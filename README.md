@@ -1,13 +1,13 @@
 # Thunderbird AI Assistant
 
-Ein AI-gestützter E-Mail-Assistent für Thunderbird mit Test-Funktionalität.
+Ein AI-gestützter E-Mail-Assistent für Thunderbird mit modularer Architektur und Thunderbird-Kompatibilität.
 
 ## 🚀 Schnellstart
 
 ### Installation
 1. **Build-Script ausführen:**
    ```powershell
-   powershell -ExecutionPolicy Bypass -File build-addon-working.ps1
+   powershell -ExecutionPolicy Bypass -File build-addon.ps1
    ```
 
 2. **Add-on in Thunderbird installieren:**
@@ -20,51 +20,65 @@ Ein AI-gestützter E-Mail-Assistent für Thunderbird mit Test-Funktionalität.
 1. **E-Mail öffnen** in Thunderbird
 2. **AI Assistant Button** klicken (in der E-Mail-Ansicht)
 3. **🧪 Test Button** klicken
-4. **Alert-Nachricht** sollte erscheinen: "🎉 Test erfolgreich! Das Add-on funktioniert!"
+4. **Toast-Nachricht** sollte erscheinen: "🎉 Test erfolgreich! Das Add-on funktioniert!"
 
 ## 📁 Projektstruktur
 
-### Test Add-on (Neue Struktur)
+### Main Add-on (Modulare Struktur)
 ```
 Thunderbird-AI/
-├── test/                     # Test-spezifische Dateien
-│   ├── manifest.json         # Test Add-on Konfiguration
+├── thunderbird-ai/           # Haupt-Add-on
+│   ├── manifest.json         # Add-on Konfiguration
+│   ├── components/           # UI Komponenten
+│   │   ├── MessageDisplayComponent.js  # Popup Komponente
+│   │   └── SettingsComponent.js       # Einstellungen Komponente
+│   ├── config/              # Konfiguration
+│   │   └── constants.js     # Konstanten und Konfiguration
+│   ├── utils/               # Utility Module
+│   │   ├── storage.js       # Speicher-Verwaltung
+│   │   ├── openai.js        # OpenAI API Service
+│   │   ├── message.js       # E-Mail Operationen
+│   │   └── ui.js           # UI Utilities
+│   ├── pages/               # HTML Templates
+│   │   └── html/
+│   │       └── message-display.html  # Haupt-Popup
+│   ├── css/                 # Stylesheets
+│   │   ├── message-display.css      # Popup Styling
+│   │   └── common.css              # Gemeinsame Styles
+│   └── js/                  # JavaScript Entry Points
+│       ├── message-display.js      # Popup Entry Point
+│       └── settingsEntry.js        # Einstellungen Entry Point
+├── common/                  # Gemeinsame Dateien
+│   ├── background.js        # Hintergrund-Script (non-module)
+│   └── utils/              # Gemeinsame Utilities
+│       ├── constants.js
+│       ├── storage.js
+│       ├── openai.js
+│       ├── message.js
+│       └── ui.js
+├── test/                    # Test Add-on
+│   ├── manifest.json        # Test Konfiguration
 │   ├── css/
-│   │   └── test.css         # Test Styling
+│   │   └── test.css        # Test Styling
 │   ├── html/
-│   │   └── test.html        # Test UI
+│   │   └── test.html       # Test UI
 │   └── js/
-│       └── test.js          # Test JavaScript
-├── common/                   # Gemeinsame Dateien
-│   └── background.js         # Hintergrund-Script (gemeinsam)
-├── build-test-simple.ps1    # Dynamisches Test Build-Script
-└── thunderbird-ai-test.xpi  # Fertiges Test Add-on
-```
-
-### Main Add-on (Bestehende Struktur)
-```
-Thunderbird-AI/
-├── manifest.json              # Add-on Konfiguration
-├── background.js       # Hintergrund-Script (vereinfacht)
-├── popup/
-│   ├── message-display.html   # Haupt-Popup UI
-│   ├── css/
-│   │   └── common.css        # Styling
-│   └── js/
-│       └── message-display.js # Popup JavaScript
-├── build-addon-working.ps1    # Build-Script
-└── thunderbird-ai.xpi        # Fertiges Add-on
+│       └── test.js         # Test JavaScript
+├── build-addon.ps1         # Build-Script
+└── thunderbird-ai.xpi      # Fertiges Add-on
 ```
 
 ## 🔧 Funktionen
 
 ### Aktuell implementiert:
-- ✅ **Test-Button** mit Alert-Nachricht
+- ✅ **Modulare Architektur** mit globalen Variablen
+- ✅ **Thunderbird-Kompatibilität** ohne ES6 Module
+- ✅ **Test-Button** mit Toast-Nachrichten
 - ✅ **Background-Script Kommunikation**
-- ✅ **Toast-Nachrichten**
 - ✅ **Grundlegende UI** mit Buttons
 - ✅ **E-Mail-Details Anzeige**
 - ✅ **AI E-Mail-Zusammenfassung** mit intelligenter Analyse
+- ✅ **OpenAI API Integration** mit Fallback-Modus
 
 ### Geplante Funktionen:
 - ✍️ Antwortvorschläge
@@ -74,23 +88,17 @@ Thunderbird-AI/
 
 ## 🛠️ Entwicklung
 
-### Test Add-on Build
-```powershell
-# Test Add-on erstellen (dynamisch)
-powershell -ExecutionPolicy Bypass -File build-test-simple.ps1
-```
-
-### Main Add-on Build
+### Build-Prozess
 ```powershell
 # Main Add-on erstellen
-powershell -ExecutionPolicy Bypass -File build-addon-working.ps1
+powershell -ExecutionPolicy Bypass -File build-addon.ps1
 ```
 
-### Build-Prozess für Test Add-on
-1. **Dynamisches Kopieren:** Alle Dateien aus `test/` und `common/` werden in ein temporäres Verzeichnis kopiert
+### Build-Prozess Details
+1. **Dynamisches Kopieren:** Alle Dateien aus `thunderbird-ai/` und `common/` werden in ein temporäres Verzeichnis kopiert
 2. **Namenskonflikte:** Werden automatisch erkannt und gemeldet
 3. **Abgeflachte Struktur:** Alle Dateien erscheinen im Root-Verzeichnis des Add-ons
-4. **Import-Pfade:** Müssen ohne Ordnerhierarchie verwendet werden (z.B. `background.js` statt `common/background.js`)
+4. **Globale Variablen:** Alle Utilities verwenden globale Variablen statt ES6 Imports
 
 ### Debugging
 - **Browser-Konsole** öffnen (F12) für JavaScript-Logs
@@ -101,7 +109,7 @@ powershell -ExecutionPolicy Bypass -File build-addon-working.ps1
 
 ### Manifest v3
 - **Permissions:** messagesRead, compose, storage, notifications
-- **Background:** Vereinfachtes Script ohne ES6-Module
+- **Background:** Modularer Script mit globalen Utilities
 - **Popup:** message-display.html mit Test-Funktionalität
 - **Settings:** settings.html für API-Konfiguration
 
@@ -110,6 +118,57 @@ powershell -ExecutionPolicy Bypass -File build-addon-working.ps1
 - **OpenAI API:** Direkte Integration für E-Mail-Analyse
 - **Storage:** Lokale Speicherung von API-Schlüssel und Statistiken
 - **Fallback:** Basis-Analyse wenn API nicht verfügbar
+
+## 🏗️ Modulare Architektur
+
+### **Globale Variablen statt ES6 Module**
+```javascript
+// ✅ Correct - Globale Variablen
+const CONFIG = { /* ... */ };
+const StorageManager = {
+    async getSettings() { /* ... */ }
+};
+const MessageDisplay = class {
+    constructor() {
+        // Verwende globale Utilities
+        StorageManager.getSettings();
+        CONFIG.ACTIONS.SUMMARIZE;
+    }
+};
+
+// Verfügbar machen
+if (typeof window !== 'undefined') {
+    window.CONFIG = CONFIG;
+    window.StorageManager = StorageManager;
+    window.MessageDisplay = MessageDisplay;
+}
+
+// ❌ Incorrect - ES6 Module
+import { CONFIG } from 'constants.js';
+export class MessageDisplay { /* ... */ }
+```
+
+### **Script Loading Order**
+```html
+<!-- Utilities zuerst laden -->
+<script src="constants.js"></script>
+<script src="storage.js"></script>
+<script src="openai.js"></script>
+<script src="message.js"></script>
+<script src="ui.js"></script>
+
+<!-- Komponenten laden -->
+<script src="MessageDisplayComponent.js"></script>
+
+<!-- Entry Point zuletzt -->
+<script src="message-display.js"></script>
+```
+
+### **Modulare Struktur**
+- **Components:** UI-Komponenten (`MessageDisplayComponent.js`, `SettingsComponent.js`)
+- **Utils:** Wiederverwendbare Funktionen (`storage.js`, `openai.js`, `message.js`, `ui.js`)
+- **Config:** Zentrale Konfiguration (`constants.js`)
+- **Entry Points:** Initialisierung (`message-display.js`, `settingsEntry.js`)
 
 ## 🤖 AI E-Mail-Zusammenfassung
 
@@ -210,4 +269,4 @@ Bei Problemen:
 
 ---
 
-**Status:** ✅ Grundlegende Funktionalität funktioniert mit Test-Button 
+**Status:** ✅ Modulare Architektur mit Thunderbird-Kompatibilität funktioniert 

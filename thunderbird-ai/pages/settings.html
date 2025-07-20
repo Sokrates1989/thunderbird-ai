@@ -64,6 +64,12 @@
 
         <div class="settings-section">
             <h2>📊 Nutzungsstatistiken</h2>
+            <div class="stats-header">
+                <button id="refreshStatsBtn" class="refresh-btn">
+                    <span class="icon">🔄</span>
+                    Aktualisieren
+                </button>
+            </div>
             <div class="stats">
                 <div class="stat-item">
                     <span class="stat-label">E-Mails analysiert:</span>
@@ -89,6 +95,17 @@
         <div class="status" id="status"></div>
     </div>
 
-    <script src="settings.js"></script>
+    <!-- Load utility modules first -->
+    <script src="constants.js"></script>
+    <script src="storage.js"></script>
+    <script src="openai.js"></script>
+    <script src="message.js"></script>
+    <script src="ui.js"></script>
+    
+    <!-- Load components -->
+    <script src="SettingsComponent.js"></script>
+    
+    <!-- Load entry point last -->
+    <script src="settingsEntry.js"></script>
 </body>
 </html> 
