@@ -13,83 +13,25 @@
             <p>Konfigurieren Sie Ihren Thunderbird AI Assistant</p>
         </div>
 
-        <div class="settings-section">
-            <h2>🤖 OpenAI API Konfiguration</h2>
-            <div class="setting-group">
-                <label for="openaiApiKey">OpenAI API-Schlüssel:</label>
-                <input type="password" id="openaiApiKey" placeholder="sk-..." />
-                <div class="help-text">
-                    Ihr OpenAI API-Schlüssel wird für E-Mail-Zusammenfassungen verwendet. 
-                    <a href="https://platform.openai.com/api-keys" target="_blank">Hier erhalten Sie einen Schlüssel</a>
-                </div>
-            </div>
-
-            <div class="setting-group">
-                <label for="model">AI Modell:</label>
-                <select id="model">
-                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Schnell & Günstig)</option>
-                    <option value="gpt-4">GPT-4 (Besser & Teurer)</option>
-                    <option value="gpt-4-turbo">GPT-4 Turbo (Beste Qualität)</option>
-                </select>
-                <div class="help-text">
-                    Wählen Sie das AI-Modell für die E-Mail-Analyse
-                </div>
-            </div>
+        <!-- Modular sections - each will be managed by its own component -->
+        <div id="api-config-section" class="settings-section">
+            <!-- API Configuration will be loaded here -->
         </div>
 
-        <div class="settings-section">
-            <h2>🔄 Automatisierung</h2>
-            <div class="setting-group">
-                <label class="checkbox-label">
-                    <input type="checkbox" id="autoProcess" />
-                    <span class="checkmark"></span>
-                    Automatische E-Mail-Verarbeitung
-                </label>
-                <div class="help-text">
-                    E-Mails werden automatisch analysiert, wenn sie geöffnet werden
-                </div>
-            </div>
+        <div id="automation-section" class="settings-section">
+            <!-- Automation settings will be loaded here -->
         </div>
 
-        <div class="settings-section">
-            <h2>🧪 API Test</h2>
-            <div class="test-section">
-                <button id="testApiBtn" class="test-btn">
-                    <span class="icon">🔍</span>
-                    API-Verbindung testen
-                </button>
-                <div id="testResult" class="test-result"></div>
-            </div>
+        <div id="api-test-section" class="settings-section">
+            <!-- API Test will be loaded here -->
         </div>
 
-        <div class="settings-section">
-            <h2>📊 Nutzungsstatistiken</h2>
-            <div class="stats-header">
-                <button id="refreshStatsBtn" class="refresh-btn">
-                    <span class="icon">🔄</span>
-                    Aktualisieren
-                </button>
-            </div>
-            <div class="stats">
-                <div class="stat-item">
-                    <span class="stat-label">E-Mails analysiert:</span>
-                    <span class="stat-value" id="emailsAnalyzed">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">API-Aufrufe:</span>
-                    <span class="stat-value" id="apiCalls">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Letzte Nutzung:</span>
-                    <span class="stat-value" id="lastUsed">Nie</span>
-                </div>
-            </div>
+        <div id="statistics-section" class="settings-section">
+            <!-- Statistics will be loaded here -->
         </div>
 
-        <div class="actions">
-            <button id="saveBtn" class="btn primary">💾 Einstellungen speichern</button>
-            <button id="resetBtn" class="btn secondary">🔄 Zurücksetzen</button>
-            <button id="closeBtn" class="btn">❌ Schließen</button>
+        <div id="actions-section" class="actions">
+            <!-- Action buttons will be loaded here -->
         </div>
 
         <div class="status" id="status"></div>
@@ -102,8 +44,15 @@
     <script src="message.js"></script>
     <script src="ui.js"></script>
     
-    <!-- Load components -->
-    <script src="SettingsComponent.js"></script>
+    <!-- Load UI components -->
+    <script src="ApiConfigComponent.js"></script>
+    <script src="AutomationComponent.js"></script>
+    <script src="ApiTestComponent.js"></script>
+    <script src="StatisticsComponent.js"></script>
+    <script src="ActionsComponent.js"></script>
+    
+    <!-- Load main settings manager -->
+    <script src="SettingsManager.js"></script>
     
     <!-- Load entry point last -->
     <script src="settingsEntry.js"></script>

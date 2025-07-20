@@ -193,6 +193,40 @@ body {
 }
 
 /* Statistics */
+.stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.stats-header h2 {
+    margin: 0;
+}
+
+.refresh-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: background-color 0.2s;
+}
+
+.refresh-btn:hover {
+    background: #5a6268;
+}
+
+.refresh-btn:disabled {
+    background: #adb5bd;
+    cursor: not-allowed;
+}
+
 .stats {
     display: grid;
     grid-template-columns: 1fr 1fr;
