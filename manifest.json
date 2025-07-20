@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "Thunderbird AI Assistant",
+  "version": "1.0.0",
+  "description": "AI-powered email assistant for summarizing, composing, categorizing and managing emails",
+  "author": "Your Name",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "thunderbird-ai@example.com",
+      "strict_min_version": "128.0"
+    }
+  },
+  "permissions": [
+    "messagesRead",
+    "messagesMove", 
+    "messagesUpdate",
+    "messagesDelete",
+    "compose",
+    "accountsRead",
+    "notifications",
+    "storage",
+    "nativeMessaging",
+    "menus",
+    "tabs"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "message_display_action": {
+    "default_title": "AI Assistant",
+    "default_popup": "message-display.html"
+  },
+  "compose_action": {
+    "default_title": "AI Writing Assistant", 
+    "default_popup": "message-display.html"
+  },
+  "action": {
+    "default_title": "Thunderbird AI Assistant",
+    "default_popup": "message-display.html"
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": ["message-display.html", "popup/*", "popup/js/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+} 

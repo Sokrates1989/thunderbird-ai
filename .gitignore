@@ -1,0 +1,6 @@
+# Ignore config.json.
+config.json
+
+# Ignore build files.
+thunderbird-ai.xpi
+thunderbird-ai-test.zip
