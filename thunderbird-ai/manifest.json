@@ -41,7 +41,7 @@
 
   "web_accessible_resources": [
     {
-      "resources": ["message-display.html", "popup/*", "popup/js/*"],
+      "resources": ["message-display.html", "settings.html"],
       "matches": ["<all_urls>"]
     }
   ]

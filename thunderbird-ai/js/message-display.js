@@ -375,8 +375,34 @@ class MessageDisplayPopup {
         
         switch (action) {
             case 'summarize':
-                contentEl.innerHTML = `<p class="summary-text">${this.escapeHtml(result.summary)}</p>`;
+                // Enhanced summary display with metadata
+                let summaryHtml = `<div class="summary-container">`;
+                
+                // Add metadata if available
+                if (result.metadata) {
+                    summaryHtml += `<div class="summary-metadata">`;
+                    summaryHtml += `<div class="metadata-item"><strong>Betreff:</strong> ${this.escapeHtml(result.metadata.subject)}</div>`;
+                    summaryHtml += `<div class="metadata-item"><strong>Von:</strong> ${this.escapeHtml(result.metadata.author)}</div>`;
+                    summaryHtml += `<div class="metadata-item"><strong>Datum:</strong> ${this.escapeHtml(result.metadata.date)}</div>`;
+                    summaryHtml += `<div class="metadata-item"><strong>Wörter:</strong> ${result.metadata.wordCount}</div>`;
+                    if (result.metadata.hasAttachments) {
+                        summaryHtml += `<div class="metadata-item"><strong>Anhänge:</strong> Ja</div>`;
+                    }
+                    summaryHtml += `</div>`;
+                }
+                
+                // Add the summary content with proper formatting
+                summaryHtml += `<div class="summary-content">${this.formatSummaryText(result.summary)}</div>`;
+                summaryHtml += `</div>`;
+                
+                contentEl.innerHTML = summaryHtml;
+                
+                // Add action buttons
                 this.addResultAction('In Zwischenablage kopieren', () => this.copyToClipboard(result.summary));
+                if (result.metadata && result.metadata.hasAttachments) {
+                    this.addResultAction('Anhänge anzeigen', () => this.showAttachments());
+                }
+                this.addResultAction('Als wichtig markieren', () => this.markAsImportant());
                 break;
                 
             case 'reply':
@@ -520,7 +546,7 @@ class MessageDisplayPopup {
     async openSettings() {
         try {
             await browser.tabs.create({
-                url: browser.runtime.getURL('popup/settings.html')
+                url: browser.runtime.getURL('settings.html')
             });
         } catch (error) {
             console.error('Error opening settings:', error);
@@ -596,6 +622,63 @@ class MessageDisplayPopup {
                 document.body.removeChild(toast);
             }, 300);
         }, 3000);
+    }
+
+    formatSummaryText(text) {
+        // Convert markdown-like formatting to HTML
+        return text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n/g, '<br>')
+            .replace(/•/g, '&bull;')
+            .replace(/📧|📝|⚠️|❓|😊|😟|😐/g, (match) => {
+                const emojiMap = {
+                    '📧': '<span class="emoji">📧</span>',
+                    '📝': '<span class="emoji">📝</span>',
+                    '⚠️': '<span class="emoji warning">⚠️</span>',
+                    '❓': '<span class="emoji">❓</span>',
+                    '😊': '<span class="emoji positive">😊</span>',
+                    '😟': '<span class="emoji negative">😟</span>',
+                    '😐': '<span class="emoji neutral">😐</span>'
+                };
+                return emojiMap[match] || match;
+            });
+    }
+
+    async showAttachments() {
+        try {
+            if (!this.currentMessage) {
+                this.showError('Keine E-Mail ausgewählt');
+                return;
+            }
+            
+            const message = await browser.messages.get(this.currentMessage.id);
+            if (!message.hasAttachments) {
+                this.showToast('Keine Anhänge gefunden');
+                return;
+            }
+            
+            // Get attachments
+            const attachments = await browser.messages.listAttachments(this.currentMessage.id);
+            
+            let attachmentList = '<div class="attachment-list">';
+            attachmentList += '<h3>Anhänge:</h3>';
+            
+            for (const attachment of attachments) {
+                attachmentList += `<div class="attachment-item">`;
+                attachmentList += `<span class="attachment-name">${this.escapeHtml(attachment.name)}</span>`;
+                attachmentList += `<span class="attachment-size">${this.formatFileSize(attachment.size)}</span>`;
+                attachmentList += `</div>`;
+            }
+            
+            attachmentList += '</div>';
+            
+            this.showResults('Anhänge', { message: attachmentList }, 'attachments');
+            
+        } catch (error) {
+            console.error('Error showing attachments:', error);
+            this.showError('Fehler beim Laden der Anhänge: ' + error.message);
+        }
     }
 }
 

@@ -129,6 +129,24 @@
             Console-Ausgabe wird hier angezeigt...
         </div>
     </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <div>Verarbeite E-Mail...</div>
+        </div>
+    </div>
+
+    <!-- Error Dialog -->
+    <div class="error-dialog" id="errorDialog" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 20px; border-radius: 8px; max-width: 400px; text-align: center;">
+            <h3 style="color: #dc3545; margin-top: 0;">Fehler</h3>
+            <p id="errorMessage"></p>
+            <button id="errorCloseBtn" style="background: #007acc; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 10px;">Schließen</button>
+        </div>
+    </div>
+
     <script src="message-display.js"></script>
 </body>
 </html> 

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thunderbird AI - Einstellungen</title>
+    <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ Einstellungen</h1>
+            <p>Konfigurieren Sie Ihren Thunderbird AI Assistant</p>
+        </div>
+
+        <div class="settings-section">
+            <h2>🤖 OpenAI API Konfiguration</h2>
+            <div class="setting-group">
+                <label for="openaiApiKey">OpenAI API-Schlüssel:</label>
+                <input type="password" id="openaiApiKey" placeholder="sk-..." />
+                <div class="help-text">
+                    Ihr OpenAI API-Schlüssel wird für E-Mail-Zusammenfassungen verwendet. 
+                    <a href="https://platform.openai.com/api-keys" target="_blank">Hier erhalten Sie einen Schlüssel</a>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label for="model">AI Modell:</label>
+                <select id="model">
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Schnell & Günstig)</option>
+                    <option value="gpt-4">GPT-4 (Besser & Teurer)</option>
+                    <option value="gpt-4-turbo">GPT-4 Turbo (Beste Qualität)</option>
+                </select>
+                <div class="help-text">
+                    Wählen Sie das AI-Modell für die E-Mail-Analyse
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h2>🔄 Automatisierung</h2>
+            <div class="setting-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="autoProcess" />
+                    <span class="checkmark"></span>
+                    Automatische E-Mail-Verarbeitung
+                </label>
+                <div class="help-text">
+                    E-Mails werden automatisch analysiert, wenn sie geöffnet werden
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h2>🧪 API Test</h2>
+            <div class="test-section">
+                <button id="testApiBtn" class="test-btn">
+                    <span class="icon">🔍</span>
+                    API-Verbindung testen
+                </button>
+                <div id="testResult" class="test-result"></div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <h2>📊 Nutzungsstatistiken</h2>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-label">E-Mails analysiert:</span>
+                    <span class="stat-value" id="emailsAnalyzed">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">API-Aufrufe:</span>
+                    <span class="stat-value" id="apiCalls">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Letzte Nutzung:</span>
+                    <span class="stat-value" id="lastUsed">Nie</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button id="saveBtn" class="btn primary">💾 Einstellungen speichern</button>
+            <button id="resetBtn" class="btn secondary">🔄 Zurücksetzen</button>
+            <button id="closeBtn" class="btn">❌ Schließen</button>
+        </div>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <script src="settings.js"></script>
+</body>
+</html> 
