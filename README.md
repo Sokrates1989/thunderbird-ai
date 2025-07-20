@@ -24,6 +24,24 @@ Ein AI-gestützter E-Mail-Assistent für Thunderbird mit Test-Funktionalität.
 
 ## 📁 Projektstruktur
 
+### Test Add-on (Neue Struktur)
+```
+Thunderbird-AI/
+├── test/                     # Test-spezifische Dateien
+│   ├── manifest.json         # Test Add-on Konfiguration
+│   ├── css/
+│   │   └── test.css         # Test Styling
+│   ├── html/
+│   │   └── test.html        # Test UI
+│   └── js/
+│       └── test.js          # Test JavaScript
+├── common/                   # Gemeinsame Dateien
+│   └── background.js         # Hintergrund-Script (gemeinsam)
+├── build-test-simple.ps1    # Dynamisches Test Build-Script
+└── thunderbird-ai-test.xpi  # Fertiges Test Add-on
+```
+
+### Main Add-on (Bestehende Struktur)
 ```
 Thunderbird-AI/
 ├── manifest.json              # Add-on Konfiguration
@@ -56,11 +74,23 @@ Thunderbird-AI/
 
 ## 🛠️ Entwicklung
 
-### Build-Script
+### Test Add-on Build
 ```powershell
-# Add-on erstellen
+# Test Add-on erstellen (dynamisch)
+powershell -ExecutionPolicy Bypass -File build-test-simple.ps1
+```
+
+### Main Add-on Build
+```powershell
+# Main Add-on erstellen
 powershell -ExecutionPolicy Bypass -File build-addon-working.ps1
 ```
+
+### Build-Prozess für Test Add-on
+1. **Dynamisches Kopieren:** Alle Dateien aus `test/` und `common/` werden in ein temporäres Verzeichnis kopiert
+2. **Namenskonflikte:** Werden automatisch erkannt und gemeldet
+3. **Abgeflachte Struktur:** Alle Dateien erscheinen im Root-Verzeichnis des Add-ons
+4. **Import-Pfade:** Müssen ohne Ordnerhierarchie verwendet werden (z.B. `background.js` statt `common/background.js`)
 
 ### Debugging
 - **Browser-Konsole** öffnen (F12) für JavaScript-Logs
