@@ -69,12 +69,14 @@ const MessageService = {
         }
 
         try {
+            console.log('Getting full message for ID:', messageId, 'Type:', typeof messageId);
             const message = await browser.messages.get(messageId);
+            console.log('Retrieved message:', message);
             
             if (!message) {
                 throw new Error(`Message with ID ${messageId} not found`);
             }
-
+            
             const content = await this.getMessageContent(messageId);
             
             return {
@@ -122,18 +124,52 @@ const MessageService = {
                 throw new Error(`Message with ID ${messageId} not found`);
             }
 
+            console.log('Getting content for message:', message);
+            console.log('Message body:', message.body);
+
             // Try to get plain text content first
             let content = '';
             
             if (message.body && message.body.plain) {
                 content = message.body.plain;
+                console.log('Using plain text content');
             } else if (message.body && message.body.html) {
                 // Convert HTML to plain text if no plain text available
                 content = this.htmlToText(message.body.html);
+                console.log('Using HTML content converted to text');
             } else {
-                content = 'Kein Inhalt verfügbar';
+                // Try alternative method to get message content
+                console.log('No body available, trying alternative method');
+                try {
+                    // Try to get message content using messageDisplay API
+                    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+                    if (tab) {
+                        const displayedMessages = await browser.messageDisplay.getDisplayedMessages(tab.id);
+                        if (displayedMessages && displayedMessages.messages && displayedMessages.messages.length > 0) {
+                            const displayedMessage = displayedMessages.messages[0];
+                            if (displayedMessage.body) {
+                                content = displayedMessage.body;
+                                console.log('Using displayed message body');
+                            } else {
+                                // Create content from available metadata
+                                content = this.createContentFromMetadata(message);
+                                console.log('Using metadata-based content');
+                            }
+                        } else {
+                            content = this.createContentFromMetadata(message);
+                            console.log('No displayed messages, using metadata');
+                        }
+                    } else {
+                        content = this.createContentFromMetadata(message);
+                        console.log('No active tab, using metadata');
+                    }
+                } catch (error) {
+                    console.log('Alternative method failed:', error);
+                    content = this.createContentFromMetadata(message);
+                }
             }
 
+            console.log('Final content length:', content.length);
             return content.trim();
         } catch (error) {
             console.error('Error getting message content:', error);
@@ -197,6 +233,59 @@ const MessageService = {
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         
         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    },
+
+    /**
+     * Create content from message metadata
+     * 
+     * Creates a content string from available message metadata when body is not available.
+     * 
+     * @param {Object} message - Message object
+     * @returns {string} Generated content from metadata
+     * 
+     * @example
+     * const content = MessageService.createContentFromMetadata(message);
+     */
+    createContentFromMetadata(message) {
+        const parts = [];
+        
+        if (message.subject) {
+            parts.push(`Betreff: ${message.subject}`);
+        }
+        
+        if (message.author) {
+            parts.push(`Von: ${message.author}`);
+        }
+        
+        if (message.date) {
+            parts.push(`Datum: ${new Date(message.date).toLocaleString('de-DE')}`);
+        }
+        
+        if (message.recipients && message.recipients.length > 0) {
+            parts.push(`An: ${message.recipients.join(', ')}`);
+        }
+        
+        if (message.ccList && message.ccList.length > 0) {
+            parts.push(`CC: ${message.ccList.join(', ')}`);
+        }
+        
+        if (message.bccList && message.bccList.length > 0) {
+            parts.push(`BCC: ${message.bccList.join(', ')}`);
+        }
+        
+        if (message.hasAttachments) {
+            parts.push('Enthält Anhänge: Ja');
+        }
+        
+        if (message.flagged) {
+            parts.push('Markiert: Ja');
+        }
+        
+        if (message.tags && message.tags.length > 0) {
+            parts.push(`Tags: ${message.tags.join(', ')}`);
+        }
+        
+        return parts.join('\n');
     },
 
     /**
@@ -324,7 +413,7 @@ const MessageService = {
     }
 };
 
-/**
+    /**
  * Make MessageService available globally for non-module environments
  * 
  * This allows the MessageService to be accessed from any script without ES6 imports.

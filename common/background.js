@@ -68,12 +68,12 @@ class ThunderbirdAI {
         // Listen for menu clicks
         browser.menus.onClicked.addListener((info, tab) => {
             this.handleMenuClick(info, tab);
-        });
+                });
 
         // Listen for extension startup
-        browser.runtime.onStartup.addListener(() => {
-            console.log('Thunderbird AI Assistant started');
-        });
+            browser.runtime.onStartup.addListener(() => {
+                console.log('Thunderbird AI Assistant started');
+            });
 
         // Listen for extension installation
         browser.runtime.onInstalled.addListener((details) => {
@@ -97,8 +97,8 @@ class ThunderbirdAI {
     async initializeMenus() {
         try {
             // Remove existing menus to avoid duplicates
-            await browser.menus.removeAll();
-            console.log('Removed existing menus');
+                await browser.menus.removeAll();
+                console.log('Removed existing menus');
 
             // Create menu items for different actions
             const menuItems = [
@@ -307,7 +307,9 @@ class ThunderbirdAI {
      */
     async summarizeMessage(messageId) {
         try {
-            console.log('Summarizing message:', messageId);
+        console.log('Summarizing message:', messageId);
+            console.log('Message ID type:', typeof messageId);
+            console.log('Message ID value:', messageId);
             
             const messageData = await MessageService.getFullMessage(messageId);
             
@@ -338,8 +340,8 @@ class ThunderbirdAI {
                 await StorageManager.updateStatistics('api');
             }
             
-            return {
-                success: true,
+        return {
+            success: true,
                 summary: summary,
                 metadata: {
                     subject: messageData.subject,
@@ -380,15 +382,15 @@ class ThunderbirdAI {
      */
     async generateReply(messageId, context = {}) {
         try {
-            console.log('Generating reply for message:', messageId);
+        console.log('Generating reply for message:', messageId);
             
             // Update statistics
             await StorageManager.updateStatistics('email');
             
-            return {
-                success: true,
-                reply: "Vielen Dank für Ihre E-Mail.\n\nIch habe Ihre Nachricht erhalten und werde mich zeitnah bei Ihnen melden.\n\nMit freundlichen Grüßen\n[Ihr Name]"
-            };
+        return {
+            success: true,
+            reply: "Vielen Dank für Ihre E-Mail.\n\nIch habe Ihre Nachricht erhalten und werde mich zeitnah bei Ihnen melden.\n\nMit freundlichen Grüßen\n[Ihr Name]"
+        };
         } catch (error) {
             console.error('Error generating reply:', error);
             return {
@@ -420,16 +422,16 @@ class ThunderbirdAI {
      */
     async categorizeMessage(messageId) {
         try {
-            console.log('Categorizing message:', messageId);
+        console.log('Categorizing message:', messageId);
             
             // Update statistics
             await StorageManager.updateStatistics('email');
             
-            return {
-                success: true,
-                category: "geschäftlich",
-                confidence: 0.85
-            };
+        return {
+            success: true,
+            category: "geschäftlich",
+            confidence: 0.85
+        };
         } catch (error) {
             console.error('Error categorizing message:', error);
             return {
@@ -461,16 +463,16 @@ class ThunderbirdAI {
      */
     async checkImportance(messageId) {
         try {
-            console.log('Checking importance for message:', messageId);
+        console.log('Checking importance for message:', messageId);
             
             // Update statistics
             await StorageManager.updateStatistics('email');
             
-            return {
-                success: true,
-                importance: "normal",
-                confidence: 0.75
-            };
+        return {
+            success: true,
+            importance: "normal",
+            confidence: 0.75
+        };
         } catch (error) {
             console.error('Error checking importance:', error);
             return {
@@ -501,15 +503,15 @@ class ThunderbirdAI {
      */
     async improveText(text, type = 'general') {
         try {
-            console.log('Improving text:', text, type);
+        console.log('Improving text:', text, type);
             
             // Update statistics
             await StorageManager.updateStatistics('email');
             
-            return {
-                success: true,
-                improvedText: "Verbesserter Text basierend auf Ihrer Eingabe."
-            };
+        return {
+            success: true,
+            improvedText: "Verbesserter Text basierend auf Ihrer Eingabe."
+        };
         } catch (error) {
             console.error('Error improving text:', error);
             return {
@@ -540,15 +542,15 @@ class ThunderbirdAI {
      */
     async processChatQuery(query, context = {}) {
         try {
-            console.log('Processing chat query:', query);
+        console.log('Processing chat query:', query);
             
             // Update statistics
             await StorageManager.updateStatistics('email');
             
-            return {
-                success: true,
-                response: "Ich bin Ihr AI-Assistent für E-Mails. Wie kann ich Ihnen helfen?"
-            };
+        return {
+            success: true,
+            response: "Ich bin Ihr AI-Assistent für E-Mails. Wie kann ich Ihnen helfen?"
+        };
         } catch (error) {
             console.error('Error processing chat query:', error);
             return {
@@ -581,17 +583,17 @@ class ThunderbirdAI {
      */
     async translateMessage(messageId, targetLanguage) {
         try {
-            console.log('Translating message:', messageId, 'to', targetLanguage);
+        console.log('Translating message:', messageId, 'to', targetLanguage);
             
             // Update statistics
             await StorageManager.updateStatistics('email');
             
-            return {
-                success: true,
-                translatedText: "Übersetzter Text der E-Mail.",
-                originalLanguage: "englisch",
-                targetLanguage: targetLanguage
-            };
+        return {
+            success: true,
+            translatedText: "Übersetzter Text der E-Mail.",
+            originalLanguage: "englisch",
+            targetLanguage: targetLanguage
+        };
         } catch (error) {
             console.error('Error translating message:', error);
             return {
@@ -621,21 +623,21 @@ class ThunderbirdAI {
      */
     async extractInfo(messageId) {
         try {
-            console.log('Extracting info from message:', messageId);
+        console.log('Extracting info from message:', messageId);
             
             // Update statistics
             await StorageManager.updateStatistics('email');
             
-            return {
-                success: true,
-                extractedInfo: {
-                    sender: "max.mustermann@example.com",
-                    date: "2024-01-15",
-                    subject: "Wichtige Information",
-                    keywords: ["Meeting", "Projekt", "Deadline"],
-                    sentiment: "neutral"
-                }
-            };
+        return {
+            success: true,
+            extractedInfo: {
+                sender: "max.mustermann@example.com",
+                date: "2024-01-15",
+                subject: "Wichtige Information",
+                keywords: ["Meeting", "Projekt", "Deadline"],
+                sentiment: "neutral"
+            }
+        };
         } catch (error) {
             console.error('Error extracting info:', error);
             return {
@@ -668,17 +670,17 @@ class ThunderbirdAI {
      */
     async checkSpam(messageId) {
         try {
-            console.log('Checking spam for message:', messageId);
+        console.log('Checking spam for message:', messageId);
             
             // Update statistics
             await StorageManager.updateStatistics('email');
             
-            return {
-                success: true,
-                isSpam: false,
-                confidence: 0.95,
-                reasons: ["Legitimer Absender", "Normale E-Mail-Struktur"]
-            };
+        return {
+            success: true,
+            isSpam: false,
+            confidence: 0.95,
+            reasons: ["Legitimer Absender", "Normale E-Mail-Struktur"]
+        };
         } catch (error) {
             console.error('Error checking spam:', error);
             return {
@@ -708,18 +710,18 @@ class ThunderbirdAI {
      */
     async findSimilar(messageId) {
         try {
-            console.log('Finding similar messages for:', messageId);
+        console.log('Finding similar messages for:', messageId);
             
             // Update statistics
             await StorageManager.updateStatistics('email');
             
-            return {
-                success: true,
-                similarMessages: [
-                    { id: "msg1", subject: "Ähnliche E-Mail 1", date: "2024-01-10" },
-                    { id: "msg2", subject: "Ähnliche E-Mail 2", date: "2024-01-05" }
-                ]
-            };
+        return {
+            success: true,
+            similarMessages: [
+                { id: "msg1", subject: "Ähnliche E-Mail 1", date: "2024-01-10" },
+                { id: "msg2", subject: "Ähnliche E-Mail 2", date: "2024-01-05" }
+            ]
+        };
         } catch (error) {
             console.error('Error finding similar messages:', error);
             return {

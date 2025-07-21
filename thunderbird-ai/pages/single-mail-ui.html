@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant</title>
+    <link rel="stylesheet" href="single-mail-ui.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>🤖 AI Assistant</h1>
+            <div class="subtitle" id="emailSubject">E-Mail wird geladen...</div>
+        </div>
+
+        <!-- Quick Actions Section -->
+        <div class="section" id="quickActionsSection">
+            <h2>🚀 Schnellaktionen</h2>
+            <div class="button-grid" id="quickActionsGrid">
+                <!-- Quick action buttons will be dynamically loaded -->
+            </div>
+        </div>
+
+        <!-- Email Details Section -->
+        <div class="section" id="emailDetailsSection">
+            <h2>📧 E-Mail Details</h2>
+            <div class="email-info" id="emailInfo">
+                <!-- Email details will be dynamically loaded -->
+            </div>
+        </div>
+
+        <!-- Advanced Options Section -->
+        <div class="advanced-section" id="advancedSection">
+            <button class="advanced-toggle" id="advancedToggle">
+                <span>Erweiterte Optionen</span>
+                <span>▼</span>
+            </button>
+            <div class="advanced-content" id="advancedContent">
+                <div class="button-grid" id="advancedActionsGrid">
+                    <!-- Advanced action buttons will be dynamically loaded -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Area -->
+        <div class="results-area" id="resultsArea">
+            <div class="results-title" id="resultsTitle">Ergebnis</div>
+            <div class="results-content" id="resultsContent"></div>
+            <div class="results-actions" id="resultsActions"></div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="footer-actions" id="footerActions">
+            <!-- Footer buttons will be dynamically loaded -->
+        </div>
+
+        <!-- Status Display -->
+        <div class="status" id="status">
+            Status: Bereit zum Testen
+        </div>
+        
+        <!-- Console Output -->
+        <div class="console-output" id="consoleOutput">
+            Console-Ausgabe wird hier angezeigt...
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <div>Verarbeite E-Mail...</div>
+        </div>
+    </div>
+
+    <!-- Error Dialog -->
+    <div class="error-dialog" id="errorDialog" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 20px; border-radius: 8px; max-width: 400px; text-align: center;">
+            <h3 style="color: #dc3545; margin-top: 0;">Fehler</h3>
+            <p id="errorMessage"></p>
+            <button id="errorCloseBtn" style="background: #007acc; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 10px;">Schließen</button>
+        </div>
+    </div>
+
+    <!-- Load utility modules first -->
+    <script src="constants.js"></script>
+    <script src="storage.js"></script>
+    <script src="openai.js"></script>
+    <script src="message.js"></script>
+    <script src="ui.js"></script>
+    
+    <!-- Load UI components (flattened paths) -->
+    <script src="HeaderComponent.js"></script>
+    <script src="QuickActionsComponent.js"></script>
+    <script src="EmailDetailsComponent.js"></script>
+    <script src="AdvancedActionsComponent.js"></script>
+    <script src="ResultsComponent.js"></script>
+    <script src="FooterActionsComponent.js"></script>
+    <script src="StatusComponent.js"></script>
+    <script src="ConsoleComponent.js"></script>
+    <script src="LoadingComponent.js"></script>
+    <script src="ErrorDialogComponent.js"></script>
+    
+    <!-- Load main manager (flattened path) -->
+    <script src="SingleMailManager.js"></script>
+    
+    <!-- Load entry point last -->
+    <script src="single-mail-ui.js"></script>
+</body>
+</html> 

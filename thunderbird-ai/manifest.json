@@ -29,15 +29,15 @@
   },
   "message_display_action": {
     "default_title": "AI Assistant",
-    "default_popup": "message-display.html"
+    "default_popup": "single-mail-ui.html"
   },
   "compose_action": {
     "default_title": "AI Writing Assistant", 
-    "default_popup": "message-display.html"
+    "default_popup": "single-mail-ui.html"
   },
   "action": {
     "default_title": "Thunderbird AI Assistant",
-    "default_popup": "message-display.html"
+    "default_popup": "single-mail-ui.html"
   },
 
   "options_ui": {
@@ -50,7 +50,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["message-display.html", "settings.html"],
+      "resources": ["single-mail-ui.html", "settings.html"],
       "matches": ["<all_urls>"]
     }
   ]
