@@ -1,7 +1,7 @@
 # Windows-Installer testen
 
 Das primäre Windows-Artefakt heißt
-`Thunderbird-AI-Setup-1.5.0-win-x64.exe`. Es installiert das Add-on nur für den
+`Thunderbird-AI-Setup-1.5.1-win-x64.exe`. Es installiert das Add-on nur für den
 aktuellen Benutzer und benötigt keine Administratorrechte.
 
 ## Automatisierter Isolationstest
@@ -14,9 +14,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 
 Der Test verwendet ausschließlich
 `%LOCALAPPDATA%\ThunderbirdAIInstallerTest` und
-`HKCU\Software\ThunderbirdAIInstallerTest`. Er prüft Installation,
-Aktualisierung einer vorhandenen Profil-XPI, eine zweite Setup-Ausführung als
-Update, beide Registry-Ansichten und die vollständige Deinstallation. Ein echtes
+`HKCU\Software\ThunderbirdAIInstallerTest`. Er prüft Installation, gültige
+XPI-Pfade für beide Sprachkataloge, Aktualisierung einer vorhandenen Profil-XPI,
+Bereinigung veralteter XPI-Versionen, eine zweite Setup-Ausführung als Update,
+beide Registry-Ansichten und die vollständige Deinstallation. Ein echtes
 Thunderbird-Profil wird weder gelesen noch verändert und Thunderbird wird nicht
 beendet oder gestartet.
 
@@ -31,7 +32,7 @@ beendet oder gestartet.
 5. Prüfen, dass **Thunderbird AI Assistant** unter Add-ons erscheint und die
    vorhandenen API-Einstellungen erhalten geblieben sind.
 6. Eine E-Mail öffnen, die Zusammenfassung ausführen und den API-Test in den
-   Einstellungen aufrufen. Im Einzelmail-Popup muss **Version 1.5.0** stehen und die Oberfläche muss deutsch sein.
+   Einstellungen aufrufen. Im Einzelmail-Popup muss **Version 1.5.1** stehen und die Oberfläche muss deutsch sein.
 7. In den Einstellungen **English** wählen und speichern. Popup, Antworteditor und Hilfe müssen anschließend englisch erscheinen; nach einem Thunderbird-Neustart muss die Auswahl erhalten bleiben.
 8. Den Installer erneut auf Englisch ausführen und kontrollieren, dass das Update ohne
    vorherige Deinstallation funktioniert.

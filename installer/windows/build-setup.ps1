@@ -37,7 +37,7 @@ function Find-InnoSetupCompiler {
 }
 
 function Get-PackagedManifest {
-    <# Read manifest.json directly from the built XPI for source/package parity checks. #>
+    <# Validate Thunderbird package paths and read the packaged manifest. #>
     param(
         [Parameter(Mandatory = $true)]
         [string]$PackagePath
@@ -46,6 +46,17 @@ function Get-PackagedManifest {
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $archive = [System.IO.Compression.ZipFile]::OpenRead($PackagePath)
     try {
+        $entryNames = @($archive.Entries | ForEach-Object { $_.FullName })
+        $invalidEntryNames = @($entryNames | Where-Object { $_.Contains('\') })
+        if ($invalidEntryNames.Count -gt 0) {
+            throw "The package '$PackagePath' contains invalid Windows-style entry names."
+        }
+        foreach ($locale in @('de', 'en')) {
+            $localeEntry = "_locales/$locale/messages.json"
+            if ($entryNames -notcontains $localeEntry) {
+                throw "The package '$PackagePath' omits '$localeEntry'."
+            }
+        }
         $entry = $archive.GetEntry('manifest.json')
         if ($null -eq $entry) {
             throw "The package '$PackagePath' does not contain manifest.json."

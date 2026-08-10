@@ -1,7 +1,7 @@
 ; Builds a per-user Windows setup around the verified Thunderbird AI XPI.
 
 #ifndef AppVersion
-  #define AppVersion "1.5.0"
+  #define AppVersion "1.5.1"
 #endif
 
 #define AppName "Thunderbird AI Assistant"
@@ -69,6 +69,9 @@ english.ThunderbirdCloseFailed=Thunderbird could not be closed safely. Save any 
 english.LaunchThunderbird=Start Thunderbird now
 english.ProfileInstallFailed=The extension could not be copied into the Thunderbird profile: %1
 
+[InstallDelete]
+Type: files; Name: "{app}\thunderbird-ai-*.xpi"
+
 [Files]
 Source: "..\..\{#GermanExtensionSource}"; DestDir: "{app}"; DestName: "{#ExtensionFileName}"; Flags: ignoreversion; Languages: german
 Source: "..\..\{#EnglishExtensionSource}"; DestDir: "{app}"; DestName: "{#ExtensionFileName}"; Flags: ignoreversion; Languages: english
@@ -82,6 +85,7 @@ Root: HKCU32; Subkey: "{#ExtensionRegistrySubkey}"; ValueType: string; ValueName
 Root: HKCU64; Subkey: "{#ExtensionRegistrySubkey}"; ValueType: string; ValueName: "{#ExtensionId}"; ValueData: "{app}\{#ExtensionFileName}"; Flags: uninsdeletevalue uninsdeletekeyifempty; Check: IsWin64
 
 [UninstallDelete]
+Type: files; Name: "{app}\thunderbird-ai-*.xpi"
 Type: dirifempty; Name: "{#ProductDataRoot}"
 
 [Run]

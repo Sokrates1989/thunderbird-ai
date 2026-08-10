@@ -183,9 +183,14 @@ try {
         throw 'The existing-profile XPI was not updated from the installer payload.'
     }
 
+    $staleExtension = Join-Path $installDirectory 'thunderbird-ai-1.2.0.xpi'
+    [System.IO.File]::WriteAllText($staleExtension, 'stale fixture', [System.Text.Encoding]::UTF8)
     Invoke-CheckedProcess -Executable $installer -Arguments @(
         '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/LANG=english'
     )
+    if (Test-Path -LiteralPath $staleExtension) {
+        throw 'Running setup as an update left a stale versioned XPI behind.'
+    }
     if ((Get-FileHash -LiteralPath $installedExtension -Algorithm SHA256).Hash -ne
         (Get-FileHash -LiteralPath $profileExtension -Algorithm SHA256).Hash) {
         throw 'Running setup as an update changed the installed/profile XPI parity.'

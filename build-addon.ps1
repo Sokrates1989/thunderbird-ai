@@ -18,6 +18,43 @@ $resolvedOutputPath = if ([System.IO.Path]::IsPathRooted($OutputPath)) {
 }
 $temporaryZipPath = [System.IO.Path]::ChangeExtension($resolvedOutputPath, '.zip')
 
+function New-XpiPackage {
+    <# Create an XPI whose entry names use the forward slashes required by ZIP/WebExtensions. #>
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$SourceDirectory,
+
+        [Parameter(Mandatory = $true)]
+        [string]$DestinationPath
+    )
+
+    Add-Type -AssemblyName System.IO.Compression
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $resolvedSource = [System.IO.Path]::GetFullPath((Resolve-Path $SourceDirectory))
+    $sourcePrefix = $resolvedSource.TrimEnd([System.IO.Path]::DirectorySeparatorChar) +
+        [System.IO.Path]::DirectorySeparatorChar
+    $archive = [System.IO.Compression.ZipFile]::Open(
+        $DestinationPath,
+        [System.IO.Compression.ZipArchiveMode]::Create
+    )
+    try {
+        $files = Get-ChildItem -LiteralPath $resolvedSource -Recurse -File |
+            Sort-Object -Property FullName
+        foreach ($file in $files) {
+            $entryName = $file.FullName.Substring($sourcePrefix.Length).Replace('\', '/')
+            [void][System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
+                $archive,
+                $file.FullName,
+                $entryName,
+                [System.IO.Compression.CompressionLevel]::Optimal
+            )
+        }
+    }
+    finally {
+        $archive.Dispose()
+    }
+}
+
 Write-Host "========================================"
 Write-Host "Thunderbird AI Assistant - Dynamic Build"
 Write-Host "========================================"
@@ -164,7 +201,7 @@ Get-ChildItem 'temp_addon' -Recurse -File | ForEach-Object {
 # Create ZIP package
 Write-Host
 Write-Host "Creating ZIP package..."
-Compress-Archive -Path (Join-Path 'temp_addon' '*') -DestinationPath $temporaryZipPath -Force
+New-XpiPackage -SourceDirectory 'temp_addon' -DestinationPath $temporaryZipPath
 Move-Item -LiteralPath $temporaryZipPath -Destination $resolvedOutputPath
 
 # Clean up
@@ -187,11 +224,30 @@ Write-Host
 Write-Host "Testing package contents..."
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $zip = [System.IO.Compression.ZipFile]::OpenRead($resolvedOutputPath)
-Write-Host "OK: Package contents:" -ForegroundColor Green
-$zip.Entries | ForEach-Object { 
-    Write-Host "  $($_.FullName) ($($_.Length) bytes)" 
+try {
+    $entryNames = @($zip.Entries | ForEach-Object { $_.FullName })
+    $invalidEntryNames = @($entryNames | Where-Object { $_.Contains('\') })
+    if ($invalidEntryNames.Count -gt 0) {
+        throw "XPI entry names contain Windows separators: $($invalidEntryNames -join ', ')"
+    }
+    foreach ($requiredEntry in @(
+            'manifest.json',
+            'install-defaults.json',
+            '_locales/de/messages.json',
+            '_locales/en/messages.json'
+        )) {
+        if ($entryNames -notcontains $requiredEntry) {
+            throw "XPI package omits required entry '$requiredEntry'."
+        }
+    }
+    Write-Host "OK: Package contents and locale paths are valid:" -ForegroundColor Green
+    $zip.Entries | ForEach-Object {
+        Write-Host "  $($_.FullName) ($($_.Length) bytes)"
+    }
 }
-$zip.Dispose()
+finally {
+    $zip.Dispose()
+}
 
 Write-Host
 Write-Host "========================================"
