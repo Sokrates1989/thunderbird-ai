@@ -15,6 +15,7 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 - nachrichtenbezogener AI Chat
 - lokale Ergebnisablage mit Verwaltung unter **Einstellungen** und Zwischenablage-Aktion
 - optionale automatische Zusammenfassung beim Öffnen einer Nachricht
+- eigenes globales Posteingangs-Dashboard mit bis zu zehn ungelesenen Nachrichten pro unterstütztem E-Mail-Konto, ohne AI-Aufruf
 - vollständig deutsch- oder englischsprachige Oberfläche mit expliziter Sprachauswahl
 - Windows-Ein-Klick-Installer mit kontrolliertem Thunderbird-Neustart
 
@@ -35,7 +36,7 @@ Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speic
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-1.4.0-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-1.5.0-win-x64.exe` herunterladen und starten.
 2. Im Setup **Deutsch** oder **English** wählen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung bestätigen.
@@ -63,32 +64,34 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-1.4.0-win-x64.exe`
+- `artifacts\Thunderbird-AI-Setup-1.5.0-win-x64.exe`
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
 ## Manueller Funktionstest
 
-1. Eine reine Text-E-Mail und eine HTML-E-Mail öffnen und jeweils **Zusammenfassen** ausführen.
-2. **Antwort vorschlagen** ausführen; ein eigener Thunderbird-Tab muss den ersten, direkt bearbeitbaren Entwurf anzeigen.
-3. Einen Änderungswunsch eingeben und **Entwurf verbessern** anklicken. Der bisherige Chat muss sichtbar bleiben und der aktuelle Entwurf aktualisiert werden.
-4. Die drei Antwortoptionen in ihren Standardwerten prüfen: Originalnachricht und **Allen antworten** aktiviert, ursprüngliche Anhänge deaktiviert.
-5. Den Entwurf zusätzlich von Hand ändern und **In Thunderbird vorbereiten** anklicken. Der neue Antwortentwurf muss an alle Teilnehmer adressiert sein, den AI-Text vor dem nativen Thunderbird-Zitat enthalten und keine ursprünglichen Anhänge besitzen.
-6. Den Antworteditor erneut öffnen, alle drei Optionen umschalten und wieder vorbereiten. Der Entwurf muss nur an den Absender gehen, kein Originalzitat enthalten und alle ursprünglichen Anhänge besitzen. Beim nächsten Öffnen müssen diese Werte vorausgewählt bleiben.
-7. Bei einem Compose-Fehler muss der aktuelle Text stattdessen in die Zwischenablage kopiert werden.
-8. Kategorie, Wichtigkeit, Übersetzung, Extraktion und Spam-Prüfung ausführen.
-9. **Ähnliche finden** prüfen; diese Aktion benötigt keinen OpenAI-Aufruf.
-10. Beide **AI Chat**-Schaltflächen testen.
-11. Das Ergebnis kopieren und lokal speichern.
-12. Unter **Einstellungen** jedes Modell testen; anschließend **Automatisch** speichern.
-13. Die Oberflächensprache auf **English** umstellen und Popup, Antworteditor, Einstellungen und Hilfe prüfen. Danach zurück auf **Deutsch** wechseln. Alle sichtbaren Texte und Meldungen müssen der Auswahl folgen.
-14. Optional die automatische Verarbeitung aktivieren, eine andere E-Mail öffnen und das Popup erneut öffnen. Die automatische Analyse muss angezeigt werden.
+1. In Thunderbirds Hauptsymbolleiste auf **Thunderbird AI Assistant** klicken. Das globale Dashboard muss die unterstützten Konten getrennt auflisten und je Konto höchstens zehn ungelesene Nachrichten anzeigen. Dafür ist weder ein API-Schlüssel noch ein AI-Aufruf erforderlich.
+2. Eine E-Mail öffnen und den nachrichtenbezogenen **AI Assistant**-Button anklicken. Statt des Dashboards muss die bisherige Einzelmail-Oberfläche erscheinen.
+3. Eine reine Text-E-Mail und eine HTML-E-Mail öffnen und jeweils **Zusammenfassen** ausführen.
+4. **Antwort vorschlagen** ausführen; ein eigener Thunderbird-Tab muss den ersten, direkt bearbeitbaren Entwurf anzeigen.
+5. Einen Änderungswunsch eingeben und **Entwurf verbessern** anklicken. Der bisherige Chat muss sichtbar bleiben und der aktuelle Entwurf aktualisiert werden.
+6. Die drei Antwortoptionen in ihren Standardwerten prüfen: Originalnachricht und **Allen antworten** aktiviert, ursprüngliche Anhänge deaktiviert.
+7. Den Entwurf zusätzlich von Hand ändern und **In Thunderbird vorbereiten** anklicken. Der neue Antwortentwurf muss an alle Teilnehmer adressiert sein, den AI-Text vor dem nativen Thunderbird-Zitat enthalten und keine ursprünglichen Anhänge besitzen.
+8. Den Antworteditor erneut öffnen, alle drei Optionen umschalten und wieder vorbereiten. Der Entwurf muss nur an den Absender gehen, kein Originalzitat enthalten und alle ursprünglichen Anhänge besitzen. Beim nächsten Öffnen müssen diese Werte vorausgewählt bleiben.
+9. Bei einem Compose-Fehler muss der aktuelle Text stattdessen in die Zwischenablage kopiert werden.
+10. Kategorie, Wichtigkeit, Übersetzung, Extraktion und Spam-Prüfung ausführen.
+11. **Ähnliche finden** prüfen; diese Aktion benötigt keinen OpenAI-Aufruf.
+12. Beide **AI Chat**-Schaltflächen testen.
+13. Das Ergebnis kopieren und lokal speichern.
+14. Unter **Einstellungen** jedes Modell testen; anschließend **Automatisch** speichern.
+15. Die Oberflächensprache auf **English** umstellen und globales Dashboard, Einzelmail-Popup, Antworteditor, Einstellungen und Hilfe prüfen. Danach zurück auf **Deutsch** wechseln. Alle sichtbaren Texte und Meldungen müssen der Auswahl folgen.
+16. Optional die automatische Verarbeitung aktivieren, eine andere E-Mail öffnen und das Popup erneut öffnen. Die automatische Analyse muss angezeigt werden.
 
-Im Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 1.4.0** stehen.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 1.5.0** stehen. Dieser erste Dashboard-Test verwendet den Ungelesen-Status als Kandidatenfilter. Eine separate, dauerhafte Markierung „bereits analysiert“ ist noch nicht Bestandteil dieser Version.
 
 ## Technische Struktur
 
-- `thunderbird-ai/`: Manifest, Seiten, Styles und UI-Komponenten
+- `thunderbird-ai/`: Manifest, getrennte globale und nachrichtenbezogene Seiten, Styles und UI-Komponenten
 - `common/`: Hintergrundskript sowie Storage-, Nachrichten- und OpenAI-Dienste
 - `tests/`: Node-basierte Unit- und Workflow-Tests ohne zusätzliche Laufzeitabhängigkeiten
 - `installer/windows/`: Inno-Setup-Build und Isolationstest

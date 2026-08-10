@@ -1,0 +1,161 @@
+:root {
+    color-scheme: light dark;
+    font-family: system-ui, sans-serif;
+}
+
+body {
+    min-width: 440px;
+    margin: 0;
+    background: #f4f6f8;
+    color: #202124;
+}
+
+.dashboard {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+}
+
+.dashboard-header {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.dashboard-header h1,
+.dashboard-header p {
+    margin: 0;
+}
+
+.dashboard-header h1 {
+    font-size: 21px;
+}
+
+.dashboard-header p {
+    margin-top: 4px;
+    color: #5f6368;
+    font-size: 13px;
+}
+
+.dashboard-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.dashboard-actions button {
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 5px;
+    background: #087cc1;
+    color: white;
+    cursor: pointer;
+}
+
+.dashboard-actions button:last-child {
+    background: #66717a;
+}
+
+.dashboard-actions button:disabled {
+    cursor: default;
+    opacity: 0.6;
+}
+
+.dashboard-status {
+    min-height: 18px;
+    margin: 0;
+    padding: 7px 9px;
+    background: #e7edf2;
+    border-radius: 5px;
+    font-size: 12px;
+}
+
+.dashboard-status[data-type="error"],
+.dashboard-account-error {
+    color: #b42318;
+}
+
+.dashboard-accounts {
+    display: grid;
+    gap: 12px;
+    max-height: 560px;
+    overflow-y: auto;
+}
+
+.dashboard-account {
+    padding: 11px;
+    background: white;
+    border: 1px solid #d9dde1;
+    border-radius: 7px;
+}
+
+.dashboard-account-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: baseline;
+}
+
+.dashboard-account-name {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-size: 15px;
+}
+
+.dashboard-account-count {
+    color: #66717a;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.dashboard-message-list {
+    display: grid;
+    gap: 7px;
+    margin: 9px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.dashboard-message {
+    padding: 8px;
+    background: #f5f7f9;
+    border-left: 3px solid #087cc1;
+    border-radius: 4px;
+}
+
+.dashboard-message-subject {
+    overflow-wrap: anywhere;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.dashboard-message-meta,
+.dashboard-empty,
+.dashboard-account-error {
+    margin: 4px 0 0;
+    color: #66717a;
+    font-size: 11px;
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background: #202124;
+        color: #f1f3f4;
+    }
+
+    .dashboard-header p,
+    .dashboard-account-count,
+    .dashboard-message-meta,
+    .dashboard-empty {
+        color: #bdc1c6;
+    }
+
+    .dashboard-status,
+    .dashboard-message {
+        background: #303134;
+    }
+
+    .dashboard-account {
+        background: #292a2d;
+        border-color: #4a4d51;
+    }
+}

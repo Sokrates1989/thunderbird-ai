@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="dashboardPageTitle"></title>
+    <link rel="stylesheet" href="global-dashboard.css">
+</head>
+<body>
+    <main class="dashboard">
+        <header class="dashboard-header">
+            <img src="icon.svg" alt="" width="44" height="44">
+            <div>
+                <h1 data-i18n="dashboardTitle"></h1>
+                <p data-i18n="dashboardIntroduction"></p>
+            </div>
+        </header>
+        <div class="dashboard-actions">
+            <button type="button" id="dashboardRefresh" data-i18n="dashboardRefresh"></button>
+            <button type="button" id="dashboardSettings" data-i18n="dashboardSettings"></button>
+        </div>
+        <p id="dashboardStatus" class="dashboard-status" role="status" aria-live="polite"></p>
+        <div id="dashboardAccounts" class="dashboard-accounts"></div>
+    </main>
+    <script src="locale-de.js"></script>
+    <script src="locale-en.js"></script>
+    <script src="constants.js"></script>
+    <script src="GlobalMailService.js"></script>
+    <script src="GlobalDashboardManager.js"></script>
+    <script src="global-dashboard.js"></script>
+</body>
+</html>

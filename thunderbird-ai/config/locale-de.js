@@ -227,5 +227,21 @@ globalThis.LOCALE_MESSAGES.de = Object.freeze({
     helpPrivacyHeading: 'Datenschutz',
     helpPrivacy: 'Bei AI-Aktionen werden Betreff, Absender, Nachrichtentext und Anhangnamen direkt an die OpenAI API gesendet. „Ähnliche finden“ arbeitet ausschließlich lokal. Automatische Analyse ist standardmäßig deaktiviert.',
     helpTroubleshootingHeading: 'Fehlersuche',
-    helpTroubleshooting: 'Wenn eine Aktion fehlschlägt, prüfen Sie zuerst den API-Test. Bei nicht lesbarem Inhalt öffnen Sie die Nachricht vollständig und versuchen Sie es erneut.'
+    helpTroubleshooting: 'Wenn eine Aktion fehlschlägt, prüfen Sie zuerst den API-Test. Bei nicht lesbarem Inhalt öffnen Sie die Nachricht vollständig und versuchen Sie es erneut.',
+    dashboardPageTitle: 'Thunderbird AI Assistant – Posteingangsübersicht',
+    dashboardTitle: 'Posteingangsübersicht',
+    dashboardIntroduction: 'Bis zu 10 ungelesene E-Mails pro Konto – ohne AI-Verarbeitung.',
+    dashboardRefresh: 'Aktualisieren',
+    dashboardSettings: 'Einstellungen',
+    dashboardLoading: 'Ungelesene E-Mails werden geladen…',
+    dashboardLoaded: 'Angezeigte ungelesene E-Mails: {messages} · Konten: {accounts}',
+    dashboardLoadFailed: 'Die ungelesenen E-Mails konnten nicht geladen werden.',
+    dashboardNoAccounts: 'Es wurde kein unterstütztes E-Mail-Konto mit Posteingang gefunden.',
+    dashboardShownCount: 'Angezeigt: {count}',
+    dashboardAccountFailed: 'Dieses Konto konnte nicht gelesen werden.',
+    dashboardNoUnread: 'Keine ungelesenen E-Mails gefunden.',
+    dashboardNoSubject: '(Kein Betreff)',
+    dashboardUnknownSender: 'Unbekannter Absender',
+    dashboardUnknownDate: 'Unbekanntes Datum',
+    dashboardMessageMeta: '{author} · {date}'
 });

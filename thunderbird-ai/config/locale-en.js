@@ -227,5 +227,21 @@ globalThis.LOCALE_MESSAGES.en = Object.freeze({
     helpPrivacyHeading: 'Privacy',
     helpPrivacy: 'AI actions send the subject, sender, message text, and attachment names directly to the OpenAI API. “Find similar” runs locally. Automatic analysis is disabled by default.',
     helpTroubleshootingHeading: 'Troubleshooting',
-    helpTroubleshooting: 'If an action fails, run the API test first. If no readable content is found, fully open the message and try again.'
+    helpTroubleshooting: 'If an action fails, run the API test first. If no readable content is found, fully open the message and try again.',
+    dashboardPageTitle: 'Thunderbird AI Assistant – Inbox overview',
+    dashboardTitle: 'Inbox overview',
+    dashboardIntroduction: 'Up to 10 unread emails per account – without AI processing.',
+    dashboardRefresh: 'Refresh',
+    dashboardSettings: 'Settings',
+    dashboardLoading: 'Loading unread emails…',
+    dashboardLoaded: 'Unread emails shown: {messages} · Accounts: {accounts}',
+    dashboardLoadFailed: 'The unread emails could not be loaded.',
+    dashboardNoAccounts: 'No supported email account with an Inbox was found.',
+    dashboardShownCount: 'Shown: {count}',
+    dashboardAccountFailed: 'This account could not be read.',
+    dashboardNoUnread: 'No unread emails found.',
+    dashboardNoSubject: '(No subject)',
+    dashboardUnknownSender: 'Unknown sender',
+    dashboardUnknownDate: 'Unknown date',
+    dashboardMessageMeta: '{author} · {date}'
 });

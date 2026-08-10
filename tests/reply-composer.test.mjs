@@ -127,7 +127,7 @@ test('explicit language selection changes text and every static page key resolve
     context.I18n.language = 'en';
     assert.equal(context.I18n.t('close'), 'Close');
 
-    const pages = ['settings.html', 'single-mail-ui.html', 'help.html']
+    const pages = ['settings.html', 'single-mail-ui.html', 'help.html', 'global-dashboard.html']
         .map(file => fs.readFileSync(path.join(repositoryRoot, 'thunderbird-ai/pages', file), 'utf8'))
         .join('\n');
     const keys = [...pages.matchAll(/data-i18n(?:-placeholder|-title|-aria-label)?="([A-Za-z0-9_]+)"/gu)]
@@ -141,7 +141,7 @@ test('explicit language selection changes text and every static page key resolve
         path.join(repositoryRoot, 'thunderbird-ai/install-defaults.json'),
         'utf8'
     ));
-    assert.deepEqual(defaults, { language: 'auto', version: '1.4.0' });
+    assert.deepEqual(defaults, { language: 'auto', version: '1.5.0' });
 });
 
 test('Thunderbird manifest localization has German and English key parity', () => {

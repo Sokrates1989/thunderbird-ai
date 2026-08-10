@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extensionName__",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
   "author": "Sokrates1989",
@@ -35,7 +35,7 @@
   "action": {
     "default_title": "__MSG_extensionName__",
     "default_icon": "icon.svg",
-    "default_popup": "single-mail-ui.html"
+    "default_popup": "global-dashboard.html"
   },
 
   "options_ui": {
