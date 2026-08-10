@@ -27,22 +27,24 @@ const ReplyComposerComponent = class {
                     <h2 id="replyComposerTitle">${I18n.t('replyComposerTitle')}</h2>
                     <button type="button" class="reply-composer-close" aria-label="${I18n.t('replyComposerClose')}">×</button>
                 </div>
-                <div class="reply-composer-messages" aria-live="polite"></div>
-                <label class="reply-composer-label" for="replyComposerDraft">${I18n.t('replyDraftLabel')}</label>
-                <textarea id="replyComposerDraft" class="reply-composer-draft" rows="9" maxlength="${CONFIG.OPENAI.MAX_REPLY_DRAFT_CHARACTERS}" placeholder="${I18n.t('replyDraftPlaceholder')}"></textarea>
-                <label class="reply-composer-label" for="replyComposerInstruction">${I18n.t('replyRefinementLabel')}</label>
-                <textarea id="replyComposerInstruction" class="reply-composer-instruction" rows="3" maxlength="${CONFIG.OPENAI.MAX_REPLY_INSTRUCTION_CHARACTERS}" placeholder="${I18n.t('replyRefinementPlaceholder')}"></textarea>
-                <div class="reply-composer-refine-row">
-                    <small>${I18n.t('replyRefineShortcut')}</small>
-                    <button type="button" class="reply-composer-refine">${I18n.t('replyRefine')}</button>
+                <div class="reply-composer-scroll">
+                    <div class="reply-composer-messages" aria-live="polite"></div>
+                    <label class="reply-composer-label" for="replyComposerDraft">${I18n.t('replyDraftLabel')}</label>
+                    <textarea id="replyComposerDraft" class="reply-composer-draft" rows="9" maxlength="${CONFIG.OPENAI.MAX_REPLY_DRAFT_CHARACTERS}" placeholder="${I18n.t('replyDraftPlaceholder')}"></textarea>
+                    <label class="reply-composer-label" for="replyComposerInstruction">${I18n.t('replyRefinementLabel')}</label>
+                    <textarea id="replyComposerInstruction" class="reply-composer-instruction" rows="3" maxlength="${CONFIG.OPENAI.MAX_REPLY_INSTRUCTION_CHARACTERS}" placeholder="${I18n.t('replyRefinementPlaceholder')}"></textarea>
+                    <div class="reply-composer-refine-row">
+                        <small>${I18n.t('replyRefineShortcut')}</small>
+                        <button type="button" class="reply-composer-refine">${I18n.t('replyRefine')}</button>
+                    </div>
+                    <p class="reply-composer-status" role="status" aria-live="polite"></p>
+                    <fieldset class="reply-composer-options">
+                        <legend>${I18n.t('replyOptionsHeading')}</legend>
+                        <label><input type="checkbox" class="reply-include-original" checked> ${I18n.t('replyIncludeOriginal')}</label>
+                        <label><input type="checkbox" class="reply-to-all" checked> ${I18n.t('replyToAll')}</label>
+                        <label><input type="checkbox" class="reply-include-attachments"> ${I18n.t('replyIncludeAttachments')}</label>
+                    </fieldset>
                 </div>
-                <p class="reply-composer-status" role="status" aria-live="polite"></p>
-                <fieldset class="reply-composer-options">
-                    <legend>${I18n.t('replyOptionsHeading')}</legend>
-                    <label><input type="checkbox" class="reply-include-original" checked> ${I18n.t('replyIncludeOriginal')}</label>
-                    <label><input type="checkbox" class="reply-to-all" checked> ${I18n.t('replyToAll')}</label>
-                    <label><input type="checkbox" class="reply-include-attachments"> ${I18n.t('replyIncludeAttachments')}</label>
-                </fieldset>
                 <div class="reply-composer-actions">
                     <button type="button" class="reply-composer-copy">${I18n.t('replyCopy')}</button>
                     <button type="button" class="reply-composer-prepare">${I18n.t('replyPrepare')}</button>

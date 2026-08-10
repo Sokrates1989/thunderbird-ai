@@ -141,7 +141,30 @@ test('explicit language selection changes text and every static page key resolve
         path.join(repositoryRoot, 'thunderbird-ai/install-defaults.json'),
         'utf8'
     ));
-    assert.deepEqual(defaults, { language: 'auto', version: '1.5.1' });
+    assert.deepEqual(defaults, { language: 'auto', version: '1.5.2' });
+});
+
+test('reply composer keeps final actions outside its scrolling content', () => {
+    const componentSource = fs.readFileSync(
+        path.join(
+            repositoryRoot,
+            'thunderbird-ai/components/single-mail/ReplyComposerComponent.js'
+        ),
+        'utf8'
+    );
+    const styles = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/styles/reply-composer.css'),
+        'utf8'
+    );
+
+    assert.match(
+        componentSource,
+        /class="reply-composer-scroll">[\s\S]*<\/div>\s*<div class="reply-composer-actions">/u
+    );
+    assert.match(styles, /\.reply-composer-scroll\s*\{[\s\S]*?flex:\s*1 1 auto;/u);
+    assert.match(styles, /\.reply-composer-scroll\s*\{[\s\S]*?overflow-y:\s*auto;/u);
+    assert.match(styles, /\.reply-composer-actions\s*\{[\s\S]*?flex:\s*0 0 auto;/u);
+    assert.match(styles, /\.reply-composer-dialog\s*\{[\s\S]*?overflow:\s*hidden;/u);
 });
 
 test('Thunderbird manifest localization has German and English key parity', () => {
