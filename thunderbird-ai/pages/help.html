@@ -1,43 +1,32 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thunderbird AI Assistant – Hilfe / Help</title>
+    <title data-i18n="helpPageTitle"></title>
     <link rel="stylesheet" href="help.css">
 </head>
 <body>
     <main>
-        <section lang="de">
-            <h1>Thunderbird AI Assistant – Hilfe</h1>
-            <p>Öffnen Sie eine E-Mail und klicken Sie auf das Add-on-Symbol. Die Schnellaktionen analysieren ausschließlich die aktuell geöffnete Nachricht.</p>
-            <h2>Einrichtung</h2>
+        <section>
+            <h1 data-i18n="helpPageTitle"></h1>
+            <p data-i18n="helpIntroduction"></p>
+            <h2 data-i18n="helpSetupHeading"></h2>
             <ol>
-                <li>Öffnen Sie <strong>Einstellungen</strong>.</li>
-                <li>Tragen Sie Ihren OpenAI API-Schlüssel ein.</li>
-                <li>Wählen Sie <strong>Automatisch (empfohlen)</strong> und testen Sie die Verbindung.</li>
-                <li>Speichern Sie die Einstellungen.</li>
+                <li data-i18n="helpSetupStep1"></li>
+                <li data-i18n="helpSetupStep2"></li>
+                <li data-i18n="helpSetupStep3"></li>
+                <li data-i18n="helpSetupStep4"></li>
             </ol>
-            <h2>Datenschutz</h2>
-            <p>Bei AI-Aktionen werden Betreff, Absender, Nachrichtentext und Anhangnamen direkt an die OpenAI API gesendet. „Ähnliche finden“ arbeitet ausschließlich lokal. Automatische Analyse ist standardmäßig deaktiviert.</p>
-            <h2>Fehlersuche</h2>
-            <p>Wenn eine Aktion fehlschlägt, prüfen Sie zuerst den API-Test. Bei nicht lesbarem Inhalt öffnen Sie die Nachricht vollständig und versuchen Sie es erneut.</p>
-        </section>
-        <section lang="en">
-            <h1>Thunderbird AI Assistant – Help</h1>
-            <p>Open an email and click the add-on icon. Quick actions analyze only the currently displayed message.</p>
-            <h2>Setup</h2>
-            <ol>
-                <li>Open <strong>Settings</strong>.</li>
-                <li>Enter your OpenAI API key.</li>
-                <li>Select <strong>Automatic (recommended)</strong> and test the connection.</li>
-                <li>Save the settings.</li>
-            </ol>
-            <h2>Privacy</h2>
-            <p>AI actions send the subject, sender, message text, and attachment names directly to the OpenAI API. “Find similar” runs locally. Automatic analysis is disabled by default.</p>
-            <h2>Troubleshooting</h2>
-            <p>If an action fails, run the API test first. If no readable content is found, fully open the message and try again.</p>
+            <h2 data-i18n="helpPrivacyHeading"></h2>
+            <p data-i18n="helpPrivacy"></p>
+            <h2 data-i18n="helpTroubleshootingHeading"></h2>
+            <p data-i18n="helpTroubleshooting"></p>
         </section>
     </main>
+    <script src="locale-de.js"></script>
+    <script src="locale-en.js"></script>
+    <script src="constants.js"></script>
+    <script src="helpEntry.js"></script>
 </body>
 </html>

@@ -15,8 +15,8 @@ const ResultsComponent = class {
 
     showResults(result) {
         this.currentResult = result;
-        this.elements.title.textContent = result?.title || 'Ergebnis';
-        this.elements.content.textContent = result?.content || 'Keine Ergebnisse verfügbar.';
+        this.elements.title.textContent = result?.title || I18n.t('resultsDefault');
+        this.elements.content.textContent = result?.content || I18n.t('noResults');
         this.createActionButtons(result?.actions || []);
         this.container.style.display = 'block';
     }
@@ -56,7 +56,7 @@ const ResultsComponent = class {
                     model: this.currentResult.model
                 });
                 if (!saved) {
-                    throw new Error('Ergebnis konnte nicht gespeichert werden.');
+                    throw new Error(I18n.t('resultSaveFailed'));
                 }
                 this.manager.updateStatus(I18n.t('saved'), 'success');
             } else if (type === 'reply') {
@@ -72,7 +72,7 @@ const ResultsComponent = class {
                 });
             }
         } catch (error) {
-            this.manager.showError(error.message);
+            this.manager.showError(I18n.t('unknownError'));
         }
     }
 

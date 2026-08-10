@@ -63,13 +63,15 @@ const ChatComponent = class {
                 history: this.history
             });
             if (!response?.success) {
-                throw new Error(response?.error || 'Unbekannter Fehler');
+                this.appendMessage('error', response?.error || I18n.t('unknownError'));
+                return;
             }
             this.history.push({ role: 'user', content: query });
             this.history.push({ role: 'assistant', content: response.data.content });
             this.appendMessage('assistant', response.data.content);
         } catch (error) {
-            this.appendMessage('error', error.message);
+            console.error('Email chat failed:', error);
+            this.appendMessage('error', I18n.t('unknownError'));
         } finally {
             this.elements.send.disabled = false;
             this.elements.input.focus();

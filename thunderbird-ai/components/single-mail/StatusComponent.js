@@ -51,7 +51,7 @@ const StatusComponent = class {
         this.currentType = type;
         
         if (this.element) {
-            this.element.textContent = `Status: ${message}`;
+            this.element.textContent = I18n.t('statusWithMessage', { message });
             this.element.className = `status ${type}`;
         }
     }
@@ -69,7 +69,7 @@ const StatusComponent = class {
         this.currentType = 'info';
         
         if (this.element) {
-            this.element.textContent = 'Status: Bereit';
+            this.element.textContent = I18n.t('statusWithMessage', { message: I18n.t('statusReady') });
             this.element.className = 'status';
         }
     }
@@ -83,7 +83,7 @@ const StatusComponent = class {
      * @example
      * this.showLoading('Processing email...');
      */
-    showLoading(message = 'Verarbeite...') {
+    showLoading(message = I18n.t('processing')) {
         this.updateStatus(message, 'info');
     }
 
@@ -145,4 +145,4 @@ const StatusComponent = class {
  */
 if (typeof window !== 'undefined') {
     window.StatusComponent = StatusComponent;
-} 
+}

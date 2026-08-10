@@ -1,14 +1,35 @@
 #!/usr/bin/env pwsh
 
+[CmdletBinding()]
+param(
+    [ValidateSet('auto', 'de', 'en')]
+    [string]$InstallerLanguage = 'auto',
+
+    [string]$OutputPath = 'thunderbird-ai.xpi'
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+$resolvedOutputPath = if ([System.IO.Path]::IsPathRooted($OutputPath)) {
+    [System.IO.Path]::GetFullPath($OutputPath)
+} else {
+    [System.IO.Path]::GetFullPath((Join-Path (Get-Location) $OutputPath))
+}
+$temporaryZipPath = [System.IO.Path]::ChangeExtension($resolvedOutputPath, '.zip')
+
 Write-Host "========================================"
 Write-Host "Thunderbird AI Assistant - Dynamic Build"
 Write-Host "========================================"
 Write-Host
 
 # Clean up previous builds
-if (Test-Path "thunderbird-ai.xpi") {
+if (Test-Path -LiteralPath $resolvedOutputPath) {
     Write-Host "Removing old add-on package..."
-    Remove-Item "thunderbird-ai.xpi"
+    Remove-Item -LiteralPath $resolvedOutputPath
+}
+if (Test-Path -LiteralPath $temporaryZipPath) {
+    Remove-Item -LiteralPath $temporaryZipPath
 }
 
 # Check required directories
@@ -57,11 +78,16 @@ function Copy-FilesRecursively {
         [hashtable]$FileMap
     )
     
-    $files = Get-ChildItem -Path $SourceDir -Recurse -File
+    $resolvedSourceDir = [System.IO.Path]::GetFullPath((Resolve-Path $SourceDir))
+    $sourcePrefix = $resolvedSourceDir.TrimEnd([System.IO.Path]::DirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
+    $files = Get-ChildItem -Path $resolvedSourceDir -Recurse -File
     $conflicts = @()
     
     foreach ($file in $files) {
-        $relativePath = $file.FullName.Replace($SourceDir, '').TrimStart('\')
+        $relativePath = $file.FullName.Substring($sourcePrefix.Length)
+        if ($relativePath.StartsWith('_locales\', [System.StringComparison]::OrdinalIgnoreCase)) {
+            continue
+        }
         $destPath = Join-Path $DestDir $file.Name
         
         if (Test-Path $destPath) {
@@ -90,6 +116,11 @@ Write-Host "Processing thunderbird-ai directory..."
 $addonConflicts = Copy-FilesRecursively -SourceDir "thunderbird-ai" -DestDir "temp_addon" -FileMap $fileMap
 $allConflicts += $addonConflicts
 
+$localeSource = Join-Path 'thunderbird-ai' '_locales'
+if (Test-Path -LiteralPath $localeSource -PathType Container) {
+    Copy-Item -LiteralPath $localeSource -Destination (Join-Path 'temp_addon' '_locales') -Recurse
+}
+
 # Copy from common directory
 Write-Host "Processing common directory..."
 $commonConflicts = Copy-FilesRecursively -SourceDir "common" -DestDir "temp_addon" -FileMap $fileMap
@@ -112,6 +143,16 @@ if ($allConflicts.Count -gt 0) {
     exit 1
 }
 
+$installDefaults = [ordered]@{
+    language = $InstallerLanguage
+    version = [string]$json.version
+} | ConvertTo-Json
+[System.IO.File]::WriteAllText(
+    (Join-Path (Resolve-Path 'temp_addon') 'install-defaults.json'),
+    $installDefaults + [Environment]::NewLine,
+    [System.Text.UTF8Encoding]::new($false)
+)
+
 # List all files in temp directory
 Write-Host
 Write-Host "Files in temp_addon:"
@@ -123,10 +164,8 @@ Get-ChildItem 'temp_addon' -Recurse -File | ForEach-Object {
 # Create ZIP package
 Write-Host
 Write-Host "Creating ZIP package..."
-cd temp_addon
-Compress-Archive -Path * -DestinationPath '../thunderbird-ai.zip' -Force
-cd ..
-Rename-Item 'thunderbird-ai.zip' 'thunderbird-ai.xpi'
+Compress-Archive -Path (Join-Path 'temp_addon' '*') -DestinationPath $temporaryZipPath -Force
+Move-Item -LiteralPath $temporaryZipPath -Destination $resolvedOutputPath
 
 # Clean up
 Remove-Item 'temp_addon' -Recurse -Force
@@ -134,8 +173,8 @@ Remove-Item 'temp_addon' -Recurse -Force
 # Validate the created package
 Write-Host
 Write-Host "Validating package..."
-if (Test-Path 'thunderbird-ai.xpi') {
-    $size = (Get-Item 'thunderbird-ai.xpi').Length
+if (Test-Path -LiteralPath $resolvedOutputPath) {
+    $size = (Get-Item -LiteralPath $resolvedOutputPath).Length
     Write-Host "OK: Add-on package created successfully" -ForegroundColor Green
     Write-Host "  Size: $([math]::Round($size/1024, 2)) KB"
 } else {
@@ -147,7 +186,7 @@ if (Test-Path 'thunderbird-ai.xpi') {
 Write-Host
 Write-Host "Testing package contents..."
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-$zip = [System.IO.Compression.ZipFile]::OpenRead('thunderbird-ai.xpi')
+$zip = [System.IO.Compression.ZipFile]::OpenRead($resolvedOutputPath)
 Write-Host "OK: Package contents:" -ForegroundColor Green
 $zip.Entries | ForEach-Object { 
     Write-Host "  $($_.FullName) ($($_.Length) bytes)" 
@@ -175,10 +214,10 @@ Write-Host "  2. Naming conflicts are detected and reported"
 Write-Host "  3. Files are copied maintaining unique names"
 Write-Host "  4. Package is created with flattened structure"
 Write-Host
-Write-Host "You can now install thunderbird-ai.xpi in Thunderbird:"
+Write-Host "You can now install $resolvedOutputPath in Thunderbird:"
 Write-Host "1. Open Thunderbird"
 Write-Host "2. Tools > Add-ons and Themes"
 Write-Host "3. Gear icon > Install Add-on From File..."
-Write-Host "4. Select thunderbird-ai.xpi"
+Write-Host "4. Select $resolvedOutputPath"
 Write-Host
-Write-Host "This dynamic add-on should work immediately!" 
+Write-Host "This dynamic add-on should work immediately!"

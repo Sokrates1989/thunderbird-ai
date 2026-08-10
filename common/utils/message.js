@@ -32,15 +32,15 @@ const MessageService = {
 
             return {
                 id: header.id,
-                subject: header.subject || '(Kein Betreff)',
-                author: header.author || 'Unbekannt',
-                from: header.author || 'Unbekannt',
+                subject: header.subject || I18n.t('noSubject'),
+                author: header.author || I18n.t('unknownSender'),
+                from: header.author || I18n.t('unknownSender'),
                 recipients: header.recipients || [],
                 ccList: header.ccList || [],
                 date,
                 formattedDate: date && !Number.isNaN(date.getTime())
                     ? date.toLocaleString(I18n.getLanguage())
-                    : 'Unbekannt',
+                    : I18n.t('unknownValue'),
                 content,
                 wordCount: content ? content.split(/\s+/u).filter(Boolean).length : 0,
                 attachments,
@@ -54,7 +54,7 @@ const MessageService = {
             };
         } catch (error) {
             console.error('Could not retrieve the full email:', error);
-            throw new Error(`Fehler beim Abrufen der E-Mail: ${error.message}`);
+            throw new Error(I18n.t('messageLoadFailed'));
         }
     },
 
@@ -93,7 +93,7 @@ const MessageService = {
                 return;
             }
             attachments.push({
-                name: part.name || 'Anhang',
+                name: part.name || I18n.t('attachmentDefaultName'),
                 contentType: part.contentType || 'application/octet-stream',
                 partName: part.partName || null,
                 size: part.size || 0
@@ -190,8 +190,8 @@ const MessageService = {
                 const sameAuthor = String(candidate.author || '').toLowerCase() === sourceAuthor;
                 return {
                     id: candidate.id,
-                    subject: candidate.subject || '(Kein Betreff)',
-                    author: candidate.author || 'Unbekannt',
+                    subject: candidate.subject || I18n.t('noSubject'),
+                    author: candidate.author || I18n.t('unknownSender'),
                     date: candidate.date,
                     score: overlap + (sameAuthor ? 2 : 0)
                 };

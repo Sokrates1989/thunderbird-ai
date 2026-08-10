@@ -14,6 +14,7 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 - nachrichtenbezogener AI Chat
 - lokale Ergebnisablage mit Verwaltung unter **Einstellungen** und Zwischenablage-Aktion
 - optionale automatische Zusammenfassung beim Öffnen einer Nachricht
+- vollständig deutsch- oder englischsprachige Oberfläche mit expliziter Sprachauswahl
 - Windows-Ein-Klick-Installer mit kontrolliertem Thunderbird-Neustart
 
 ## OpenAI-Modelle
@@ -33,10 +34,11 @@ Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speic
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-1.2.0-win-x64.exe` herunterladen und starten.
-2. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
-3. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung bestätigen.
-4. Unter **Einstellungen** den OpenAI API-Schlüssel eintragen, **Automatisch (empfohlen)** wählen, die Verbindung testen und speichern.
+1. `Thunderbird-AI-Setup-1.3.0-win-x64.exe` herunterladen und starten.
+2. Im Setup **Deutsch** oder **English** wählen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
+3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
+4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung bestätigen.
+5. Unter **Einstellungen** den OpenAI API-Schlüssel eintragen, **Automatisch (empfohlen)** wählen, die Verbindung testen und speichern. Die Oberflächensprache kann dort jederzeit unabhängig von der Thunderbird-Sprache geändert werden.
 
 Der benutzerbezogene Installer benötigt keine Administratorrechte. Eine neue Setup-Datei aktualisiert die vorhandene Version; eine Deinstallation ist nicht nötig. Die feste Add-on-ID erhält die Einstellungen. Der aktuelle Test-Installer ist nicht Authenticode-signiert und kann deshalb eine SmartScreen-Warnung auslösen.
 
@@ -60,7 +62,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-1.2.0-win-x64.exe`
+- `artifacts\Thunderbird-AI-Setup-1.3.0-win-x64.exe`
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
@@ -75,9 +77,10 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 7. Beide **AI Chat**-Schaltflächen testen.
 8. Das Ergebnis kopieren und lokal speichern.
 9. Unter **Einstellungen** jedes Modell testen; anschließend **Automatisch** speichern.
-10. Optional die automatische Verarbeitung aktivieren, eine andere E-Mail öffnen und das Popup erneut öffnen. Die automatische Analyse muss angezeigt werden.
+10. Die Oberflächensprache auf **English** umstellen und Popup, Antworteditor, Einstellungen und Hilfe prüfen. Danach zurück auf **Deutsch** wechseln. Alle sichtbaren Texte und Meldungen müssen der Auswahl folgen.
+11. Optional die automatische Verarbeitung aktivieren, eine andere E-Mail öffnen und das Popup erneut öffnen. Die automatische Analyse muss angezeigt werden.
 
-Im Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 1.2.0** stehen.
+Im Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 1.3.0** stehen.
 
 ## Technische Struktur
 

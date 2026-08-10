@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Assistant</title>
+    <title data-i18n="appTitle"></title>
     <link rel="stylesheet" href="single-mail-ui.css">
     <link rel="stylesheet" href="reply-composer.css">
 </head>
@@ -11,14 +11,14 @@
     <div class="container">
         <!-- Header Section -->
         <div class="header">
-            <h1>🤖 AI Assistant</h1>
+            <h1 data-i18n="appTitle"></h1>
             <div class="subtitle" id="emailSubject"></div>
             <div class="addon-version" id="addonVersion"></div>
         </div>
 
         <!-- Quick Actions Section -->
         <div class="section" id="quickActionsSection">
-            <h2>🚀 Schnellaktionen</h2>
+            <h2 data-i18n="quickActionsHeading"></h2>
             <div class="button-grid" id="quickActionsGrid">
                 <!-- Quick action buttons will be dynamically loaded -->
             </div>
@@ -26,7 +26,7 @@
 
         <!-- Email Details Section -->
         <div class="section" id="emailDetailsSection">
-            <h2>📧 E-Mail Details</h2>
+            <h2 data-i18n="emailDetailsHeading"></h2>
             <div class="email-info" id="emailInfo">
                 <!-- Email details will be dynamically loaded -->
             </div>
@@ -35,7 +35,7 @@
         <!-- Advanced Options Section -->
         <div class="advanced-section" id="advancedSection">
             <button class="advanced-toggle" id="advancedToggle">
-                <span>Erweiterte Optionen</span>
+                <span data-i18n="advancedOptions"></span>
                 <span>▼</span>
             </button>
             <div class="advanced-content" id="advancedContent">
@@ -47,7 +47,7 @@
 
         <!-- Results Area -->
         <div class="results-area" id="resultsArea">
-            <div class="results-title" id="resultsTitle">Ergebnis</div>
+            <div class="results-title" id="resultsTitle" data-i18n="resultsDefault"></div>
             <div class="results-content" id="resultsContent"></div>
             <div class="results-actions" id="resultsActions"></div>
         </div>
@@ -58,34 +58,30 @@
         </div>
 
         <!-- Status Display -->
-        <div class="status" id="status">
-            Status: Bereit zum Testen
-        </div>
+        <div class="status" id="status"></div>
         
-        <!-- Console Output -->
-        <div class="console-output" id="consoleOutput">
-            Console-Ausgabe wird hier angezeigt...
-        </div>
     </div>
 
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner">
             <div class="spinner"></div>
-            <div>Verarbeite E-Mail...</div>
+            <div data-i18n="loadingEmail"></div>
         </div>
     </div>
 
     <!-- Error Dialog -->
     <div class="error-dialog" id="errorDialog" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
         <div style="background: white; padding: 20px; border-radius: 8px; max-width: 400px; text-align: center;">
-            <h3 style="color: #dc3545; margin-top: 0;">Fehler</h3>
+            <h3 style="color: #dc3545; margin-top: 0;" data-i18n="errorTitle"></h3>
             <p id="errorMessage"></p>
-            <button id="errorCloseBtn" style="background: #007acc; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 10px;">Schließen</button>
+            <button id="errorCloseBtn" style="background: #007acc; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-top: 10px;" data-i18n="close" data-i18n-aria-label="errorClose"></button>
         </div>
     </div>
 
     <!-- Load utility modules first -->
+    <script src="locale-de.js"></script>
+    <script src="locale-en.js"></script>
     <script src="constants.js"></script>
     <script src="storage.js"></script>
     <script src="openai.js"></script>

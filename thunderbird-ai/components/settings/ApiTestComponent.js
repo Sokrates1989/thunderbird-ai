@@ -61,11 +61,11 @@ const ApiTestComponent = class {
      */
     createUI() {
         this.container.innerHTML = `
-            <h2>🧪 API Test</h2>
+            <h2>${I18n.t('apiTestTitle')}</h2>
             <div class="test-section">
                 <button id="testApiBtn" class="test-btn">
                     <span class="icon">🔍</span>
-                    API-Verbindung testen
+                    ${I18n.t('apiTestButton')}
                 </button>
                 <div id="testResult" class="test-result"></div>
             </div>
@@ -110,13 +110,13 @@ const ApiTestComponent = class {
             const model = modelSelect ? modelSelect.value : CONFIG.OPENAI.DEFAULT_MODEL;
 
             if (!apiKey) {
-                this.showTestResult('❌ Kein API-Schlüssel eingegeben. Bitte geben Sie einen Schlüssel ein.', 'error');
+                this.showTestResult(`❌ ${I18n.t('apiKeyRequiredForTest')}`, 'error');
                 return;
             }
 
             // Show loading state
             this.elements.testApiBtn.disabled = true;
-            this.elements.testApiBtn.innerHTML = '<span class="icon">⏳</span> Teste...';
+            this.elements.testApiBtn.innerHTML = `<span class="icon">⏳</span> ${I18n.t('apiTesting')}`;
 
             // Test the connection
             const result = await this.settingsManager.sendToBackground(CONFIG.ACTIONS.TEST_API, {
@@ -132,11 +132,11 @@ const ApiTestComponent = class {
 
         } catch (error) {
             console.error('API test error:', error);
-            this.showTestResult('❌ Fehler beim Testen der API-Verbindung: ' + error.message, 'error');
+            this.showTestResult(`❌ ${I18n.t('apiTestFailed')}`, 'error');
         } finally {
             // Reset button state
             this.elements.testApiBtn.disabled = false;
-            this.elements.testApiBtn.innerHTML = '<span class="icon">🔍</span> API-Verbindung testen';
+            this.elements.testApiBtn.innerHTML = `<span class="icon">🔍</span> ${I18n.t('apiTestButton')}`;
         }
     }
 

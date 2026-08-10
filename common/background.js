@@ -80,19 +80,28 @@ class ThunderbirdAI {
                 case CONFIG.ACTIONS.GET_STATISTICS:
                     return StorageManager.getSettings();
                 case CONFIG.ACTIONS.SAVE_SETTINGS:
-                    return { success: await StorageManager.saveSettings(request) };
+                    return this.saveSettings(request);
                 case CONFIG.ACTIONS.GET_AUTOMATIC_RESULT:
                     return {
                         success: true,
                         data: await StorageManager.getAutomaticResult(request.messageId)
                     };
                 default:
-                    return { success: false, error: `Unknown action: ${request.action}` };
+                    return { success: false, error: I18n.t('unknownError') };
             }
         } catch (error) {
             console.error('Background action failed:', error);
-            return { success: false, error: error.message };
+            return { success: false, error: I18n.t('unknownError') };
         }
+    }
+
+    async saveSettings(settings) {
+        const success = await StorageManager.saveSettings(settings);
+        if (success && I18n.isSupportedLanguage(settings.uiLanguage)) {
+            await I18n.setLanguage(settings.uiLanguage);
+            await this.initializeMenus();
+        }
+        return { success };
     }
 
     async runEmailAction(task, messageId, options = {}) {
@@ -263,7 +272,8 @@ class ThunderbirdAI {
             const preview = response.data.content.replace(/\s+/gu, ' ').slice(0, 220);
             await this.showNotification(response.data.title, preview);
         } catch (error) {
-            await this.showNotification(I18n.t('errorTitle'), error.message);
+            console.error('Context-menu action failed:', error);
+            await this.showNotification(I18n.t('errorTitle'), I18n.t('unknownError'));
         }
     }
 
@@ -281,8 +291,10 @@ class ThunderbirdAI {
     }
 }
 
-try {
-    globalThis.thunderbirdAI = new ThunderbirdAI();
-} catch (error) {
-    console.error('Thunderbird AI Assistant failed to initialize:', error);
-}
+globalThis.thunderbirdAIInitialization = I18n.initialize()
+    .then(() => {
+        globalThis.thunderbirdAI = new ThunderbirdAI();
+    })
+    .catch(error => {
+        console.error('Thunderbird AI Assistant failed to initialize:', error);
+    });

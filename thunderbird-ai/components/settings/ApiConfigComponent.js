@@ -65,18 +65,18 @@ const ApiConfigComponent = class {
             .map(model => `<option value="${model.value}">${I18n.modelLabel(model.value)}</option>`)
             .join('');
         this.container.innerHTML = `
-            <h2>🤖 OpenAI API Konfiguration</h2>
+            <h2>${I18n.t('apiConfigTitle')}</h2>
             <div class="setting-group">
-                <label for="openaiApiKey">OpenAI API-Schlüssel:</label>
+                <label for="openaiApiKey">${I18n.t('apiKeyLabel')}</label>
                 <input type="password" id="openaiApiKey" placeholder="sk-..." />
                 <div class="help-text">
-                    Ihr OpenAI API-Schlüssel wird für E-Mail-Zusammenfassungen verwendet. 
-                    <a href="https://platform.openai.com/api-keys" target="_blank">Hier erhalten Sie einen Schlüssel</a>
+                    ${I18n.t('apiKeyHelp')}
+                    <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">${I18n.t('apiKeyLink')}</a>
                 </div>
             </div>
 
             <div class="setting-group">
-                <label for="model">AI Modell:</label>
+                <label for="model">${I18n.t('modelLabel')}</label>
                 <select id="model">
                     ${modelOptions}
                 </select>

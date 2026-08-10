@@ -19,10 +19,12 @@
  * // Entry point starts automatically when settings page loads
  * const settingsManager = new SettingsManager();
  */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     console.log('Initializing Thunderbird AI Settings...');
     
     try {
+        await I18n.initialize();
+        I18n.localizeDocument();
         // Create the main settings manager
         const settingsManager = new SettingsManager();
         console.log('Settings manager initialized successfully');
@@ -33,4 +35,4 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
         console.error('Failed to initialize settings manager:', error);
     }
-}); 
+});

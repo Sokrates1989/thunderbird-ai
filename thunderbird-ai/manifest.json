@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "Thunderbird AI Assistant",
-  "version": "1.2.0",
-  "description": "AI-powered email assistant for summarizing, composing, categorizing and managing emails",
-  "author": "Your Name",
+  "name": "__MSG_extensionName__",
+  "version": "1.3.0",
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "en",
+  "author": "Sokrates1989",
   "browser_specific_settings": {
     "gecko": {
       "id": "thunderbird-ai@example.com",
@@ -24,15 +25,15 @@
     "48": "icon.svg"
   },
   "background": {
-    "scripts": ["constants.js", "storage.js", "openai.js", "message.js", "ui.js", "background.js"]
+    "scripts": ["locale-de.js", "locale-en.js", "constants.js", "storage.js", "openai.js", "message.js", "ui.js", "background.js"]
   },
   "message_display_action": {
-    "default_title": "AI Assistant",
+    "default_title": "__MSG_actionTitle__",
     "default_icon": "icon.svg",
     "default_popup": "single-mail-ui.html"
   },
   "action": {
-    "default_title": "Thunderbird AI Assistant",
+    "default_title": "__MSG_extensionName__",
     "default_icon": "icon.svg",
     "default_popup": "single-mail-ui.html"
   },
@@ -47,7 +48,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["single-mail-ui.html", "settings.html", "help.html", "icon.svg"],
+      "resources": ["single-mail-ui.html", "settings.html", "help.html", "icon.svg", "install-defaults.json", "locale-de.js", "locale-en.js"],
       "matches": ["<all_urls>"]
     }
   ]

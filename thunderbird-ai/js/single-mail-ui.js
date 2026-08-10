@@ -19,10 +19,12 @@
  * // Entry point starts automatically when popup loads
  * const singleMailManager = new SingleMailManager();
  */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     console.log('Initializing Thunderbird AI Single Mail UI...');
     
     try {
+        await I18n.initialize();
+        I18n.localizeDocument();
         // Get email data from URL parameters or current context
         const urlParams = new URLSearchParams(window.location.search);
         const emailId = urlParams.get('emailId');
@@ -47,4 +49,4 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
         console.error('Failed to initialize single mail manager:', error);
     }
-}); 
+});

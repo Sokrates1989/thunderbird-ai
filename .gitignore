@@ -3,6 +3,7 @@ config.json
 
 # Ignore build files.
 thunderbird-ai.xpi
+thunderbird-ai-*.xpi
 thunderbird-ai-test.zip
 artifacts/
 build/

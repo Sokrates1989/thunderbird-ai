@@ -61,7 +61,10 @@ const StorageManager = {
             autoProcess: Boolean(result[CONFIG.STORAGE_KEYS.AUTO_PROCESS]),
             emailsAnalyzed: Number(result[CONFIG.STORAGE_KEYS.EMAILS_ANALYZED]) || 0,
             apiCalls: Number(result[CONFIG.STORAGE_KEYS.API_CALLS]) || 0,
-            lastUsed: result[CONFIG.STORAGE_KEYS.LAST_USED] || 'Nie'
+            lastUsed: result[CONFIG.STORAGE_KEYS.LAST_USED] || null,
+            uiLanguage: I18n.isSupportedLanguage(result[CONFIG.STORAGE_KEYS.UI_LANGUAGE])
+                ? result[CONFIG.STORAGE_KEYS.UI_LANGUAGE]
+                : I18n.getLanguage()
         };
     },
 
@@ -69,7 +72,10 @@ const StorageManager = {
         return this.setMultiple({
             [CONFIG.STORAGE_KEYS.OPENAI_API_KEY]: String(settings.openaiApiKey || '').trim(),
             [CONFIG.STORAGE_KEYS.MODEL]: this.normalizeModel(settings.model),
-            [CONFIG.STORAGE_KEYS.AUTO_PROCESS]: Boolean(settings.autoProcess)
+            [CONFIG.STORAGE_KEYS.AUTO_PROCESS]: Boolean(settings.autoProcess),
+            [CONFIG.STORAGE_KEYS.UI_LANGUAGE]: I18n.isSupportedLanguage(settings.uiLanguage)
+                ? settings.uiLanguage
+                : I18n.getLanguage()
         });
     },
 
@@ -86,7 +92,7 @@ const StorageManager = {
         await this.setMultiple({
             [CONFIG.STORAGE_KEYS.EMAILS_ANALYZED]: emailsAnalyzed + (type === 'email' ? 1 : 0),
             [CONFIG.STORAGE_KEYS.API_CALLS]: apiCalls + (type === 'api' ? 1 : 0),
-            [CONFIG.STORAGE_KEYS.LAST_USED]: new Date().toLocaleDateString(I18n.getLanguage())
+            [CONFIG.STORAGE_KEYS.LAST_USED]: new Date().toISOString()
         });
     },
 

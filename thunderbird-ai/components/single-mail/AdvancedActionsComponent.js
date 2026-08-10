@@ -8,10 +8,10 @@ const AdvancedActionsComponent = class {
         this.buttons = {};
         this.isExpanded = false;
         this.actions = [
-            { id: 'translateBtn', icon: '🌐', text: 'Übersetzen', action: 'TRANSLATE' },
-            { id: 'extractInfoBtn', icon: '🔍', text: 'Infos extrahieren', action: 'EXTRACT_INFO' },
-            { id: 'checkSpamBtn', icon: '🛡️', text: 'Spam prüfen', action: 'CHECK_SPAM' },
-            { id: 'findSimilarBtn', icon: '🔗', text: 'Ähnliche finden', action: 'FIND_SIMILAR' }
+            { id: 'translateBtn', icon: '🌐', textKey: 'translate', action: 'TRANSLATE' },
+            { id: 'extractInfoBtn', icon: '🔍', textKey: 'extractInfo', action: 'EXTRACT_INFO' },
+            { id: 'checkSpamBtn', icon: '🛡️', textKey: 'checkSpam', action: 'CHECK_SPAM' },
+            { id: 'findSimilarBtn', icon: '🔗', textKey: 'findSimilar', action: 'FIND_SIMILAR' }
         ];
     }
 
@@ -22,10 +22,10 @@ const AdvancedActionsComponent = class {
         languageControl.textContent = `${I18n.t('translateTarget')}: `;
         this.languageSelect = document.createElement('select');
         for (const [value, key] of [
-            ['Deutsch', 'translateGerman'],
-            ['English', 'translateEnglish'],
-            ['Français', 'translateFrench'],
-            ['Español', 'translateSpanish']
+            ['de', 'translateGerman'],
+            ['en', 'translateEnglish'],
+            ['fr', 'translateFrench'],
+            ['es', 'translateSpanish']
         ]) {
             const option = document.createElement('option');
             option.value = value;
@@ -40,7 +40,7 @@ const AdvancedActionsComponent = class {
             button.id = definition.id;
             button.className = 'button';
             button.dataset.action = definition.action;
-            button.innerHTML = `<span class="icon">${definition.icon}</span><span class="text">${definition.text}</span>`;
+            button.innerHTML = `<span class="icon">${definition.icon}</span><span class="text">${I18n.t(definition.textKey)}</span>`;
             button.addEventListener('click', event => this.handleButtonClick(event));
             this.container.appendChild(button);
             this.buttons[definition.id] = button;

@@ -32,7 +32,7 @@ const SavedResultsComponent = class {
             const date = result.savedAt
                 ? new Date(result.savedAt).toLocaleString(I18n.getLanguage())
                 : '';
-            summary.textContent = `${result.title || 'Ergebnis'} · ${date}`;
+            summary.textContent = `${result.title || I18n.t('resultsDefault')} · ${date}`;
             const content = document.createElement('pre');
             content.textContent = result.content || '';
             const actions = document.createElement('div');

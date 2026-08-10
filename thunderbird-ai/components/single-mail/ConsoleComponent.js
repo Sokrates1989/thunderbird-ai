@@ -47,7 +47,7 @@ const ConsoleComponent = class {
      * this.log('Operation started', 'info');
      */
     log(message, level = 'info') {
-        const timestamp = new Date().toLocaleTimeString();
+        const timestamp = new Date().toLocaleTimeString(I18n.getLanguage());
         const logEntry = {
             timestamp,
             message,
@@ -75,12 +75,17 @@ const ConsoleComponent = class {
     updateDisplay() {
         if (!this.element) return;
         
-        const logHtml = this.logs.map(log => {
-            const levelClass = `log-${log.level}`;
-            return `<div class="log-entry ${levelClass}">[${log.timestamp}] ${log.message}</div>`;
-        }).join('');
-        
-        this.element.innerHTML = logHtml || 'Console-Ausgabe wird hier angezeigt...';
+        this.element.replaceChildren();
+        if (this.logs.length === 0) {
+            this.element.textContent = I18n.t('consolePlaceholder');
+        } else {
+            for (const log of this.logs) {
+                const entry = document.createElement('div');
+                entry.className = `log-entry log-${log.level}`;
+                entry.textContent = `[${log.timestamp}] ${log.message}`;
+                this.element.appendChild(entry);
+            }
+        }
         
         // Auto-scroll to bottom
         this.element.scrollTop = this.element.scrollHeight;
@@ -130,4 +135,4 @@ const ConsoleComponent = class {
  */
 if (typeof window !== 'undefined') {
     window.ConsoleComponent = ConsoleComponent;
-} 
+}

@@ -80,7 +80,7 @@ const ErrorDialogComponent = class {
      * @example
      * this.showError('Something went wrong', 'Error');
      */
-    showError(message, title = 'Fehler') {
+    showError(message, title = I18n.t('errorTitle')) {
         this.isVisible = true;
         
         if (this.element) {
@@ -93,7 +93,7 @@ const ErrorDialogComponent = class {
         
         // Update title if provided
         const titleElement = this.element?.querySelector('h3');
-        if (titleElement && title !== 'Fehler') {
+        if (titleElement) {
             titleElement.textContent = title;
         }
     }
@@ -146,4 +146,4 @@ const ErrorDialogComponent = class {
  */
 if (typeof window !== 'undefined') {
     window.ErrorDialogComponent = ErrorDialogComponent;
-} 
+}

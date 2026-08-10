@@ -45,7 +45,7 @@ const LoadingComponent = class {
      * @example
      * this.show(true, 'Processing...');
      */
-    show(show, message = 'Verarbeite E-Mail...') {
+    show(show, message = I18n.t('loadingEmail')) {
         this.isVisible = show;
         
         if (this.element) {
@@ -124,4 +124,4 @@ const LoadingComponent = class {
  */
 if (typeof window !== 'undefined') {
     window.LoadingComponent = LoadingComponent;
-} 
+}

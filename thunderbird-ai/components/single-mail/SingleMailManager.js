@@ -55,7 +55,7 @@ const SingleMailManager = class {
             }
         } catch (error) {
             console.error('Could not initialize the message UI:', error);
-            this.showError(`Fehler beim Initialisieren: ${error.message}`);
+            this.showError(I18n.t('initializeFailed'));
         }
     }
 
@@ -89,7 +89,7 @@ const SingleMailManager = class {
             from: this.emailData.author || this.emailData.from,
             status: this.emailData.flagged ? 'flagged' : (this.emailData.read ? 'read' : 'unread')
         });
-        this.updateStatus(`E-Mail geladen: ${this.emailData.subject}`);
+        this.updateStatus(I18n.t('emailLoaded', { subject: this.emailData.subject }));
     }
 
     async showAutomaticResult() {
@@ -102,13 +102,13 @@ const SingleMailManager = class {
     }
 
     showGeneralInterface() {
-        this.components.header.updateEmailSubject?.('AI Assistant – Keine E-Mail ausgewählt');
+        this.components.header.updateEmailSubject?.(I18n.t('noEmailSelectedTitle'));
         this.components.emailDetails.updateEmailData?.({
             from: '-',
-            subject: 'Keine E-Mail ausgewählt',
+            subject: I18n.t('noEmailSelected'),
             date: '-',
             size: 0,
-            status: 'Bitte öffnen Sie eine E-Mail'
+            status: I18n.t('openEmailPrompt')
         });
         this.components.quickActions.setButtonsEnabled(false);
         this.components.advancedActions.setButtonsEnabled(false);
@@ -143,14 +143,19 @@ const SingleMailManager = class {
                 ...options
             });
             if (!response?.success) {
-                throw new Error(response?.error || 'Unbekannter Fehler');
+                const message = response?.error || I18n.t('unknownError');
+                this.showError(message);
+                this.updateStatus(message, 'error');
+                return null;
             }
             this.components.results.showResults(response.data);
-            this.updateStatus(`${response.data.title} erstellt.`, 'success');
+            this.updateStatus(I18n.t('actionCompleted', { title: response.data.title }), 'success');
             return response.data;
         } catch (error) {
-            this.showError(error.message);
-            this.updateStatus(error.message, 'error');
+            console.error('AI action failed:', error);
+            const message = I18n.t('unknownError');
+            this.showError(message);
+            this.updateStatus(message, 'error');
             error.uiShown = true;
             throw error;
         } finally {
@@ -194,7 +199,7 @@ const SingleMailManager = class {
         this.components.status?.updateStatus?.(message, type);
     }
 
-    showError(message, title = 'Fehler') {
+    showError(message, title = I18n.t('errorTitle')) {
         this.components.errorDialog?.showError?.(message, title);
     }
 

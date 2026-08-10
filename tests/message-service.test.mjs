@@ -5,6 +5,8 @@ import { createContext, loadScript } from '../test-support/load-script.mjs';
 
 function loadMessageService(browser) {
     const context = createContext({ browser });
+    loadScript(context, 'thunderbird-ai/config/locale-de.js');
+    loadScript(context, 'thunderbird-ai/config/locale-en.js');
     loadScript(context, 'thunderbird-ai/config/constants.js');
     loadScript(context, 'common/utils/message.js');
     return context.MessageService;

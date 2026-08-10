@@ -1,17 +1,19 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thunderbird AI - Einstellungen</title>
+    <title data-i18n="settingsPageTitle"></title>
     <link rel="stylesheet" href="settings.css">
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>⚙️ Einstellungen</h1>
-            <p>Konfigurieren Sie Ihren Thunderbird AI Assistant</p>
+            <h1 data-i18n="settingsHeading"></h1>
+            <p data-i18n="settingsIntroduction"></p>
         </div>
+
+        <div id="language-section" class="settings-section"></div>
 
         <!-- Modular sections - each will be managed by its own component -->
         <div id="api-config-section" class="settings-section">
@@ -42,6 +44,8 @@
     </div>
 
     <!-- Load utility modules first -->
+    <script src="locale-de.js"></script>
+    <script src="locale-en.js"></script>
     <script src="constants.js"></script>
     <script src="storage.js"></script>
     <script src="openai.js"></script>
@@ -49,6 +53,7 @@
     <script src="ui.js"></script>
     
     <!-- Load UI components -->
+    <script src="LanguageComponent.js"></script>
     <script src="ApiConfigComponent.js"></script>
     <script src="AutomationComponent.js"></script>
     <script src="ApiTestComponent.js"></script>

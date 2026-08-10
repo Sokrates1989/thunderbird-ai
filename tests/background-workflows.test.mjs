@@ -9,7 +9,7 @@ function eventTarget() {
     return { addListener() {} };
 }
 
-function loadBackground() {
+async function loadBackground() {
     const stats = [];
     const serviceCalls = [];
     const context = createContext({
@@ -22,6 +22,8 @@ function loadBackground() {
             tabs: { create: async () => {} }
         }
     });
+    loadScript(context, 'thunderbird-ai/config/locale-de.js');
+    loadScript(context, 'thunderbird-ai/config/locale-en.js');
     loadScript(context, 'thunderbird-ai/config/constants.js');
     context.MessageService = {
         getFullMessage: async id => ({
@@ -64,11 +66,12 @@ function loadBackground() {
         saveAutomaticResult: async () => true
     };
     loadScript(context, 'common/background.js');
+    await context.thunderbirdAIInitialization;
     return { ai: context.thunderbirdAI, config: context.CONFIG, serviceCalls, stats };
 }
 
 test('every visible email AI action returns the shared result contract', async () => {
-    const { ai, config, serviceCalls } = loadBackground();
+    const { ai, config, serviceCalls } = await loadBackground();
     const actions = [
         config.ACTIONS.SUMMARIZE,
         config.ACTIONS.REPLY,
@@ -91,7 +94,7 @@ test('every visible email AI action returns the shared result contract', async (
 });
 
 test('chat, similar-message search, and API test are functional routes', async () => {
-    const { ai, config } = loadBackground();
+    const { ai, config } = await loadBackground();
 
     const chat = await ai.handleMessage({ action: config.ACTIONS.CHAT, messageId: 7, query: 'Was ist wichtig?' });
     const similar = await ai.handleMessage({ action: config.ACTIONS.FIND_SIMILAR, messageId: 7 });
@@ -103,7 +106,7 @@ test('chat, similar-message search, and API test are functional routes', async (
 });
 
 test('reply refinement uses the source message and returns an editable reply result', async () => {
-    const { ai, config, serviceCalls, stats } = loadBackground();
+    const { ai, config, serviceCalls, stats } = await loadBackground();
 
     const response = await ai.handleMessage({
         action: config.ACTIONS.REFINE_REPLY,

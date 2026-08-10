@@ -97,16 +97,32 @@ if (-not $SkipAddonBuild) {
     if ($addonBuildExitCode -ne 0) {
         throw "Add-on build failed with exit code $addonBuildExitCode."
     }
+
+    foreach ($language in @('de', 'en')) {
+        $languagePackage = Join-Path $repositoryRoot "thunderbird-ai-$language.xpi"
+        & $powerShellExecutable -NoProfile -ExecutionPolicy Bypass -File (
+            Join-Path $repositoryRoot 'build-addon.ps1'
+        ) -InstallerLanguage $language -OutputPath $languagePackage
+        if ($LASTEXITCODE -ne 0) {
+            throw "Add-on build for language '$language' failed with exit code $LASTEXITCODE."
+        }
+    }
 }
 
-$packagePath = Join-Path $repositoryRoot 'thunderbird-ai.xpi'
-if (-not (Test-Path -LiteralPath $packagePath -PathType Leaf)) {
-    throw "Required XPI not found at '$packagePath'."
-}
-$packagedManifest = Get-PackagedManifest -PackagePath $packagePath
-if ([string]$packagedManifest.version -ne $version -or
-    [string]$packagedManifest.browser_specific_settings.gecko.id -ne $extensionId) {
-    throw 'The packaged XPI version or extension ID does not match the source manifest.'
+$packagePaths = @(
+    (Join-Path $repositoryRoot 'thunderbird-ai.xpi'),
+    (Join-Path $repositoryRoot 'thunderbird-ai-de.xpi'),
+    (Join-Path $repositoryRoot 'thunderbird-ai-en.xpi')
+)
+foreach ($packagePath in $packagePaths) {
+    if (-not (Test-Path -LiteralPath $packagePath -PathType Leaf)) {
+        throw "Required XPI not found at '$packagePath'."
+    }
+    $packagedManifest = Get-PackagedManifest -PackagePath $packagePath
+    if ([string]$packagedManifest.version -ne $version -or
+        [string]$packagedManifest.browser_specific_settings.gecko.id -ne $extensionId) {
+        throw "The packaged XPI '$packagePath' does not match the source manifest."
+    }
 }
 
 $compiler = Find-InnoSetupCompiler

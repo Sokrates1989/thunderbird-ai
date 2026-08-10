@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
 
-import { createContext, loadScript } from '../test-support/load-script.mjs';
+import { createContext, loadScript, repositoryRoot } from '../test-support/load-script.mjs';
 
 function interactiveElement(value = '') {
     return {
@@ -56,6 +58,8 @@ function loadReplyUi({ beginReply, writeText }) {
         },
         navigator: { clipboard: { writeText } }
     });
+    loadScript(context, 'thunderbird-ai/config/locale-de.js');
+    loadScript(context, 'thunderbird-ai/config/locale-en.js');
     loadScript(context, 'thunderbird-ai/config/constants.js');
     loadScript(context, 'thunderbird-ai/components/single-mail/QuickActionsComponent.js');
     loadScript(context, 'thunderbird-ai/components/single-mail/ReplyComposerComponent.js');
@@ -79,6 +83,64 @@ test('German and English UI catalogs expose the same keys', () => {
     const englishKeys = Object.keys(context.LOCALE_MESSAGES.en).sort();
 
     assert.deepEqual(germanKeys, englishKeys);
+    for (const key of germanKeys) {
+        const germanPlaceholders = [...context.LOCALE_MESSAGES.de[key].matchAll(/\{([^}]+)\}/gu)]
+            .map(match => match[1]).sort();
+        const englishPlaceholders = [...context.LOCALE_MESSAGES.en[key].matchAll(/\{([^}]+)\}/gu)]
+            .map(match => match[1]).sort();
+        assert.deepEqual(germanPlaceholders, englishPlaceholders, key);
+    }
+});
+
+test('explicit language selection changes text and every static page key resolves', () => {
+    const { context } = loadReplyUi({
+        beginReply: async () => {},
+        writeText: async () => {}
+    });
+    context.I18n.language = 'de';
+    assert.equal(context.I18n.t('close'), 'Schließen');
+    context.I18n.language = 'en';
+    assert.equal(context.I18n.t('close'), 'Close');
+
+    const pages = ['settings.html', 'single-mail-ui.html', 'help.html']
+        .map(file => fs.readFileSync(path.join(repositoryRoot, 'thunderbird-ai/pages', file), 'utf8'))
+        .join('\n');
+    const keys = [...pages.matchAll(/data-i18n(?:-placeholder|-title|-aria-label)?="([A-Za-z0-9_]+)"/gu)]
+        .map(match => match[1]);
+    for (const key of keys) {
+        assert.ok(context.LOCALE_MESSAGES.de[key], `missing German key ${key}`);
+        assert.ok(context.LOCALE_MESSAGES.en[key], `missing English key ${key}`);
+    }
+
+    const defaults = JSON.parse(fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/install-defaults.json'),
+        'utf8'
+    ));
+    assert.deepEqual(defaults, { language: 'auto', version: '1.3.0' });
+});
+
+test('Thunderbird manifest localization has German and English key parity', () => {
+    const manifest = JSON.parse(fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/manifest.json'),
+        'utf8'
+    ));
+    const german = JSON.parse(fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/_locales/de/messages.json'),
+        'utf8'
+    ));
+    const english = JSON.parse(fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/_locales/en/messages.json'),
+        'utf8'
+    ));
+
+    assert.deepEqual(Object.keys(german).sort(), Object.keys(english).sort());
+    const manifestText = JSON.stringify(manifest);
+    const referencedKeys = [...manifestText.matchAll(/__MSG_([A-Za-z0-9_]+)__/gu)]
+        .map(match => match[1]);
+    for (const key of referencedKeys) {
+        assert.ok(german[key]?.message, `missing German manifest key ${key}`);
+        assert.ok(english[key]?.message, `missing English manifest key ${key}`);
+    }
 });
 
 test('suggest reply quick action opens the dedicated reply composer', async () => {

@@ -106,6 +106,33 @@ function Remove-TestRegistryInView {
     }
 }
 
+function Get-InstallerLanguageFromXpi {
+    <# Read the bounded installer language hand-off from an XPI. #>
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path
+    )
+
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $archive = [System.IO.Compression.ZipFile]::OpenRead($Path)
+    try {
+        $entry = $archive.GetEntry('install-defaults.json')
+        if ($null -eq $entry) {
+            throw "XPI '$Path' omits install-defaults.json."
+        }
+        $reader = [System.IO.StreamReader]::new($entry.Open(), [System.Text.Encoding]::UTF8)
+        try {
+            return (($reader.ReadToEnd() | ConvertFrom-Json).language)
+        }
+        finally {
+            $reader.Dispose()
+        }
+    }
+    finally {
+        $archive.Dispose()
+    }
+}
+
 $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
 $manifest = Get-Content -LiteralPath (
     Join-Path $repositoryRoot 'thunderbird-ai\manifest.json'
@@ -140,7 +167,7 @@ try {
     $installer = & (Join-Path $PSScriptRoot 'build-setup.ps1') -TestMode
     $installer = [System.IO.Path]::GetFullPath(($installer | Select-Object -Last 1))
     Invoke-CheckedProcess -Executable $installer -Arguments @(
-        '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART'
+        '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/LANG=english'
     )
 
     $installDirectory = Join-Path $testRoot 'app'
@@ -148,13 +175,16 @@ try {
     if (-not (Test-Path -LiteralPath $installedExtension -PathType Leaf)) {
         throw "Installer omitted '$installedExtension'."
     }
+    if ((Get-InstallerLanguageFromXpi -Path $installedExtension) -ne 'en') {
+        throw 'The English setup selection was not handed to the installed extension.'
+    }
     if ((Get-FileHash -LiteralPath $installedExtension -Algorithm SHA256).Hash -ne
         (Get-FileHash -LiteralPath $profileExtension -Algorithm SHA256).Hash) {
         throw 'The existing-profile XPI was not updated from the installer payload.'
     }
 
     Invoke-CheckedProcess -Executable $installer -Arguments @(
-        '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART'
+        '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/LANG=english'
     )
     if ((Get-FileHash -LiteralPath $installedExtension -Algorithm SHA256).Hash -ne
         (Get-FileHash -LiteralPath $profileExtension -Algorithm SHA256).Hash) {

@@ -1,7 +1,7 @@
 ; Builds a per-user Windows setup around the verified Thunderbird AI XPI.
 
 #ifndef AppVersion
-  #define AppVersion "1.2.0"
+  #define AppVersion "1.3.0"
 #endif
 
 #define AppName "Thunderbird AI Assistant"
@@ -9,6 +9,8 @@
 #define AppUrl "https://github.com/Sokrates1989/thunderbird-ai"
 #define ExtensionId "thunderbird-ai@example.com"
 #define ExtensionFileName "thunderbird-ai-" + AppVersion + ".xpi"
+#define GermanExtensionSource "thunderbird-ai-de.xpi"
+#define EnglishExtensionSource "thunderbird-ai-en.xpi"
 
 #ifdef TestMode
   #define SetupAppId "ThunderbirdAI.Setup.Test"
@@ -43,6 +45,7 @@ OutputBaseFilename={#SetupOutputName}
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern dynamic
+ShowLanguageDialog=yes
 SetupLogging=yes
 UninstallDisplayName={#AppName}
 VersionInfoVersion={#AppVersion}
@@ -67,7 +70,8 @@ english.LaunchThunderbird=Start Thunderbird now
 english.ProfileInstallFailed=The extension could not be copied into the Thunderbird profile: %1
 
 [Files]
-Source: "..\..\thunderbird-ai.xpi"; DestDir: "{app}"; DestName: "{#ExtensionFileName}"; Flags: ignoreversion
+Source: "..\..\{#GermanExtensionSource}"; DestDir: "{app}"; DestName: "{#ExtensionFileName}"; Flags: ignoreversion; Languages: german
+Source: "..\..\{#EnglishExtensionSource}"; DestDir: "{app}"; DestName: "{#ExtensionFileName}"; Flags: ignoreversion; Languages: english
 
 [Registry]
 #ifdef TestMode

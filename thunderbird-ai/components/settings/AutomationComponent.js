@@ -62,15 +62,15 @@ const AutomationComponent = class {
      */
     createUI() {
         this.container.innerHTML = `
-            <h2>🔄 Automatisierung</h2>
+            <h2>${I18n.t('automationTitle')}</h2>
             <div class="setting-group">
                 <label class="checkbox-label">
                     <input type="checkbox" id="autoProcess" />
                     <span class="checkmark"></span>
-                    Automatische E-Mail-Verarbeitung
+                    ${I18n.t('autoProcessLabel')}
                 </label>
                 <div class="help-text">
-                    E-Mails werden automatisch analysiert, wenn sie geöffnet werden
+                    ${I18n.t('autoProcessHelp')}
                 </div>
             </div>
         `;
@@ -154,4 +154,4 @@ const AutomationComponent = class {
  */
 if (typeof window !== 'undefined') {
     window.AutomationComponent = AutomationComponent;
-} 
+}

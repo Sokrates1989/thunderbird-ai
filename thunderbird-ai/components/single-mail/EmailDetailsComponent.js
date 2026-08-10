@@ -56,19 +56,19 @@ const EmailDetailsComponent = class {
     createUI() {
         this.container.innerHTML = `
             <div class="info-row">
-                <span class="info-label">Von:</span>
+                <span class="info-label">${I18n.t('emailFromLabel')}:</span>
                 <span class="info-value" id="emailFrom">-</span>
             </div>
             <div class="info-row">
-                <span class="info-label">Datum:</span>
+                <span class="info-label">${I18n.t('emailDateLabel')}:</span>
                 <span class="info-value" id="emailDate">-</span>
             </div>
             <div class="info-row">
-                <span class="info-label">Größe:</span>
+                <span class="info-label">${I18n.t('emailSizeLabel')}:</span>
                 <span class="info-value" id="emailSize">-</span>
             </div>
             <div class="info-row">
-                <span class="info-label">Status:</span>
+                <span class="info-label">${I18n.t('emailStatusLabel')}:</span>
                 <span class="info-value" id="emailStatus">-</span>
             </div>
         `;
@@ -211,27 +211,29 @@ const EmailDetailsComponent = class {
             // Format based on how recent the email is
             if (diffDays === 0) {
                 // Today - show time
-                return dateObj.toLocaleTimeString('de-DE', { 
+                const time = dateObj.toLocaleTimeString(I18n.getLanguage(), {
                     hour: '2-digit', 
                     minute: '2-digit' 
-                }) + ' (Heute)';
+                });
+                return I18n.t('todayAt', { time });
             } else if (diffDays === 1) {
                 // Yesterday
-                return dateObj.toLocaleTimeString('de-DE', { 
+                const time = dateObj.toLocaleTimeString(I18n.getLanguage(), {
                     hour: '2-digit', 
                     minute: '2-digit' 
-                }) + ' (Gestern)';
+                });
+                return I18n.t('yesterdayAt', { time });
             } else if (diffDays < 7) {
                 // This week - show day and time
-                return dateObj.toLocaleDateString('de-DE', { 
+                return dateObj.toLocaleDateString(I18n.getLanguage(), {
                     weekday: 'short' 
-                }) + ', ' + dateObj.toLocaleTimeString('de-DE', { 
+                }) + ', ' + dateObj.toLocaleTimeString(I18n.getLanguage(), {
                     hour: '2-digit', 
                     minute: '2-digit' 
                 });
             } else {
                 // Older - show full date
-                return dateObj.toLocaleDateString('de-DE', {
+                return dateObj.toLocaleDateString(I18n.getLanguage(), {
                     day: '2-digit',
                     month: '2-digit',
                     year: 'numeric'
@@ -266,7 +268,7 @@ const EmailDetailsComponent = class {
             unitIndex++;
         }
         
-        return `${sizeValue.toFixed(1)} ${units[unitIndex]}`;
+        return `${new Intl.NumberFormat(I18n.getLanguage(), { maximumFractionDigits: 1 }).format(sizeValue)} ${units[unitIndex]}`;
     }
 
     /**
@@ -283,16 +285,17 @@ const EmailDetailsComponent = class {
         if (!status) return '-';
         
         const statusMap = {
-            'unread': 'Ungelesen',
-            'read': 'Gelesen',
-            'flagged': 'Markiert',
-            'spam': 'Spam',
-            'trash': 'Papierkorb',
-            'draft': 'Entwurf',
-            'sent': 'Gesendet'
+            unread: 'statusUnread',
+            read: 'statusRead',
+            flagged: 'statusFlagged',
+            spam: 'statusSpam',
+            trash: 'statusTrash',
+            draft: 'statusDraft',
+            sent: 'statusSent'
         };
         
-        return statusMap[status.toLowerCase()] || status;
+        const key = statusMap[status.toLowerCase()];
+        return key ? I18n.t(key) : status;
     }
 
     /**
@@ -351,7 +354,7 @@ const EmailDetailsComponent = class {
         elements.forEach(element => {
             if (element) {
                 if (loading) {
-                    element.textContent = 'Lade...';
+                    element.textContent = I18n.t('loading');
                     element.style.opacity = '0.6';
                 } else {
                     element.style.opacity = '1';
@@ -386,4 +389,4 @@ const EmailDetailsComponent = class {
  */
 if (typeof window !== 'undefined') {
     window.EmailDetailsComponent = EmailDetailsComponent;
-} 
+}

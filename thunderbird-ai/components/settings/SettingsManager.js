@@ -62,6 +62,7 @@ const SettingsManager = class {
      */
     createComponents() {
         // Create all components
+        this.components.language = new LanguageComponent(this);
         this.components.apiConfig = new ApiConfigComponent(this);
         this.components.automation = new AutomationComponent(this);
         this.components.apiTest = new ApiTestComponent(this);
@@ -149,10 +150,12 @@ const SettingsManager = class {
     collectAllSettings() {
         const apiConfigValues = this.components.apiConfig.getCurrentValues();
         const automationValues = this.components.automation.getCurrentValues();
+        const languageValues = this.components.language.getCurrentValues();
         
         return {
             ...apiConfigValues,
-            ...automationValues
+            ...automationValues,
+            ...languageValues
         };
     }
 
@@ -185,7 +188,8 @@ const SettingsManager = class {
         const defaultSettings = {
             openaiApiKey: '',
             model: CONFIG.OPENAI.DEFAULT_MODEL,
-            autoProcess: false
+            autoProcess: false,
+            uiLanguage: I18n.getLanguage()
         };
         
         this.updateAllComponents(defaultSettings);

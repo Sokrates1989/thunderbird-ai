@@ -67,7 +67,7 @@ const UIUtils = {
      * // ... perform operation ...
      * UIUtils.hideLoading();
      */
-    showLoading(message = 'Verarbeite E-Mail...') {
+    showLoading(message = I18n.t('loadingEmail')) {
         const overlay = document.getElementById('loadingOverlay');
         if (overlay) {
             const messageEl = overlay.querySelector('.loading-spinner div:last-child');
@@ -390,4 +390,4 @@ const UIUtils = {
  */
 if (typeof window !== 'undefined') {
     window.UIUtils = UIUtils;
-} 
+}

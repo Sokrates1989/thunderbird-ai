@@ -1,0 +1,5 @@
+{
+  "extensionName": { "message": "Thunderbird AI Assistant" },
+  "actionTitle": { "message": "AI Assistant" },
+  "extensionDescription": { "message": "AI-gestützter E-Mail-Assistent zum Zusammenfassen, Beantworten, Kategorisieren und Verwalten von Nachrichten." }
+}

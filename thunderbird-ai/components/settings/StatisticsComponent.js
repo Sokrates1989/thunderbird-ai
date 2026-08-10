@@ -65,24 +65,24 @@ const StatisticsComponent = class {
     createUI() {
         this.container.innerHTML = `
             <div class="stats-header">
-                <h2>📊 Nutzungsstatistiken</h2>
+                <h2>${I18n.t('statisticsTitle')}</h2>
                 <button id="refreshStatsBtn" class="refresh-btn">
                     <span class="icon">🔄</span>
-                    Aktualisieren
+                    ${I18n.t('refresh')}
                 </button>
             </div>
             <div class="stats">
                 <div class="stat-item">
-                    <span class="stat-label">E-Mails analysiert:</span>
+                    <span class="stat-label">${I18n.t('emailsAnalyzedLabel')}:</span>
                     <span class="stat-value" id="emailsAnalyzed">0</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">API-Aufrufe:</span>
+                    <span class="stat-label">${I18n.t('apiCallsLabel')}:</span>
                     <span class="stat-value" id="apiCalls">0</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Letzte Nutzung:</span>
-                    <span class="stat-value" id="lastUsed">Nie</span>
+                    <span class="stat-label">${I18n.t('lastUsedLabel')}:</span>
+                    <span class="stat-value" id="lastUsed">${I18n.t('never')}</span>
                 </div>
             </div>
         `;
@@ -125,7 +125,7 @@ const StatisticsComponent = class {
             if (stats) {
                 this.elements.emailsAnalyzed.textContent = stats.emailsAnalyzed || 0;
                 this.elements.apiCalls.textContent = stats.apiCalls || 0;
-                this.elements.lastUsed.textContent = stats.lastUsed || 'Nie';
+                this.elements.lastUsed.textContent = this.formatLastUsed(stats.lastUsed);
             }
         } catch (error) {
             console.error('Error loading statistics:', error);
@@ -145,18 +145,18 @@ const StatisticsComponent = class {
     async refreshStatistics() {
         try {
             this.elements.refreshStatsBtn.disabled = true;
-            this.elements.refreshStatsBtn.innerHTML = '<span class="icon">⏳</span> Aktualisiere...';
+            this.elements.refreshStatsBtn.innerHTML = `<span class="icon">⏳</span> ${I18n.t('refreshing')}`;
             
             await this.loadStatistics();
             
-            this.settingsManager.showStatus('Statistiken aktualisiert!', 'success');
+            this.settingsManager.showStatus(I18n.t('statisticsUpdated'), 'success');
             
         } catch (error) {
             console.error('Error refreshing statistics:', error);
-            this.settingsManager.showStatus('Fehler beim Aktualisieren der Statistiken', 'error');
+            this.settingsManager.showStatus(I18n.t('statisticsUpdateFailed'), 'error');
         } finally {
             this.elements.refreshStatsBtn.disabled = false;
-            this.elements.refreshStatsBtn.innerHTML = '<span class="icon">🔄</span> Aktualisieren';
+            this.elements.refreshStatsBtn.innerHTML = `<span class="icon">🔄</span> ${I18n.t('refresh')}`;
         }
     }
 
@@ -209,8 +209,16 @@ const StatisticsComponent = class {
             this.elements.apiCalls.textContent = stats.apiCalls;
         }
         if (stats.lastUsed !== undefined) {
-            this.elements.lastUsed.textContent = stats.lastUsed;
+            this.elements.lastUsed.textContent = this.formatLastUsed(stats.lastUsed);
         }
+    }
+
+    formatLastUsed(value) {
+        if (!value) {
+            return I18n.t('never');
+        }
+        const date = new Date(value);
+        return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString(I18n.getLanguage());
     }
 
     /**
@@ -235,4 +243,4 @@ const StatisticsComponent = class {
  */
 if (typeof window !== 'undefined') {
     window.StatisticsComponent = StatisticsComponent;
-} 
+}

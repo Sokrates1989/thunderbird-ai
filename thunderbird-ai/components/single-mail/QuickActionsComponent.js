@@ -68,7 +68,7 @@ const QuickActionsComponent = class {
         if (action === 'TEST') {
             const response = await this.manager.sendToBackground(CONFIG.ACTIONS.TEST);
             if (!response?.success) {
-                throw new Error(response?.message || response?.error || 'API-Test fehlgeschlagen');
+                throw new Error(response?.message || response?.error || I18n.t('apiTestFailed'));
             }
             this.manager.updateStatus(response.message, 'success');
             return response;

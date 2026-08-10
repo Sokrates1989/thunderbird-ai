@@ -61,9 +61,9 @@ const ActionsComponent = class {
      */
     createUI() {
         this.container.innerHTML = `
-            <button id="saveBtn" class="btn primary">💾 Einstellungen speichern</button>
-            <button id="resetBtn" class="btn secondary">🔄 Zurücksetzen</button>
-            <button id="closeBtn" class="btn">❌ Schließen</button>
+            <button id="saveBtn" class="btn primary">💾 ${I18n.t('saveSettings')}</button>
+            <button id="resetBtn" class="btn secondary">🔄 ${I18n.t('resetSettings')}</button>
+            <button id="closeBtn" class="btn">❌ ${I18n.t('close')}</button>
         `;
 
         // Store element references
@@ -114,15 +114,21 @@ const ActionsComponent = class {
 
             // Show loading state
             this.elements.saveBtn.disabled = true;
-            this.elements.saveBtn.innerHTML = '⏳ Speichere...';
+            this.elements.saveBtn.innerHTML = `⏳ ${I18n.t('saving')}`;
 
             // Save settings
             const result = await this.settingsManager.sendToBackground(CONFIG.ACTIONS.SAVE_SETTINGS, settings);
             
             if (result.success) {
+                const languageChanged = settings.uiLanguage !== I18n.getLanguage();
+                await I18n.setLanguage(settings.uiLanguage);
+                if (languageChanged) {
+                    window.location.reload();
+                    return;
+                }
                 this.settingsManager.showStatus(I18n.t('settingsSaved'), 'success');
             } else {
-                this.settingsManager.showStatus(I18n.t('settingsSaveFailed') + ': ' + result.error, 'error');
+                this.settingsManager.showStatus(I18n.t('settingsSaveFailed'), 'error');
             }
             
         } catch (error) {
@@ -131,7 +137,7 @@ const ActionsComponent = class {
         } finally {
             // Reset button state
             this.elements.saveBtn.disabled = false;
-            this.elements.saveBtn.innerHTML = '💾 Einstellungen speichern';
+            this.elements.saveBtn.innerHTML = `💾 ${I18n.t('saveSettings')}`;
         }
     }
 
@@ -146,11 +152,11 @@ const ActionsComponent = class {
      * await this.resetSettings();
      */
     async resetSettings() {
-        if (confirm('Möchten Sie wirklich alle Einstellungen zurücksetzen?')) {
+        if (confirm(I18n.t('resetConfirm'))) {
             try {
                 // Show loading state
                 this.elements.resetBtn.disabled = true;
-                this.elements.resetBtn.innerHTML = '⏳ Setze zurück...';
+                this.elements.resetBtn.innerHTML = `⏳ ${I18n.t('resetting')}`;
 
                 // Reset all components
                 this.settingsManager.resetAllComponents();
@@ -159,24 +165,25 @@ const ActionsComponent = class {
                 const defaultSettings = {
                     openaiApiKey: '',
                     model: CONFIG.OPENAI.DEFAULT_MODEL,
-                    autoProcess: false
+                    autoProcess: false,
+                    uiLanguage: I18n.getLanguage()
                 };
 
                 const result = await this.settingsManager.sendToBackground(CONFIG.ACTIONS.SAVE_SETTINGS, defaultSettings);
                 
                 if (result.success) {
-                    this.settingsManager.showStatus('Einstellungen zurückgesetzt!', 'success');
+                    this.settingsManager.showStatus(I18n.t('settingsReset'), 'success');
                 } else {
-                    this.settingsManager.showStatus('Fehler beim Zurücksetzen: ' + result.error, 'error');
+                    this.settingsManager.showStatus(I18n.t('settingsResetFailed'), 'error');
                 }
                 
             } catch (error) {
                 console.error('Error resetting settings:', error);
-                this.settingsManager.showStatus('Fehler beim Zurücksetzen der Einstellungen', 'error');
+                this.settingsManager.showStatus(I18n.t('settingsResetFailed'), 'error');
             } finally {
                 // Reset button state
                 this.elements.resetBtn.disabled = false;
-                this.elements.resetBtn.innerHTML = '🔄 Zurücksetzen';
+                this.elements.resetBtn.innerHTML = `🔄 ${I18n.t('resetSettings')}`;
             }
         }
     }

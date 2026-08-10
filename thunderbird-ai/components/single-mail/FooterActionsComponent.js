@@ -4,9 +4,9 @@ const FooterActionsComponent = class {
         this.manager = manager;
         this.container = manager.elements.footerActions;
         this.actions = [
-            { icon: '⚙️', text: 'Einstellungen', action: 'OPEN_SETTINGS' },
-            { icon: '💬', text: 'AI Chat', action: 'OPEN_CHAT' },
-            { icon: '❓', text: 'Hilfe', action: 'OPEN_HELP' }
+            { icon: '⚙️', textKey: 'footerSettings', action: 'OPEN_SETTINGS' },
+            { icon: '💬', textKey: 'footerChat', action: 'OPEN_CHAT' },
+            { icon: '❓', textKey: 'footerHelp', action: 'OPEN_HELP' }
         ];
     }
 
@@ -15,7 +15,7 @@ const FooterActionsComponent = class {
         for (const definition of this.actions) {
             const button = document.createElement('button');
             button.className = 'footer-btn';
-            button.innerHTML = `<span class="icon">${definition.icon}</span><span class="text">${definition.text}</span>`;
+            button.innerHTML = `<span class="icon">${definition.icon}</span><span class="text">${I18n.t(definition.textKey)}</span>`;
             button.addEventListener('click', () => this.executeAction(definition.action));
             this.container.appendChild(button);
         }
@@ -33,7 +33,7 @@ const FooterActionsComponent = class {
                 window.close();
             }
         } catch (error) {
-            this.manager.showError(error.message);
+            this.manager.showError(I18n.t('unknownError'));
         }
     }
 
