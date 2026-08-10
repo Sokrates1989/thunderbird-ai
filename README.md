@@ -15,7 +15,7 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 - nachrichtenbezogener AI Chat
 - lokale Ergebnisablage mit Verwaltung unter **Einstellungen** und Zwischenablage-Aktion
 - optionale automatische Zusammenfassung beim Öffnen einer Nachricht
-- eigenes globales Posteingangs-Dashboard mit bis zu zehn ungelesenen Nachrichten pro unterstütztem E-Mail-Konto, ohne AI-Aufruf
+- eigenes globales Posteingangs-Dashboard mit bis zu zehn ungelesenen Nachrichten pro Konto, Einzelauswahl, „Alle auswählen“, bestätigtem Einzel-/Mehrfachlöschen und optionaler lokaler Inhaltsvorschau
 - vollständig deutsch- oder englischsprachige Oberfläche mit expliziter Sprachauswahl
 - Windows-Ein-Klick-Installer mit kontrolliertem Thunderbird-Neustart
 
@@ -30,13 +30,13 @@ Alternativ kann Luna, Terra oder `gpt-5.6-sol` für alle Aufgaben fest ausgewäh
 
 ## Datenschutz
 
-Bei AI-Aktionen werden Betreff, Absender, Nachrichtentext und Namen erkannter Anhänge direkt von Thunderbird an die OpenAI API gesendet. Beim Verbessern eines Antwortentwurfs werden außerdem der aktuelle Entwurf und die letzten Änderungswünsche übertragen. Die Suche nach ähnlichen Nachrichten läuft ausschließlich lokal. Automatische Verarbeitung ist standardmäßig deaktiviert.
+Bei AI-Aktionen werden Betreff, Absender, Nachrichtentext und Namen erkannter Anhänge direkt von Thunderbird an die OpenAI API gesendet. Beim Verbessern eines Antwortentwurfs werden außerdem der aktuelle Entwurf und die letzten Änderungswünsche übertragen. Die Suche nach ähnlichen Nachrichten und die optionale Dashboard-Inhaltsvorschau laufen ausschließlich lokal. Automatische Verarbeitung ist standardmäßig deaktiviert.
 
 Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speicher des Thunderbird-Profils. Für eine breitere Veröffentlichung sollte zusätzlich geprüft werden, ob dieses Sicherheitsmodell den eigenen Anforderungen entspricht.
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-1.5.2-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-1.6.0-win-x64.exe` herunterladen und starten.
 2. Im Setup **Deutsch** oder **English** wählen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung bestätigen.
@@ -66,30 +66,34 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-1.5.2-win-x64.exe`
+- `artifacts\Thunderbird-AI-Setup-1.6.0-win-x64.exe`
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
 ## Manueller Funktionstest
 
 1. In Thunderbirds Hauptsymbolleiste auf **Thunderbird AI Assistant** klicken. Das globale Dashboard muss die unterstützten Konten getrennt auflisten und je Konto höchstens zehn ungelesene Nachrichten anzeigen. Dafür ist weder ein API-Schlüssel noch ein AI-Aufruf erforderlich.
-2. Eine E-Mail öffnen und den nachrichtenbezogenen **AI Assistant**-Button anklicken. Statt des Dashboards muss die bisherige Einzelmail-Oberfläche erscheinen.
-3. Eine reine Text-E-Mail und eine HTML-E-Mail öffnen und jeweils **Zusammenfassen** ausführen.
-4. **Antwort vorschlagen** ausführen; ein eigener Thunderbird-Tab muss den ersten, direkt bearbeitbaren Entwurf anzeigen. Bei langem Inhalt muss nur der mittlere Arbeitsbereich scrollen, während **Antwort kopieren** und **In Thunderbird vorbereiten** dauerhaft sichtbar bleiben.
-5. Einen Änderungswunsch eingeben und **Entwurf verbessern** anklicken. Der bisherige Chat muss sichtbar bleiben und der aktuelle Entwurf aktualisiert werden.
-6. Die drei Antwortoptionen in ihren Standardwerten prüfen: Originalnachricht und **Allen antworten** aktiviert, ursprüngliche Anhänge deaktiviert.
-7. Den Entwurf zusätzlich von Hand ändern und **In Thunderbird vorbereiten** anklicken. Der neue Antwortentwurf muss an alle Teilnehmer adressiert sein, den AI-Text vor dem nativen Thunderbird-Zitat enthalten und keine ursprünglichen Anhänge besitzen.
-8. Den Antworteditor erneut öffnen, alle drei Optionen umschalten und wieder vorbereiten. Der Entwurf muss nur an den Absender gehen, kein Originalzitat enthalten und alle ursprünglichen Anhänge besitzen. Beim nächsten Öffnen müssen diese Werte vorausgewählt bleiben.
-9. Bei einem Compose-Fehler muss der aktuelle Text stattdessen in die Zwischenablage kopiert werden.
-10. Kategorie, Wichtigkeit, Übersetzung, Extraktion und Spam-Prüfung ausführen.
-11. **Ähnliche finden** prüfen; diese Aktion benötigt keinen OpenAI-Aufruf.
-12. Beide **AI Chat**-Schaltflächen testen.
-13. Das Ergebnis kopieren und lokal speichern.
-14. Unter **Einstellungen** jedes Modell testen; anschließend **Automatisch** speichern.
-15. Die Oberflächensprache auf **English** umstellen und globales Dashboard, Einzelmail-Popup, Antworteditor, Einstellungen und Hilfe prüfen. Danach zurück auf **Deutsch** wechseln. Alle sichtbaren Texte und Meldungen müssen der Auswahl folgen.
-16. Optional die automatische Verarbeitung aktivieren, eine andere E-Mail öffnen und das Popup erneut öffnen. Die automatische Analyse muss angezeigt werden.
+2. **Nachrichteninhalt als Vorschau anzeigen** aktivieren und nacheinander 1 sowie 5 Vorschauzeilen einstellen. Lange Vorschauen müssen innerhalb der Nachricht scrollbar sein. Dashboard schließen und erneut öffnen; Schalter und Zeilenzahl müssen erhalten bleiben.
+3. Mehrere Nachrichten einzeln auswählen und anschließend **Alle auswählen** testen. Anzahl, Auswahlzustand und Mehrfachschaltfläche müssen sich passend aktualisieren.
+4. Bei einer entbehrlichen Testnachricht die direkte Schaltfläche **Löschen** anklicken und den Dialog zunächst abbrechen. Danach bestätigen; nur diese Nachricht darf aus der Übersicht verschwinden.
+5. Mehrere entbehrliche Testnachrichten auswählen, **Ausgewählte löschen** anklicken und bestätigen. Nur die ausgewählten Nachrichten dürfen verschwinden. Thunderbird verwendet dabei die Lösch- und Papierkorb-Einstellungen des jeweiligen Kontos.
+6. Eine E-Mail öffnen und den nachrichtenbezogenen **AI Assistant**-Button anklicken. Statt des Dashboards muss die bisherige Einzelmail-Oberfläche erscheinen.
+7. Eine reine Text-E-Mail und eine HTML-E-Mail öffnen und jeweils **Zusammenfassen** ausführen.
+8. **Antwort vorschlagen** ausführen; ein eigener Thunderbird-Tab muss den ersten, direkt bearbeitbaren Entwurf anzeigen. Bei langem Inhalt muss nur der mittlere Arbeitsbereich scrollen, während **Antwort kopieren** und **In Thunderbird vorbereiten** dauerhaft sichtbar bleiben.
+9. Einen Änderungswunsch eingeben und **Entwurf verbessern** anklicken. Der bisherige Chat muss sichtbar bleiben und der aktuelle Entwurf aktualisiert werden.
+10. Die drei Antwortoptionen in ihren Standardwerten prüfen: Originalnachricht und **Allen antworten** aktiviert, ursprüngliche Anhänge deaktiviert.
+11. Den Entwurf zusätzlich von Hand ändern und **In Thunderbird vorbereiten** anklicken. Der neue Antwortentwurf muss an alle Teilnehmer adressiert sein, den AI-Text vor dem nativen Thunderbird-Zitat enthalten und keine ursprünglichen Anhänge besitzen.
+12. Den Antworteditor erneut öffnen, alle drei Optionen umschalten und wieder vorbereiten. Der Entwurf muss nur an den Absender gehen, kein Originalzitat enthalten und alle ursprünglichen Anhänge besitzen. Beim nächsten Öffnen müssen diese Werte vorausgewählt bleiben.
+13. Bei einem Compose-Fehler muss der aktuelle Text stattdessen in die Zwischenablage kopiert werden.
+14. Kategorie, Wichtigkeit, Übersetzung, Extraktion und Spam-Prüfung ausführen.
+15. **Ähnliche finden** prüfen; diese Aktion benötigt keinen OpenAI-Aufruf.
+16. Beide **AI Chat**-Schaltflächen testen.
+17. Das Ergebnis kopieren und lokal speichern.
+18. Unter **Einstellungen** jedes Modell testen; anschließend **Automatisch** speichern.
+19. Die Oberflächensprache auf **English** umstellen und globales Dashboard, Einzelmail-Popup, Antworteditor, Einstellungen und Hilfe prüfen. Danach zurück auf **Deutsch** wechseln. Alle sichtbaren Texte und Meldungen müssen der Auswahl folgen.
+20. Optional die automatische Verarbeitung aktivieren, eine andere E-Mail öffnen und das Popup erneut öffnen. Die automatische Analyse muss angezeigt werden.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 1.5.2** stehen. Dieser erste Dashboard-Test verwendet den Ungelesen-Status als Kandidatenfilter. Eine separate, dauerhafte Markierung „bereits analysiert“ ist noch nicht Bestandteil dieser Version.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 1.6.0** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Eine separate, dauerhafte Markierung „bereits analysiert“ ist noch nicht Bestandteil dieser Version.
 
 ## Technische Struktur
 

@@ -19,12 +19,33 @@
             <button type="button" id="dashboardRefresh" data-i18n="dashboardRefresh"></button>
             <button type="button" id="dashboardSettings" data-i18n="dashboardSettings"></button>
         </div>
+        <section class="dashboard-display-options" aria-labelledby="dashboardDisplayOptionsHeading">
+            <h2 id="dashboardDisplayOptionsHeading" data-i18n="dashboardDisplayOptions"></h2>
+            <div class="dashboard-display-controls">
+                <label>
+                    <input type="checkbox" id="dashboardShowPreview">
+                    <span data-i18n="dashboardShowPreview"></span>
+                </label>
+                <label for="dashboardPreviewLines" data-i18n="dashboardPreviewLines"></label>
+                <input type="number" id="dashboardPreviewLines" min="1" max="20" step="1" inputmode="numeric">
+            </div>
+            <p data-i18n="dashboardPreviewPrivacy"></p>
+        </section>
         <p id="dashboardStatus" class="dashboard-status" role="status" aria-live="polite"></p>
+        <div class="dashboard-bulk-actions">
+            <label>
+                <input type="checkbox" id="dashboardSelectAll">
+                <span data-i18n="dashboardSelectAll"></span>
+            </label>
+            <span id="dashboardSelectedCount" class="dashboard-selected-count"></span>
+            <button type="button" id="dashboardTrashSelected" data-i18n="dashboardTrashSelected"></button>
+        </div>
         <div id="dashboardAccounts" class="dashboard-accounts"></div>
     </main>
     <script src="locale-de.js"></script>
     <script src="locale-en.js"></script>
     <script src="constants.js"></script>
+    <script src="message.js"></script>
     <script src="GlobalMailService.js"></script>
     <script src="GlobalDashboardManager.js"></script>
     <script src="global-dashboard.js"></script>

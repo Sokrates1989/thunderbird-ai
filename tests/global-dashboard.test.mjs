@@ -22,10 +22,16 @@ function message(id, day) {
     };
 }
 
-function loadService({ accounts, query }) {
+function loadService({
+    accounts = [],
+    query = async () => ({ id: null, messages: [] }),
+    getMessageContent = async () => '',
+    deleteMessages = async () => {}
+}) {
     const aborted = [];
     const context = createContext({
         console: { error() {}, log() {}, warn() {} },
+        MessageService: { getMessageContent },
         browser: {
             accounts: { list: async includeFolders => {
                 assert.equal(includeFolders, true);
@@ -33,7 +39,8 @@ function loadService({ accounts, query }) {
             } },
             messages: {
                 query,
-                abortList: async id => aborted.push(id)
+                abortList: async id => aborted.push(id),
+                delete: deleteMessages
             }
         }
     });
@@ -79,6 +86,40 @@ test('global dashboard returns the newest ten unread Inbox headers per mail acco
     assert.deepEqual(aborted.sort(), ['list-a', 'list-b']);
 });
 
+test('dashboard previews are loaded locally and one MIME failure stays isolated', async () => {
+    const calls = [];
+    const getMessageContent = async id => {
+        calls.push(id);
+        if (id === 2) {
+            throw new Error('Body unavailable');
+        }
+        return `Body ${id}`;
+    };
+    const { service } = loadService({ getMessageContent });
+    const accounts = [{ messages: [message(1, 1), message(2, 2), message(3, 3)] }];
+
+    const result = await service.loadPreviews(accounts, 2);
+
+    assert.equal(result, accounts);
+    assert.deepEqual(calls.sort(), [1, 2, 3]);
+    assert.equal(accounts[0].messages[0].preview, 'Body 1');
+    assert.equal(accounts[0].messages[0].previewFailed, false);
+    assert.equal(accounts[0].messages[1].preview, '');
+    assert.equal(accounts[0].messages[1].previewFailed, true);
+    assert.equal(accounts[0].messages[2].preview, 'Body 3');
+});
+
+test('dashboard deletion uses the Thunderbird 128 non-permanent signature', async () => {
+    const calls = [];
+    const { service } = loadService({
+        deleteMessages: async (...parameters) => calls.push(parameters)
+    });
+
+    await service.moveToTrash([7, 8, 7, null, undefined]);
+
+    assert.deepEqual(calls.map(([ids, permanent]) => [Array.from(ids), permanent]), [[[7, 8], false]]);
+});
+
 test('one unread query failure does not hide the remaining accounts', async () => {
     const accounts = [
         account('broken', 'Broken', 'imap', { id: 'root-broken', subFolders: [inbox('broken-inbox')] }),
@@ -109,10 +150,22 @@ test('manifest routes global and message toolbar actions to separate popup pages
         path.join(repositoryRoot, 'thunderbird-ai/pages/global-dashboard.html'),
         'utf8'
     );
+    const dashboardStyles = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/styles/global-dashboard.css'),
+        'utf8'
+    );
 
     assert.equal(manifest.action.default_popup, 'global-dashboard.html');
     assert.equal(manifest.message_display_action.default_popup, 'single-mail-ui.html');
+    assert.ok(manifest.permissions.includes('messagesDelete'));
+    assert.match(dashboard, /id="dashboardSelectAll"/u);
+    assert.match(dashboard, /id="dashboardTrashSelected"/u);
+    assert.match(dashboard, /id="dashboardShowPreview"/u);
+    assert.match(dashboard, /id="dashboardPreviewLines"/u);
+    assert.match(dashboard, /message\.js/u);
     assert.match(dashboard, /GlobalMailService\.js/u);
     assert.match(dashboard, /GlobalDashboardManager\.js/u);
     assert.doesNotMatch(dashboard, /openai\.js|OpenAIService/u);
+    assert.match(dashboardStyles, /overflow-y:\s*auto/u);
+    assert.match(dashboardStyles, /--dashboard-preview-lines/u);
 });

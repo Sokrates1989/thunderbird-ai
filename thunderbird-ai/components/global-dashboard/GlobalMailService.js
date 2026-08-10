@@ -1,7 +1,7 @@
 /**
- * Reads bounded unread-message candidates for the global dashboard.
- * Only message headers from each account's Inbox are requested; no message body
- * is loaded and no AI or external network service is involved.
+ * Reads bounded unread-message candidates for the global dashboard and performs
+ * explicitly requested local mailbox actions. Message bodies are loaded only
+ * when the dashboard preview preference is enabled; no AI service is involved.
  */
 const GlobalMailService = {
     QUERY_PAGE_SIZE: 100,
@@ -13,6 +13,41 @@ const GlobalMailService = {
             .map(account => ({ account, inbox: this.findInbox(account.rootFolder) }))
             .filter(item => item.inbox && !['nntp', 'rss'].includes(item.account.type));
         return Promise.all(mailAccounts.map(item => this.listAccount(item, limit)));
+    },
+
+    /** Add locally extracted body previews without failing the full dashboard. */
+    async loadPreviews(accounts, concurrency = 4) {
+        const messages = accounts
+            .flatMap(account => account.messages || [])
+            .filter(message => message.preview === undefined);
+        let nextIndex = 0;
+        const worker = async () => {
+            while (nextIndex < messages.length) {
+                const message = messages[nextIndex];
+                nextIndex += 1;
+                try {
+                    message.preview = await MessageService.getMessageContent(message.id);
+                    message.previewFailed = false;
+                } catch (error) {
+                    console.warn(`Could not load preview for message ${message.id}:`, error);
+                    message.preview = '';
+                    message.previewFailed = true;
+                }
+            }
+        };
+        const workerCount = Math.min(Math.max(1, concurrency), messages.length);
+        await Promise.all(Array.from({ length: workerCount }, () => worker()));
+        return accounts;
+    },
+
+    /** Move messages according to Thunderbird's account trash settings. */
+    async moveToTrash(messageIds) {
+        const uniqueIds = [...new Set(messageIds)].filter(id => id !== undefined && id !== null);
+        if (!uniqueIds.length) {
+            return;
+        }
+        // The boolean signature is retained for Thunderbird 128 compatibility.
+        await browser.messages.delete(uniqueIds, false);
     },
 
     /** Find the special-use Inbox without relying on localized folder names. */
