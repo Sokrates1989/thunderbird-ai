@@ -21,6 +21,34 @@
         </div>
         <section class="dashboard-display-options" aria-labelledby="dashboardDisplayOptionsHeading">
             <h2 id="dashboardDisplayOptionsHeading" data-i18n="dashboardDisplayOptions"></h2>
+            <div class="dashboard-query-controls">
+                <label>
+                    <span data-i18n="dashboardSortOrder"></span>
+                    <select id="dashboardSortOrder">
+                        <option value="date-desc" data-i18n="dashboardSortNewest"></option>
+                        <option value="date-asc" data-i18n="dashboardSortOldest"></option>
+                        <option value="sender-asc" data-i18n="dashboardSortSenderAscending"></option>
+                        <option value="sender-desc" data-i18n="dashboardSortSenderDescending"></option>
+                    </select>
+                </label>
+                <label>
+                    <span data-i18n="dashboardMessageLimit"></span>
+                    <input type="number" id="dashboardMessageLimit" min="1" max="50" step="1" inputmode="numeric">
+                </label>
+                <label>
+                    <span data-i18n="dashboardDateFrom"></span>
+                    <input type="date" id="dashboardDateFrom">
+                </label>
+                <label>
+                    <span data-i18n="dashboardDateTo"></span>
+                    <input type="date" id="dashboardDateTo">
+                </label>
+                <details id="dashboardSenderFilter" class="dashboard-sender-filter">
+                    <summary id="dashboardSenderSummary" data-i18n="dashboardSenderFilter"></summary>
+                    <div id="dashboardSenderOptions" class="dashboard-sender-options"></div>
+                </details>
+            </div>
+            <p data-i18n="dashboardLimitHint"></p>
             <div class="dashboard-display-controls">
                 <label>
                     <input type="checkbox" id="dashboardShowPreview">
@@ -47,6 +75,8 @@
     <script src="constants.js"></script>
     <script src="message.js"></script>
     <script src="GlobalMailService.js"></script>
+    <script src="GlobalMailViewService.js"></script>
+    <script src="DashboardSenderFilterComponent.js"></script>
     <script src="GlobalDashboardManager.js"></script>
     <script src="global-dashboard.js"></script>
 </body>

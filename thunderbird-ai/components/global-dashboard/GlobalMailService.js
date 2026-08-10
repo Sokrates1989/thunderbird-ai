@@ -6,13 +6,13 @@
 const GlobalMailService = {
     QUERY_PAGE_SIZE: 100,
 
-    /** Return up to the requested number of newest unread Inbox messages per mail account. */
-    async listUnreadByAccount(limit = 10) {
+    /** Return all unread Inbox headers per supported mail account. */
+    async listUnreadByAccount() {
         const accounts = await browser.accounts.list(true);
         const mailAccounts = accounts
             .map(account => ({ account, inbox: this.findInbox(account.rootFolder) }))
             .filter(item => item.inbox && !['nntp', 'rss'].includes(item.account.type));
-        return Promise.all(mailAccounts.map(item => this.listAccount(item, limit)));
+        return Promise.all(mailAccounts.map(item => this.listAccount(item)));
     },
 
     /** Add locally extracted body previews without failing the full dashboard. */
@@ -68,17 +68,19 @@ const GlobalMailService = {
     },
 
     /** Isolate one account failure so the remaining accounts can still be displayed. */
-    async listAccount({ account, inbox }, limit) {
+    async listAccount({ account, inbox }) {
         let messageList = null;
         try {
             messageList = await browser.messages.query({
                 folderId: inbox.id,
                 read: false,
-                messagesPerPage: Math.max(limit, this.QUERY_PAGE_SIZE)
+                messagesPerPage: this.QUERY_PAGE_SIZE
             });
-            const messages = [...(messageList.messages || [])]
-                .sort((left, right) => this.dateValue(right.date) - this.dateValue(left.date))
-                .slice(0, limit);
+            const messages = [...(messageList.messages || [])];
+            while (messageList.id) {
+                messageList = await browser.messages.continueList(messageList.id);
+                messages.push(...(messageList.messages || []));
+            }
             return {
                 accountId: account.id,
                 accountName: account.name,
@@ -102,12 +104,6 @@ const GlobalMailService = {
                 });
             }
         }
-    },
-
-    dateValue(value) {
-        const date = value instanceof Date ? value : new Date(value || 0);
-        const timestamp = date.getTime();
-        return Number.isFinite(timestamp) ? timestamp : 0;
     }
 };
 

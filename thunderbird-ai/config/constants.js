@@ -2,7 +2,7 @@
 
 const CONFIG = {
     ADDON_NAME: 'Thunderbird AI Assistant',
-    ADDON_VERSION: '1.6.0',
+    ADDON_VERSION: '1.7.0',
     ADDON_ID: 'thunderbird-ai@example.com',
 
     OPENAI: {
@@ -59,7 +59,12 @@ const CONFIG = {
         REPLY_TO_ALL: 'replyToAll',
         REPLY_INCLUDE_ATTACHMENTS: 'replyIncludeAttachments',
         DASHBOARD_SHOW_PREVIEW: 'dashboardShowPreview',
-        DASHBOARD_PREVIEW_LINES: 'dashboardPreviewLines'
+        DASHBOARD_PREVIEW_LINES: 'dashboardPreviewLines',
+        DASHBOARD_SORT_ORDER: 'dashboardSortOrder',
+        DASHBOARD_MESSAGE_LIMIT: 'dashboardMessageLimit',
+        DASHBOARD_DATE_FROM: 'dashboardDateFrom',
+        DASHBOARD_DATE_TO: 'dashboardDateTo',
+        DASHBOARD_SENDER_FILTER: 'dashboardSenderFilter'
     },
 
     UI: {
