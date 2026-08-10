@@ -38,9 +38,10 @@ thunderbird-ai/
 - `GlobalMailService.js` owns Thunderbird header pagination, previews, and deletion.
 - `GlobalMailViewService.js` applies sender/date/AI filters, score sorting, and per-account limits before previews are loaded.
 - `DashboardViewPreferences.js` owns persisted view controls.
-- `DashboardSenderFilterComponent.js` and `DashboardMessageComponent.js` render their focused UI areas without injecting mailbox HTML.
-- `DashboardAIService.js` opens the existing single-message workspaces and persists only bounded importance/spam score metadata, keyed by RFC Message-ID instead of Thunderbird's restart-volatile numeric ID.
-- Bulk email bodies cross to `background.js`, which retrieves normalized messages through `MessageService` and calls `OpenAIService.analyzeBulkTriage`. That service always forces Luna, processes bounded batches, and returns validated 0–100 scores.
+- `DashboardSenderFilterComponent.js`, `DashboardMessageComponent.js`, and `DashboardFeedbackComponent.js` render their focused UI areas without injecting mailbox HTML.
+- `DashboardAIService.js` opens the existing single-message workspaces and persists bounded importance/spam score metadata, keyed by RFC Message-ID instead of Thunderbird's restart-volatile numeric ID.
+- `dashboard-training.js` owns the separate bounded archive of explicit operator corrections. It stores a clipped message snapshot and selects at most five relevant examples; Thunderbird deletion never accesses its storage key.
+- Bulk email bodies cross to `background.js`, which retrieves normalized messages through `MessageService`, selects relevant corrections through `DashboardTrainingService`, and calls `OpenAIService.analyzeBulkTriage`. That service always forces Luna, processes bounded batches, and returns validated 0–100 scores.
 
 ## 🏗️ Architecture Overview
 

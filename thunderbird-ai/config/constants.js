@@ -2,7 +2,7 @@
 
 const CONFIG = {
     ADDON_NAME: 'Thunderbird AI Assistant',
-    ADDON_VERSION: '1.8.0',
+    ADDON_VERSION: '1.9.0',
     ADDON_ID: 'thunderbird-ai@example.com',
 
     OPENAI: {
@@ -45,6 +45,9 @@ const CONFIG = {
         BULK_TRIAGE_BATCH_SIZE: 8,
         BULK_TRIAGE_CONCURRENCY: 2,
         BULK_TRIAGE_EMAIL_CHARACTERS: 6000,
+        BULK_TRIAGE_FEEDBACK_EXAMPLES: 5,
+        DASHBOARD_FEEDBACK_ARCHIVE_LIMIT: 250,
+        DASHBOARD_FEEDBACK_REASON_CHARACTERS: 1000,
         MAX_REPLY_DRAFT_CHARACTERS: 20000,
         MAX_REPLY_INSTRUCTION_CHARACTERS: 4000
     },
@@ -73,7 +76,8 @@ const CONFIG = {
         DASHBOARD_AI_STATUS_FILTER: 'dashboardAiStatusFilter',
         DASHBOARD_IMPORTANCE_MINIMUM: 'dashboardImportanceMinimum',
         DASHBOARD_SPAM_MINIMUM: 'dashboardSpamMinimum',
-        DASHBOARD_AI_RESULTS: 'dashboardAiResults'
+        DASHBOARD_AI_RESULTS: 'dashboardAiResults',
+        DASHBOARD_FEEDBACK_ARCHIVE: 'dashboardFeedbackArchive'
     },
 
     UI: {
@@ -101,7 +105,8 @@ const CONFIG = {
         EXTRACT_INFO: 'extractInfo',
         CHECK_SPAM: 'checkSpam',
         FIND_SIMILAR: 'findSimilar',
-        DASHBOARD_BULK_TRIAGE: 'analyzeDashboardMessages'
+        DASHBOARD_BULK_TRIAGE: 'analyzeDashboardMessages',
+        DASHBOARD_SAVE_FEEDBACK: 'saveDashboardScoreFeedback'
     },
 
     SHORTCUTS: {

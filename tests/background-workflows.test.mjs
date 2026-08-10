@@ -41,6 +41,13 @@ async function loadBackground() {
             date: '2026-08-09'
         }]
     };
+    context.DashboardTrainingService = {
+        relevantExamples: async () => [],
+        archiveFeedback: async (_message, feedback) => ({
+            correctedScores: feedback.correctedScores,
+            updatedAt: '2026-08-10T12:00:00.000Z'
+        })
+    };
     const result = method => async () => {
         serviceCalls.push(method);
         return { content: `${method} result`, usedApi: true, model: 'gpt-5.6-luna' };
@@ -157,6 +164,29 @@ test('dashboard bulk triage uses the shared background message loader and score 
     ]);
     assert.deepEqual(serviceCalls, ['bulk:2']);
     assert.deepEqual(stats, ['email:2', 'api']);
+});
+
+test('dashboard score feedback is routed to the independent background archive', async () => {
+    const { ai, config } = await loadBackground();
+
+    const response = await ai.handleMessage({
+        action: config.ACTIONS.DASHBOARD_SAVE_FEEDBACK,
+        messageId: 7,
+        originalScores: { importanceScore: 20, spamScore: 80 },
+        correctedScores: { importanceScore: 90, spamScore: 5 },
+        reason: 'Trusted sender',
+        sourceModel: 'gpt-5.6-luna'
+    });
+
+    assert.equal(response.success, true);
+    assert.deepEqual(
+        {
+            importanceScore: response.data.importanceScore,
+            spamScore: response.data.spamScore,
+            correctedAt: response.data.correctedAt
+        },
+        { importanceScore: 90, spamScore: 5, correctedAt: '2026-08-10T12:00:00.000Z' }
+    );
 });
 
 test('packaged UI sources contain no unfinished actions or retired models', () => {

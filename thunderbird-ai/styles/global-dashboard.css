@@ -53,6 +53,101 @@ body {
     cursor: pointer;
 }
 
+.dashboard-message-action.feedback {
+    background: #5f4bb6;
+}
+
+.dashboard-ai-score.corrected {
+    border-color: #b7a8f0;
+    background: #f1edff;
+    color: #49358f;
+}
+
+.dashboard-feedback-dialog {
+    width: min(440px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    padding: 0;
+    overflow-y: auto;
+    border: 1px solid #aab4bd;
+    border-radius: 9px;
+    color: inherit;
+    background: #fff;
+}
+
+.dashboard-feedback-dialog::backdrop {
+    background: rgb(0 0 0 / 45%);
+}
+
+.dashboard-feedback-dialog form {
+    display: grid;
+    gap: 13px;
+    padding: 18px;
+}
+
+.dashboard-feedback-dialog h2,
+.dashboard-feedback-dialog p {
+    margin: 0;
+}
+
+.dashboard-feedback-subject {
+    overflow-wrap: anywhere;
+    font-weight: 650;
+}
+
+.dashboard-feedback-field {
+    display: grid;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.dashboard-feedback-score-control {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 64px auto;
+    gap: 7px;
+    align-items: center;
+}
+
+.dashboard-feedback-score-control input[type="number"] {
+    min-width: 0;
+    padding: 5px;
+}
+
+.dashboard-feedback-field textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 7px;
+    resize: vertical;
+}
+
+.dashboard-feedback-privacy {
+    color: #66717a;
+    font-size: 11px;
+}
+
+.dashboard-feedback-status {
+    min-height: 16px;
+    color: #b42318;
+    font-size: 11px;
+}
+
+.dashboard-feedback-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.dashboard-feedback-actions button {
+    padding: 7px 11px;
+}
+
+#dashboardFeedbackSubmit {
+    border: 0;
+    border-radius: 5px;
+    background: #087cc1;
+    color: white;
+}
+
 .dashboard-actions button:last-child {
     background: #66717a;
 }
@@ -456,5 +551,15 @@ body {
     .dashboard-ai-score.spam.likely {
         background: #4a2523;
         color: #ffb4ad;
+    }
+
+    .dashboard-ai-score.corrected {
+        background: #352d54;
+        color: #d5ccff;
+    }
+
+    .dashboard-feedback-dialog {
+        border-color: #62666b;
+        background: #292a2d;
     }
 }

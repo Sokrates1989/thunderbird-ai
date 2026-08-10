@@ -78,6 +78,13 @@ function loadDashboardAIService() {
                 getURL: value => `moz-extension://test/${value}`,
                 sendMessage: async message => {
                     sentMessages.push(message);
+                    if (message.action === 'saveDashboardScoreFeedback') {
+                        return { success: true, data: {
+                            importanceScore: message.correctedScores.importanceScore,
+                            spamScore: message.correctedScores.spamScore,
+                            correctedAt: '2026-08-10T12:00:00.000Z'
+                        } };
+                    }
                     return { success: true, data: { results: [], failedCount: 0, model: 'gpt-5.6-luna' } };
                 }
             },
@@ -93,6 +100,7 @@ function loadDashboardAIService() {
     loadScript(context, 'thunderbird-ai/config/locale-de.js');
     loadScript(context, 'thunderbird-ai/config/locale-en.js');
     loadScript(context, 'thunderbird-ai/config/constants.js');
+    loadScript(context, 'common/utils/message.js');
     loadScript(context, 'thunderbird-ai/components/global-dashboard/DashboardAIService.js');
     return { context, openedTabs, sentMessages, service: context.DashboardAIService, storageState };
 }
@@ -234,6 +242,18 @@ test('dashboard AI scores persist without mail content and direct actions open s
     }] }];
     service.attachResults(restartedAccounts, saved);
     await service.analyze([42]);
+    restartedAccounts[0].messages[0].correctedImportanceScore = 94;
+    restartedAccounts[0].messages[0].correctedSpamScore = 2;
+    const correction = await service.submitFeedback(
+        restartedAccounts[0].messages[0],
+        'Known supplier'
+    );
+    const corrected = await service.saveCorrection(
+        saved,
+        restartedAccounts[0],
+        restartedAccounts[0].messages[0],
+        correction
+    );
     await service.openWorkspace(42, 'summarize');
     await service.openWorkspace(42, 'reply');
 
@@ -241,12 +261,21 @@ test('dashboard AI scores persist without mail content and direct actions open s
         storageState[context.CONFIG.STORAGE_KEYS.DASHBOARD_AI_RESULTS]
     );
     assert.deepEqual(
-        { importanceScore: persisted.importanceScore, spamScore: persisted.spamScore, model: persisted.model },
-        { importanceScore: 81, spamScore: 9, model: 'gpt-5.6-luna' }
+        {
+            importanceScore: persisted.importanceScore,
+            spamScore: persisted.spamScore,
+            model: persisted.model,
+            corrected: persisted.corrected
+        },
+        { importanceScore: 94, spamScore: 2, model: 'gpt-5.6-luna', corrected: true }
     );
     assert.doesNotMatch(JSON.stringify(storageState), /Private body/u);
     assert.equal(restartedAccounts[0].messages[0].aiAnalysis.importanceScore, 81);
     assert.equal(sentMessages[0].action, context.CONFIG.ACTIONS.DASHBOARD_BULK_TRIAGE);
+    assert.equal(sentMessages[1].action, context.CONFIG.ACTIONS.DASHBOARD_SAVE_FEEDBACK);
+    assert.equal(sentMessages[1].reason, 'Known supplier');
+    assert.equal(Object.values(corrected)[0].importanceScore, 94);
+    assert.equal(Object.values(corrected)[0].corrected, true);
     assert.match(openedTabs[0].url, /single-mail-ui\.html\?messageId=42&summarize=1/u);
     assert.match(openedTabs[1].url, /single-mail-ui\.html\?messageId=42&reply=1/u);
 });
@@ -414,6 +443,10 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.equal(manifest.action.default_popup, 'global-dashboard.html');
     assert.equal(manifest.message_display_action.default_popup, 'single-mail-ui.html');
     assert.ok(manifest.permissions.includes('messagesDelete'));
+    assert.ok(manifest.background.scripts.indexOf('dashboard-training.js')
+        > manifest.background.scripts.indexOf('message.js'));
+    assert.ok(manifest.background.scripts.indexOf('dashboard-training.js')
+        < manifest.background.scripts.indexOf('openai.js'));
     assert.match(dashboard, /id="dashboardSelectAll"/u);
     assert.match(dashboard, /id="dashboardTrashSelected"/u);
     assert.match(dashboard, /id="dashboardShowPreview"/u);
@@ -435,6 +468,11 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(dashboard, /DashboardViewPreferences\.js/u);
     assert.match(dashboard, /DashboardAIService\.js/u);
     assert.match(dashboard, /DashboardMessageComponent\.js/u);
+    assert.match(dashboard, /DashboardFeedbackComponent\.js/u);
+    assert.match(dashboard, /id="dashboardFeedbackDialog"/u);
+    assert.match(dashboard, /id="dashboardFeedbackImportanceRange"/u);
+    assert.match(dashboard, /id="dashboardFeedbackSpamRange"/u);
+    assert.match(dashboard, /id="dashboardFeedbackReason"/u);
     assert.match(dashboard, /GlobalDashboardManager\.js/u);
     assert.doesNotMatch(dashboard, /openai\.js|OpenAIService/u);
     assert.match(dashboardStyles, /overflow-y:\s*auto/u);

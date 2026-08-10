@@ -5,6 +5,7 @@ const DashboardMessageComponent = class {
         this.onSelectionChanged = options.onSelectionChanged;
         this.onSummarize = options.onSummarize;
         this.onReply = options.onReply;
+        this.onCorrectScores = options.onCorrectScores;
         this.onTrash = options.onTrash;
     }
 
@@ -65,6 +66,13 @@ const DashboardMessageComponent = class {
                 classification: I18n.t(spamClassification)
             }))
         );
+        if (analysis.corrected) {
+            scores.appendChild(this.textElement(
+                'span',
+                'dashboard-ai-score corrected',
+                I18n.t('dashboardFeedbackCorrectedMarker')
+            ));
+        }
         return scores;
     }
 
@@ -90,9 +98,26 @@ const DashboardMessageComponent = class {
         actions.className = 'dashboard-message-actions';
         actions.append(
             this.actionButton('dashboardSummarizeOne', 'dashboardSummarizeMessage', subject, busy, () => this.onSummarize(message)),
-            this.actionButton('dashboardReplyOne', 'dashboardReplyMessage', subject, busy, () => this.onReply(message)),
-            this.actionButton('dashboardTrashOne', 'dashboardTrashMessage', subject, busy, () => this.onTrash(message), 'danger')
+            this.actionButton('dashboardReplyOne', 'dashboardReplyMessage', subject, busy, () => this.onReply(message))
         );
+        if (message.aiAnalysis) {
+            actions.appendChild(this.actionButton(
+                'dashboardCorrectScores',
+                'dashboardCorrectScoresMessage',
+                subject,
+                busy,
+                () => this.onCorrectScores(message),
+                'feedback'
+            ));
+        }
+        actions.appendChild(this.actionButton(
+            'dashboardTrashOne',
+            'dashboardTrashMessage',
+            subject,
+            busy,
+            () => this.onTrash(message),
+            'danger'
+        ));
         return actions;
     }
 

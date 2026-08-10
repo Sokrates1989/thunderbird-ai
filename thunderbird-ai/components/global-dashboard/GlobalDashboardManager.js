@@ -66,9 +66,13 @@ const GlobalDashboardManager = class {
                 this.openMessageWorkspace(message, 'reply')
                     .catch(error => this.showWorkspaceError(error));
             },
+            onCorrectScores: message => this.feedbackComponent.open(message),
             onTrash: message => {
                 this.trashOne(message).catch(error => this.showUnexpectedError(error));
             }
+        });
+        this.feedbackComponent = new DashboardFeedbackComponent({
+            onSave: (message, reason) => this.saveScoreFeedback(message, reason)
         });
     }
 
@@ -413,6 +417,23 @@ const GlobalDashboardManager = class {
     /** Open the existing single-message summary or reply workspace. */
     async openMessageWorkspace(message, mode) {
         await DashboardAIService.openWorkspace(message.id, mode);
+    }
+
+    /** Archive an operator correction and immediately reapply score sort/filter controls. */
+    async saveScoreFeedback(message, reason) {
+        const account = this.sourceAccounts.find(candidate => (
+            (candidate.messages || []).some(item => item.id === message.id)
+        ));
+        const correction = await DashboardAIService.submitFeedback(message, reason);
+        this.aiResults = await DashboardAIService.saveCorrection(
+            this.aiResults,
+            account,
+            message,
+            correction
+        );
+        DashboardAIService.attachResults(this.sourceAccounts, this.aiResults);
+        await this.rebuildCurrentView();
+        this.setStatus(I18n.t('dashboardFeedbackSaved'), 'success');
     }
 
     /** Report a direct-workspace failure without mislabeling it as a mailbox load failure. */

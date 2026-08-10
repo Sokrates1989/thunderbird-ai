@@ -32,6 +32,8 @@ const MessageService = {
 
             return {
                 id: header.id,
+                headerMessageId: header.headerMessageId || '',
+                accountId: header.folder?.accountId || '',
                 subject: header.subject || I18n.t('noSubject'),
                 author: header.author || I18n.t('unknownSender'),
                 from: header.author || I18n.t('unknownSender'),
@@ -211,6 +213,25 @@ const MessageService = {
                 .split(/\s+/u)
                 .filter(token => token.length > 2 && !stopWords.has(token))
         );
+    },
+
+    /** Build a restart-stable identity without retaining a Thunderbird numeric ID. */
+    messageIdentity(message, accountIdOverride = '') {
+        const accountId = String(accountIdOverride || message?.accountId || '');
+        const headerMessageId = String(message?.headerMessageId || '').trim();
+        if (headerMessageId) {
+            return JSON.stringify(['header', accountId, headerMessageId]);
+        }
+        const timestamp = new Date(message?.date || '').getTime();
+        const date = Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : '';
+        return JSON.stringify([
+            'fallback',
+            accountId,
+            date,
+            String(message?.author || ''),
+            String(message?.subject || ''),
+            Number(message?.size) || 0
+        ]);
     },
 
     async updateMessageTags(messageId, tags) {

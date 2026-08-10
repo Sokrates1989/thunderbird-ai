@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extensionName__",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
   "author": "Sokrates1989",
@@ -26,7 +26,7 @@
     "48": "icon.svg"
   },
   "background": {
-    "scripts": ["locale-de.js", "locale-en.js", "constants.js", "storage.js", "openai.js", "message.js", "ui.js", "background.js"]
+    "scripts": ["locale-de.js", "locale-en.js", "constants.js", "storage.js", "message.js", "dashboard-training.js", "openai.js", "ui.js", "background.js"]
   },
   "message_display_action": {
     "default_title": "__MSG_actionTitle__",

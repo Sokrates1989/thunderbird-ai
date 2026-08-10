@@ -99,6 +99,38 @@
         </div>
         <div id="dashboardAccounts" class="dashboard-accounts"></div>
     </main>
+    <dialog id="dashboardFeedbackDialog" class="dashboard-feedback-dialog">
+        <form id="dashboardFeedbackForm" method="dialog">
+            <h2 data-i18n="dashboardFeedbackTitle"></h2>
+            <p id="dashboardFeedbackSubject" class="dashboard-feedback-subject"></p>
+            <label class="dashboard-feedback-field">
+                <span data-i18n="dashboardFeedbackImportance"></span>
+                <span class="dashboard-feedback-score-control">
+                    <input type="range" id="dashboardFeedbackImportanceRange" min="0" max="100" step="1">
+                    <input type="number" id="dashboardFeedbackImportanceNumber" min="0" max="100" step="1" inputmode="numeric">
+                    <span aria-hidden="true">%</span>
+                </span>
+            </label>
+            <label class="dashboard-feedback-field">
+                <span data-i18n="dashboardFeedbackSpam"></span>
+                <span class="dashboard-feedback-score-control">
+                    <input type="range" id="dashboardFeedbackSpamRange" min="0" max="100" step="1">
+                    <input type="number" id="dashboardFeedbackSpamNumber" min="0" max="100" step="1" inputmode="numeric">
+                    <span aria-hidden="true">%</span>
+                </span>
+            </label>
+            <label class="dashboard-feedback-field">
+                <span data-i18n="dashboardFeedbackReason"></span>
+                <textarea id="dashboardFeedbackReason" rows="3" maxlength="1000" data-i18n-placeholder="dashboardFeedbackReasonPlaceholder"></textarea>
+            </label>
+            <p class="dashboard-feedback-privacy" data-i18n="dashboardFeedbackPrivacy"></p>
+            <p id="dashboardFeedbackStatus" class="dashboard-feedback-status" role="alert"></p>
+            <div class="dashboard-feedback-actions">
+                <button type="button" id="dashboardFeedbackCancel" data-i18n="dashboardFeedbackCancel"></button>
+                <button type="submit" id="dashboardFeedbackSubmit" data-i18n="dashboardFeedbackSave"></button>
+            </div>
+        </form>
+    </dialog>
     <script src="locale-de.js"></script>
     <script src="locale-en.js"></script>
     <script src="constants.js"></script>
@@ -109,6 +141,7 @@
     <script src="DashboardSenderFilterComponent.js"></script>
     <script src="DashboardAIService.js"></script>
     <script src="DashboardMessageComponent.js"></script>
+    <script src="DashboardFeedbackComponent.js"></script>
     <script src="GlobalDashboardManager.js"></script>
     <script src="global-dashboard.js"></script>
 </body>

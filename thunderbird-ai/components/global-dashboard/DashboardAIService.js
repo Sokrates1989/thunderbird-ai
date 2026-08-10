@@ -58,21 +58,7 @@ const DashboardAIService = {
 
     /** Prefer the RFC Message-ID because Thunderbird numeric IDs expire after restart. */
     messageKey(account, message) {
-        const accountId = String(account?.accountId || '');
-        const headerMessageId = String(message?.headerMessageId || '').trim();
-        if (headerMessageId) {
-            return JSON.stringify(['header', accountId, headerMessageId]);
-        }
-        const timestamp = new Date(message?.date || '').getTime();
-        const date = Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : '';
-        return JSON.stringify([
-            'fallback',
-            accountId,
-            date,
-            String(message?.author || ''),
-            String(message?.subject || ''),
-            Number(message?.size) || 0
-        ]);
+        return MessageService.messageIdentity(message, account?.accountId);
     },
 
     /** Request the shared background coordinator to analyze selected messages. */
@@ -85,6 +71,49 @@ const DashboardAIService = {
             throw new Error(response?.error || I18n.t('dashboardAnalysisFailed'));
         }
         return response.data;
+    },
+
+    /** Archive one correction in the background and return its validated score metadata. */
+    async submitFeedback(message, reason = '') {
+        const analysis = message?.aiAnalysis;
+        const response = await browser.runtime.sendMessage({
+            action: CONFIG.ACTIONS.DASHBOARD_SAVE_FEEDBACK,
+            messageId: message.id,
+            originalScores: {
+                importanceScore: analysis.importanceScore,
+                spamScore: analysis.spamScore
+            },
+            correctedScores: {
+                importanceScore: message.correctedImportanceScore,
+                spamScore: message.correctedSpamScore
+            },
+            reason,
+            sourceModel: analysis.model
+        });
+        if (!response?.success) {
+            throw new Error(response?.error || I18n.t('dashboardFeedbackSaveFailed'));
+        }
+        return response.data;
+    },
+
+    /** Replace the visible score while retaining a durable user-correction marker. */
+    async saveCorrection(existingResults, account, message, correction) {
+        const storageKey = this.messageKey(account, message);
+        const correctedAt = String(correction?.correctedAt || '');
+        const normalized = this.normalizeResult({
+            importanceScore: correction?.importanceScore,
+            spamScore: correction?.spamScore,
+            analyzedAt: correctedAt,
+            correctedAt,
+            corrected: true,
+            model: message?.aiAnalysis?.model || null
+        });
+        if (!normalized) {
+            throw new Error(I18n.t('dashboardFeedbackInvalid'));
+        }
+        const merged = { ...this.normalizeResults(existingResults), [storageKey]: normalized };
+        await browser.storage.local.set({ [CONFIG.STORAGE_KEYS.DASHBOARD_AI_RESULTS]: merged });
+        return merged;
     },
 
     /** Open the existing single-message workspace in its requested AI mode. */
@@ -119,7 +148,9 @@ const DashboardAIService = {
             importanceScore,
             spamScore,
             analyzedAt,
-            model: typeof result.model === 'string' ? result.model : null
+            model: typeof result.model === 'string' ? result.model : null,
+            corrected: result?.corrected === true,
+            correctedAt: typeof result?.correctedAt === 'string' ? result.correctedAt : null
         };
     },
 

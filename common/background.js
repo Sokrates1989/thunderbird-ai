@@ -67,6 +67,8 @@ class ThunderbirdAI {
                     return this.findSimilar(request.messageId);
                 case CONFIG.ACTIONS.DASHBOARD_BULK_TRIAGE:
                     return this.analyzeDashboardMessages(request.messageIds || []);
+                case CONFIG.ACTIONS.DASHBOARD_SAVE_FEEDBACK:
+                    return this.saveDashboardScoreFeedback(request);
                 case CONFIG.ACTIONS.CHAT:
                     return this.processChatQuery(
                         request.query,
@@ -152,7 +154,8 @@ class ThunderbirdAI {
         const messages = await Promise.all(
             uniqueIds.map(messageId => MessageService.getFullMessage(messageId))
         );
-        const analysis = await OpenAIService.analyzeBulkTriage(messages);
+        const feedbackExamples = await DashboardTrainingService.relevantExamples(messages);
+        const analysis = await OpenAIService.analyzeBulkTriage(messages, feedbackExamples);
         await StorageManager.updateStatistics('email', analysis.scores.length);
         if (analysis.apiCalls) {
             await StorageManager.updateStatistics('api', analysis.apiCalls);
@@ -163,6 +166,25 @@ class ThunderbirdAI {
                 results: analysis.scores,
                 failedCount: analysis.failedCount,
                 model: analysis.model
+            }
+        };
+    }
+
+    /** Persist explicit operator corrections independently from Thunderbird mail state. */
+    async saveDashboardScoreFeedback(request) {
+        const message = await MessageService.getFullMessage(request.messageId);
+        const feedback = await DashboardTrainingService.archiveFeedback(message, {
+            originalScores: request.originalScores,
+            correctedScores: request.correctedScores,
+            reason: request.reason,
+            sourceModel: request.sourceModel
+        });
+        return {
+            success: true,
+            data: {
+                importanceScore: feedback.correctedScores.importanceScore,
+                spamScore: feedback.correctedScores.spamScore,
+                correctedAt: feedback.updatedAt
             }
         };
     }

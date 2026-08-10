@@ -123,7 +123,7 @@ const OpenAIService = {
     },
 
     /** Classify several messages in bounded Luna batches and retain successful partial batches. */
-    async analyzeBulkTriage(messages) {
+    async analyzeBulkTriage(messages, feedbackExamples = []) {
         const batches = [];
         for (let index = 0; index < messages.length; index += CONFIG.OPENAI.BULK_TRIAGE_BATCH_SIZE) {
             batches.push(messages.slice(index, index + CONFIG.OPENAI.BULK_TRIAGE_BATCH_SIZE));
@@ -137,7 +137,7 @@ const OpenAIService = {
                 nextBatch += 1;
                 const batch = batches[batchIndex];
                 try {
-                    results[batchIndex] = await this.analyzeBulkTriageBatch(batch);
+                    results[batchIndex] = await this.analyzeBulkTriageBatch(batch, feedbackExamples);
                 } catch (error) {
                     failures.push({ batchIndex, count: batch.length, error });
                 }
@@ -158,17 +158,37 @@ const OpenAIService = {
     },
 
     /** Request one strict score pair per message while forcing the low-cost Luna model. */
-    async analyzeBulkTriageBatch(messages) {
-        const input = messages.map((message, index) => [
+    async analyzeBulkTriageBatch(messages, feedbackExamples = []) {
+        const messageInput = messages.map((message, index) => [
             `<bulk-email index="${index}">`,
             this.formatEmailContext(message, CONFIG.OPENAI.BULK_TRIAGE_EMAIL_CHARACTERS),
             '</bulk-email>'
         ].join('\n')).join('\n\n');
+        const feedbackInput = this.formatBulkFeedbackExamples(feedbackExamples);
         const response = await this.request('bulkTriage', {
             instructions: this.baseInstructions(I18n.t('bulkTriagePrompt')),
-            input
+            input: [feedbackInput, messageInput].filter(Boolean).join('\n\n')
         }, { preferredModel: CONFIG.OPENAI.BULK_TRIAGE_MODEL });
         return this.parseBulkTriageScores(response.content, messages);
+    },
+
+    /** Format bounded operator corrections as examples, never as executable instructions. */
+    formatBulkFeedbackExamples(examples) {
+        if (!Array.isArray(examples) || !examples.length) {
+            return '';
+        }
+        const rows = examples.slice(0, CONFIG.OPENAI.BULK_TRIAGE_FEEDBACK_EXAMPLES)
+            .map((example, index) => [
+                `<operator-feedback-example index="${index}">`,
+                JSON.stringify({
+                    email: example.message,
+                    originalScores: example.originalScores,
+                    correctedScores: example.correctedScores,
+                    operatorReason: String(example.reason || '')
+                }),
+                '</operator-feedback-example>'
+            ].join('\n'));
+        return ['<operator-feedback-examples>', ...rows, '</operator-feedback-examples>'].join('\n');
     },
 
     /** Validate untrusted model output and map its local indices back to Thunderbird IDs. */
