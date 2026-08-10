@@ -50,6 +50,19 @@ const GlobalMailService = {
         await browser.messages.delete(uniqueIds, false);
     },
 
+    /** Mark every unique message as read while isolating individual update failures. */
+    async markAsRead(messageIds) {
+        const uniqueIds = [...new Set(messageIds)].filter(id => id !== undefined && id !== null);
+        const results = await Promise.allSettled(
+            uniqueIds.map(messageId => browser.messages.update(messageId, { read: true }))
+        );
+        return results.reduce((summary, result, index) => {
+            const target = result.status === 'fulfilled' ? summary.updatedIds : summary.failedIds;
+            target.push(uniqueIds[index]);
+            return summary;
+        }, { updatedIds: [], failedIds: [] });
+    },
+
     /** Find the special-use Inbox without relying on localized folder names. */
     findInbox(folder) {
         if (!folder) {

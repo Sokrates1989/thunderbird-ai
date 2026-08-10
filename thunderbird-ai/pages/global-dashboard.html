@@ -100,14 +100,37 @@
             <span id="dashboardLoadingText"></span>
         </div>
         <div class="dashboard-bulk-actions">
-            <label>
-                <input type="checkbox" id="dashboardSelectAll">
-                <span data-i18n="dashboardSelectAll"></span>
-            </label>
-            <span id="dashboardSelectedCount" class="dashboard-selected-count"></span>
-            <button type="button" id="dashboardAnalyzeSelected" class="dashboard-analyze-selected" data-i18n="dashboardAnalyzeSelected"></button>
-            <button type="button" id="dashboardRescoreSelected" class="dashboard-rescore-selected" data-i18n="dashboardRescoreSelected"></button>
-            <button type="button" id="dashboardTrashSelected" data-i18n="dashboardTrashSelected"></button>
+            <div class="dashboard-bulk-selection">
+                <label>
+                    <input type="checkbox" id="dashboardSelectAll">
+                    <span data-i18n="dashboardSelectAll"></span>
+                </label>
+                <span id="dashboardSelectedCount" class="dashboard-selected-count"></span>
+            </div>
+            <div class="dashboard-bulk-action-groups">
+                <div class="dashboard-bulk-action-group ai" role="group" aria-labelledby="dashboardBulkAIHeading">
+                    <span id="dashboardBulkAIHeading" class="dashboard-action-group-title" data-i18n="dashboardAIActionsGroup"></span>
+                    <button type="button" id="dashboardAnalyzeSelected" class="dashboard-bulk-action dashboard-analyze-selected">
+                        <span class="dashboard-action-icon" aria-hidden="true">✨</span>
+                        <span data-i18n="dashboardAnalyzeSelected"></span>
+                    </button>
+                    <button type="button" id="dashboardRescoreSelected" class="dashboard-bulk-action dashboard-rescore-selected">
+                        <span class="dashboard-action-icon" aria-hidden="true">↻</span>
+                        <span data-i18n="dashboardRescoreSelected"></span>
+                    </button>
+                </div>
+                <div class="dashboard-bulk-action-group mail" role="group" aria-labelledby="dashboardBulkMailHeading">
+                    <span id="dashboardBulkMailHeading" class="dashboard-action-group-title" data-i18n="dashboardMailActionsGroup"></span>
+                    <button type="button" id="dashboardMarkReadSelected" class="dashboard-bulk-action dashboard-mark-read">
+                        <span class="dashboard-action-icon" aria-hidden="true">✓</span>
+                        <span data-i18n="dashboardMarkReadSelected"></span>
+                    </button>
+                    <button type="button" id="dashboardTrashSelected" class="dashboard-bulk-action dashboard-danger-action">
+                        <span class="dashboard-action-icon" aria-hidden="true">🗑️</span>
+                        <span data-i18n="dashboardTrashSelected"></span>
+                    </button>
+                </div>
+            </div>
         </div>
         <div id="dashboardAccounts" class="dashboard-accounts"></div>
     </main>

@@ -27,7 +27,8 @@ function loadService({
     query = async () => ({ id: null, messages: [] }),
     continueList = async () => ({ id: null, messages: [] }),
     getMessageContent = async () => '',
-    deleteMessages = async () => {}
+    deleteMessages = async () => {},
+    updateMessage = async () => {}
 }) {
     const aborted = [];
     const context = createContext({
@@ -42,7 +43,8 @@ function loadService({
                 query,
                 continueList,
                 abortList: async id => aborted.push(id),
-                delete: deleteMessages
+                delete: deleteMessages,
+                update: updateMessage
             }
         }
     });
@@ -129,6 +131,17 @@ function loadDashboardAIService() {
     loadScript(context, 'common/utils/message.js');
     loadScript(context, 'thunderbird-ai/components/global-dashboard/DashboardAIService.js');
     return { context, openedTabs, sentMessages, service: context.DashboardAIService, storageState };
+}
+
+function loadDashboardManager(markAsRead) {
+    const context = createContext({
+        GlobalMailService: { markAsRead },
+        I18n: {
+            t: (key, replacements = {}) => `${key}:${JSON.stringify(replacements)}`
+        }
+    });
+    loadScript(context, 'thunderbird-ai/components/global-dashboard/GlobalDashboardManager.js');
+    return context.GlobalDashboardManager;
 }
 
 test('global dashboard reads every unread-header page for each Inbox', async () => {
@@ -628,6 +641,54 @@ test('dashboard deletion uses the Thunderbird 128 non-permanent signature', asyn
     assert.deepEqual(calls.map(([ids, permanent]) => [Array.from(ids), permanent]), [[[7, 8], false]]);
 });
 
+test('mark as read updates each unique message and isolates partial failures', async () => {
+    const calls = [];
+    const { service } = loadService({
+        updateMessage: async (messageId, properties) => {
+            calls.push([messageId, { ...properties }]);
+            if (messageId === 8) {
+                throw new Error('Message unavailable');
+            }
+        }
+    });
+
+    const result = await service.markAsRead([7, 8, 7, null, undefined]);
+
+    assert.deepEqual(calls, [
+        [7, { read: true }],
+        [8, { read: true }]
+    ]);
+    assert.deepEqual(Array.from(result.updatedIds), [7]);
+    assert.deepEqual(Array.from(result.failedIds), [8]);
+});
+
+test('selected mark-as-read refreshes the unread view and reports partial success', async () => {
+    const calls = [];
+    const DashboardManager = loadDashboardManager(async messageIds => {
+        calls.push([...messageIds]);
+        return { updatedIds: [7], failedIds: [8] };
+    });
+    const manager = Object.create(DashboardManager.prototype);
+    const busyStates = [];
+    const statuses = [];
+    let refreshCount = 0;
+    manager.selectedMessageIds = new Set([7, 8]);
+    manager.setBusy = busy => busyStates.push(busy);
+    manager.refresh = async () => { refreshCount += 1; };
+    manager.setStatus = (messageText, type) => statuses.push([messageText, type]);
+
+    await manager.markSelectedAsRead();
+
+    assert.deepEqual(calls, [[7, 8]]);
+    assert.equal(refreshCount, 1);
+    assert.equal(manager.selectedMessageIds.size, 0);
+    assert.deepEqual(busyStates, [true, false]);
+    assert.deepEqual(statuses, [[
+        'dashboardMarkReadPartial:{"updated":1,"failed":1}',
+        'warning'
+    ]]);
+});
+
 test('one unread query failure does not hide the remaining accounts', async () => {
     const accounts = [
         account('broken', 'Broken', 'imap', { id: 'root-broken', subFolders: [inbox('broken-inbox')] }),
@@ -662,6 +723,10 @@ test('manifest routes global and message toolbar actions to separate popup pages
         path.join(repositoryRoot, 'thunderbird-ai/styles/global-dashboard.css'),
         'utf8'
     );
+    const messageComponent = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/components/global-dashboard/DashboardMessageComponent.js'),
+        'utf8'
+    );
     const singleMailManager = fs.readFileSync(
         path.join(repositoryRoot, 'thunderbird-ai/components/single-mail/SingleMailManager.js'),
         'utf8'
@@ -670,12 +735,16 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.equal(manifest.action.default_popup, 'global-dashboard.html');
     assert.equal(manifest.message_display_action.default_popup, 'single-mail-ui.html');
     assert.ok(manifest.permissions.includes('messagesDelete'));
+    assert.ok(manifest.permissions.includes('messagesUpdate'));
     assert.ok(manifest.background.scripts.indexOf('dashboard-training.js')
         > manifest.background.scripts.indexOf('message.js'));
     assert.ok(manifest.background.scripts.indexOf('dashboard-training.js')
         < manifest.background.scripts.indexOf('openai.js'));
     assert.match(dashboard, /id="dashboardSelectAll"/u);
     assert.match(dashboard, /id="dashboardTrashSelected"/u);
+    assert.match(dashboard, /id="dashboardMarkReadSelected"/u);
+    assert.match(dashboard, /class="dashboard-bulk-action-groups"/u);
+    assert.match(dashboard, /class="dashboard-action-icon" aria-hidden="true"/u);
     assert.match(dashboard, /id="dashboardShowPreview"/u);
     assert.match(dashboard, /id="dashboardPreviewLines"/u);
     assert.match(dashboard, /id="dashboardSortOrder"/u);
@@ -709,5 +778,16 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(dashboardStyles, /overflow-y:\s*auto/u);
     assert.match(dashboardStyles, /--dashboard-preview-lines/u);
     assert.match(dashboardStyles, /@keyframes dashboard-spin/u);
+    assert.match(
+        dashboardStyles,
+        /\.dashboard-message-actions\s*\{[^}]*grid-template-columns:\s*repeat\(2,/su
+    );
+    assert.match(
+        dashboardStyles,
+        /\.dashboard-bulk-action-groups\s*\{[^}]*grid-template-columns:\s*repeat\(2,/su
+    );
+    assert.match(messageComponent, /dashboardMarkReadOne/u);
+    assert.match(messageComponent, /dashboard-message-action-group/u);
+    assert.match(messageComponent, /dashboard-action-icon/u);
     assert.match(singleMailManager, /parameters\.get\('summarize'\) === '1'[\s\S]*executeAIAction\('SUMMARIZE_EMAIL'\)/u);
 });

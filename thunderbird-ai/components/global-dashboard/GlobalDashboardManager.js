@@ -28,6 +28,7 @@ const GlobalDashboardManager = class {
             selectedCount: document.getElementById('dashboardSelectedCount'),
             analyzeSelected: document.getElementById('dashboardAnalyzeSelected'),
             rescoreSelected: document.getElementById('dashboardRescoreSelected'),
+            markReadSelected: document.getElementById('dashboardMarkReadSelected'),
             loadingIndicator: document.getElementById('dashboardLoadingIndicator'),
             loadingText: document.getElementById('dashboardLoadingText'),
             trashSelected: document.getElementById('dashboardTrashSelected')
@@ -72,6 +73,9 @@ const GlobalDashboardManager = class {
                     .catch(error => this.showWorkspaceError(error));
             },
             onCorrectScores: message => this.feedbackComponent.open(message),
+            onMarkRead: message => {
+                this.markOneAsRead(message).catch(error => this.showUnexpectedError(error));
+            },
             onTrash: message => {
                 this.trashOne(message).catch(error => this.showUnexpectedError(error));
             }
@@ -113,6 +117,9 @@ const GlobalDashboardManager = class {
         this.elements.selectAll.addEventListener('change', () => this.toggleAllVisible());
         this.elements.trashSelected.addEventListener('click', () => {
             this.trashSelected().catch(error => this.showUnexpectedError(error));
+        });
+        this.elements.markReadSelected.addEventListener('click', () => {
+            this.markSelectedAsRead().catch(error => this.showUnexpectedError(error));
         });
         this.elements.analyzeSelected.addEventListener('click', () => {
             this.analyzeSelected().catch(error => this.showUnexpectedError(error));
@@ -516,6 +523,45 @@ const GlobalDashboardManager = class {
         this.setStatus(I18n.t('dashboardFeedbackSaved'), 'success');
     }
 
+    /** Mark one directly targeted message as read without an unnecessary confirmation. */
+    async markOneAsRead(message) {
+        await this.performMarkAsRead([message.id], 'dashboardMarkReadOneSuccess');
+    }
+
+    /** Mark all selected visible messages as read in one fault-isolated operation. */
+    async markSelectedAsRead() {
+        const messageIds = [...this.selectedMessageIds];
+        if (!messageIds.length) {
+            return;
+        }
+        await this.performMarkAsRead(messageIds, 'dashboardMarkReadSelectedSuccess');
+    }
+
+    /** Apply read state, refresh the unread view, and report complete or partial success. */
+    async performMarkAsRead(messageIds, successKey) {
+        this.setBusy(true, I18n.t('dashboardMarkReadInProgress'));
+        try {
+            const result = await GlobalMailService.markAsRead(messageIds);
+            this.selectedMessageIds.clear();
+            await this.refresh();
+            if (result.failedIds.length && result.updatedIds.length) {
+                this.setStatus(I18n.t('dashboardMarkReadPartial', {
+                    updated: result.updatedIds.length,
+                    failed: result.failedIds.length
+                }), 'warning');
+            } else if (result.failedIds.length) {
+                this.setStatus(I18n.t('dashboardMarkReadFailed'), 'error');
+            } else {
+                this.setStatus(I18n.t(successKey, { count: result.updatedIds.length }), 'success');
+            }
+        } catch (error) {
+            console.error('Could not mark dashboard messages as read:', error);
+            this.setStatus(I18n.t('dashboardMarkReadFailed'), 'error');
+        } finally {
+            this.setBusy(false);
+        }
+    }
+
     /** Report a direct-workspace failure without mislabeling it as a mailbox load failure. */
     showWorkspaceError(error) {
         console.error('Could not open the single-message AI workspace:', error);
@@ -577,6 +623,7 @@ const GlobalDashboardManager = class {
         this.elements.selectAll.indeterminate = selected > 0 && selected < total;
         this.elements.selectAll.disabled = this.busy || total === 0;
         this.elements.trashSelected.disabled = this.busy || selected === 0;
+        this.elements.markReadSelected.disabled = this.busy || selected === 0;
         this.elements.analyzeSelected.disabled = this.busy || selected === 0;
         this.elements.rescoreSelected.disabled = this.busy || selected === 0;
         this.elements.selectedCount.textContent = I18n.t('dashboardSelectedCount', { count: selected });

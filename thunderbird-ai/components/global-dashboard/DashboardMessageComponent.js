@@ -6,6 +6,7 @@ const DashboardMessageComponent = class {
         this.onSummarize = options.onSummarize;
         this.onReply = options.onReply;
         this.onCorrectScores = options.onCorrectScores;
+        this.onMarkRead = options.onMarkRead;
         this.onTrash = options.onTrash;
     }
 
@@ -96,42 +97,86 @@ const DashboardMessageComponent = class {
         return preview;
     }
 
-    /** Create direct actions that delegate to existing summary, reply, and trash workflows. */
+    /** Separate reusable AI workflows from ordinary Thunderbird mailbox actions. */
     actionButtons(message, subject, busy) {
         const actions = document.createElement('div');
         actions.className = 'dashboard-message-actions';
-        actions.append(
-            this.actionButton('dashboardSummarizeOne', 'dashboardSummarizeMessage', subject, busy, () => this.onSummarize(message)),
-            this.actionButton('dashboardReplyOne', 'dashboardReplyMessage', subject, busy, () => this.onReply(message))
+        const aiActions = this.actionGroup('dashboardAIActionsGroup', 'ai');
+        aiActions.append(
+            this.actionButton(
+                'dashboardSummarizeOne',
+                'dashboardSummarizeMessage',
+                subject,
+                busy,
+                () => this.onSummarize(message),
+                { icon: '📝' }
+            ),
+            this.actionButton(
+                'dashboardReplyOne',
+                'dashboardReplyMessage',
+                subject,
+                busy,
+                () => this.onReply(message),
+                { icon: '✍️' }
+            )
         );
         if (message.aiAnalysis) {
-            actions.appendChild(this.actionButton(
+            aiActions.appendChild(this.actionButton(
                 'dashboardCorrectScores',
                 'dashboardCorrectScoresMessage',
                 subject,
                 busy,
                 () => this.onCorrectScores(message),
-                'feedback'
+                { icon: '🎚️', className: 'feedback' }
             ));
         }
-        actions.appendChild(this.actionButton(
-            'dashboardTrashOne',
-            'dashboardTrashMessage',
-            subject,
-            busy,
-            () => this.onTrash(message),
-            'danger'
-        ));
+        const mailActions = this.actionGroup('dashboardMailActionsGroup', 'mail');
+        mailActions.append(
+            this.actionButton(
+                'dashboardMarkReadOne',
+                'dashboardMarkReadMessage',
+                subject,
+                busy,
+                () => this.onMarkRead(message),
+                { icon: '✓', className: 'mark-read' }
+            ),
+            this.actionButton(
+                'dashboardTrashOne',
+                'dashboardTrashMessage',
+                subject,
+                busy,
+                () => this.onTrash(message),
+                { icon: '🗑️', className: 'danger' }
+            )
+        );
+        actions.append(aiActions, mailActions);
         return actions;
     }
 
-    actionButton(textKey, labelKey, subject, busy, callback, className = '') {
+    /** Create one visibly labelled action group that also exposes an accessible name. */
+    actionGroup(titleKey, type) {
+        const group = document.createElement('div');
+        group.className = `dashboard-message-action-group ${type}`;
+        group.setAttribute('role', 'group');
+        group.setAttribute('aria-label', I18n.t(titleKey));
+        group.appendChild(this.textElement(
+            'span',
+            'dashboard-action-group-title',
+            I18n.t(titleKey)
+        ));
+        return group;
+    }
+
+    /** Build an icon-labelled button without placing decorative icons in its accessible name. */
+    actionButton(textKey, labelKey, subject, busy, callback, options = {}) {
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = `dashboard-message-action ${className}`.trim();
-        button.textContent = I18n.t(textKey);
+        button.className = `dashboard-message-action ${options.className || ''}`.trim();
         button.disabled = busy;
         button.setAttribute('aria-label', I18n.t(labelKey, { subject }));
+        const icon = this.textElement('span', 'dashboard-action-icon', options.icon || '');
+        icon.setAttribute('aria-hidden', 'true');
+        button.append(icon, this.textElement('span', 'dashboard-action-label', I18n.t(textKey)));
         button.addEventListener('click', callback);
         return button;
     }
