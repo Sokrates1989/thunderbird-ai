@@ -1,12 +1,12 @@
 /**
- * Reads bounded unread-message candidates for the global dashboard and performs
+ * Reads every paginated unread Inbox header for the global dashboard and performs
  * explicitly requested local mailbox actions. Message bodies are loaded only
  * when the dashboard preview preference is enabled; no AI service is involved.
  */
 const GlobalMailService = {
     QUERY_PAGE_SIZE: 100,
 
-    /** Return all unread Inbox headers per supported mail account. */
+    /** Return all unread Inbox headers per supported account for correct global ranking. */
     async listUnreadByAccount() {
         const accounts = await browser.accounts.list(true);
         const mailAccounts = accounts

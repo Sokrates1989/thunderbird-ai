@@ -11,8 +11,11 @@ const GlobalDashboardManager = class {
             settings: document.getElementById('dashboardSettings'),
             showPreview: document.getElementById('dashboardShowPreview'),
             previewLines: document.getElementById('dashboardPreviewLines'),
+            viewMode: document.getElementById('dashboardViewMode'),
             sortOrder: document.getElementById('dashboardSortOrder'),
             messageLimit: document.getElementById('dashboardMessageLimit'),
+            messageLimitLabel: document.getElementById('dashboardMessageLimitLabel'),
+            limitHint: document.getElementById('dashboardLimitHint'),
             dateFrom: document.getElementById('dashboardDateFrom'),
             dateTo: document.getElementById('dashboardDateTo'),
             aiStatusFilter: document.getElementById('dashboardAIStatusFilter'),
@@ -36,6 +39,7 @@ const GlobalDashboardManager = class {
         this.previewEnabled = false;
         this.previewLineCount = 3;
         this.sortOrder = GlobalMailViewService.DEFAULT_SORT_ORDER;
+        this.viewMode = GlobalMailViewService.DEFAULT_VIEW_MODE;
         this.messageLimit = GlobalMailViewService.DEFAULT_LIMIT;
         this.dateFrom = '';
         this.dateTo = '';
@@ -91,6 +95,7 @@ const GlobalDashboardManager = class {
             this.handlePreviewLineChange().catch(error => this.showUnexpectedError(error));
         });
         for (const element of [
+            this.elements.viewMode,
             this.elements.sortOrder,
             this.elements.messageLimit,
             this.elements.dateFrom,
@@ -100,7 +105,8 @@ const GlobalDashboardManager = class {
             this.elements.spamMinimum
         ]) {
             element.addEventListener('change', () => {
-                this.handleViewControlChange().catch(error => this.showUnexpectedError(error));
+                this.handleViewControlChange(element)
+                    .catch(error => this.showUnexpectedError(error));
             });
         }
         this.elements.selectAll.addEventListener('change', () => this.toggleAllVisible());
@@ -135,8 +141,19 @@ const GlobalDashboardManager = class {
     applyPreferenceControls() {
         this.elements.showPreview.checked = this.previewEnabled;
         this.elements.previewLines.value = String(this.previewLineCount);
+        this.elements.viewMode.value = this.viewMode;
         this.elements.sortOrder.value = this.sortOrder;
-        this.elements.messageLimit.value = String(this.messageLimit);
+        const combined = GlobalMailViewService.combinesAccounts(this.viewMode, this.sortOrder);
+        this.elements.messageLimit.value = String(
+            combined ? GlobalMailViewService.COMBINED_LIMIT : this.messageLimit
+        );
+        this.elements.messageLimit.disabled = this.busy || combined;
+        this.elements.messageLimitLabel.textContent = I18n.t(
+            combined ? 'dashboardMessageLimitCombined' : 'dashboardMessageLimit'
+        );
+        this.elements.limitHint.textContent = I18n.t(
+            combined ? 'dashboardCombinedLimitHint' : 'dashboardLimitHint'
+        );
         this.elements.dateFrom.value = this.dateFrom;
         this.elements.dateTo.value = this.dateTo;
         this.elements.aiStatusFilter.value = this.aiStatusFilter;
@@ -176,7 +193,7 @@ const GlobalDashboardManager = class {
     }
 
     /** Validate the query controls, persist them, and rebuild the visible slice. */
-    async handleViewControlChange() {
+    async handleViewControlChange(changedElement = null) {
         const fromDate = GlobalMailViewService.normalizeDate(this.elements.dateFrom.value);
         const toDate = GlobalMailViewService.normalizeDate(this.elements.dateTo.value);
         this.clearDateValidity();
@@ -188,8 +205,11 @@ const GlobalDashboardManager = class {
             return;
         }
 
+        this.viewMode = GlobalMailViewService.normalizeViewMode(this.elements.viewMode.value);
         this.sortOrder = GlobalMailViewService.normalizeSortOrder(this.elements.sortOrder.value);
-        this.messageLimit = GlobalMailViewService.normalizeLimit(this.elements.messageLimit.value);
+        if (changedElement === this.elements.messageLimit) {
+            this.messageLimit = GlobalMailViewService.normalizeLimit(this.elements.messageLimit.value);
+        }
         this.dateFrom = fromDate;
         this.dateTo = toDate;
         this.aiStatusFilter = GlobalMailViewService.normalizeAIStatusFilter(
@@ -254,6 +274,7 @@ const GlobalDashboardManager = class {
     /** Filter, sort, limit, and optionally preview the current header snapshot. */
     async rebuildCurrentView() {
         this.accounts = GlobalMailViewService.apply(this.sourceAccounts, {
+            viewMode: this.viewMode,
             sortOrder: this.sortOrder,
             limit: this.messageLimit,
             selectedSenders: this.selectedSenderKeys,
@@ -280,7 +301,7 @@ const GlobalDashboardManager = class {
             0
         );
         this.setStatus(I18n.t('dashboardLoaded', {
-            accounts: this.accounts.length,
+            accounts: this.sourceAccounts.length,
             messages: messageCount,
             matches: matchingCount
         }));
@@ -332,6 +353,13 @@ const GlobalDashboardManager = class {
             }
             section.appendChild(list);
         }
+        if (account.failedAccountCount) {
+            section.appendChild(this.textElement(
+                'p',
+                'dashboard-account-error',
+                I18n.t('dashboardSomeAccountsFailed', { count: account.failedAccountCount })
+            ));
+        }
         return section;
     }
 
@@ -341,7 +369,8 @@ const GlobalDashboardManager = class {
             selected: this.selectedMessageIds.has(message.id),
             busy: this.busy,
             previewEnabled: this.previewEnabled,
-            previewLineCount: this.previewLineCount
+            previewLineCount: this.previewLineCount,
+            showAccount: this.accounts.length === 1 && this.accounts[0].combined === true
         });
     }
 
@@ -526,8 +555,10 @@ const GlobalDashboardManager = class {
         this.elements.refresh.disabled = busy;
         this.elements.showPreview.disabled = busy;
         this.elements.previewLines.disabled = busy || !this.previewEnabled;
+        this.elements.viewMode.disabled = busy;
         this.elements.sortOrder.disabled = busy;
-        this.elements.messageLimit.disabled = busy;
+        this.elements.messageLimit.disabled = busy
+            || GlobalMailViewService.combinesAccounts(this.viewMode, this.sortOrder);
         this.elements.dateFrom.disabled = busy;
         this.elements.dateTo.disabled = busy;
         this.elements.aiStatusFilter.disabled = busy;

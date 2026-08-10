@@ -54,11 +54,35 @@ function loadViewService() {
     const context = createContext({
         I18n: {
             getLanguage: () => 'en',
-            t: key => key === 'dashboardUnknownSender' ? 'Unknown sender' : key
+            t: key => ({
+                dashboardUnknownSender: 'Unknown sender',
+                dashboardAllAccounts: 'All accounts'
+            }[key] || key)
         }
     });
     loadScript(context, 'thunderbird-ai/components/global-dashboard/GlobalMailViewService.js');
     return context.GlobalMailViewService;
+}
+
+function loadViewPreferences(initial = {}) {
+    const storage = { ...initial };
+    const context = createContext({
+        browser: {
+            i18n: { getUILanguage: () => 'en-US' },
+            storage: { local: {
+                get: async keys => Object.fromEntries(
+                    keys.filter(key => Object.hasOwn(storage, key)).map(key => [key, storage[key]])
+                ),
+                set: async values => Object.assign(storage, values)
+            } }
+        }
+    });
+    loadScript(context, 'thunderbird-ai/config/locale-de.js');
+    loadScript(context, 'thunderbird-ai/config/locale-en.js');
+    loadScript(context, 'thunderbird-ai/config/constants.js');
+    loadScript(context, 'thunderbird-ai/components/global-dashboard/GlobalMailViewService.js');
+    loadScript(context, 'thunderbird-ai/components/global-dashboard/DashboardViewPreferences.js');
+    return { context, preferences: context.DashboardViewPreferences, storage };
 }
 
 function loadSenderFilterComponent() {
@@ -166,6 +190,61 @@ test('newest-first default sorts later pages before applying the display limit',
     assert.equal(result[0].matchingCount, 3);
 });
 
+test('combined view retains exactly the newest fifty matching messages across every account', () => {
+    const service = loadViewService();
+    const oldAccount = {
+        accountId: 'old',
+        accountName: 'Old account',
+        messages: Array.from({ length: 4 }, (_value, index) => ({
+            ...message(index + 1, 1),
+            date: new Date(Date.UTC(2020, 0, index + 1))
+        }))
+    };
+    const busyAccount = {
+        accountId: 'busy',
+        accountName: 'Busy account',
+        messages: Array.from({ length: 55 }, (_value, index) => ({
+            ...message(index + 100, 1),
+            date: new Date(Date.UTC(2026, 6, index + 1))
+        }))
+    };
+
+    const [combined] = service.apply([oldAccount, busyAccount], {
+        viewMode: 'combined',
+        sortOrder: 'date-desc',
+        limit: 3
+    });
+
+    assert.equal(combined.accountName, 'All accounts');
+    assert.equal(combined.combined, true);
+    assert.equal(combined.messages.length, 50);
+    assert.ok(combined.messages.every(item => item.id >= 105));
+    assert.equal(combined.messages[0].id, 154);
+    assert.equal(combined.messages[0].dashboardAccountName, 'Busy account');
+    assert.equal(combined.matchingCount, 59);
+});
+
+test('combined display sorting never expands its newest-fifty global candidate set', () => {
+    const service = loadViewService();
+    const messages = Array.from({ length: 51 }, (_value, index) => ({
+        ...message(index + 1, 1),
+        author: index === 0 ? 'AAA oldest' : `Sender ${index}`,
+        date: new Date(Date.UTC(2026, 0, index + 1))
+    }));
+
+    const [combined] = service.apply([{
+        accountId: 'one',
+        accountName: 'One',
+        messages
+    }], {
+        viewMode: 'combined',
+        sortOrder: 'sender-asc'
+    });
+
+    assert.equal(combined.messages.length, 50);
+    assert.ok(combined.messages.every(item => item.id !== 1));
+});
+
 test('sender and inclusive date filters run before participant sorting and limits', () => {
     const service = loadViewService();
     const accounts = [{ messages: [
@@ -219,6 +298,54 @@ test('AI scores support importance and spam sorting plus analyzed-state filters'
     assert.deepEqual(Array.from(leastSpam[0].messages, item => item.id), [2, 1, 3]);
     assert.deepEqual(Array.from(spam[0].messages, item => item.id), [1]);
     assert.deepEqual(Array.from(unanalyzed[0].messages, item => item.id), [3]);
+});
+
+test('explicit global AI sorts flatten scored messages across account boundaries', () => {
+    const service = loadViewService();
+    const accounts = [
+        {
+            accountId: 'personal',
+            accountName: 'Personal',
+            messages: [
+                { ...message(1, 1), aiAnalysis: { importanceScore: 20, spamScore: 90 } },
+                { ...message(2, 2), aiAnalysis: { importanceScore: 95, spamScore: 5 } }
+            ]
+        },
+        {
+            accountId: 'work',
+            accountName: 'Work',
+            messages: [
+                { ...message(3, 3), aiAnalysis: { importanceScore: 70, spamScore: 40 } }
+            ]
+        }
+    ];
+
+    const [combined] = service.apply(accounts, {
+        viewMode: 'account',
+        sortOrder: 'importance-global-desc',
+        limit: 1
+    });
+
+    assert.equal(combined.combined, true);
+    assert.deepEqual(Array.from(combined.messages, item => item.id), [2, 3, 1]);
+    assert.deepEqual(
+        Array.from(combined.messages, item => item.dashboardAccountName),
+        ['Personal', 'Work', 'Personal']
+    );
+});
+
+test('dashboard grouping mode is normalized and persisted independently', async () => {
+    const { context, preferences, storage } = loadViewPreferences({
+        dashboardViewMode: 'combined'
+    });
+
+    const loaded = await preferences.load();
+    assert.equal(loaded.viewMode, 'combined');
+    loaded.viewMode = 'account';
+    await preferences.save(loaded);
+
+    assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_VIEW_MODE], 'account');
+    assert.equal(context.GlobalMailViewService.normalizeViewMode('invalid'), 'account');
 });
 
 test('dashboard AI scores persist without mail content and direct actions open shared workspaces', async () => {
@@ -486,6 +613,7 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(dashboard, /id="dashboardShowPreview"/u);
     assert.match(dashboard, /id="dashboardPreviewLines"/u);
     assert.match(dashboard, /id="dashboardSortOrder"/u);
+    assert.match(dashboard, /id="dashboardViewMode"/u);
     assert.match(dashboard, /id="dashboardMessageLimit"/u);
     assert.match(dashboard, /id="dashboardDateFrom"[^>]*type="date"|type="date"[^>]*id="dashboardDateFrom"/u);
     assert.match(dashboard, /id="dashboardDateTo"[^>]*type="date"|type="date"[^>]*id="dashboardDateTo"/u);
@@ -494,6 +622,8 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(dashboard, /id="dashboardImportanceMinimum"/u);
     assert.match(dashboard, /id="dashboardSpamMinimum"/u);
     assert.match(dashboard, /id="dashboardAnalyzeSelected"/u);
+    assert.match(dashboard, /value="importance-global-desc"/u);
+    assert.match(dashboard, /value="spam-global-desc"/u);
     assert.match(dashboard, /id="dashboardLoadingIndicator"/u);
     assert.match(dashboard, /message\.js/u);
     assert.match(dashboard, /GlobalMailService\.js/u);

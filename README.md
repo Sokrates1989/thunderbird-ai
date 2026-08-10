@@ -15,7 +15,7 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 - nachrichtenbezogener AI Chat
 - lokale Ergebnisablage mit Verwaltung unter **Einstellungen** und Zwischenablage-Aktion
 - optionale automatische Zusammenfassung beim Öffnen einer Nachricht
-- eigenes globales Posteingangs-Dashboard mit vollständiger Header-Paginierung, standardmäßig neuester Sortierung, durchsuchbarem Absenderfilter, Datumsfiltern, frei wählbaren 1–50 Nachrichten pro Konto, Einzelauswahl, Mehrfachlöschen und optionaler lokaler Inhaltsvorschau
+- eigenes globales Posteingangs-Dashboard mit vollständiger Header-Paginierung, umschaltbarer Konto- oder kombinierter Neueste-50-Ansicht, kontenübergreifender Score-Sortierung, durchsuchbarem Absenderfilter, Datumsfiltern, frei wählbaren 1–50 Nachrichten pro Konto, Einzelauswahl, Mehrfachlöschen und optionaler lokaler Inhaltsvorschau
 - standardmäßig Luna-basierte Bulk-Auswertung ausgewählter Dashboard-Nachrichten mit Wichtigkeits- und Spam-Wahrscheinlichkeit von 0–100 %, dauerhaften Score-Filtern und Score-Sortierungen
 - leicht korrigierbare Scores mit separatem, löschunabhängigem Lernarchiv, getrennten Gründen für Wichtigkeit und Spam sowie manueller Referenzverwaltung unter **Einstellungen**
 - direkte Dashboard-Aktionen für die bestehende Zusammenfassung und den bestehenden interaktiven Antworteditor
@@ -42,7 +42,7 @@ Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speic
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-2.0.0-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-2.1.0-win-x64.exe` herunterladen und starten.
 2. Im Setup **Deutsch** oder **English** wählen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung bestätigen.
@@ -72,21 +72,21 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-2.0.0-win-x64.exe`
+- `artifacts\Thunderbird-AI-Setup-2.1.0-win-x64.exe`
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
 ## Manueller Funktionstest
 
-1. In Thunderbirds Hauptsymbolleiste auf **Thunderbird AI Assistant** klicken. Während des Ladens muss der animierte Ladehinweis sichtbar sein. Danach muss das globale Dashboard die unterstützten Konten getrennt auflisten. **Datum: Neueste zuerst** ist der Standard; die aktuellsten ungelesenen Nachrichten müssen oben stehen, auch wenn ein Konto sehr viele ungelesene Nachrichten enthält.
-2. Die vier lokalen Sortierungen prüfen: neueste/älteste zuerst und **Beteiligte** A–Z/Z–A. Dashboard schließen und erneut öffnen; die letzte Auswahl muss erhalten bleiben.
-3. Die maximale Anzahl erst auf 2 und dann auf 15 setzen. Pro Konto dürfen nie mehr Nachrichten als dieser Wert erscheinen; Werte unter 1 oder über 50 müssen auf den erlaubten Bereich begrenzt werden.
+1. In Thunderbirds Hauptsymbolleiste auf **Thunderbird AI Assistant** klicken. Während des Ladens muss der animierte Ladehinweis sichtbar sein. Danach muss das globale Dashboard die unterstützten Konten standardmäßig getrennt auflisten. **Datum: Neueste zuerst** ist der Standard; die aktuellsten ungelesenen Nachrichten müssen oben stehen, auch wenn ein Konto sehr viele ungelesene Nachrichten enthält.
+2. Auf **Konten kombinieren: neueste 50 Nachrichten** umschalten. Es muss genau eine Liste mit höchstens 50 Nachrichten erscheinen, die aus allen Konten global nach Datum ausgewählt wurden. Ein selten genutztes Konto mit alten Nachrichten darf keine neueren Nachrichten eines aktiven Kontos verdrängen. Jede Zeile muss ihr Ursprungskonto anzeigen. Danach zurück zur kontogetrennten Ansicht wechseln; die Auswahl muss nach erneutem Öffnen erhalten bleiben.
+3. Die vier lokalen Sortierungen prüfen: neueste/älteste zuerst und **Beteiligte** A–Z/Z–A. Die maximale Anzahl erst auf 2 und dann auf 15 setzen. In der getrennten Ansicht dürfen pro Konto nie mehr Nachrichten als dieser Wert erscheinen; in der kombinierten oder global sortierten Ansicht ist die Grenze fest 50 und das Mengenfeld deaktiviert.
 4. Den Absender-Filter öffnen, **Alle Absender** deaktivieren und einzelne Absender auswählen. Im Suchfeld nacheinander zwei unterschiedliche Absender suchen und jeweils aktivieren. Beide müssen ausgewählt bleiben, obwohl immer nur das aktuelle Suchergebnis sichtbar ist. Nur passende Nachrichten dürfen erscheinen; der Filter muss nach erneutem Öffnen erhalten bleiben.
 5. Mit den Kalenderfeldern **Datum von** und **Datum bis** einen inklusiven Bereich einstellen. Außerhalb liegende Nachrichten müssen verschwinden; ein Bis-Datum vor dem Von-Datum muss abgewiesen werden.
 6. **Nachrichteninhalt als Vorschau anzeigen** aktivieren und nacheinander 1 sowie 5 Vorschauzeilen einstellen. Nur die nach Sortierung, Filtern und Mengenbegrenzung sichtbaren Nachrichten dürfen Inhaltsvorschauen laden. Lange Vorschauen müssen innerhalb der Nachricht scrollbar sein.
 7. Mehrere Nachrichten einzeln auswählen und anschließend **Alle auswählen** testen. Anzahl, Auswahlzustand und beide Bulk-Schaltflächen müssen sich passend aktualisieren.
 8. **Ausgewählte mit AI analysieren** anklicken. Während der Verarbeitung muss der Luna-Ladehinweis mit Animation sichtbar sein. Danach müssen jede erfolgreich analysierte Nachricht zwei Prozentwerte und die Antwortmeldung das Luna-Modell nennen.
-9. Alle vier neuen Score-Sortierungen prüfen: Wichtigkeit und Spam-Wahrscheinlichkeit jeweils auf- und absteigend. Nicht analysierte Nachrichten müssen hinter analysierten Ergebnissen stehen.
+9. Alle vier lokalen Score-Sortierungen und die vier Varianten **über alle Konten** prüfen: Wichtigkeit und Spam-Wahrscheinlichkeit jeweils auf- und absteigend. Die kontenübergreifenden Varianten müssen in der sonst kontogetrennten Ansicht genau eine global sortierte Liste erzeugen. Nicht analysierte Nachrichten müssen hinter analysierten Ergebnissen stehen.
 10. Die AI-Filter **Nur analysierte**, **Nur nicht analysierte**, **Wahrscheinlich Spam** und **Wahrscheinlich kein Spam** sowie beide Mindestwerte testen. Einstellungen müssen nach erneutem Öffnen erhalten bleiben.
 11. An einer analysierten Nachricht **Werte korrigieren** anklicken. Beide Regler und Zahlenfelder müssen mit den aktuellen Werten starten und synchron bleiben. Ohne Änderung muss das Speichern abgewiesen werden.
 12. Wichtigkeit und Spam-Wahrscheinlichkeit ändern, optional eine Begründung eingeben und speichern. Die neuen Werte und **Vom Nutzer korrigiert** müssen sofort erscheinen und von Sortierung/Filtern verwendet werden. Dashboard schließen und erneut öffnen; die Korrektur muss erhalten bleiben.
@@ -111,7 +111,7 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 31. Die Oberflächensprache auf **English** umstellen und globales Dashboard, Einzelmail-Popup, Antworteditor, Einstellungen und Hilfe prüfen. Danach zurück auf **Deutsch** wechseln. Alle sichtbaren Texte und Meldungen müssen der Auswahl folgen.
 32. Optional die automatische Verarbeitung aktivieren, eine andere E-Mail öffnen und das Popup erneut öffnen. Die automatische Analyse muss angezeigt werden.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.0.0** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.1.0** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 ## Technische Struktur
 

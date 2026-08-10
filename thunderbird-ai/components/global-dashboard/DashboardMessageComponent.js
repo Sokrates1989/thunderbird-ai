@@ -18,9 +18,13 @@ const DashboardMessageComponent = class {
         const content = document.createElement('div');
         content.className = 'dashboard-message-content';
         content.appendChild(this.textElement('div', 'dashboard-message-subject', subject));
-        content.appendChild(this.textElement('div', 'dashboard-message-meta', I18n.t('dashboardMessageMeta', {
+        const metadataKey = options.showAccount && message.dashboardAccountName
+            ? 'dashboardMessageCombinedMeta'
+            : 'dashboardMessageMeta';
+        content.appendChild(this.textElement('div', 'dashboard-message-meta', I18n.t(metadataKey, {
             author: message.author || I18n.t('dashboardUnknownSender'),
-            date: this.formatDate(message.date)
+            date: this.formatDate(message.date),
+            account: message.dashboardAccountName || ''
         })));
         if (message.aiAnalysis) {
             content.appendChild(this.analysisScores(message.aiAnalysis));

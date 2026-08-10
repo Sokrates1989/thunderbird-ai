@@ -22,6 +22,13 @@
         <section class="dashboard-display-options" aria-labelledby="dashboardDisplayOptionsHeading">
             <h2 id="dashboardDisplayOptionsHeading" data-i18n="dashboardDisplayOptions"></h2>
             <div class="dashboard-query-controls">
+                <label class="dashboard-view-mode">
+                    <span data-i18n="dashboardViewMode"></span>
+                    <select id="dashboardViewMode">
+                        <option value="account" data-i18n="dashboardViewByAccount"></option>
+                        <option value="combined" data-i18n="dashboardViewCombined"></option>
+                    </select>
+                </label>
                 <label>
                     <span data-i18n="dashboardSortOrder"></span>
                     <select id="dashboardSortOrder">
@@ -33,10 +40,14 @@
                         <option value="importance-asc" data-i18n="dashboardSortImportanceAscending"></option>
                         <option value="spam-desc" data-i18n="dashboardSortSpamDescending"></option>
                         <option value="spam-asc" data-i18n="dashboardSortSpamAscending"></option>
+                        <option value="importance-global-desc" data-i18n="dashboardSortImportanceGlobalDescending"></option>
+                        <option value="importance-global-asc" data-i18n="dashboardSortImportanceGlobalAscending"></option>
+                        <option value="spam-global-desc" data-i18n="dashboardSortSpamGlobalDescending"></option>
+                        <option value="spam-global-asc" data-i18n="dashboardSortSpamGlobalAscending"></option>
                     </select>
                 </label>
                 <label>
-                    <span data-i18n="dashboardMessageLimit"></span>
+                    <span id="dashboardMessageLimitLabel" data-i18n="dashboardMessageLimit"></span>
                     <input type="number" id="dashboardMessageLimit" min="1" max="50" step="1" inputmode="numeric">
                 </label>
                 <label>
@@ -70,7 +81,7 @@
                     <input type="number" id="dashboardSpamMinimum" min="0" max="100" step="1" inputmode="numeric">
                 </label>
             </div>
-            <p data-i18n="dashboardLimitHint"></p>
+            <p id="dashboardLimitHint" data-i18n="dashboardLimitHint"></p>
             <div class="dashboard-display-controls">
                 <label>
                     <input type="checkbox" id="dashboardShowPreview">

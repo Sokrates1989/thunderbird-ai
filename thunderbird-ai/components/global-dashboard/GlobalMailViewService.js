@@ -2,7 +2,10 @@
 const GlobalMailViewService = {
     DEFAULT_LIMIT: 10,
     MAX_LIMIT: 50,
+    COMBINED_LIMIT: 50,
     DEFAULT_SORT_ORDER: 'date-desc',
+    DEFAULT_VIEW_MODE: 'account',
+    VIEW_MODES: new Set(['account', 'combined']),
     SORT_ORDERS: new Set([
         'date-desc',
         'date-asc',
@@ -11,7 +14,11 @@ const GlobalMailViewService = {
         'importance-desc',
         'importance-asc',
         'spam-desc',
-        'spam-asc'
+        'spam-asc',
+        'importance-global-desc',
+        'importance-global-asc',
+        'spam-global-desc',
+        'spam-global-asc'
     ]),
     AI_STATUS_FILTERS: new Set(['all', 'analyzed', 'unanalyzed', 'probably-spam', 'probably-not-spam']),
     UNKNOWN_SENDER_KEY: '__unknown_sender__',
@@ -27,6 +34,24 @@ const GlobalMailViewService = {
     /** Resolve unknown persisted sort values to the newest-first default. */
     normalizeSortOrder(value) {
         return this.SORT_ORDERS.has(value) ? value : this.DEFAULT_SORT_ORDER;
+    },
+
+    normalizeViewMode(value) {
+        return this.VIEW_MODES.has(value) ? value : this.DEFAULT_VIEW_MODE;
+    },
+
+    /** Global score variants flatten account groups even in account-separated mode. */
+    isGlobalScoreSort(sortOrder) {
+        return this.normalizeSortOrder(sortOrder).includes('-global-');
+    },
+
+    /** Combined mode and explicit global score sorts both render one account-neutral list. */
+    combinesAccounts(viewMode, sortOrder) {
+        return this.normalizeViewMode(viewMode) === 'combined' || this.isGlobalScoreSort(sortOrder);
+    },
+
+    baseSortOrder(sortOrder) {
+        return this.normalizeSortOrder(sortOrder).replace('-global-', '-');
     },
 
     /** Resolve unknown persisted AI filters to the inclusive default. */
@@ -74,6 +99,8 @@ const GlobalMailViewService = {
     apply(accounts, options = {}) {
         const limit = this.normalizeLimit(options.limit);
         const sortOrder = this.normalizeSortOrder(options.sortOrder);
+        const baseSortOrder = this.baseSortOrder(sortOrder);
+        const viewMode = this.normalizeViewMode(options.viewMode);
         const selectedSenders = options.selectedSenders === null || options.selectedSenders === undefined
             ? null
             : new Set(options.selectedSenders);
@@ -87,7 +114,7 @@ const GlobalMailViewService = {
             sensitivity: 'base'
         });
 
-        return accounts.map(account => {
+        const prepared = accounts.map(account => {
             const matches = (account.messages || [])
                 .filter(message => this.matchesSender(message, selectedSenders))
                 .filter(message => this.matchesDate(message, fromDate, toDate))
@@ -96,15 +123,72 @@ const GlobalMailViewService = {
                     aiStatusFilter,
                     importanceMinimum,
                     spamMinimum
-                ))
-                .sort((left, right) => this.compare(left, right, sortOrder, collator));
+                ));
             return {
                 ...account,
                 sourceCount: (account.messages || []).length,
                 matchingCount: matches.length,
-                messages: matches.slice(0, limit)
+                messages: matches
             };
         });
+        if (!accounts.length) {
+            return [];
+        }
+        if (viewMode === 'combined') {
+            return [this.combineNewest(prepared, baseSortOrder, collator)];
+        }
+        if (this.isGlobalScoreSort(sortOrder)) {
+            return [this.combineByScore(prepared, baseSortOrder, collator)];
+        }
+        return prepared.map(account => ({
+            ...account,
+            messages: account.messages
+                .sort((left, right) => this.compare(left, right, baseSortOrder, collator))
+                .slice(0, limit)
+        }));
+    },
+
+    /** Select the newest global candidate set before applying its display sorting. */
+    combineNewest(accounts, sortOrder, collator) {
+        const allMatches = this.flattenAccounts(accounts);
+        const newest = allMatches
+            .sort((left, right) => this.compare(left, right, 'date-desc', collator))
+            .slice(0, this.COMBINED_LIMIT);
+        return this.combinedAccount(
+            accounts,
+            newest.sort((left, right) => this.compare(left, right, sortOrder, collator)),
+            allMatches.length
+        );
+    },
+
+    /** Rank the complete filtered snapshot globally by one of the explicit AI score orders. */
+    combineByScore(accounts, sortOrder, collator) {
+        const allMatches = this.flattenAccounts(accounts);
+        const messages = allMatches
+            .sort((left, right) => this.compare(left, right, sortOrder, collator))
+            .slice(0, this.COMBINED_LIMIT);
+        return this.combinedAccount(accounts, messages, allMatches.length);
+    },
+
+    flattenAccounts(accounts) {
+        return accounts.flatMap(account => (account.messages || []).map(message => {
+            message.dashboardAccountId = account.accountId;
+            message.dashboardAccountName = account.accountName;
+            return message;
+        }));
+    },
+
+    combinedAccount(accounts, messages, matchingCount) {
+        return {
+            accountId: '__all_accounts__',
+            accountName: I18n.t('dashboardAllAccounts'),
+            sourceCount: accounts.reduce((total, account) => total + account.sourceCount, 0),
+            matchingCount,
+            failedAccountCount: accounts.filter(account => account.failed).length,
+            messages,
+            failed: false,
+            combined: true
+        };
     },
 
     /** Check one message against the optional explicit sender selection. */
