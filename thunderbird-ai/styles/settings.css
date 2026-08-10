@@ -334,6 +334,37 @@ body {
     display: block;
 }
 
+.saved-result {
+    margin-bottom: 10px;
+    padding: 10px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+}
+
+.saved-result summary {
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.saved-result pre {
+    max-height: 260px;
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font: inherit;
+}
+
+.saved-result-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.saved-result-button {
+    padding: 7px 10px;
+    font-size: 12px;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     .container {
@@ -352,4 +383,4 @@ body {
         width: 100%;
         justify-content: center;
     }
-} 
+}

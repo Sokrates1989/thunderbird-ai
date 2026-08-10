@@ -34,6 +34,7 @@ const SettingsManager = class {
         this.components = {};
         this.currentSettings = {};
         this.statusElement = document.getElementById('status');
+        this.statusTimer = null;
         
         this.initialize();
     }
@@ -65,6 +66,7 @@ const SettingsManager = class {
         this.components.automation = new AutomationComponent(this);
         this.components.apiTest = new ApiTestComponent(this);
         this.components.statistics = new StatisticsComponent(this);
+        this.components.savedResults = new SavedResultsComponent(this);
         this.components.actions = new ActionsComponent(this);
     }
 
@@ -87,7 +89,7 @@ const SettingsManager = class {
             }
         } catch (error) {
             console.error('Error loading initial settings:', error);
-            this.showStatus(CONFIG.ERRORS.SETTINGS_LOAD_FAILED, 'error');
+            this.showStatus(I18n.t('settingsLoadFailed'), 'error');
         }
     }
 
@@ -161,7 +163,7 @@ const SettingsManager = class {
      * 
      * @param {Object} settings - New settings to display
      * @example
-     * this.updateAllComponents({ openaiApiKey: 'sk-...', model: 'gpt-4' });
+     * this.updateAllComponents({ openaiApiKey: 'sk-...', model: 'auto' });
      */
     updateAllComponents(settings) {
         Object.values(this.components).forEach(component => {
@@ -217,10 +219,12 @@ const SettingsManager = class {
      * this.showStatus('An error occurred', 'error');
      */
     showStatus(message, type = 'info') {
+        clearTimeout(this.statusTimer);
         this.statusElement.textContent = message;
         this.statusElement.className = `status ${type}`;
+        this.statusElement.style.display = 'block';
         
-        setTimeout(() => {
+        this.statusTimer = setTimeout(() => {
             this.statusElement.style.display = 'none';
         }, 5000);
     }
@@ -235,6 +239,7 @@ const SettingsManager = class {
      * this.cleanup();
      */
     cleanup() {
+        clearTimeout(this.statusTimer);
         // Cleanup all components
         Object.values(this.components).forEach(component => {
             if (component.cleanup) {
@@ -252,4 +257,4 @@ const SettingsManager = class {
  */
 if (typeof window !== 'undefined') {
     window.SettingsManager = SettingsManager;
-} 
+}

@@ -1,0 +1,11 @@
+{
+  "name": "thunderbird-ai-assistant",
+  "version": "1.1.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

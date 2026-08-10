@@ -1,424 +1,237 @@
-/**
- * Thunderbird AI Assistant - Message Service
- * 
- * This module provides email message handling utilities for the Thunderbird AI Assistant.
- * It handles message retrieval, content extraction, metadata processing, and message operations.
- * 
- * @module MessageService
- * @author Thunderbird AI Assistant Team
- * @version 1.0.0
- */
-
-/**
- * Global MessageService object for managing email message operations
- * 
- * This object provides methods for retrieving, processing, and manipulating email messages
- * using Thunderbird's messaging APIs. It handles both individual messages and message lists.
- * 
- * @namespace MessageService
- * @type {Object}
- */
+/** Thunderbird message retrieval and MIME-body extraction helpers. */
 const MessageService = {
-    /**
-     * Get current message from active tab
-     * 
-     * Retrieves the currently displayed message from the active Thunderbird tab.
-     * Uses the messageDisplay API to get the message context.
-     * 
-     * @async
-     * @param {number} tabId - ID of the tab to get message from
-     * @returns {Promise<Object|null>} Current message object or null if none
-     * 
-     * @example
-     * const message = await MessageService.getCurrentMessage(tabId);
-     * if (message) {
-     *   console.log('Subject:', message.subject);
-     *   console.log('From:', message.author);
-     * }
-     */
     async getCurrentMessage(tabId) {
         try {
-            const displayedMessages = await browser.messageDisplay.getDisplayedMessages(tabId);
-            return displayedMessages.messages[0] || null;
+            const displayed = await browser.messageDisplay.getDisplayedMessages(tabId);
+            const messages = Array.isArray(displayed) ? displayed : displayed?.messages;
+            return messages?.[0] || null;
         } catch (error) {
-            console.error('Error getting current message:', error);
+            console.error('Could not get the displayed message:', error);
             return null;
         }
     },
 
-    /**
-     * Get full message content by ID
-     * 
-     * Retrieves complete message data including headers, body, and metadata.
-     * Uses the messages API to fetch detailed message information.
-     * 
-     * @async
-     * @param {string|number} messageId - ID of the message to retrieve
-     * @returns {Promise<Object>} Complete message object with all properties
-     * @throws {Error} If message cannot be retrieved or messageId is invalid
-     * 
-     * @example
-     * const messageData = await MessageService.getFullMessage('msg123');
-     * console.log('Subject:', messageData.subject);
-     * console.log('Content:', messageData.content);
-     * console.log('Attachments:', messageData.hasAttachments);
-     */
+    /** Retrieve the header and decoded MIME tree and expose one normalized object. */
     async getFullMessage(messageId) {
-        if (!messageId) {
-            throw new Error('Message ID is required');
+        if (messageId === undefined || messageId === null) {
+            throw new Error(I18n.t('messageNotFound'));
         }
 
         try {
-            console.log('Getting full message for ID:', messageId, 'Type:', typeof messageId);
-            const message = await browser.messages.get(messageId);
-            console.log('Retrieved message:', message);
-            
-            if (!message) {
-                throw new Error(`Message with ID ${messageId} not found`);
+            const [header, mimeMessage] = await Promise.all([
+                browser.messages.get(messageId),
+                browser.messages.getFull(messageId)
+            ]);
+            if (!header || !mimeMessage) {
+                throw new Error(I18n.t('messageNotFound'));
             }
-            
-            const content = await this.getMessageContent(messageId);
-            
+
+            const content = this.extractBody(mimeMessage);
+            const attachments = this.extractAttachments(mimeMessage);
+            const date = header.date ? new Date(header.date) : null;
+
             return {
-                id: message.id,
-                subject: message.subject || 'Kein Betreff',
-                author: message.author || 'Unbekannt',
-                date: message.date ? new Date(message.date).toLocaleDateString('de-DE') : 'Unbekannt',
-                content: content,
-                wordCount: content ? content.split(/\s+/).length : 0,
-                hasAttachments: message.hasAttachments || false,
-                flagged: message.flagged || false,
-                read: message.read || false,
-                tags: message.tags || [],
-                size: message.size || 0
+                id: header.id,
+                subject: header.subject || '(Kein Betreff)',
+                author: header.author || 'Unbekannt',
+                from: header.author || 'Unbekannt',
+                recipients: header.recipients || [],
+                ccList: header.ccList || [],
+                date,
+                formattedDate: date && !Number.isNaN(date.getTime())
+                    ? date.toLocaleString(I18n.getLanguage())
+                    : 'Unbekannt',
+                content,
+                wordCount: content ? content.split(/\s+/u).filter(Boolean).length : 0,
+                attachments,
+                hasAttachments: Boolean(header.hasAttachments || attachments.length),
+                flagged: Boolean(header.flagged),
+                read: Boolean(header.read),
+                status: header.flagged ? 'flagged' : (header.read ? 'read' : 'unread'),
+                tags: header.tags || [],
+                size: header.size || 0,
+                folderId: header.folder?.id || null
             };
         } catch (error) {
-            console.error('Error getting full message:', error);
+            console.error('Could not retrieve the full email:', error);
             throw new Error(`Fehler beim Abrufen der E-Mail: ${error.message}`);
         }
     },
 
-    /**
-     * Get message content/body
-     * 
-     * Retrieves the text content of a message body, handling different content types.
-     * Attempts to get plain text first, falls back to HTML if needed.
-     * 
-     * @async
-     * @param {string|number} messageId - ID of the message to get content from
-     * @returns {Promise<string>} Message content as text
-     * 
-     * @example
-     * const content = await MessageService.getMessageContent('msg123');
-     * console.log('Message content:', content.substring(0, 100) + '...');
-     */
     async getMessageContent(messageId) {
-        if (!messageId) {
-            throw new Error('Message ID is required');
-        }
+        const mimeMessage = await browser.messages.getFull(messageId);
+        return this.extractBody(mimeMessage);
+    },
 
-        try {
-            const message = await browser.messages.get(messageId);
-            
-            if (!message) {
-                throw new Error(`Message with ID ${messageId} not found`);
+    /** Prefer text/plain MIME parts and use HTML only when no plain part exists. */
+    extractBody(rootPart) {
+        const plainParts = [];
+        const htmlParts = [];
+
+        this.walkParts(rootPart, part => {
+            if (!part.body || this.isAttachment(part)) {
+                return;
             }
-
-            console.log('Getting content for message:', message);
-            console.log('Message body:', message.body);
-
-            // Try to get plain text content first
-            let content = '';
-            
-            if (message.body && message.body.plain) {
-                content = message.body.plain;
-                console.log('Using plain text content');
-            } else if (message.body && message.body.html) {
-                // Convert HTML to plain text if no plain text available
-                content = this.htmlToText(message.body.html);
-                console.log('Using HTML content converted to text');
-            } else {
-                // Try alternative method to get message content
-                console.log('No body available, trying alternative method');
-                try {
-                    // Try to get message content using messageDisplay API
-                    const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-                    if (tab) {
-                        const displayedMessages = await browser.messageDisplay.getDisplayedMessages(tab.id);
-                        if (displayedMessages && displayedMessages.messages && displayedMessages.messages.length > 0) {
-                            const displayedMessage = displayedMessages.messages[0];
-                            if (displayedMessage.body) {
-                                content = displayedMessage.body;
-                                console.log('Using displayed message body');
-                            } else {
-                                // Create content from available metadata
-                                content = this.createContentFromMetadata(message);
-                                console.log('Using metadata-based content');
-                            }
-                        } else {
-                            content = this.createContentFromMetadata(message);
-                            console.log('No displayed messages, using metadata');
-                        }
-                    } else {
-                        content = this.createContentFromMetadata(message);
-                        console.log('No active tab, using metadata');
-                    }
-                } catch (error) {
-                    console.log('Alternative method failed:', error);
-                    content = this.createContentFromMetadata(message);
-                }
+            const contentType = String(part.contentType || '').split(';')[0].trim().toLowerCase();
+            if (contentType === 'text/plain') {
+                plainParts.push(part.body);
+            } else if (contentType === 'text/html') {
+                htmlParts.push(part.body);
             }
+        });
 
-            console.log('Final content length:', content.length);
-            return content.trim();
-        } catch (error) {
-            console.error('Error getting message content:', error);
-            return 'Fehler beim Laden des Inhalts';
+        const content = plainParts.length
+            ? plainParts.join('\n\n')
+            : htmlParts.map(html => this.htmlToText(html)).join('\n\n');
+        return this.normalizeWhitespace(content);
+    },
+
+    extractAttachments(rootPart) {
+        const attachments = [];
+        this.walkParts(rootPart, part => {
+            if (!this.isAttachment(part)) {
+                return;
+            }
+            attachments.push({
+                name: part.name || 'Anhang',
+                contentType: part.contentType || 'application/octet-stream',
+                partName: part.partName || null,
+                size: part.size || 0
+            });
+        });
+        return attachments;
+    },
+
+    walkParts(part, visitor) {
+        if (!part) {
+            return;
+        }
+        visitor(part);
+        for (const child of part.parts || []) {
+            this.walkParts(child, visitor);
         }
     },
 
-    /**
-     * Extract metadata from message
-     * 
-     * Extracts and formats key metadata from a message object.
-     * Returns a standardized object with common message properties.
-     * 
-     * @param {Object} message - Message object to extract metadata from
-     * @returns {Object} Extracted metadata object
-     * @returns {string} returns.author - Message author/sender
-     * @returns {string} returns.date - Formatted date string
-     * @returns {string} returns.subject - Message subject
-     * @returns {number} returns.size - Message size in bytes
-     * @returns {boolean} returns.hasAttachments - Whether message has attachments
-     * @returns {boolean} returns.flagged - Whether message is flagged
-     * @returns {boolean} returns.read - Whether message has been read
-     * 
-     * @example
-     * const metadata = MessageService.extractMetadata(message);
-     * console.log('From:', metadata.author);
-     * console.log('Date:', metadata.date);
-     * console.log('Size:', MessageService.formatFileSize(metadata.size));
-     */
-    extractMetadata(message) {
-        return {
-            author: message.author || 'Unbekannt',
-            date: message.date ? new Date(message.date).toLocaleDateString('de-DE') : 'Unbekannt',
-            subject: message.subject || 'Kein Betreff',
-            size: message.size || 0,
-            hasAttachments: message.hasAttachments || false,
-            flagged: message.flagged || false,
-            read: message.read || false
-        };
+    isAttachment(part) {
+        if (part.name) {
+            return true;
+        }
+        const disposition = part.headers?.['content-disposition'];
+        const value = Array.isArray(disposition) ? disposition.join(';') : disposition;
+        return String(value || '').toLowerCase().includes('attachment');
     },
 
-    /**
-     * Format file size for display
-     * 
-     * Converts file size in bytes to human-readable format.
-     * Supports KB, MB, GB with appropriate precision.
-     * 
-     * @param {number} bytes - File size in bytes
-     * @returns {string} Formatted file size string
-     * 
-     * @example
-     * console.log(MessageService.formatFileSize(1024)); // "1.0 KB"
-     * console.log(MessageService.formatFileSize(1048576)); // "1.0 MB"
-     * console.log(MessageService.formatFileSize(1234)); // "1.2 KB"
-     */
-    formatFileSize(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-    },
-
-    /**
-     * Create content from message metadata
-     * 
-     * Creates a content string from available message metadata when body is not available.
-     * 
-     * @param {Object} message - Message object
-     * @returns {string} Generated content from metadata
-     * 
-     * @example
-     * const content = MessageService.createContentFromMetadata(message);
-     */
-    createContentFromMetadata(message) {
-        const parts = [];
-        
-        if (message.subject) {
-            parts.push(`Betreff: ${message.subject}`);
-        }
-        
-        if (message.author) {
-            parts.push(`Von: ${message.author}`);
-        }
-        
-        if (message.date) {
-            parts.push(`Datum: ${new Date(message.date).toLocaleString('de-DE')}`);
-        }
-        
-        if (message.recipients && message.recipients.length > 0) {
-            parts.push(`An: ${message.recipients.join(', ')}`);
-        }
-        
-        if (message.ccList && message.ccList.length > 0) {
-            parts.push(`CC: ${message.ccList.join(', ')}`);
-        }
-        
-        if (message.bccList && message.bccList.length > 0) {
-            parts.push(`BCC: ${message.bccList.join(', ')}`);
-        }
-        
-        if (message.hasAttachments) {
-            parts.push('Enthält Anhänge: Ja');
-        }
-        
-        if (message.flagged) {
-            parts.push('Markiert: Ja');
-        }
-        
-        if (message.tags && message.tags.length > 0) {
-            parts.push(`Tags: ${message.tags.join(', ')}`);
-        }
-        
-        return parts.join('\n');
-    },
-
-    /**
-     * Convert HTML to plain text
-     * 
-     * Strips HTML tags and converts HTML content to plain text.
-     * Handles common HTML entities and preserves basic formatting.
-     * 
-     * @param {string} html - HTML content to convert
-     * @returns {string} Plain text content
-     * 
-     * @example
-     * const text = MessageService.htmlToText('<p>Hello <strong>world</strong>!</p>');
-     * console.log(text); // "Hello world!"
-     */
+    /** Convert HTML without relying on a DOM, because background scripts have none. */
     htmlToText(html) {
-        if (!html) return '';
-        
-        // Create temporary element to parse HTML
-        const div = document.createElement('div');
-        div.innerHTML = html;
-        
-        // Get text content and clean up
-        let text = div.textContent || div.innerText || '';
-        
-        // Replace common HTML entities
-        text = text.replace(/&nbsp;/g, ' ')
-                   .replace(/&amp;/g, '&')
-                   .replace(/&lt;/g, '<')
-                   .replace(/&gt;/g, '>')
-                   .replace(/&quot;/g, '"')
-                   .replace(/&#39;/g, "'");
-        
-        // Clean up whitespace
-        text = text.replace(/\s+/g, ' ').trim();
-        
-        return text;
+        if (!html) {
+            return '';
+        }
+        const withoutUnsafeBlocks = String(html)
+            .replace(/<\s*(script|style|head)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/giu, ' ')
+            .replace(/<\s*br\s*\/?>/giu, '\n')
+            .replace(/<\s*\/\s*(p|div|li|tr|h[1-6])\s*>/giu, '\n')
+            .replace(/<\s*li[^>]*>/giu, '• ')
+            .replace(/<[^>]+>/gu, ' ');
+        return this.decodeHtmlEntities(withoutUnsafeBlocks);
     },
 
-    /**
-     * Update message tags
-     * 
-     * Adds or removes tags from a message using Thunderbird's messaging API.
-     * Useful for categorizing and organizing emails.
-     * 
-     * @async
-     * @param {string|number} messageId - ID of the message to update
-     * @param {string[]} tags - Array of tags to apply to the message
-     * @returns {Promise<boolean>} Success status of the operation
-     * 
-     * @example
-     * const success = await MessageService.updateMessageTags('msg123', ['wichtig', 'geschäftlich']);
-     * if (success) {
-     *   console.log('Tags updated successfully');
-     * }
-     */
+    decodeHtmlEntities(text) {
+        const named = {
+            amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
+            auml: 'ä', ouml: 'ö', uuml: 'ü', Auml: 'Ä', Ouml: 'Ö', Uuml: 'Ü', szlig: 'ß'
+        };
+        const decodeCodePoint = (match, value, radix) => {
+            const codePoint = parseInt(value, radix);
+            return Number.isInteger(codePoint) && codePoint >= 0 && codePoint <= 0x10FFFF
+                ? String.fromCodePoint(codePoint)
+                : match;
+        };
+        return String(text)
+            .replace(/&#(\d+);/gu, (match, decimal) => decodeCodePoint(match, decimal, 10))
+            .replace(/&#x([0-9a-f]+);/giu, (match, hex) => decodeCodePoint(match, hex, 16))
+            .replace(/&([a-z]+);/giu, (match, name) => named[name] ?? match);
+    },
+
+    normalizeWhitespace(text) {
+        return String(text || '')
+            .replace(/\r\n?/gu, '\n')
+            .replace(/[\t\f\v ]+/gu, ' ')
+            .replace(/ *\n */gu, '\n')
+            .replace(/\n{3,}/gu, '\n\n')
+            .trim();
+    },
+
+    /** Find related messages locally, without sending mailbox contents to OpenAI. */
+    async findSimilarMessages(messageId, limit = 5) {
+        const source = await browser.messages.get(messageId);
+        const folderId = source?.folder?.id;
+        if (!source || !folderId) {
+            return [];
+        }
+
+        let page = await browser.messages.query({
+            folderId,
+            messagesPerPage: 100,
+            returnMessageListId: true
+        });
+        const candidates = [...(page.messages || [])];
+        while (page.id && candidates.length < 300) {
+            page = await browser.messages.continueList(page.id);
+            candidates.push(...(page.messages || []));
+        }
+
+        const sourceTokens = this.subjectTokens(source.subject);
+        const sourceAuthor = String(source.author || '').toLowerCase();
+        return candidates
+            .filter(candidate => candidate.id !== source.id)
+            .map(candidate => {
+                const candidateTokens = this.subjectTokens(candidate.subject);
+                const overlap = [...sourceTokens].filter(token => candidateTokens.has(token)).length;
+                const sameAuthor = String(candidate.author || '').toLowerCase() === sourceAuthor;
+                return {
+                    id: candidate.id,
+                    subject: candidate.subject || '(Kein Betreff)',
+                    author: candidate.author || 'Unbekannt',
+                    date: candidate.date,
+                    score: overlap + (sameAuthor ? 2 : 0)
+                };
+            })
+            .filter(candidate => candidate.score > 0)
+            .sort((left, right) => right.score - left.score || new Date(right.date) - new Date(left.date))
+            .slice(0, limit);
+    },
+
+    subjectTokens(subject) {
+        const stopWords = new Set(['re', 'fw', 'fwd', 'aw', 'wg', 'und', 'oder', 'the', 'and', 'für', 'von']);
+        return new Set(
+            String(subject || '')
+                .toLocaleLowerCase()
+                .normalize('NFKD')
+                .replace(/[^\p{L}\p{N}]+/gu, ' ')
+                .split(/\s+/u)
+                .filter(token => token.length > 2 && !stopWords.has(token))
+        );
+    },
+
     async updateMessageTags(messageId, tags) {
-        try {
-            await browser.messages.update(messageId, { tags: tags });
-            return true;
-        } catch (error) {
-            console.error('Error updating message tags:', error);
-            return false;
-        }
+        await browser.messages.update(messageId, { tags });
+        return true;
     },
 
-    /**
-     * Mark message as important
-     * 
-     * Flags a message as important using Thunderbird's flagging system.
-     * This makes the message more visible in the message list.
-     * 
-     * @async
-     * @param {string|number} messageId - ID of the message to flag
-     * @returns {Promise<boolean>} Success status of the operation
-     * 
-     * @example
-     * const success = await MessageService.markAsImportant('msg123');
-     * if (success) {
-     *   console.log('Message marked as important');
-     * }
-     */
     async markAsImportant(messageId) {
-        try {
-            await browser.messages.update(messageId, { flagged: true });
-            return true;
-        } catch (error) {
-            console.error('Error marking message as important:', error);
-            return false;
-        }
+        await browser.messages.update(messageId, { flagged: true });
+        return true;
     },
 
-    /**
-     * Get message attachments
-     * 
-     * Retrieves attachment information for a message.
-     * Returns array of attachment objects with name, size, and type.
-     * 
-     * @async
-     * @param {string|number} messageId - ID of the message to get attachments from
-     * @returns {Promise<Array>} Array of attachment objects
-     * 
-     * @example
-     * const attachments = await MessageService.getAttachments('msg123');
-     * attachments.forEach(attachment => {
-     *   console.log('Name:', attachment.name);
-     *   console.log('Size:', MessageService.formatFileSize(attachment.size));
-     * });
-     */
     async getAttachments(messageId) {
-        try {
-            const message = await browser.messages.get(messageId);
-            
-            if (!message || !message.hasAttachments) {
-                return [];
-            }
-
-            // Note: Thunderbird's API doesn't provide direct attachment access
-            // This is a placeholder for future implementation
-            return [];
-        } catch (error) {
-            console.error('Error getting attachments:', error);
-            return [];
-        }
+        const mimeMessage = await browser.messages.getFull(messageId);
+        return this.extractAttachments(mimeMessage);
     }
 };
 
-    /**
- * Make MessageService available globally for non-module environments
- * 
- * This allows the MessageService to be accessed from any script without ES6 imports.
- * Used for Thunderbird add-on compatibility.
- */
 if (typeof window !== 'undefined') {
     window.MessageService = MessageService;
-} 
+}
+if (typeof globalThis !== 'undefined') {
+    globalThis.MessageService = MessageService;
+}

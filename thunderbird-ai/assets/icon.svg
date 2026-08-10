@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="Thunderbird AI Assistant">
+  <rect width="48" height="48" rx="10" fill="#0a84ff"/>
+  <path d="M11 15h26v20H11z" fill="#fff"/>
+  <path d="M12 17l12 10 12-10" fill="none" stroke="#0a84ff" stroke-width="3"/>
+  <circle cx="36" cy="12" r="8" fill="#7c3aed"/>
+  <path d="M36 7.5l1.2 3.3 3.3 1.2-3.3 1.2-1.2 3.3-1.2-3.3-3.3-1.2 3.3-1.2z" fill="#fff"/>
+</svg>

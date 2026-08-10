@@ -120,14 +120,14 @@ const ActionsComponent = class {
             const result = await this.settingsManager.sendToBackground(CONFIG.ACTIONS.SAVE_SETTINGS, settings);
             
             if (result.success) {
-                this.settingsManager.showStatus(CONFIG.SUCCESS.SETTINGS_SAVED, 'success');
+                this.settingsManager.showStatus(I18n.t('settingsSaved'), 'success');
             } else {
-                this.settingsManager.showStatus(CONFIG.ERRORS.SETTINGS_SAVE_FAILED + ': ' + result.error, 'error');
+                this.settingsManager.showStatus(I18n.t('settingsSaveFailed') + ': ' + result.error, 'error');
             }
             
         } catch (error) {
             console.error('Error saving settings:', error);
-            this.settingsManager.showStatus(CONFIG.ERRORS.SETTINGS_SAVE_FAILED, 'error');
+            this.settingsManager.showStatus(I18n.t('settingsSaveFailed'), 'error');
         } finally {
             // Reset button state
             this.elements.saveBtn.disabled = false;
@@ -190,17 +190,16 @@ const ActionsComponent = class {
      * @example
      * this.closeSettings();
      */
-    closeSettings() {
+    async closeSettings() {
         try {
             // Cleanup components
             this.settingsManager.cleanup();
             
-            // Try to close the window if it's a popup
-            if (window.opener) {
-                window.close();
+            const currentTab = await browser.tabs.getCurrent();
+            if (currentTab?.id !== undefined) {
+                await browser.tabs.remove(currentTab.id);
             } else {
-                // If it's opened in a tab, redirect to a blank page or close tab
-                window.location.href = 'about:blank';
+                window.close();
             }
         } catch (error) {
             console.error('Error closing settings:', error);
@@ -218,4 +217,4 @@ const ActionsComponent = class {
  */
 if (typeof window !== 'undefined') {
     window.ActionsComponent = ActionsComponent;
-} 
+}

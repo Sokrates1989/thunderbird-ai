@@ -1,7 +1,7 @@
 # Windows-Installer testen
 
 Das primäre Windows-Artefakt heißt
-`Thunderbird-AI-Setup-1.0.0-win-x64.exe`. Es installiert das Add-on nur für den
+`Thunderbird-AI-Setup-1.1.0-win-x64.exe`. Es installiert das Add-on nur für den
 aktuellen Benutzer und benötigt keine Administratorrechte.
 
 ## Automatisierter Isolationstest

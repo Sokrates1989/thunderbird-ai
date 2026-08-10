@@ -1,43 +1,76 @@
-// Thunderbird AI Assistant - Constants and Configuration
+// Thunderbird AI Assistant - shared configuration and localized UI strings.
 
 const CONFIG = {
-    // Addon Information
     ADDON_NAME: 'Thunderbird AI Assistant',
-    ADDON_VERSION: '1.0.0',
+    ADDON_VERSION: '1.1.0',
     ADDON_ID: 'thunderbird-ai@example.com',
-    
-    // OpenAI Configuration
+
     OPENAI: {
         BASE_URL: 'https://api.openai.com/v1',
-        DEFAULT_MODEL: 'gpt-3.5-turbo',
+        DEFAULT_MODEL: 'auto',
         AVAILABLE_MODELS: [
-            { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo (Schnell & Günstig)' },
-            { value: 'gpt-4', label: 'GPT-4 (Besser & Teurer)' },
-            { value: 'gpt-4-turbo', label: 'GPT-4 Turbo (Beste Qualität)' }
+            {
+                value: 'auto',
+                labels: {
+                    de: 'Automatisch (empfohlen)',
+                    en: 'Automatic (recommended)'
+                }
+            },
+            {
+                value: 'gpt-5.6-luna',
+                labels: {
+                    de: 'GPT-5.6 Luna (schnell & sparsam)',
+                    en: 'GPT-5.6 Luna (fast & efficient)'
+                }
+            },
+            {
+                value: 'gpt-5.6-terra',
+                labels: {
+                    de: 'GPT-5.6 Terra (ausgewogen)',
+                    en: 'GPT-5.6 Terra (balanced)'
+                }
+            },
+            {
+                value: 'gpt-5.6-sol',
+                labels: {
+                    de: 'GPT-5.6 Sol (höchste Qualität)',
+                    en: 'GPT-5.6 Sol (highest quality)'
+                }
+            }
         ],
-        MAX_TOKENS: 500,
-        TEMPERATURE: 0.7
+        TASK_PROFILES: {
+            summarize: { model: 'gpt-5.6-terra', effort: 'low', verbosity: 'medium', maxOutputTokens: 1200 },
+            reply: { model: 'gpt-5.6-terra', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
+            categorize: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'low', maxOutputTokens: 350 },
+            importance: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'low', maxOutputTokens: 350 },
+            chat: { model: 'gpt-5.6-terra', effort: 'low', verbosity: 'medium', maxOutputTokens: 1200 },
+            translate: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'medium', maxOutputTokens: 1800 },
+            extract: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
+            spam: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'low', maxOutputTokens: 450 },
+            improve: { model: 'gpt-5.6-terra', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
+            test: { model: 'gpt-5.6-luna', effort: 'none', verbosity: 'low', maxOutputTokens: 20 }
+        },
+        MAX_EMAIL_CHARACTERS: 50000
     },
-    
-    // Storage Keys
+
     STORAGE_KEYS: {
         OPENAI_API_KEY: 'openaiApiKey',
         MODEL: 'model',
         AUTO_PROCESS: 'autoProcess',
         EMAILS_ANALYZED: 'emailsAnalyzed',
         API_CALLS: 'apiCalls',
-        LAST_USED: 'lastUsed'
+        LAST_USED: 'lastUsed',
+        SAVED_RESULTS: 'savedResults',
+        AUTOMATIC_RESULTS: 'automaticResults'
     },
-    
-    // UI Configuration
+
     UI: {
         POPUP_WIDTH: 450,
         POPUP_HEIGHT: 600,
         TOAST_DURATION: 3000,
-        LOADING_TIMEOUT: 30000
+        LOADING_TIMEOUT: 60000
     },
-    
-    // Message Actions
+
     ACTIONS: {
         SUMMARIZE: 'summarizeMessage',
         REPLY: 'suggestReply',
@@ -50,71 +83,146 @@ const CONFIG = {
         SAVE_SETTINGS: 'saveSettings',
         TEST_API: 'testApiConnection',
         GET_STATISTICS: 'getStatistics',
+        GET_AUTOMATIC_RESULT: 'getAutomaticResult',
         TRANSLATE: 'translateMessage',
         EXTRACT_INFO: 'extractInfo',
         CHECK_SPAM: 'checkSpam',
         FIND_SIMILAR: 'findSimilar'
     },
-    
-    // Keyboard Shortcuts
+
     SHORTCUTS: {
         SUMMARIZE: 'Ctrl+Alt+S',
         REPLY: 'Ctrl+Alt+R',
         CATEGORIZE: 'Ctrl+Alt+C',
         IMPORTANCE: 'Ctrl+Alt+I'
-    },
-    
-    // Error Messages
-    ERRORS: {
-        API_KEY_MISSING: 'OpenAI API-Schlüssel nicht konfiguriert. Bitte in den Einstellungen hinzufügen.',
-        API_CONNECTION_FAILED: 'OpenAI API-Verbindung fehlgeschlagen',
-        MESSAGE_NOT_FOUND: 'E-Mail nicht gefunden',
-        SETTINGS_LOAD_FAILED: 'Fehler beim Laden der Einstellungen',
-        SETTINGS_SAVE_FAILED: 'Fehler beim Speichern der Einstellungen'
-    },
-    
-    // Success Messages
-    SUCCESS: {
-        SETTINGS_SAVED: 'Einstellungen erfolgreich gespeichert!',
-        API_TEST_SUCCESS: 'API-Verbindung erfolgreich! OpenAI ist verfügbar.',
-        SUMMARY_GENERATED: 'E-Mail-Zusammenfassung erfolgreich erstellt'
     }
 };
 
-const PROMPTS = {
-    EMAIL_SUMMARY: (subject, author, date, content) => `Analysiere diese E-Mail und erstelle eine strukturierte Zusammenfassung auf Deutsch:
-
-E-Mail Details:
-- Betreff: ${subject}
-- Von: ${author}
-- Datum: ${date}
-- Inhalt: ${content}
-
-Erstelle eine Zusammenfassung mit folgenden Elementen:
-1. Metadaten (Absender, Betreff, Datum, Wortanzahl)
-2. Dringlichkeit (hoch/mittel/niedrig) mit Begründung
-3. Ton der E-Mail (formell/informell) mit Begründung
-4. Enthält Fragen? (ja/nein) mit Details
-5. Hauptpunkte (3-5 wichtigste Punkte)
-6. Erforderliche Aktionen
-7. Stimmungsanalyse (positiv/negativ/neutral) mit Begründung
-8. Anhänge erwähnt? (ja/nein)
-
-Formatiere die Antwort mit Emojis und klarer Struktur.`,
-
-    SYSTEM_PROMPT: 'Du bist ein E-Mail-Assistent, der E-Mails analysiert und strukturierte Zusammenfassungen auf Deutsch erstellt. Verwende Emojis und klare Formatierung.'
+const LOCALE_MESSAGES = {
+    de: {
+        apiKeyMissing: 'OpenAI API-Schlüssel ist nicht konfiguriert. Bitte öffnen Sie die Einstellungen.',
+        apiKeyInvalid: 'Bitte geben Sie einen gültigen OpenAI API-Schlüssel ein.',
+        apiTestSuccess: 'API-Verbindung erfolgreich. Verwendetes Modell: {model}',
+        settingsSaved: 'Einstellungen erfolgreich gespeichert!',
+        settingsLoadFailed: 'Fehler beim Laden der Einstellungen',
+        settingsSaveFailed: 'Fehler beim Speichern der Einstellungen',
+        messageNotFound: 'Keine geöffnete E-Mail gefunden.',
+        emptyMessage: 'Die E-Mail enthält keinen lesbaren Text.',
+        summaryTitle: 'E-Mail-Zusammenfassung',
+        replyTitle: 'Antwortvorschlag',
+        categoryTitle: 'E-Mail-Kategorie',
+        importanceTitle: 'Wichtigkeitsprüfung',
+        translationTitle: 'Übersetzung',
+        extractionTitle: 'Extrahierte Informationen',
+        spamTitle: 'Spam-Prüfung',
+        similarTitle: 'Ähnliche E-Mails',
+        chatTitle: 'AI Chat zur E-Mail',
+        chatClose: 'Chat schließen',
+        chatPlaceholder: 'Frage zu dieser E-Mail… (Strg+Enter zum Senden)',
+        chatSend: 'Senden',
+        translateTarget: 'Zielsprache',
+        translateGerman: 'Deutsch',
+        translateEnglish: 'Englisch',
+        translateFrench: 'Französisch',
+        translateSpanish: 'Spanisch',
+        improveTitle: 'Verbesserter Text',
+        copy: 'Kopieren',
+        save: 'Speichern',
+        useAsReply: 'Als Antwort verwenden',
+        copied: 'In die Zwischenablage kopiert.',
+        saved: 'Ergebnis lokal gespeichert.',
+        savedResults: 'Gespeicherte Ergebnisse',
+        noSavedResults: 'Noch keine Ergebnisse gespeichert.',
+        delete: 'Löschen',
+        openMessage: 'E-Mail öffnen',
+        replyOpened: 'Antwortentwurf in Thunderbird geöffnet.',
+        processing: 'Verarbeite…',
+        autoResultTitle: 'Automatische Analyse',
+        autoResultReady: 'Die automatische E-Mail-Analyse ist fertig.',
+        noSimilar: 'Keine ausreichend ähnlichen E-Mails im aktuellen Ordner gefunden.',
+        modelHelp: '„Automatisch“ nutzt Luna für schnelle Analyseaufgaben und Terra für Zusammenfassungen, Antworten und Chat.',
+        testPrompt: 'Antworte ausschließlich mit OK.'
+    },
+    en: {
+        apiKeyMissing: 'No OpenAI API key is configured. Please open Settings.',
+        apiKeyInvalid: 'Please enter a valid OpenAI API key.',
+        apiTestSuccess: 'API connection successful. Model used: {model}',
+        settingsSaved: 'Settings saved successfully!',
+        settingsLoadFailed: 'Failed to load settings',
+        settingsSaveFailed: 'Failed to save settings',
+        messageNotFound: 'No open email was found.',
+        emptyMessage: 'The email does not contain readable text.',
+        summaryTitle: 'Email summary',
+        replyTitle: 'Suggested reply',
+        categoryTitle: 'Email category',
+        importanceTitle: 'Importance check',
+        translationTitle: 'Translation',
+        extractionTitle: 'Extracted information',
+        spamTitle: 'Spam check',
+        similarTitle: 'Similar emails',
+        chatTitle: 'AI chat about this email',
+        chatClose: 'Close chat',
+        chatPlaceholder: 'Ask about this email… (Ctrl+Enter to send)',
+        chatSend: 'Send',
+        translateTarget: 'Target language',
+        translateGerman: 'German',
+        translateEnglish: 'English',
+        translateFrench: 'French',
+        translateSpanish: 'Spanish',
+        improveTitle: 'Improved text',
+        copy: 'Copy',
+        save: 'Save',
+        useAsReply: 'Use as reply',
+        copied: 'Copied to the clipboard.',
+        saved: 'Result saved locally.',
+        savedResults: 'Saved results',
+        noSavedResults: 'No results have been saved yet.',
+        delete: 'Delete',
+        openMessage: 'Open email',
+        replyOpened: 'Reply draft opened in Thunderbird.',
+        processing: 'Processing…',
+        autoResultTitle: 'Automatic analysis',
+        autoResultReady: 'The automatic email analysis is ready.',
+        noSimilar: 'No sufficiently similar emails were found in the current folder.',
+        modelHelp: '“Automatic” uses Luna for fast analysis tasks and Terra for summaries, replies, and chat.',
+        testPrompt: 'Reply with OK only.'
+    }
 };
 
-const SENTIMENT_WORDS = {
-    POSITIVE: ['danke', 'freut', 'gut', 'toll', 'super', 'großartig', 'excellent', 'wonderful', 'amazing'],
-    NEGATIVE: ['problem', 'fehler', 'schlecht', 'enttäuscht', 'unzufrieden', 'terrible', 'awful', 'disappointed'],
-    URGENT: ['dringend', 'sofort', 'asap', 'urgent', 'immediately', 'critical'],
-    FORMAL: ['sehr geehrte', 'mit freundlichen grüßen', 'hochachtungsvoll', 'yours sincerely', 'best regards']
+const I18n = {
+    getLanguage() {
+        let language = '';
+        try {
+            language = browser?.i18n?.getUILanguage?.() || '';
+        } catch (_error) {
+            language = typeof navigator !== 'undefined' ? navigator.language : '';
+        }
+        return language.toLowerCase().startsWith('en') ? 'en' : 'de';
+    },
+
+    t(key, replacements = {}) {
+        const language = this.getLanguage();
+        const template = LOCALE_MESSAGES[language]?.[key] || LOCALE_MESSAGES.de[key] || key;
+        return Object.entries(replacements).reduce(
+            (text, [name, value]) => text.replaceAll(`{${name}}`, String(value)),
+            template
+        );
+    },
+
+    modelLabel(model) {
+        const definition = CONFIG.OPENAI.AVAILABLE_MODELS.find(item => item.value === model);
+        return definition?.labels[this.getLanguage()] || definition?.labels.de || model;
+    }
 };
 
-// Make available globally for non-module environments
+// Keep compatibility with the existing non-module Thunderbird build.
 if (typeof window !== 'undefined') {
     window.CONFIG = CONFIG;
-    window.PROMPTS = PROMPTS;
-    window.SENTIMENT_WORDS = SENTIMENT_WORDS;
-} 
+    window.LOCALE_MESSAGES = LOCALE_MESSAGES;
+    window.I18n = I18n;
+}
+if (typeof globalThis !== 'undefined') {
+    globalThis.CONFIG = CONFIG;
+    globalThis.LOCALE_MESSAGES = LOCALE_MESSAGES;
+    globalThis.I18n = I18n;
+}

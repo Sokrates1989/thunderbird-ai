@@ -106,6 +106,8 @@ const ApiTestComponent = class {
             // Get current API key from the input field (not saved settings)
             const apiKeyInput = document.getElementById('openaiApiKey');
             const apiKey = apiKeyInput ? apiKeyInput.value.trim() : '';
+            const modelSelect = document.getElementById('model');
+            const model = modelSelect ? modelSelect.value : CONFIG.OPENAI.DEFAULT_MODEL;
 
             if (!apiKey) {
                 this.showTestResult('❌ Kein API-Schlüssel eingegeben. Bitte geben Sie einen Schlüssel ein.', 'error');
@@ -117,7 +119,10 @@ const ApiTestComponent = class {
             this.elements.testApiBtn.innerHTML = '<span class="icon">⏳</span> Teste...';
 
             // Test the connection
-            const result = await this.settingsManager.sendToBackground(CONFIG.ACTIONS.TEST_API, { apiKey });
+            const result = await this.settingsManager.sendToBackground(CONFIG.ACTIONS.TEST_API, {
+                apiKey,
+                model
+            });
 
             if (result.success) {
                 this.showTestResult('✅ ' + result.message, 'success');
@@ -172,4 +177,4 @@ const ApiTestComponent = class {
  */
 if (typeof window !== 'undefined') {
     window.ApiTestComponent = ApiTestComponent;
-} 
+}

@@ -61,6 +61,9 @@ const ApiConfigComponent = class {
      * this.createUI();
      */
     createUI() {
+        const modelOptions = CONFIG.OPENAI.AVAILABLE_MODELS
+            .map(model => `<option value="${model.value}">${I18n.modelLabel(model.value)}</option>`)
+            .join('');
         this.container.innerHTML = `
             <h2>🤖 OpenAI API Konfiguration</h2>
             <div class="setting-group">
@@ -75,12 +78,10 @@ const ApiConfigComponent = class {
             <div class="setting-group">
                 <label for="model">AI Modell:</label>
                 <select id="model">
-                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo (Schnell & Günstig)</option>
-                    <option value="gpt-4">GPT-4 (Besser & Teurer)</option>
-                    <option value="gpt-4-turbo">GPT-4 Turbo (Beste Qualität)</option>
+                    ${modelOptions}
                 </select>
                 <div class="help-text">
-                    Wählen Sie das AI-Modell für die E-Mail-Analyse
+                    ${I18n.t('modelHelp')}
                 </div>
             </div>
         `;
@@ -174,7 +175,7 @@ const ApiConfigComponent = class {
      * 
      * @param {Object} settings - New settings to display
      * @example
-     * this.updateDisplay({ openaiApiKey: 'sk-...', model: 'gpt-4' });
+     * this.updateDisplay({ openaiApiKey: 'sk-...', model: 'auto' });
      */
     updateDisplay(settings) {
         if (settings.openaiApiKey !== undefined) {
@@ -194,4 +195,4 @@ const ApiConfigComponent = class {
  */
 if (typeof window !== 'undefined') {
     window.ApiConfigComponent = ApiConfigComponent;
-} 
+}
