@@ -65,10 +65,18 @@ class ThunderbirdAI {
                     return this.runEmailAction('spam', request.messageId);
                 case CONFIG.ACTIONS.FIND_SIMILAR:
                     return this.findSimilar(request.messageId);
+                case CONFIG.ACTIONS.SCORE_MESSAGE:
+                    return this.scoreSingleMessage(request.messageId);
                 case CONFIG.ACTIONS.DASHBOARD_BULK_TRIAGE:
                     return this.analyzeDashboardMessages(request.messageIds || []);
                 case CONFIG.ACTIONS.DASHBOARD_SAVE_FEEDBACK:
                     return this.saveDashboardScoreFeedback(request);
+                case CONFIG.ACTIONS.GET_SCORE_ARCHIVE:
+                    return { success: true, data: await DashboardTrainingService.loadArchive() };
+                case CONFIG.ACTIONS.UPDATE_SCORE_ARCHIVE:
+                    return this.updateScoreArchive(request);
+                case CONFIG.ACTIONS.REMOVE_SCORE_ARCHIVE:
+                    return this.removeScoreArchive(request.storageKey);
                 case CONFIG.ACTIONS.CHAT:
                     return this.processChatQuery(
                         request.query,
@@ -144,7 +152,7 @@ class ThunderbirdAI {
         return this.successResult(task, result, messageId);
     }
 
-    /** Load selected messages once and return Luna-only importance and spam scores. */
+    /** Load selected messages once and return configured-model importance and spam scores. */
     async analyzeDashboardMessages(messageIds) {
         const uniqueIds = [...new Set(messageIds)]
             .filter(messageId => messageId !== undefined && messageId !== null);
@@ -170,6 +178,29 @@ class ThunderbirdAI {
         };
     }
 
+    /** Score one message and return any exact archived operator correction beside it. */
+    async scoreSingleMessage(messageId) {
+        const message = await MessageService.getFullMessage(messageId);
+        const [archivedFeedback, feedbackExamples] = await Promise.all([
+            DashboardTrainingService.findForMessage(message),
+            DashboardTrainingService.relevantExamples([message])
+        ]);
+        const result = await OpenAIService.analyzeSingleScore(message, feedbackExamples);
+        await StorageManager.updateStatistics('email');
+        await StorageManager.updateStatistics('api');
+        return {
+            success: true,
+            data: {
+                title: I18n.t('singleScoreTitle'),
+                messageId,
+                importanceScore: result.importanceScore,
+                spamScore: result.spamScore,
+                model: result.model,
+                archivedFeedback
+            }
+        };
+    }
+
     /** Persist explicit operator corrections independently from Thunderbird mail state. */
     async saveDashboardScoreFeedback(request) {
         const message = await MessageService.getFullMessage(request.messageId);
@@ -177,6 +208,7 @@ class ThunderbirdAI {
             originalScores: request.originalScores,
             correctedScores: request.correctedScores,
             reason: request.reason,
+            reasons: request.reasons,
             sourceModel: request.sourceModel
         });
         return {
@@ -187,6 +219,22 @@ class ThunderbirdAI {
                 correctedAt: feedback.updatedAt
             }
         };
+    }
+
+    async updateScoreArchive(request) {
+        const record = await DashboardTrainingService.updateArchivedFeedback(
+            request.storageKey,
+            {
+                correctedScores: request.correctedScores,
+                reasons: request.reasons
+            }
+        );
+        return { success: true, data: record };
+    }
+
+    async removeScoreArchive(storageKey) {
+        const removed = await DashboardTrainingService.removeArchivedFeedback(storageKey);
+        return { success: removed, error: removed ? null : I18n.t('scoreArchiveMissing') };
     }
 
     successResult(task, result, messageId) {

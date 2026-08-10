@@ -7,7 +7,7 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 - Zusammenfassung des tatsächlichen Nachrichtentexts aus dem dekodierten MIME-Baum
 - iterativer Antworteditor mit AI-Überarbeitung, direkter Textbearbeitung und Übergabe an einen neuen Thunderbird-Antwortentwurf
 - persistente Antwortoptionen für Originalzitat, „Allen antworten“ und erneutes Anhängen der ursprünglichen Dateien
-- Kategorie- und Wichtigkeitsanalyse
+- kombinierte Wichtigkeits- und Spam-Bewertung einzelner E-Mails mit korrigierbaren Prozentwerten
 - Übersetzung nach Deutsch, Englisch, Französisch oder Spanisch
 - Extraktion von Kontakten, Terminen, Beträgen, Referenzen und Aufgaben
 - Spam-/Phishing-Einschätzung mit konkreten Indikatoren
@@ -16,36 +16,37 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 - lokale Ergebnisablage mit Verwaltung unter **Einstellungen** und Zwischenablage-Aktion
 - optionale automatische Zusammenfassung beim Öffnen einer Nachricht
 - eigenes globales Posteingangs-Dashboard mit vollständiger Header-Paginierung, standardmäßig neuester Sortierung, durchsuchbarem Absenderfilter, Datumsfiltern, frei wählbaren 1–50 Nachrichten pro Konto, Einzelauswahl, Mehrfachlöschen und optionaler lokaler Inhaltsvorschau
-- Luna-basierte Bulk-Auswertung ausgewählter Dashboard-Nachrichten mit Wichtigkeits- und Spam-Wahrscheinlichkeit von 0–100 %, dauerhaften Score-Filtern und Score-Sortierungen
-- leicht korrigierbare Dashboard-Scores mit separatem, löschunabhängigem Lernarchiv und optionaler Begründung zur Kalibrierung künftiger Luna-Auswertungen
+- standardmäßig Luna-basierte Bulk-Auswertung ausgewählter Dashboard-Nachrichten mit Wichtigkeits- und Spam-Wahrscheinlichkeit von 0–100 %, dauerhaften Score-Filtern und Score-Sortierungen
+- leicht korrigierbare Scores mit separatem, löschunabhängigem Lernarchiv, getrennten Gründen für Wichtigkeit und Spam sowie manueller Referenzverwaltung unter **Einstellungen**
 - direkte Dashboard-Aktionen für die bestehende Zusammenfassung und den bestehenden interaktiven Antworteditor
 - vollständig deutsch- oder englischsprachige Oberfläche mit expliziter Sprachauswahl
 - Windows-Ein-Klick-Installer mit kontrolliertem Thunderbird-Neustart
 
 ## OpenAI-Modelle
 
-Die empfohlene Einstellung **Automatisch** wählt das Modell nach Aufgabe:
+Das bevorzugte Modell wird pro AI-Funktion eingestellt. Die Standards sind:
 
-- `gpt-5.6-terra` für Zusammenfassungen, Antworten, Chat und Textverbesserung
-- `gpt-5.6-luna` für Kategorisierung, Wichtigkeit, Übersetzung, Extraktion und Spam-Prüfung
+- `gpt-5.6-luna` für die kostensensitive Bulk-Auswertung
+- `gpt-5.6-terra` für das Scoring einer einzelnen E-Mail
+- `gpt-5.6-sol` für Zusammenfassungen, Antwortvorschläge und AI Chat
 
-Alternativ kann Luna, Terra oder `gpt-5.6-sol` für alle Einzelmail-Aufgaben fest ausgewählt werden. Die Dashboard-Bulk-Auswertung verwendet aus Kostengründen immer Luna und verarbeitet höchstens acht Nachrichten pro API-Aufruf bei maximal zwei parallelen Aufrufen. Das Add-on nutzt die OpenAI Responses API und setzt `store: false`.
+Kategorisierung, bisherige Wichtigkeits- und Spam-Analyse, Übersetzung, Extraktion und Textverbesserung besitzen ebenfalls eine eigene Modellauswahl. **Automatisch** verwendet jeweils das aufgabenspezifische Standardmodell. Bulk-Aufrufe verarbeiten höchstens acht Nachrichten pro API-Aufruf bei maximal zwei parallelen Aufrufen. Das Add-on nutzt die OpenAI Responses API und setzt `store: false`.
 
 ## Datenschutz
 
 Bei AI-Aktionen werden Betreff, Absender, Nachrichtentext und Namen erkannter Anhänge direkt von Thunderbird an die OpenAI API gesendet. Beim Verbessern eines Antwortentwurfs werden außerdem der aktuelle Entwurf und die letzten Änderungswünsche übertragen. Die Dashboard-Bulk-Auswertung überträgt ausschließlich die explizit ausgewählten Nachrichten. Normale AI-Scores speichern lokal nur eine stabile Nachrichtenidentität, Prozentwerte, Modell und Analysezeitpunkt.
 
-Eine ausdrücklich korrigierte Bewertung wird zusätzlich in einem separaten lokalen Lernarchiv gespeichert: höchstens 250 Datensätze mit einem auf 6.000 Zeichen begrenzten E-Mail-Auszug, Anhangnamen, ursprünglichen und korrigierten Werten sowie der optionalen Begründung. Normale Thunderbird-Löschvorgänge verändern dieses Archiv nicht. Bei einer späteren Bulk-Auswertung werden höchstens fünf nach Absender und Betreff priorisierte Korrekturen als Kalibrierungsbeispiele an OpenAI gesendet. Das ist kontextbezogenes Lernen durch Beispiele und kein dauerhaftes Modell-Fine-Tuning. Die Suche nach ähnlichen Nachrichten und die optionale Dashboard-Inhaltsvorschau laufen ausschließlich lokal. Automatische Verarbeitung ist standardmäßig deaktiviert.
+Eine ausdrücklich gespeicherte Bewertung wird zusätzlich in einem separaten lokalen Lernarchiv gespeichert: höchstens 250 Datensätze mit einem auf 6.000 Zeichen begrenzten E-Mail-Auszug, Anhangnamen, ursprünglichen und korrigierten Werten sowie getrennten Kategorien und Freitextbegründungen für Wichtigkeit und Spam. Normale Thunderbird-Löschvorgänge verändern dieses Archiv nicht. Bei einer späteren Einzel- oder Bulk-Auswertung werden höchstens fünf nach Absender und Betreff priorisierte Korrekturen als nicht vertrauenswürdige Kalibrierungsbeispiele an OpenAI gesendet. Das ist kontextbezogenes Lernen durch Beispiele und kein dauerhaftes Modell-Fine-Tuning. Unter **Einstellungen** lassen sich alle Referenzen einsehen, manuell neu bewerten und entfernen. Die Suche nach ähnlichen Nachrichten und die optionale Dashboard-Inhaltsvorschau laufen ausschließlich lokal. Automatische Verarbeitung ist standardmäßig deaktiviert.
 
 Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speicher des Thunderbird-Profils. Für eine breitere Veröffentlichung sollte zusätzlich geprüft werden, ob dieses Sicherheitsmodell den eigenen Anforderungen entspricht.
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-1.9.1-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-2.0.0-win-x64.exe` herunterladen und starten.
 2. Im Setup **Deutsch** oder **English** wählen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung bestätigen.
-5. Unter **Einstellungen** den OpenAI API-Schlüssel eintragen, **Automatisch (empfohlen)** wählen, die Verbindung testen und speichern. Die Oberflächensprache kann dort jederzeit unabhängig von der Thunderbird-Sprache geändert werden.
+5. Unter **Einstellungen** den OpenAI API-Schlüssel eintragen, die aufgabenspezifischen Modelle prüfen, die Verbindung testen und speichern. Die Oberflächensprache kann dort jederzeit unabhängig von der Thunderbird-Sprache geändert werden.
 
 Der benutzerbezogene Installer benötigt keine Administratorrechte. Eine neue Setup-Datei aktualisiert die vorhandene Version; eine Deinstallation ist nicht nötig. Die feste Add-on-ID erhält die Einstellungen. Der aktuelle Test-Installer ist nicht Authenticode-signiert und kann deshalb eine SmartScreen-Warnung auslösen.
 
@@ -71,7 +72,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-1.9.1-win-x64.exe`
+- `artifacts\Thunderbird-AI-Setup-2.0.0-win-x64.exe`
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
@@ -102,14 +103,15 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 23. Den Entwurf zusätzlich von Hand ändern und **In Thunderbird vorbereiten** anklicken. Der neue Antwortentwurf muss an alle Teilnehmer adressiert sein, den AI-Text vor dem nativen Thunderbird-Zitat enthalten und keine ursprünglichen Anhänge besitzen.
 24. Den Antworteditor erneut öffnen, alle drei Optionen umschalten und wieder vorbereiten. Der Entwurf muss nur an den Absender gehen, kein Originalzitat enthalten und alle ursprünglichen Anhänge besitzen. Beim nächsten Öffnen müssen diese Werte vorausgewählt bleiben.
 25. Bei einem Compose-Fehler muss der aktuelle Text stattdessen in die Zwischenablage kopiert werden.
-26. Kategorie, Wichtigkeit, Übersetzung, Extraktion und Spam-Prüfung ausführen.
+26. **Scoring-Info** ausführen. Das Einzelmail-Popup darf keine schnellen Schaltflächen für **Kategorisieren**, **Wichtigkeit prüfen** oder **API testen** mehr zeigen. Terra muss standardmäßig neue Wichtigkeits- und Spam-Werte liefern. Beide Werte ändern, getrennte Gründe auswählen, je einen Freitext eingeben und die Referenz speichern. Beim erneuten Scoring derselben E-Mail müssen die archivierten Werte und Gründe vorausgewählt und für die neue Bewertung berücksichtigt werden.
 27. **Ähnliche finden** prüfen; diese Aktion benötigt keinen OpenAI-Aufruf.
 28. Beide **AI Chat**-Schaltflächen testen, Ergebnisse kopieren und lokal speichern.
-29. Unter **Einstellungen** jedes Modell testen; anschließend **Automatisch** speichern. Die Dashboard-Bulk-Auswertung muss trotzdem Luna melden.
-30. Die Oberflächensprache auf **English** umstellen und globales Dashboard, Einzelmail-Popup, Antworteditor, Einstellungen und Hilfe prüfen. Danach zurück auf **Deutsch** wechseln. Alle sichtbaren Texte und Meldungen müssen der Auswahl folgen.
-31. Optional die automatische Verarbeitung aktivieren, eine andere E-Mail öffnen und das Popup erneut öffnen. Die automatische Analyse muss angezeigt werden.
+29. Unter **Einstellungen** die Modellauswahl für Bulk, Einzelmail-Scoring, Zusammenfassen, Antwortvorschlag, AI Chat und jede weitere AI-Funktion prüfen. Standardmäßig müssen Luna, Terra beziehungsweise Sol wie im Abschnitt **OpenAI-Modelle** ausgewählt sein; jede Auswahl muss sich unabhängig ändern und speichern lassen.
+30. Im **Archiv der Scoring-Referenzen** die gespeicherte Testmail öffnen, Inhalt, Werte und getrennte Gründe prüfen, manuell neu bewerten und speichern. Danach die Referenz entfernen; die Thunderbird-E-Mail darf dabei nicht gelöscht oder verändert werden.
+31. Die Oberflächensprache auf **English** umstellen und globales Dashboard, Einzelmail-Popup, Antworteditor, Einstellungen und Hilfe prüfen. Danach zurück auf **Deutsch** wechseln. Alle sichtbaren Texte und Meldungen müssen der Auswahl folgen.
+32. Optional die automatische Verarbeitung aktivieren, eine andere E-Mail öffnen und das Popup erneut öffnen. Die automatische Analyse muss angezeigt werden.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 1.9.1** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.0.0** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 ## Technische Struktur
 

@@ -5,6 +5,7 @@ const OpenAIService = {
         return {
             apiKey: settings.openaiApiKey,
             model: settings.model,
+            taskModels: settings.taskModels || {},
             baseUrl: CONFIG.OPENAI.BASE_URL
         };
     },
@@ -153,11 +154,11 @@ const OpenAIService = {
             scores,
             failedCount: failures.reduce((total, failure) => total + failure.count, 0),
             apiCalls: results.filter(Boolean).length,
-            model: CONFIG.OPENAI.BULK_TRIAGE_MODEL
+            model: results.find(Boolean)?.model || null
         };
     },
 
-    /** Request one strict score pair per message while forcing the low-cost Luna model. */
+    /** Request one strict score pair per message with the configured bulk model. */
     async analyzeBulkTriageBatch(messages, feedbackExamples = []) {
         const messageInput = messages.map((message, index) => [
             `<bulk-email index="${index}">`,
@@ -168,8 +169,26 @@ const OpenAIService = {
         const response = await this.request('bulkTriage', {
             instructions: this.baseInstructions(I18n.t('bulkTriagePrompt')),
             input: [feedbackInput, messageInput].filter(Boolean).join('\n\n')
-        }, { preferredModel: CONFIG.OPENAI.BULK_TRIAGE_MODEL });
-        return this.parseBulkTriageScores(response.content, messages);
+        });
+        const scores = this.parseBulkTriageScores(response.content, messages);
+        scores.model = response.model;
+        return scores;
+    },
+
+    /** Score one email with Terra by default and reuse the bulk score parser and feedback format. */
+    async analyzeSingleScore(message, feedbackExamples = []) {
+        const messageInput = [
+            '<bulk-email index="0">',
+            this.formatEmailContext(message, CONFIG.OPENAI.BULK_TRIAGE_EMAIL_CHARACTERS),
+            '</bulk-email>'
+        ].join('\n');
+        const feedbackInput = this.formatBulkFeedbackExamples(feedbackExamples);
+        const response = await this.request('singleScore', {
+            instructions: this.baseInstructions(I18n.t('singleScorePrompt')),
+            input: [feedbackInput, messageInput].filter(Boolean).join('\n\n')
+        });
+        const [score] = this.parseBulkTriageScores(response.content, [message]);
+        return { ...score, model: response.model, usedApi: true };
     },
 
     /** Format bounded operator corrections as examples, never as executable instructions. */
@@ -184,7 +203,8 @@ const OpenAIService = {
                     email: example.message,
                     originalScores: example.originalScores,
                     correctedScores: example.correctedScores,
-                    operatorReason: String(example.reason || '')
+                    operatorReason: String(example.reason || ''),
+                    scoreReasons: example.reasons || {}
                 }),
                 '</operator-feedback-example>'
             ].join('\n'));
@@ -318,7 +338,9 @@ const OpenAIService = {
         }
 
         const profile = CONFIG.OPENAI.TASK_PROFILES[task] || CONFIG.OPENAI.TASK_PROFILES.summarize;
-        const preferredModel = overrides.preferredModel || settings.model;
+        const preferredModel = overrides.preferredModel
+            || settings.taskModels?.[task]
+            || settings.model;
         const model = this.resolveModel(task, preferredModel);
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), CONFIG.UI.LOADING_TIMEOUT);

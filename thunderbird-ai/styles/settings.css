@@ -101,6 +101,26 @@ body {
     text-decoration: underline;
 }
 
+.model-task-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.model-task-setting label {
+    min-height: 34px;
+    margin-bottom: 5px;
+    font-size: 12px;
+}
+
+.model-task-setting select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
 /* Checkbox styling */
 .checkbox-label {
     display: flex;
@@ -365,6 +385,84 @@ body {
     font-size: 12px;
 }
 
+.score-archive-refresh {
+    margin: 10px 0;
+}
+
+.score-archive-count {
+    font-weight: bold;
+}
+
+.score-archive-record {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #d5d9dd;
+    border-radius: 6px;
+    background: white;
+}
+
+.score-archive-record summary {
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.score-archive-metadata {
+    color: #666;
+    font-size: 12px;
+}
+
+.score-archive-content {
+    max-height: 180px;
+    overflow: auto;
+    padding: 8px;
+    border-radius: 4px;
+    background: #f4f5f6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font: inherit;
+    font-size: 12px;
+}
+
+.score-archive-editor {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.score-archive-reasons {
+    min-width: 0;
+}
+
+.score-archive-reasons > label {
+    display: block;
+    margin: 5px 0;
+    font-size: 12px;
+}
+
+.score-archive-reasons input[type="number"] {
+    width: 62px;
+    margin-right: 4px;
+}
+
+.score-archive-reasons textarea {
+    box-sizing: border-box;
+    width: 100%;
+    margin-top: 8px;
+    resize: vertical;
+}
+
+.score-archive-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.score-archive-record-status {
+    color: #155724;
+    font-size: 12px;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     .container {
@@ -372,6 +470,11 @@ body {
     }
     
     .stats {
+        grid-template-columns: 1fr;
+    }
+
+    .model-task-grid,
+    .score-archive-editor {
         grid-template-columns: 1fr;
     }
     

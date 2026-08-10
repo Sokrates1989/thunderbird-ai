@@ -185,6 +185,72 @@ body {
     overflow-wrap: anywhere;
 }
 
+.score-ai-summary,
+.score-archive-notice,
+.score-privacy {
+    margin: 0 0 10px;
+}
+
+.score-archive-notice {
+    padding: 8px;
+    border-radius: 4px;
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.score-editor {
+    margin: 12px 0;
+    padding: 10px;
+    border: 1px solid #cbd1d6;
+    border-radius: 6px;
+}
+
+.score-editor legend {
+    padding: 0 5px;
+    font-weight: bold;
+}
+
+.score-value-row {
+    display: grid;
+    grid-template-columns: 1fr 58px auto;
+    align-items: center;
+    gap: 6px;
+}
+
+.score-value-row input[type="number"] {
+    box-sizing: border-box;
+    width: 58px;
+    padding: 5px;
+}
+
+.score-reason-prompt {
+    margin: 10px 0 6px;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.score-reason-option {
+    display: block;
+    margin: 5px 0;
+    font-size: 12px;
+}
+
+.score-reason-option input {
+    margin-right: 6px;
+}
+
+.score-editor textarea {
+    box-sizing: border-box;
+    width: 100%;
+    margin-top: 7px;
+    resize: vertical;
+}
+
+.score-privacy {
+    color: #666;
+    font-size: 11px;
+}
+
 .loading {
     text-align: center;
     color: #666;

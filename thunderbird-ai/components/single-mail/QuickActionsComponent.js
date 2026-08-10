@@ -8,10 +8,8 @@ const QuickActionsComponent = class {
         this.actions = [
             { id: 'summarizeBtn', icon: '📄', text: I18n.t('quickSummarize'), shortcut: shortcut('S'), action: 'SUMMARIZE', className: 'primary', description: I18n.t('quickSummarizeDescription') },
             { id: 'replyBtn', icon: '✍️', text: I18n.t('quickReply'), shortcut: shortcut('R'), action: 'SUGGEST_REPLY', description: I18n.t('quickReplyDescription') },
-            { id: 'categorizeBtn', icon: '📂', text: I18n.t('quickCategorize'), shortcut: shortcut('C'), action: 'CATEGORIZE', description: I18n.t('quickCategorizeDescription') },
-            { id: 'importanceBtn', icon: '⚡', text: I18n.t('quickImportance'), action: 'CHECK_IMPORTANCE', description: I18n.t('quickImportanceDescription') },
             { id: 'chatBtn', icon: '💬', text: I18n.t('quickChat'), action: 'OPEN_CHAT', description: I18n.t('quickChatDescription') },
-            { id: 'testBtn', icon: '🧪', text: I18n.t('quickTest'), action: 'TEST', className: 'test', description: I18n.t('quickTestDescription') }
+            { id: 'scoreBtn', icon: '📊', text: I18n.t('quickScoring'), action: 'SCORE', className: 'test', description: I18n.t('quickScoringDescription') }
         ];
         this.keydownHandler = event => this.handleShortcut(event);
     }
@@ -52,9 +50,7 @@ const QuickActionsComponent = class {
 
     async executeAction(action) {
         const actions = {
-            SUMMARIZE: 'SUMMARIZE_EMAIL',
-            CATEGORIZE: 'CATEGORIZE_EMAIL',
-            CHECK_IMPORTANCE: 'CHECK_IMPORTANCE'
+            SUMMARIZE: 'SUMMARIZE_EMAIL'
         };
         if (actions[action]) {
             return this.manager.executeAIAction(actions[action]);
@@ -65,13 +61,8 @@ const QuickActionsComponent = class {
         if (action === 'SUGGEST_REPLY') {
             return this.manager.openReplyComposer();
         }
-        if (action === 'TEST') {
-            const response = await this.manager.sendToBackground(CONFIG.ACTIONS.TEST);
-            if (!response?.success) {
-                throw new Error(response?.message || response?.error || I18n.t('apiTestFailed'));
-            }
-            this.manager.updateStatus(response.message, 'success');
-            return response;
+        if (action === 'SCORE') {
+            return this.manager.scoreCurrentEmail();
         }
         throw new Error(`Unknown action: ${action}`);
     }
@@ -80,7 +71,7 @@ const QuickActionsComponent = class {
         if (!event.ctrlKey || !event.altKey) {
             return;
         }
-        const buttonByKey = { s: 'summarizeBtn', r: 'replyBtn', c: 'categorizeBtn' };
+        const buttonByKey = { s: 'summarizeBtn', r: 'replyBtn' };
         const button = this.buttons[buttonByKey[event.key.toLowerCase()]];
         if (button) {
             event.preventDefault();

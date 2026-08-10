@@ -121,3 +121,59 @@ test('feedback archive and operator reasons stay within their configured bounds'
     assert.equal(storage[key][0].reason.length, 1000);
     assert.equal(storage[key].filter(record => record.storageKey.startsWith('old-')).length, 249);
 });
+
+test('separate score reasons survive exact-message reuse, manual rescoring, and removal', async () => {
+    const { service } = loadTrainingService();
+    const message = email();
+    const archived = await service.archiveFeedback(message, {
+        originalScores: { importanceScore: 44, spamScore: 30 },
+        correctedScores: { importanceScore: 92, spamScore: 4 },
+        reasons: {
+            importance: { categories: ['sender', 'requestedAction'], text: 'Invoice needs approval' },
+            spam: { categories: ['addressStyle'], text: 'Known company domain' }
+        },
+        sourceModel: 'gpt-5.6-terra'
+    });
+
+    const exact = await service.findForMessage(message);
+    assert.deepEqual(Array.from(exact.reasons.importance.categories), ['sender', 'requestedAction']);
+    assert.equal(exact.reasons.spam.text, 'Known company domain');
+
+    const updated = await service.updateArchivedFeedback(archived.storageKey, {
+        correctedScores: { importanceScore: 80, spamScore: 7 },
+        reasons: {
+            importance: { categories: ['content'], text: 'Useful, but not urgent' },
+            spam: { categories: ['previousExperience'], text: 'Repeated legitimate invoices' }
+        }
+    });
+    assert.deepEqual(
+        {
+            importanceScore: updated.correctedScores.importanceScore,
+            spamScore: updated.correctedScores.spamScore,
+            importanceText: updated.reasons.importance.text
+        },
+        { importanceScore: 80, spamScore: 7, importanceText: 'Useful, but not urgent' }
+    );
+
+    assert.equal(await service.removeArchivedFeedback(archived.storageKey), true);
+    assert.equal(await service.findForMessage(message), null);
+});
+
+test('legacy common reasons migrate into both score-specific explanation fields', async () => {
+    const { context, service, storage } = loadTrainingService();
+    const key = context.CONFIG.STORAGE_KEYS.DASHBOARD_FEEDBACK_ARCHIVE;
+    const timestamp = '2026-08-10T10:00:00.000Z';
+    storage[key] = [{
+        storageKey: 'legacy',
+        message: service.messageSnapshot(email()),
+        originalScores: { importanceScore: 20, spamScore: 80 },
+        correctedScores: { importanceScore: 90, spamScore: 5 },
+        reason: 'Trusted sender',
+        createdAt: timestamp,
+        updatedAt: timestamp
+    }];
+
+    const [record] = await service.loadArchive();
+    assert.equal(record.reasons.importance.text, 'Trusted sender');
+    assert.equal(record.reasons.spam.text, 'Trusted sender');
+});

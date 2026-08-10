@@ -68,6 +68,7 @@ const SettingsManager = class {
         this.components.apiTest = new ApiTestComponent(this);
         this.components.statistics = new StatisticsComponent(this);
         this.components.savedResults = new SavedResultsComponent(this);
+        this.components.scoreArchive = new ScoringArchiveComponent(this);
         this.components.actions = new ActionsComponent(this);
     }
 
@@ -187,9 +188,14 @@ const SettingsManager = class {
     resetAllComponents() {
         const defaultSettings = {
             openaiApiKey: '',
-            model: CONFIG.OPENAI.DEFAULT_MODEL,
             autoProcess: false,
-            uiLanguage: I18n.getLanguage()
+            uiLanguage: I18n.getLanguage(),
+            ...Object.fromEntries(
+                CONFIG.OPENAI.MODEL_SETTINGS.map(definition => [
+                    definition.property,
+                    definition.defaultModel
+                ])
+            )
         };
         
         this.updateAllComponents(defaultSettings);

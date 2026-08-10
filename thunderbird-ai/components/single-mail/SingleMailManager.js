@@ -165,6 +165,27 @@ const SingleMailManager = class {
         }
     }
 
+    async scoreCurrentEmail() {
+        if (this.emailId === undefined || this.emailId === null) {
+            throw new Error(I18n.t('messageNotFound'));
+        }
+        this.showLoading(true);
+        this.updateStatus(I18n.t('singleScoreLoading'));
+        try {
+            const response = await this.sendToBackground(CONFIG.ACTIONS.SCORE_MESSAGE, {
+                messageId: this.emailId
+            });
+            if (!response?.success) {
+                throw new Error(response?.error || I18n.t('singleScoreFailed'));
+            }
+            this.components.results.showScoring(response.data);
+            this.updateStatus(I18n.t('singleScoreReady'), 'success');
+            return response.data;
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
     openChat() {
         if (this.emailId === undefined || this.emailId === null) {
             this.showError(I18n.t('messageNotFound'));

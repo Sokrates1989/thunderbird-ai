@@ -164,9 +164,14 @@ const ActionsComponent = class {
                 // Save default settings
                 const defaultSettings = {
                     openaiApiKey: '',
-                    model: CONFIG.OPENAI.DEFAULT_MODEL,
                     autoProcess: false,
-                    uiLanguage: I18n.getLanguage()
+                    uiLanguage: I18n.getLanguage(),
+                    ...Object.fromEntries(
+                        CONFIG.OPENAI.MODEL_SETTINGS.map(definition => [
+                            definition.property,
+                            definition.defaultModel
+                        ])
+                    )
                 };
 
                 const result = await this.settingsManager.sendToBackground(CONFIG.ACTIONS.SAVE_SETTINGS, defaultSettings);

@@ -12,6 +12,7 @@ const DashboardTrainingService = {
         }
         const reason = String(feedback?.reason || '').trim()
             .slice(0, CONFIG.OPENAI.DASHBOARD_FEEDBACK_REASON_CHARACTERS);
+        const reasons = this.normalizeReasons(feedback?.reasons, feedback?.reasons ? '' : reason);
         const storageKey = MessageService.messageIdentity(message);
         const records = await this.loadArchive();
         const existing = records.find(record => record.storageKey === storageKey);
@@ -21,7 +22,8 @@ const DashboardTrainingService = {
             message: this.messageSnapshot(message),
             originalScores: existing?.originalScores || submittedOriginalScores,
             correctedScores,
-            reason,
+            reason: reason || this.reasonSummary(reasons),
+            reasons,
             sourceModel: String(feedback?.sourceModel || existing?.sourceModel || ''),
             createdAt: existing?.createdAt || now,
             updatedAt: now
@@ -33,6 +35,49 @@ const DashboardTrainingService = {
             [CONFIG.STORAGE_KEYS.DASHBOARD_FEEDBACK_ARCHIVE]: bounded
         });
         return record;
+    },
+
+    /** Return the existing correction for this exact message, if one was archived. */
+    async findForMessage(message) {
+        const storageKey = MessageService.messageIdentity(message);
+        return (await this.loadArchive()).find(record => record.storageKey === storageKey) || null;
+    },
+
+    /** Update operator scores and per-score explanations without requiring the live email. */
+    async updateArchivedFeedback(storageKey, feedback) {
+        const records = await this.loadArchive();
+        const existing = records.find(record => record.storageKey === String(storageKey || ''));
+        const correctedScores = this.normalizeScores(feedback?.correctedScores);
+        if (!existing || !correctedScores) {
+            throw new Error(I18n.t('dashboardFeedbackInvalid'));
+        }
+        const reasons = this.normalizeReasons(
+            feedback?.reasons,
+            feedback?.reasons ? '' : existing.reason
+        );
+        const updated = {
+            ...existing,
+            correctedScores,
+            reasons,
+            reason: feedback?.reasons ? this.reasonSummary(reasons) : existing.reason,
+            updatedAt: new Date().toISOString()
+        };
+        const sorted = [updated, ...records.filter(record => record.storageKey !== updated.storageKey)]
+            .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
+        await browser.storage.local.set({
+            [CONFIG.STORAGE_KEYS.DASHBOARD_FEEDBACK_ARCHIVE]: sorted
+        });
+        return updated;
+    },
+
+    /** Remove one learning reference without touching its Thunderbird message. */
+    async removeArchivedFeedback(storageKey) {
+        const records = await this.loadArchive();
+        const remaining = records.filter(record => record.storageKey !== String(storageKey || ''));
+        await browser.storage.local.set({
+            [CONFIG.STORAGE_KEYS.DASHBOARD_FEEDBACK_ARCHIVE]: remaining
+        });
+        return remaining.length !== records.length;
     },
 
     /** Load only records that still satisfy the private feedback archive contract. */
@@ -101,6 +146,7 @@ const DashboardTrainingService = {
             correctedScores,
             reason: String(record.reason || '')
                 .slice(0, CONFIG.OPENAI.DASHBOARD_FEEDBACK_REASON_CHARACTERS),
+            reasons: this.normalizeReasons(record.reasons, record.reason),
             sourceModel: String(record.sourceModel || ''),
             createdAt,
             updatedAt
@@ -118,6 +164,32 @@ const DashboardTrainingService = {
     normalizeScore(value) {
         const score = Number(value);
         return Number.isFinite(score) && score >= 0 && score <= 100 ? Math.round(score) : null;
+    },
+
+    normalizeReasons(reasons, legacyReason = '') {
+        return {
+            importance: this.normalizeReasonSection(reasons?.importance, legacyReason),
+            spam: this.normalizeReasonSection(reasons?.spam, legacyReason)
+        };
+    },
+
+    normalizeReasonSection(section, legacyReason = '') {
+        const allowed = new Set(CONFIG.OPENAI.SCORE_FEEDBACK_CATEGORIES);
+        const categories = Array.isArray(section?.categories)
+            ? [...new Set(section.categories.map(String).filter(category => allowed.has(category)))]
+            : [];
+        const text = String(section?.text || legacyReason || '').trim()
+            .slice(0, CONFIG.OPENAI.DASHBOARD_FEEDBACK_REASON_CHARACTERS);
+        return { categories, text };
+    },
+
+    reasonSummary(reasons) {
+        return [reasons?.importance?.text, reasons?.spam?.text]
+            .map(value => String(value || '').trim())
+            .filter(Boolean)
+            .filter((value, index, values) => values.indexOf(value) === index)
+            .join(' | ')
+            .slice(0, CONFIG.OPENAI.DASHBOARD_FEEDBACK_REASON_CHARACTERS);
     },
 
     normalizeAuthor(value) {

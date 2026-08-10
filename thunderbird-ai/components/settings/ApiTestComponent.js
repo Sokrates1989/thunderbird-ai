@@ -106,8 +106,8 @@ const ApiTestComponent = class {
             // Get current API key from the input field (not saved settings)
             const apiKeyInput = document.getElementById('openaiApiKey');
             const apiKey = apiKeyInput ? apiKeyInput.value.trim() : '';
-            const modelSelect = document.getElementById('model');
-            const model = modelSelect ? modelSelect.value : CONFIG.OPENAI.DEFAULT_MODEL;
+            const modelSelect = document.getElementById('bulkModel');
+            const model = modelSelect ? modelSelect.value : CONFIG.OPENAI.TASK_PROFILES.test.model;
 
             if (!apiKey) {
                 this.showTestResult(`❌ ${I18n.t('apiKeyRequiredForTest')}`, 'error');

@@ -2,7 +2,7 @@
 
 const CONFIG = {
     ADDON_NAME: 'Thunderbird AI Assistant',
-    ADDON_VERSION: '1.9.1',
+    ADDON_VERSION: '2.0.0',
     ADDON_ID: 'thunderbird-ai@example.com',
 
     OPENAI: {
@@ -27,27 +27,48 @@ const CONFIG = {
             }
         ],
         TASK_PROFILES: {
-            summarize: { model: 'gpt-5.6-terra', effort: 'low', verbosity: 'medium', maxOutputTokens: 1200 },
-            reply: { model: 'gpt-5.6-terra', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
-            replyRefine: { model: 'gpt-5.6-terra', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
+            summarize: { model: 'gpt-5.6-sol', effort: 'low', verbosity: 'medium', maxOutputTokens: 1200 },
+            reply: { model: 'gpt-5.6-sol', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
+            replyRefine: { model: 'gpt-5.6-sol', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
             categorize: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'low', maxOutputTokens: 350 },
             importance: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'low', maxOutputTokens: 350 },
-            chat: { model: 'gpt-5.6-terra', effort: 'low', verbosity: 'medium', maxOutputTokens: 1200 },
+            chat: { model: 'gpt-5.6-sol', effort: 'low', verbosity: 'medium', maxOutputTokens: 1200 },
             translate: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'medium', maxOutputTokens: 1800 },
             extract: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
             spam: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'low', maxOutputTokens: 450 },
             bulkTriage: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'low', maxOutputTokens: 1200 },
+            singleScore: { model: 'gpt-5.6-terra', effort: 'low', verbosity: 'low', maxOutputTokens: 300 },
             improve: { model: 'gpt-5.6-terra', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
             test: { model: 'gpt-5.6-luna', effort: 'none', verbosity: 'low', maxOutputTokens: 20 }
         },
+        MODEL_SETTINGS: [
+            { property: 'bulkModel', storageKey: 'bulkModel', labelKey: 'modelTaskBulk', tasks: ['bulkTriage'], defaultModel: 'gpt-5.6-luna' },
+            { property: 'singleScoreModel', storageKey: 'singleScoreModel', labelKey: 'modelTaskSingleScore', tasks: ['singleScore'], defaultModel: 'gpt-5.6-terra' },
+            { property: 'summarizeModel', storageKey: 'summarizeModel', labelKey: 'modelTaskSummarize', tasks: ['summarize'], defaultModel: 'gpt-5.6-sol' },
+            { property: 'replyModel', storageKey: 'replyModel', labelKey: 'modelTaskReply', tasks: ['reply', 'replyRefine'], defaultModel: 'gpt-5.6-sol' },
+            { property: 'chatModel', storageKey: 'chatModel', labelKey: 'modelTaskChat', tasks: ['chat'], defaultModel: 'gpt-5.6-sol' },
+            { property: 'categorizeModel', storageKey: 'categorizeModel', labelKey: 'modelTaskCategorize', tasks: ['categorize'], defaultModel: 'gpt-5.6-luna' },
+            { property: 'importanceModel', storageKey: 'importanceModel', labelKey: 'modelTaskImportance', tasks: ['importance'], defaultModel: 'gpt-5.6-luna' },
+            { property: 'translateModel', storageKey: 'translateModel', labelKey: 'modelTaskTranslate', tasks: ['translate'], defaultModel: 'gpt-5.6-luna' },
+            { property: 'extractModel', storageKey: 'extractModel', labelKey: 'modelTaskExtract', tasks: ['extract'], defaultModel: 'gpt-5.6-luna' },
+            { property: 'spamModel', storageKey: 'spamModel', labelKey: 'modelTaskSpam', tasks: ['spam'], defaultModel: 'gpt-5.6-luna' },
+            { property: 'improveModel', storageKey: 'improveModel', labelKey: 'modelTaskImprove', tasks: ['improve'], defaultModel: 'gpt-5.6-terra' }
+        ],
         MAX_EMAIL_CHARACTERS: 50000,
-        BULK_TRIAGE_MODEL: 'gpt-5.6-luna',
         BULK_TRIAGE_BATCH_SIZE: 8,
         BULK_TRIAGE_CONCURRENCY: 2,
         BULK_TRIAGE_EMAIL_CHARACTERS: 6000,
         BULK_TRIAGE_FEEDBACK_EXAMPLES: 5,
         DASHBOARD_FEEDBACK_ARCHIVE_LIMIT: 250,
         DASHBOARD_FEEDBACK_REASON_CHARACTERS: 1000,
+        SCORE_FEEDBACK_CATEGORIES: [
+            'sender',
+            'addressStyle',
+            'content',
+            'requestedAction',
+            'linksAttachments',
+            'previousExperience'
+        ],
         MAX_REPLY_DRAFT_CHARACTERS: 20000,
         MAX_REPLY_INSTRUCTION_CHARACTERS: 4000
     },
@@ -55,6 +76,17 @@ const CONFIG = {
     STORAGE_KEYS: {
         OPENAI_API_KEY: 'openaiApiKey',
         MODEL: 'model',
+        BULK_MODEL: 'bulkModel',
+        SINGLE_SCORE_MODEL: 'singleScoreModel',
+        SUMMARIZE_MODEL: 'summarizeModel',
+        REPLY_MODEL: 'replyModel',
+        CHAT_MODEL: 'chatModel',
+        CATEGORIZE_MODEL: 'categorizeModel',
+        IMPORTANCE_MODEL: 'importanceModel',
+        TRANSLATE_MODEL: 'translateModel',
+        EXTRACT_MODEL: 'extractModel',
+        SPAM_MODEL: 'spamModel',
+        IMPROVE_MODEL: 'improveModel',
         AUTO_PROCESS: 'autoProcess',
         EMAILS_ANALYZED: 'emailsAnalyzed',
         API_CALLS: 'apiCalls',
@@ -105,8 +137,12 @@ const CONFIG = {
         EXTRACT_INFO: 'extractInfo',
         CHECK_SPAM: 'checkSpam',
         FIND_SIMILAR: 'findSimilar',
+        SCORE_MESSAGE: 'scoreMessage',
         DASHBOARD_BULK_TRIAGE: 'analyzeDashboardMessages',
-        DASHBOARD_SAVE_FEEDBACK: 'saveDashboardScoreFeedback'
+        DASHBOARD_SAVE_FEEDBACK: 'saveDashboardScoreFeedback',
+        GET_SCORE_ARCHIVE: 'getScoreArchive',
+        UPDATE_SCORE_ARCHIVE: 'updateScoreArchive',
+        REMOVE_SCORE_ARCHIVE: 'removeScoreArchive'
     },
 
     SHORTCUTS: {

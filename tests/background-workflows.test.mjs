@@ -43,6 +43,14 @@ async function loadBackground() {
     };
     context.DashboardTrainingService = {
         relevantExamples: async () => [],
+        findForMessage: async () => ({
+            storageKey: 'known',
+            correctedScores: { importanceScore: 91, spamScore: 4 },
+            reasons: { importance: { categories: ['sender'], text: 'Known sender' } }
+        }),
+        loadArchive: async () => [{ storageKey: 'known' }],
+        updateArchivedFeedback: async (storageKey, feedback) => ({ storageKey, ...feedback }),
+        removeArchivedFeedback: async storageKey => storageKey === 'known',
         archiveFeedback: async (_message, feedback) => ({
             correctedScores: feedback.correctedScores,
             updatedAt: '2026-08-10T12:00:00.000Z'
@@ -74,6 +82,12 @@ async function loadBackground() {
                 model: 'gpt-5.6-luna'
             };
         },
+        analyzeSingleScore: async () => ({
+            importanceScore: 77,
+            spamScore: 8,
+            usedApi: true,
+            model: 'gpt-5.6-terra'
+        }),
         processChat: result('chat'),
         improveText: result('improve'),
         testConnection: async () => ({ success: true, message: 'ok' })
@@ -187,6 +201,30 @@ test('dashboard score feedback is routed to the independent background archive',
         },
         { importanceScore: 90, spamScore: 5, correctedAt: '2026-08-10T12:00:00.000Z' }
     );
+});
+
+test('single scoring reuses archived feedback and archive management stays background-owned', async () => {
+    const { ai, config, stats } = await loadBackground();
+
+    const score = await ai.handleMessage({ action: config.ACTIONS.SCORE_MESSAGE, messageId: 7 });
+    const archive = await ai.handleMessage({ action: config.ACTIONS.GET_SCORE_ARCHIVE });
+    const updated = await ai.handleMessage({
+        action: config.ACTIONS.UPDATE_SCORE_ARCHIVE,
+        storageKey: 'known',
+        correctedScores: { importanceScore: 70, spamScore: 11 },
+        reasons: { importance: { categories: ['content'], text: 'Changed' } }
+    });
+    const removed = await ai.handleMessage({
+        action: config.ACTIONS.REMOVE_SCORE_ARCHIVE,
+        storageKey: 'known'
+    });
+
+    assert.equal(score.data.model, 'gpt-5.6-terra');
+    assert.equal(score.data.archivedFeedback.storageKey, 'known');
+    assert.deepEqual(stats, ['email', 'api']);
+    assert.equal(archive.data[0].storageKey, 'known');
+    assert.equal(updated.data.correctedScores.importanceScore, 70);
+    assert.equal(removed.success, true);
 });
 
 test('packaged UI sources contain no unfinished actions or retired models', () => {

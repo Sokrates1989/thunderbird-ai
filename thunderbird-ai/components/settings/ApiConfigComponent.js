@@ -64,6 +64,14 @@ const ApiConfigComponent = class {
         const modelOptions = CONFIG.OPENAI.AVAILABLE_MODELS
             .map(model => `<option value="${model.value}">${I18n.modelLabel(model.value)}</option>`)
             .join('');
+        const taskSelectors = CONFIG.OPENAI.MODEL_SETTINGS.map(definition => `
+            <div class="model-task-setting">
+                <label for="${definition.property}">${I18n.t(definition.labelKey)}</label>
+                <select id="${definition.property}" data-model-property="${definition.property}">
+                    ${modelOptions}
+                </select>
+            </div>
+        `).join('');
         this.container.innerHTML = `
             <h2>${I18n.t('apiConfigTitle')}</h2>
             <div class="setting-group">
@@ -76,19 +84,20 @@ const ApiConfigComponent = class {
             </div>
 
             <div class="setting-group">
-                <label for="model">${I18n.t('modelLabel')}</label>
-                <select id="model">
-                    ${modelOptions}
-                </select>
+                <label>${I18n.t('modelRoutingTitle')}</label>
                 <div class="help-text">
-                    ${I18n.t('modelHelp')}
+                    ${I18n.t('modelRoutingHelp')}
                 </div>
+                <div class="model-task-grid">${taskSelectors}</div>
             </div>
         `;
 
         // Store element references
         this.elements.apiKeyInput = document.getElementById('openaiApiKey');
-        this.elements.modelSelect = document.getElementById('model');
+        this.elements.modelSelects = Object.fromEntries(
+            [...this.container.querySelectorAll('[data-model-property]')]
+                .map(select => [select.dataset.modelProperty, select])
+        );
     }
 
     /**
@@ -105,10 +114,11 @@ const ApiConfigComponent = class {
             this.validateApiKey(e.target.value);
         });
 
-        // Model selection change
-        this.elements.modelSelect.addEventListener('change', (e) => {
-            this.settingsManager.notifySettingChanged('model', e.target.value);
-        });
+        for (const [property, select] of Object.entries(this.elements.modelSelects)) {
+            select.addEventListener('change', event => {
+                this.settingsManager.notifySettingChanged(property, event.target.value);
+            });
+        }
     }
 
     /**
@@ -126,7 +136,10 @@ const ApiConfigComponent = class {
             
             if (settings) {
                 this.elements.apiKeyInput.value = settings.openaiApiKey || '';
-                this.elements.modelSelect.value = settings.model || CONFIG.OPENAI.DEFAULT_MODEL;
+                for (const definition of CONFIG.OPENAI.MODEL_SETTINGS) {
+                    this.elements.modelSelects[definition.property].value =
+                        settings[definition.property] || definition.defaultModel;
+                }
             }
         } catch (error) {
             console.error('Error loading API settings:', error);
@@ -164,7 +177,10 @@ const ApiConfigComponent = class {
     getCurrentValues() {
         return {
             openaiApiKey: this.elements.apiKeyInput.value.trim(),
-            model: this.elements.modelSelect.value
+            ...Object.fromEntries(
+                Object.entries(this.elements.modelSelects)
+                    .map(([property, select]) => [property, select.value])
+            )
         };
     }
 
@@ -181,8 +197,11 @@ const ApiConfigComponent = class {
         if (settings.openaiApiKey !== undefined) {
             this.elements.apiKeyInput.value = settings.openaiApiKey;
         }
-        if (settings.model !== undefined) {
-            this.elements.modelSelect.value = settings.model;
+        for (const definition of CONFIG.OPENAI.MODEL_SETTINGS) {
+            const value = settings[definition.property];
+            if (value !== undefined) {
+                this.elements.modelSelects[definition.property].value = value;
+            }
         }
     }
 };

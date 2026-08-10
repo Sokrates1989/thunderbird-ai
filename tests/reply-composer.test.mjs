@@ -141,7 +141,7 @@ test('explicit language selection changes text and every static page key resolve
         path.join(repositoryRoot, 'thunderbird-ai/install-defaults.json'),
         'utf8'
     ));
-    assert.deepEqual(defaults, { language: 'auto', version: '1.9.1' });
+    assert.deepEqual(defaults, { language: 'auto', version: '2.0.0' });
 });
 
 test('reply composer keeps final actions outside its scrolling content', () => {
@@ -208,6 +208,25 @@ test('suggest reply quick action opens the dedicated reply composer', async () =
     await component.executeAction('SUGGEST_REPLY');
 
     assert.equal(composerOpened, 1);
+});
+
+test('single-mail quick actions replace categorization, importance, and API test with scoring', async () => {
+    const { context, manager } = loadReplyUi({
+        beginReply: async () => {},
+        writeText: async () => {}
+    });
+    let scoringOpened = 0;
+    manager.scoreCurrentEmail = async () => { scoringOpened += 1; };
+    const component = new context.QuickActionsComponent(manager);
+
+    assert.deepEqual(Array.from(component.actions, action => action.id), [
+        'summarizeBtn',
+        'replyBtn',
+        'chatBtn',
+        'scoreBtn'
+    ]);
+    await component.executeAction('SCORE');
+    assert.equal(scoringOpened, 1);
 });
 
 test('reply workspace loads an initial proposal and refines the edited draft', async () => {

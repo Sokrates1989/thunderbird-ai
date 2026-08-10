@@ -39,9 +39,9 @@ const StorageManager = {
         }
     },
 
-    normalizeModel(model) {
+    normalizeModel(model, fallback = CONFIG.OPENAI.DEFAULT_MODEL) {
         const supported = new Set(CONFIG.OPENAI.AVAILABLE_MODELS.map(item => item.value));
-        return supported.has(model) ? model : CONFIG.OPENAI.DEFAULT_MODEL;
+        return supported.has(model) ? model : fallback;
     },
 
     /** Return settings while transparently retiring legacy GPT-3.5/GPT-4 values. */
@@ -50,6 +50,16 @@ const StorageManager = {
         const result = await this.getMultiple(keys);
         const storedModel = result[CONFIG.STORAGE_KEYS.MODEL];
         const model = this.normalizeModel(storedModel);
+        const legacyFallback = storedModel && model !== CONFIG.OPENAI.DEFAULT_MODEL ? model : null;
+        const taskModels = {};
+
+        for (const definition of CONFIG.OPENAI.MODEL_SETTINGS) {
+            const storedTaskModel = result[definition.storageKey];
+            taskModels[definition.property] = this.normalizeModel(
+                storedTaskModel,
+                legacyFallback || definition.defaultModel
+            );
+        }
 
         if (storedModel && storedModel !== model) {
             await this.set(CONFIG.STORAGE_KEYS.MODEL, model);
@@ -58,6 +68,12 @@ const StorageManager = {
         return {
             openaiApiKey: result[CONFIG.STORAGE_KEYS.OPENAI_API_KEY] || '',
             model,
+            ...taskModels,
+            taskModels: Object.fromEntries(
+                CONFIG.OPENAI.MODEL_SETTINGS.flatMap(definition => (
+                    definition.tasks.map(task => [task, taskModels[definition.property]])
+                ))
+            ),
             autoProcess: Boolean(result[CONFIG.STORAGE_KEYS.AUTO_PROCESS]),
             emailsAnalyzed: Number(result[CONFIG.STORAGE_KEYS.EMAILS_ANALYZED]) || 0,
             apiCalls: Number(result[CONFIG.STORAGE_KEYS.API_CALLS]) || 0,
@@ -69,14 +85,20 @@ const StorageManager = {
     },
 
     async saveSettings(settings) {
-        return this.setMultiple({
+        const values = {
             [CONFIG.STORAGE_KEYS.OPENAI_API_KEY]: String(settings.openaiApiKey || '').trim(),
-            [CONFIG.STORAGE_KEYS.MODEL]: this.normalizeModel(settings.model),
             [CONFIG.STORAGE_KEYS.AUTO_PROCESS]: Boolean(settings.autoProcess),
             [CONFIG.STORAGE_KEYS.UI_LANGUAGE]: I18n.isSupportedLanguage(settings.uiLanguage)
                 ? settings.uiLanguage
                 : I18n.getLanguage()
-        });
+        };
+        for (const definition of CONFIG.OPENAI.MODEL_SETTINGS) {
+            values[definition.storageKey] = this.normalizeModel(
+                settings[definition.property],
+                definition.defaultModel
+            );
+        }
+        return this.setMultiple(values);
     },
 
     /** Increment one usage counter by the number of completed operations. */
