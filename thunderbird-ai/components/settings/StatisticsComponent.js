@@ -84,7 +84,20 @@ const StatisticsComponent = class {
                     <span class="stat-label">${I18n.t('lastUsedLabel')}:</span>
                     <span class="stat-value" id="lastUsed">${I18n.t('never')}</span>
                 </div>
+                <div class="stat-item estimated-cost">
+                    <span class="stat-label">${I18n.t('estimatedApiCostLabel')}:</span>
+                    <span class="stat-value" id="estimatedApiCost">${this.formatEstimatedCost(0)}</span>
+                </div>
             </div>
+            <p class="usage-cost-help">
+                ${I18n.t('estimatedApiCostHelp', {
+                    version: CONFIG.ADDON_VERSION,
+                    date: this.formatPricingDate()
+                })}
+                <a href="https://developers.openai.com/api/docs/models/compare" target="_blank" rel="noopener noreferrer">
+                    ${I18n.t('apiPricingLink')}
+                </a>
+            </p>
         `;
 
         // Store element references
@@ -92,6 +105,7 @@ const StatisticsComponent = class {
         this.elements.emailsAnalyzed = document.getElementById('emailsAnalyzed');
         this.elements.apiCalls = document.getElementById('apiCalls');
         this.elements.lastUsed = document.getElementById('lastUsed');
+        this.elements.estimatedApiCost = document.getElementById('estimatedApiCost');
     }
 
     /**
@@ -123,9 +137,7 @@ const StatisticsComponent = class {
             const stats = await this.settingsManager.sendToBackground(CONFIG.ACTIONS.GET_STATISTICS);
             
             if (stats) {
-                this.elements.emailsAnalyzed.textContent = stats.emailsAnalyzed || 0;
-                this.elements.apiCalls.textContent = stats.apiCalls || 0;
-                this.elements.lastUsed.textContent = this.formatLastUsed(stats.lastUsed);
+                this.updateDisplay(stats);
             }
         } catch (error) {
             console.error('Error loading statistics:', error);
@@ -211,6 +223,27 @@ const StatisticsComponent = class {
         if (stats.lastUsed !== undefined) {
             this.elements.lastUsed.textContent = this.formatLastUsed(stats.lastUsed);
         }
+        if (stats.estimatedApiCostUsd !== undefined) {
+            this.elements.estimatedApiCost.textContent = this.formatEstimatedCost(
+                stats.estimatedApiCostUsd
+            );
+        }
+    }
+
+    /** Format a small non-negative USD estimate without hiding sub-cent usage. */
+    formatEstimatedCost(value) {
+        const amount = Math.max(0, Number(value) || 0);
+        return new Intl.NumberFormat(I18n.getLanguage(), {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 4,
+            maximumFractionDigits: 6
+        }).format(amount);
+    }
+
+    formatPricingDate() {
+        const date = new Date(`${CONFIG.OPENAI.PRICING_SNAPSHOT_DATE}T00:00:00Z`);
+        return date.toLocaleDateString(I18n.getLanguage());
     }
 
     formatLastUsed(value) {

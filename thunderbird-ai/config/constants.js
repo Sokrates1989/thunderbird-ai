@@ -2,7 +2,7 @@
 
 const CONFIG = {
     ADDON_NAME: 'Thunderbird AI Assistant',
-    ADDON_VERSION: '2.2.0',
+    ADDON_VERSION: '2.3.0',
     ADDON_ID: 'thunderbird-ai@example.com',
 
     OPENAI: {
@@ -29,6 +29,12 @@ const CONFIG = {
                 labelKey: 'modelSol'
             }
         ],
+        PRICING_SNAPSHOT_DATE: '2026-08-11',
+        PRICING_USD_PER_MILLION_TOKENS: {
+            'gpt-5.6-luna': { input: 0.20, cachedInput: 0.02, output: 1.20 },
+            'gpt-5.6-terra': { input: 2.00, cachedInput: 0.20, output: 12.00 },
+            'gpt-5.6-sol': { input: 5.00, cachedInput: 0.50, output: 30.00 }
+        },
         TASK_PROFILES: {
             summarize: { model: 'gpt-5.6-sol', effort: 'low', verbosity: 'medium', maxOutputTokens: 1200 },
             reply: { model: 'gpt-5.6-sol', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
@@ -90,12 +96,11 @@ const CONFIG = {
         EXTRACT_MODEL: 'extractModel',
         SPAM_MODEL: 'spamModel',
         IMPROVE_MODEL: 'improveModel',
-        AUTO_PROCESS: 'autoProcess',
         EMAILS_ANALYZED: 'emailsAnalyzed',
         API_CALLS: 'apiCalls',
+        API_USAGE_BY_MODEL: 'apiUsageByModel',
         LAST_USED: 'lastUsed',
         SAVED_RESULTS: 'savedResults',
-        AUTOMATIC_RESULTS: 'automaticResults',
         UI_LANGUAGE: 'uiLanguage',
         INSTALLER_LANGUAGE_VERSION: 'installerLanguageVersion',
         REPLY_INCLUDE_ORIGINAL: 'replyIncludeOriginal',
@@ -136,7 +141,6 @@ const CONFIG = {
         SAVE_SETTINGS: 'saveSettings',
         TEST_API: 'testApiConnection',
         GET_STATISTICS: 'getStatistics',
-        GET_AUTOMATIC_RESULT: 'getAutomaticResult',
         TRANSLATE: 'translateMessage',
         EXTRACT_INFO: 'extractInfo',
         CHECK_SPAM: 'checkSpam',

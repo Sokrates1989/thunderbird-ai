@@ -85,10 +85,10 @@ const ApiConfigComponent = class {
 
             <div class="setting-group">
                 <label>${I18n.t('modelRoutingTitle')}</label>
-                <div class="help-text">
+                <div class="help-text" id="modelRoutingHelp">
                     ${I18n.t('modelRoutingHelp')}
                 </div>
-                <div class="model-task-grid">${taskSelectors}</div>
+                <div class="model-task-grid" aria-describedby="modelRoutingHelp">${taskSelectors}</div>
             </div>
         `;
 

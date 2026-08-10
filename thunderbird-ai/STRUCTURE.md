@@ -63,7 +63,7 @@ thunderbird-ai/
 - Available globally as `CONFIG`
 
 #### **Utilities (`utils/`)**
-- **`storage.js`**: Browser storage operations and settings management (global `StorageManager`)
+- **`storage.js`**: Browser storage operations, settings management, serialized per-model token accounting, and dated API-cost estimation (global `StorageManager`)
 - **`retry.js`**: Shared bounded retry and Thunderbird runtime-delivery backoff (global `RetryService`)
 - **`openai.js`**: OpenAI API integration and AI services (global `OpenAIService`)
 - **`message.js`**: Email message operations and data extraction (global `MessageService`)
@@ -114,6 +114,8 @@ thunderbird-ai/
 - **Responsibilities**:
   - Settings storage/retrieval
   - Statistics tracking
+  - Per-model input, cached-input, and output token accounting
+  - Dated USD cost estimation for the settings statistics
   - Data persistence
   - Error handling
 - **Dependencies**: Uses global `CONFIG`

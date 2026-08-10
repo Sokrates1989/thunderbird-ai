@@ -1,5 +1,7 @@
 /** Local persistence for settings, counters, and user-requested AI results. */
 const StorageManager = {
+    _apiUsageWriteQueue: Promise.resolve(),
+
     async get(key, defaultValue = null) {
         try {
             const result = await browser.storage.local.get([key]);
@@ -65,6 +67,9 @@ const StorageManager = {
             await this.set(CONFIG.STORAGE_KEYS.MODEL, model);
         }
 
+        const apiUsageByModel = this.normalizeApiUsageByModel(
+            result[CONFIG.STORAGE_KEYS.API_USAGE_BY_MODEL]
+        );
         return {
             openaiApiKey: result[CONFIG.STORAGE_KEYS.OPENAI_API_KEY] || '',
             model,
@@ -74,9 +79,10 @@ const StorageManager = {
                     definition.tasks.map(task => [task, taskModels[definition.property]])
                 ))
             ),
-            autoProcess: Boolean(result[CONFIG.STORAGE_KEYS.AUTO_PROCESS]),
             emailsAnalyzed: Number(result[CONFIG.STORAGE_KEYS.EMAILS_ANALYZED]) || 0,
             apiCalls: Number(result[CONFIG.STORAGE_KEYS.API_CALLS]) || 0,
+            apiUsageByModel,
+            estimatedApiCostUsd: this.estimateApiCostUsd(apiUsageByModel),
             lastUsed: result[CONFIG.STORAGE_KEYS.LAST_USED] || null,
             uiLanguage: I18n.isSupportedLanguage(result[CONFIG.STORAGE_KEYS.UI_LANGUAGE])
                 ? result[CONFIG.STORAGE_KEYS.UI_LANGUAGE]
@@ -87,7 +93,6 @@ const StorageManager = {
     async saveSettings(settings) {
         const values = {
             [CONFIG.STORAGE_KEYS.OPENAI_API_KEY]: String(settings.openaiApiKey || '').trim(),
-            [CONFIG.STORAGE_KEYS.AUTO_PROCESS]: Boolean(settings.autoProcess),
             [CONFIG.STORAGE_KEYS.UI_LANGUAGE]: I18n.isSupportedLanguage(settings.uiLanguage)
                 ? settings.uiLanguage
                 : I18n.getLanguage()
@@ -118,6 +123,73 @@ const StorageManager = {
         });
     },
 
+    /** Convert untrusted API or storage values into non-negative whole token counts. */
+    apiTokenCount(value) {
+        const count = Number(value);
+        return Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+    },
+
+    /** Normalize persisted per-model usage before it reaches calculations or UI. */
+    normalizeApiUsageByModel(value) {
+        if (!value || typeof value !== 'object' || Array.isArray(value)) {
+            return {};
+        }
+        return Object.fromEntries(Object.entries(value).map(([model, usage]) => [model, {
+            inputTokens: this.apiTokenCount(usage?.inputTokens),
+            cachedInputTokens: this.apiTokenCount(usage?.cachedInputTokens),
+            outputTokens: this.apiTokenCount(usage?.outputTokens)
+        }]));
+    },
+
+    /** Estimate the recorded text-token spend using the bundled dated price snapshot. */
+    estimateApiCostUsd(usageByModel) {
+        return Object.entries(this.normalizeApiUsageByModel(usageByModel))
+            .reduce((total, [model, usage]) => {
+                const pricing = CONFIG.OPENAI.PRICING_USD_PER_MILLION_TOKENS[model];
+                if (!pricing) {
+                    return total;
+                }
+                const cachedTokens = Math.min(usage.inputTokens, usage.cachedInputTokens);
+                const uncachedTokens = usage.inputTokens - cachedTokens;
+                return total
+                    + ((uncachedTokens * pricing.input) / 1_000_000)
+                    + ((cachedTokens * pricing.cachedInput) / 1_000_000)
+                    + ((usage.outputTokens * pricing.output) / 1_000_000);
+            }, 0);
+    },
+
+    /** Serialize concurrent Responses API usage writes so bulk batches cannot overwrite each other. */
+    async recordApiUsage(model, usage) {
+        const inputTokens = this.apiTokenCount(usage?.input_tokens);
+        const cachedInputTokens = Math.min(
+            inputTokens,
+            this.apiTokenCount(usage?.input_tokens_details?.cached_tokens)
+        );
+        const outputTokens = this.apiTokenCount(usage?.output_tokens);
+        if (!model || (!inputTokens && !outputTokens)) {
+            return false;
+        }
+
+        const write = this._apiUsageWriteQueue.catch(() => false).then(async () => {
+            const key = CONFIG.STORAGE_KEYS.API_USAGE_BY_MODEL;
+            const current = await this.get(key, {});
+            const byModel = this.normalizeApiUsageByModel(current);
+            const previous = byModel[model] || {
+                inputTokens: 0,
+                cachedInputTokens: 0,
+                outputTokens: 0
+            };
+            byModel[model] = {
+                inputTokens: previous.inputTokens + inputTokens,
+                cachedInputTokens: previous.cachedInputTokens + cachedInputTokens,
+                outputTokens: previous.outputTokens + outputTokens
+            };
+            return this.set(key, byModel);
+        });
+        this._apiUsageWriteQueue = write.catch(() => false);
+        return write;
+    },
+
     /** Keep a bounded local history for explicit “Save” actions. */
     async saveResult(result) {
         const key = CONFIG.STORAGE_KEYS.SAVED_RESULTS;
@@ -129,27 +201,6 @@ const StorageManager = {
         return this.set(key, savedResults.slice(0, 50));
     },
 
-    /** Store the most recent opt-in automatic analysis for each message. */
-    async saveAutomaticResult(messageId, result) {
-        const key = CONFIG.STORAGE_KEYS.AUTOMATIC_RESULTS;
-        const results = await this.get(key, {});
-        results[String(messageId)] = {
-            ...result,
-            createdAt: new Date().toISOString()
-        };
-
-        const bounded = Object.fromEntries(
-            Object.entries(results)
-                .sort((left, right) => right[1].createdAt.localeCompare(left[1].createdAt))
-                .slice(0, 20)
-        );
-        return this.set(key, bounded);
-    },
-
-    async getAutomaticResult(messageId) {
-        const results = await this.get(CONFIG.STORAGE_KEYS.AUTOMATIC_RESULTS, {});
-        return results[String(messageId)] || null;
-    }
 };
 
 if (typeof window !== 'undefined') {

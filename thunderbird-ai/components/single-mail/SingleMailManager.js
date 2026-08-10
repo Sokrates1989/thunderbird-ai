@@ -40,7 +40,6 @@ const SingleMailManager = class {
             await this.loadCurrentEmailData();
             if (this.emailData) {
                 this.updateUIWithEmailData();
-                await this.showAutomaticResult();
             } else {
                 this.showGeneralInterface();
             }
@@ -92,15 +91,6 @@ const SingleMailManager = class {
             status: this.emailData.flagged ? 'flagged' : (this.emailData.read ? 'read' : 'unread')
         });
         this.updateStatus(I18n.t('emailLoaded', { subject: this.emailData.subject }));
-    }
-
-    async showAutomaticResult() {
-        const response = await this.sendToBackground(CONFIG.ACTIONS.GET_AUTOMATIC_RESULT, {
-            messageId: this.emailId
-        });
-        if (response?.success && response.data) {
-            this.components.results.showResults(response.data);
-        }
     }
 
     showGeneralInterface() {

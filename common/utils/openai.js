@@ -426,6 +426,11 @@ const OpenAIService = {
             if (!content) {
                 throw this.createRequestError('apiNoOutput');
             }
+            try {
+                await StorageManager.recordApiUsage(model, data.usage);
+            } catch (error) {
+                console.error('Could not record OpenAI token usage:', error);
+            }
             return { content, usedApi: true, model };
         } finally {
             clearTimeout(timeout);

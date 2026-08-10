@@ -164,7 +164,6 @@ const ActionsComponent = class {
                 // Save default settings
                 const defaultSettings = {
                     openaiApiKey: '',
-                    autoProcess: false,
                     uiLanguage: I18n.getLanguage(),
                     ...Object.fromEntries(
                         CONFIG.OPENAI.MODEL_SETTINGS.map(definition => [

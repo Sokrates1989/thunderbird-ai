@@ -1,7 +1,6 @@
 /** Background coordinator for Thunderbird events and AI workflows. */
 class ThunderbirdAI {
     constructor() {
-        this.autoProcessing = new Set();
         this.setupEventListeners();
         this.initializeMenus();
     }
@@ -9,15 +8,6 @@ class ThunderbirdAI {
     setupEventListeners() {
         browser.runtime.onMessage.addListener((request, sender) => this.handleMessage(request, sender));
         browser.menus.onClicked.addListener((info, tab) => this.handleMenuClick(info, tab));
-
-        if (browser.messageDisplay.onMessagesDisplayed) {
-            browser.messageDisplay.onMessagesDisplayed.addListener((_tab, messageList) => {
-                const messages = Array.isArray(messageList) ? messageList : messageList?.messages;
-                if (messages?.[0]) {
-                    this.handleAutomaticProcessing(messages[0]);
-                }
-            });
-        }
     }
 
     async initializeMenus() {
@@ -93,11 +83,6 @@ class ThunderbirdAI {
                     return StorageManager.getSettings();
                 case CONFIG.ACTIONS.SAVE_SETTINGS:
                     return this.saveSettings(request);
-                case CONFIG.ACTIONS.GET_AUTOMATIC_RESULT:
-                    return {
-                        success: true,
-                        data: await StorageManager.getAutomaticResult(request.messageId)
-                    };
                 default:
                     return { success: false, error: I18n.t('unknownError') };
             }
@@ -349,28 +334,6 @@ class ThunderbirdAI {
                 similarMessages
             }
         };
-    }
-
-    async handleAutomaticProcessing(messageHeader) {
-        const settings = await StorageManager.getSettings();
-        const messageId = messageHeader?.id;
-        if (!settings.autoProcess || !settings.openaiApiKey || this.autoProcessing.has(messageId)) {
-            return;
-        }
-
-        this.autoProcessing.add(messageId);
-        try {
-            const response = await this.runEmailAction('summarize', messageId);
-            if (response.success) {
-                response.data.title = I18n.t('autoResultTitle');
-                await StorageManager.saveAutomaticResult(messageId, response.data);
-                await this.showNotification(CONFIG.ADDON_NAME, I18n.t('autoResultReady'));
-            }
-        } catch (error) {
-            console.error('Automatic email processing failed:', error);
-        } finally {
-            this.autoProcessing.delete(messageId);
-        }
     }
 
     async handleMenuClick(info) {

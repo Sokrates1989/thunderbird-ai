@@ -44,7 +44,6 @@ test('legacy general model is a migration fallback and saved task choices become
 
     await service.saveSettings({
         openaiApiKey: 'sk-example',
-        autoProcess: false,
         uiLanguage: 'en',
         ...Object.fromEntries(context.CONFIG.OPENAI.MODEL_SETTINGS.map(definition => [
             definition.property,
@@ -55,4 +54,35 @@ test('legacy general model is a migration fallback and saved task choices become
     assert.equal(values.bulkModel, 'gpt-5.6-luna');
     assert.equal(values.singleScoreModel, 'gpt-5.6-terra');
     assert.equal(values.summarizeModel, 'gpt-5.6-sol');
+});
+
+test('concurrent token reports accumulate by model and produce a dated price estimate', async () => {
+    const { service, values } = loadStorage();
+
+    await Promise.all([
+        service.recordApiUsage('gpt-5.6-luna', {
+            input_tokens: 1_000_000,
+            input_tokens_details: { cached_tokens: 200_000 },
+            output_tokens: 100_000
+        }),
+        service.recordApiUsage('gpt-5.6-terra', {
+            input_tokens: 500_000,
+            output_tokens: 50_000
+        })
+    ]);
+
+    const settings = await service.getSettings();
+    assert.deepEqual(JSON.parse(JSON.stringify(values.apiUsageByModel)), {
+        'gpt-5.6-luna': {
+            inputTokens: 1_000_000,
+            cachedInputTokens: 200_000,
+            outputTokens: 100_000
+        },
+        'gpt-5.6-terra': {
+            inputTokens: 500_000,
+            cachedInputTokens: 0,
+            outputTokens: 50_000
+        }
+    });
+    assert.ok(Math.abs(settings.estimatedApiCostUsd - 1.884) < Number.EPSILON);
 });

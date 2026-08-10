@@ -94,10 +94,8 @@ async function loadBackground(options = {}) {
     };
     context.StorageManager = {
         updateStatistics: async (type, amount = 1) => stats.push(amount === 1 ? type : `${type}:${amount}`),
-        getSettings: async () => ({ autoProcess: false }),
-        saveSettings: async () => true,
-        getAutomaticResult: async () => null,
-        saveAutomaticResult: async () => true
+        getSettings: async () => ({}),
+        saveSettings: async () => true
     };
     loadScript(context, 'common/utils/retry.js');
     context.RetryService.wait = async () => {};

@@ -6,6 +6,7 @@ import { createContext, loadScript } from '../test-support/load-script.mjs';
 function loadOpenAIService({ model = 'auto', taskModels, fetchImplementation, responseText = 'Ergebnis' } = {}) {
     const requests = [];
     const retryDelays = [];
+    const recordedUsage = [];
     const context = createContext({
         browser: { i18n: { getUILanguage: () => 'de-DE' } },
         fetch: fetchImplementation || (async (_url, options) => {
@@ -32,20 +33,22 @@ function loadOpenAIService({ model = 'auto', taskModels, fetchImplementation, re
         )))
         : taskModels;
     context.StorageManager = {
-        getSettings: async () => ({ openaiApiKey: 'sk-test-key', model, taskModels: configuredTaskModels })
+        getSettings: async () => ({ openaiApiKey: 'sk-test-key', model, taskModels: configuredTaskModels }),
+        recordApiUsage: async (usedModel, usage) => recordedUsage.push([usedModel, usage])
     };
     loadScript(context, 'common/utils/openai.js');
-    return { retryDelays, service: context.OpenAIService, requests };
+    return { recordedUsage, retryDelays, service: context.OpenAIService, requests };
 }
 
-function successfulResponse(content = 'Ergebnis') {
+function successfulResponse(content = 'Ergebnis', usage = null) {
     return {
         ok: true,
         json: async () => ({
             output: [{
                 type: 'message',
                 content: [{ type: 'output_text', text: content }]
-            }]
+            }],
+            ...(usage ? { usage } : {})
         })
     };
 }
@@ -69,6 +72,31 @@ test('an explicit supported model overrides task routing', async () => {
 
     assert.equal(requests[0].model, 'gpt-5.6-sol');
     assert.equal(result.content, 'Ergebnis');
+});
+
+test('successful responses record model-specific token usage for cost statistics', async () => {
+    const usage = {
+        input_tokens: 1200,
+        input_tokens_details: { cached_tokens: 200 },
+        output_tokens: 80
+    };
+    const { recordedUsage, service } = loadOpenAIService({
+        fetchImplementation: async () => successfulResponse('Tracked', usage)
+    });
+
+    await service.request('summarize', { instructions: 'x', input: 'y' });
+
+    assert.deepEqual(recordedUsage.map(([model, value]) => ({
+        model,
+        inputTokens: value.input_tokens,
+        cachedTokens: value.input_tokens_details.cached_tokens,
+        outputTokens: value.output_tokens
+    })), [{
+        model: 'gpt-5.6-sol',
+        inputTokens: 1200,
+        cachedTokens: 200,
+        outputTokens: 80
+    }]);
 });
 
 test('transient network failures are retried before the UI receives an error', async () => {
