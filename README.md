@@ -2,19 +2,24 @@
 
 Ein AI-gestützter E-Mail-Assistent für Thunderbird mit modularer Architektur und Thunderbird-Kompatibilität.
 
-## 🚀 Schnellstart
+## 🚀 Schnellstart unter Windows
 
 ### Installation
-1. **Build-Script ausführen:**
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File build-addon.ps1
-   ```
+1. `Thunderbird-AI-Setup-1.0.0-win-x64.exe` herunterladen und starten.
+2. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart
+   zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
+3. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung des Add-ons
+   bestätigen.
+4. API-Schlüssel und Modell in den Add-on-Einstellungen konfigurieren.
 
-2. **Add-on in Thunderbird installieren:**
-   - Thunderbird öffnen
-   - Tools > Add-ons and Themes
-   - Zahnrad-Icon > Install Add-on From File...
-   - `thunderbird-ai.xpi` auswählen
+Der benutzerbezogene Installer benötigt keine Administratorrechte. Eine neuere
+Setup-Datei wird direkt über die vorhandene Version installiert; eine vorherige
+Deinstallation ist nicht nötig. Die feste Add-on-ID erhält vorhandene
+Einstellungen. Zum Entfernen dient Windows **Installierte Apps**.
+
+Der aktuelle Test-Installer ist noch nicht Authenticode-signiert. Windows
+SmartScreen kann deshalb vor einem unbekannten Herausgeber warnen. Vor dem Start
+sollte die veröffentlichte SHA-256-Prüfsumme verglichen werden.
 
 ### Testen
 1. **E-Mail öffnen** in Thunderbird
@@ -90,9 +95,21 @@ Thunderbird-AI/
 
 ### Build-Prozess
 ```powershell
-# Main Add-on erstellen
-powershell -ExecutionPolicy Bypass -File build-addon.ps1
+# Inno Setup einmalig installieren
+winget install --id JRSoftware.InnoSetup --exact
+
+# XPI und Ein-Klick-Installer erstellen
+powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\build-setup.ps1
+
+# Installer isoliert prüfen
+powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-setup.ps1
 ```
+
+Der Build erzeugt
+`artifacts\Thunderbird-AI-Setup-1.0.0-win-x64.exe`. Der Isolationstest verwendet
+nur eigene LocalAppData- und Registry-Ziele. Die bisherige einzelne XPI kann mit
+`build-addon.ps1` weiterhin für Entwicklungsdiagnosen erzeugt und manuell über
+Thunderbird installiert werden.
 
 ### Build-Prozess Details
 1. **Dynamisches Kopieren:** Alle Dateien aus `thunderbird-ai/` und `common/` werden in ein temporäres Verzeichnis kopiert
@@ -269,4 +286,4 @@ Bei Problemen:
 
 ---
 
-**Status:** ✅ Modulare Architektur mit Thunderbird-Kompatibilität funktioniert 
+**Status:** ✅ Modulare Architektur mit Thunderbird-Kompatibilität funktioniert
