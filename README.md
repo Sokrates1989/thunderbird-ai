@@ -15,7 +15,7 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 - nachrichtenbezogener AI Chat
 - lokale Ergebnisablage mit Verwaltung unter **Einstellungen** und Zwischenablage-Aktion
 - optionale automatische Zusammenfassung beim Öffnen einer Nachricht
-- eigenes globales Posteingangs-Dashboard mit vollständiger Header-Paginierung, standardmäßig neuester Sortierung, Absender-/Datumsfiltern, frei wählbaren 1–50 Nachrichten pro Konto, Einzelauswahl, Mehrfachlöschen und optionaler lokaler Inhaltsvorschau
+- eigenes globales Posteingangs-Dashboard mit vollständiger Header-Paginierung, standardmäßig neuester Sortierung, durchsuchbarem Absenderfilter, Datumsfiltern, frei wählbaren 1–50 Nachrichten pro Konto, Einzelauswahl, Mehrfachlöschen und optionaler lokaler Inhaltsvorschau
 - Luna-basierte Bulk-Auswertung ausgewählter Dashboard-Nachrichten mit Wichtigkeits- und Spam-Wahrscheinlichkeit von 0–100 %, dauerhaften Score-Filtern und Score-Sortierungen
 - leicht korrigierbare Dashboard-Scores mit separatem, löschunabhängigem Lernarchiv und optionaler Begründung zur Kalibrierung künftiger Luna-Auswertungen
 - direkte Dashboard-Aktionen für die bestehende Zusammenfassung und den bestehenden interaktiven Antworteditor
@@ -41,7 +41,7 @@ Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speic
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-1.9.0-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-1.9.1-win-x64.exe` herunterladen und starten.
 2. Im Setup **Deutsch** oder **English** wählen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung bestätigen.
@@ -71,7 +71,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-1.9.0-win-x64.exe`
+- `artifacts\Thunderbird-AI-Setup-1.9.1-win-x64.exe`
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
@@ -80,7 +80,7 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 1. In Thunderbirds Hauptsymbolleiste auf **Thunderbird AI Assistant** klicken. Während des Ladens muss der animierte Ladehinweis sichtbar sein. Danach muss das globale Dashboard die unterstützten Konten getrennt auflisten. **Datum: Neueste zuerst** ist der Standard; die aktuellsten ungelesenen Nachrichten müssen oben stehen, auch wenn ein Konto sehr viele ungelesene Nachrichten enthält.
 2. Die vier lokalen Sortierungen prüfen: neueste/älteste zuerst und **Beteiligte** A–Z/Z–A. Dashboard schließen und erneut öffnen; die letzte Auswahl muss erhalten bleiben.
 3. Die maximale Anzahl erst auf 2 und dann auf 15 setzen. Pro Konto dürfen nie mehr Nachrichten als dieser Wert erscheinen; Werte unter 1 oder über 50 müssen auf den erlaubten Bereich begrenzt werden.
-4. Den Absender-Filter öffnen, **Alle Absender** deaktivieren und einzelne Absender auswählen. Nur passende Nachrichten dürfen erscheinen; der Filter muss nach erneutem Öffnen erhalten bleiben.
+4. Den Absender-Filter öffnen, **Alle Absender** deaktivieren und einzelne Absender auswählen. Im Suchfeld nacheinander zwei unterschiedliche Absender suchen und jeweils aktivieren. Beide müssen ausgewählt bleiben, obwohl immer nur das aktuelle Suchergebnis sichtbar ist. Nur passende Nachrichten dürfen erscheinen; der Filter muss nach erneutem Öffnen erhalten bleiben.
 5. Mit den Kalenderfeldern **Datum von** und **Datum bis** einen inklusiven Bereich einstellen. Außerhalb liegende Nachrichten müssen verschwinden; ein Bis-Datum vor dem Von-Datum muss abgewiesen werden.
 6. **Nachrichteninhalt als Vorschau anzeigen** aktivieren und nacheinander 1 sowie 5 Vorschauzeilen einstellen. Nur die nach Sortierung, Filtern und Mengenbegrenzung sichtbaren Nachrichten dürfen Inhaltsvorschauen laden. Lange Vorschauen müssen innerhalb der Nachricht scrollbar sein.
 7. Mehrere Nachrichten einzeln auswählen und anschließend **Alle auswählen** testen. Anzahl, Auswahlzustand und beide Bulk-Schaltflächen müssen sich passend aktualisieren.
@@ -109,7 +109,7 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 30. Die Oberflächensprache auf **English** umstellen und globales Dashboard, Einzelmail-Popup, Antworteditor, Einstellungen und Hilfe prüfen. Danach zurück auf **Deutsch** wechseln. Alle sichtbaren Texte und Meldungen müssen der Auswahl folgen.
 31. Optional die automatische Verarbeitung aktivieren, eine andere E-Mail öffnen und das Popup erneut öffnen. Die automatische Analyse muss angezeigt werden.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 1.9.0** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 1.9.1** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 ## Technische Struktur
 

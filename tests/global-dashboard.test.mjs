@@ -62,7 +62,7 @@ function loadViewService() {
 }
 
 function loadSenderFilterComponent() {
-    const context = createContext();
+    const context = createContext({ I18n: { getLanguage: () => 'en' } });
     loadScript(context, 'thunderbird-ai/components/global-dashboard/DashboardSenderFilterComponent.js');
     return context.DashboardSenderFilterComponent;
 }
@@ -347,6 +347,40 @@ test('sender dropdown collapses a complete checkbox selection to the all-senders
 
     assert.deepEqual(Array.from(onlyAda), ['ada']);
     assert.equal(allAgain, null);
+});
+
+test('sender search filters only visible options and preserves selections across queries', () => {
+    const SenderFilter = loadSenderFilterComponent();
+    const component = new SenderFilter({
+        details: null,
+        summary: null,
+        options: null,
+        onSelectionChanged: async () => {},
+        onError: () => {}
+    });
+    component.availableSenders = [
+        { key: 'ada <ada@example.test>', label: 'Ada <ada@example.test>' },
+        { key: 'bob <bob@example.test>', label: 'Bob <bob@example.test>' },
+        { key: 'shop <orders@amazon.com>', label: 'Amazon Shop <orders@amazon.com>' }
+    ];
+    component.selectedSenderKeys = new Set();
+
+    assert.deepEqual(
+        Array.from(component.filteredSenders('AMAZON.COM'), sender => sender.key),
+        ['shop <orders@amazon.com>']
+    );
+    let selection = component.selectionAfterToggle('ada <ada@example.test>', true);
+    component.selectedSenderKeys = selection;
+    assert.deepEqual(
+        Array.from(component.filteredSenders('bob'), sender => sender.key),
+        ['bob <bob@example.test>']
+    );
+    selection = component.selectionAfterToggle('bob <bob@example.test>', true);
+
+    assert.deepEqual([...selection].sort(), [
+        'ada <ada@example.test>',
+        'bob <bob@example.test>'
+    ]);
 });
 
 test('an interrupted continuation is aborted and isolated to its account', async () => {

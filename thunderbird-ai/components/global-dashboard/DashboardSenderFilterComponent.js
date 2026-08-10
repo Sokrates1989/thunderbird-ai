@@ -9,6 +9,7 @@ const DashboardSenderFilterComponent = class {
         this.onError = onError;
         this.availableSenders = [];
         this.selectedSenderKeys = null;
+        this.searchQuery = '';
         this.busy = false;
     }
 
@@ -18,7 +19,6 @@ const DashboardSenderFilterComponent = class {
         this.selectedSenderKeys = selectedSenderKeys === null
             ? null
             : new Set(selectedSenderKeys);
-        this.elements.options.replaceChildren();
         const selectedCount = this.selectionCount();
         const totalCount = this.availableSenders.length;
         this.elements.summary.textContent = this.selectedSenderKeys === null
@@ -28,6 +28,14 @@ const DashboardSenderFilterComponent = class {
                 count: totalCount
             });
 
+        this.renderOptions();
+    }
+
+    /** Rebuild the searchable dropdown while retaining the current query. */
+    renderOptions() {
+        this.elements.options.replaceChildren();
+        const selectedCount = this.selectionCount();
+        const totalCount = this.availableSenders.length;
         if (!totalCount) {
             this.elements.options.appendChild(this.textElement(
                 'p',
@@ -37,6 +45,9 @@ const DashboardSenderFilterComponent = class {
             return;
         }
 
+        const list = document.createElement('div');
+        list.className = 'dashboard-sender-list';
+        const search = this.searchField(() => this.renderSenderList(list));
         const all = this.checkboxLabel(I18n.t('dashboardAllSenders'));
         all.input.checked = selectedCount === totalCount;
         all.input.indeterminate = selectedCount > 0 && selectedCount < totalCount;
@@ -44,17 +55,61 @@ const DashboardSenderFilterComponent = class {
             this.emitSelection(all.input.checked ? null : new Set());
         });
         all.label.classList.add('dashboard-sender-all');
-        this.elements.options.appendChild(all.label);
+        this.elements.options.append(search.label, all.label, list);
+        this.renderSenderList(list);
+    }
 
-        for (const sender of this.availableSenders) {
+    /** Render only matching senders; selection still belongs to the full sender set. */
+    renderSenderList(list) {
+        list.replaceChildren();
+        const senders = this.filteredSenders();
+        if (!senders.length) {
+            list.appendChild(this.textElement(
+                'p',
+                'dashboard-sender-empty',
+                I18n.t('dashboardSenderSearchEmpty')
+            ));
+            return;
+        }
+        for (const sender of senders) {
             const option = this.checkboxLabel(sender.label);
             option.input.checked = this.selectedSenderKeys === null
                 || this.selectedSenderKeys.has(sender.key);
             option.input.addEventListener('change', () => {
                 this.emitSelection(this.selectionAfterToggle(sender.key, option.input.checked));
             });
-            this.elements.options.appendChild(option.label);
+            list.appendChild(option.label);
         }
+    }
+
+    /** Filter labels and addresses case-insensitively without changing selection. */
+    filteredSenders(query = this.searchQuery) {
+        const normalized = String(query || '').trim().toLocaleLowerCase(I18n.getLanguage());
+        if (!normalized) {
+            return [...this.availableSenders];
+        }
+        return this.availableSenders.filter(sender => (
+            `${sender.label} ${sender.key}`.toLocaleLowerCase(I18n.getLanguage()).includes(normalized)
+        ));
+    }
+
+    searchField(onInput) {
+        const label = document.createElement('label');
+        label.className = 'dashboard-sender-search';
+        const text = document.createElement('span');
+        text.className = 'visually-hidden';
+        text.textContent = I18n.t('dashboardSenderSearchLabel');
+        const input = document.createElement('input');
+        input.type = 'search';
+        input.value = this.searchQuery;
+        input.disabled = this.busy;
+        input.placeholder = I18n.t('dashboardSenderSearchPlaceholder');
+        input.addEventListener('input', () => {
+            this.searchQuery = input.value;
+            onInput();
+        });
+        label.append(text, input);
+        return { label, input };
     }
 
     /** Disable interaction while headers or previews are being refreshed. */
