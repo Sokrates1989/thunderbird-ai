@@ -110,7 +110,7 @@ const DashboardAIService = {
     },
 
     /** Archive one correction in the background and return its validated score metadata. */
-    async submitFeedback(message, reason = '') {
+    async submitFeedback(message, reasons) {
         const analysis = message?.aiAnalysis;
         const response = await this.sendRequest({
             action: CONFIG.ACTIONS.DASHBOARD_SAVE_FEEDBACK,
@@ -123,7 +123,7 @@ const DashboardAIService = {
                 importanceScore: message.correctedImportanceScore,
                 spamScore: message.correctedSpamScore
             },
-            reason,
+            reasons,
             sourceModel: analysis.model
         }, 'dashboardFeedbackSaveFailed');
         if (!response?.success) {
@@ -157,7 +157,8 @@ const DashboardAIService = {
             analyzedAt: correctedAt,
             correctedAt,
             corrected: true,
-            model: message?.aiAnalysis?.model || null
+            model: message?.aiAnalysis?.model || null,
+            reasons: correction?.reasons
         });
         if (!normalized) {
             throw new Error(I18n.t('dashboardFeedbackInvalid'));
@@ -201,7 +202,23 @@ const DashboardAIService = {
             analyzedAt,
             model: typeof result.model === 'string' ? result.model : null,
             corrected: result?.corrected === true,
-            correctedAt: typeof result?.correctedAt === 'string' ? result.correctedAt : null
+            correctedAt: typeof result?.correctedAt === 'string' ? result.correctedAt : null,
+            reasons: this.normalizeReasons(result?.reasons)
+        };
+    },
+
+    normalizeReasons(reasons) {
+        const allowed = new Set(CONFIG.OPENAI.SCORE_FEEDBACK_CATEGORIES);
+        const normalizeSection = section => ({
+            categories: Array.isArray(section?.categories)
+                ? [...new Set(section.categories.map(String).filter(value => allowed.has(value)))]
+                : [],
+            text: String(section?.text || '').trim()
+                .slice(0, CONFIG.OPENAI.DASHBOARD_FEEDBACK_REASON_CHARACTERS)
+        });
+        return {
+            importance: normalizeSection(reasons?.importance),
+            spam: normalizeSection(reasons?.spam)
         };
     },
 

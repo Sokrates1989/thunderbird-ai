@@ -108,7 +108,8 @@ function loadDashboardAIService() {
                         return { success: true, data: {
                             importanceScore: message.correctedScores.importanceScore,
                             spamScore: message.correctedScores.spamScore,
-                            correctedAt: '2026-08-10T12:00:00.000Z'
+                            correctedAt: '2026-08-10T12:00:00.000Z',
+                            reasons: message.reasons
                         } };
                     }
                     return { success: true, data: { results: [], failedCount: 0, model: 'gpt-5.6-luna' } };
@@ -386,9 +387,13 @@ test('dashboard AI scores persist without mail content and direct actions open s
     await service.analyze([42]);
     restartedAccounts[0].messages[0].correctedImportanceScore = 94;
     restartedAccounts[0].messages[0].correctedSpamScore = 2;
+    const reasons = {
+        importance: { categories: ['sender'], text: 'Known supplier' },
+        spam: { categories: ['content'], text: 'Expected invoice' }
+    };
     const correction = await service.submitFeedback(
         restartedAccounts[0].messages[0],
-        'Known supplier'
+        reasons
     );
     const corrected = await service.saveCorrection(
         saved,
@@ -415,9 +420,13 @@ test('dashboard AI scores persist without mail content and direct actions open s
     assert.equal(restartedAccounts[0].messages[0].aiAnalysis.importanceScore, 81);
     assert.equal(sentMessages[0].action, context.CONFIG.ACTIONS.DASHBOARD_BULK_TRIAGE);
     assert.equal(sentMessages[1].action, context.CONFIG.ACTIONS.DASHBOARD_SAVE_FEEDBACK);
-    assert.equal(sentMessages[1].reason, 'Known supplier');
+    assert.deepEqual(sentMessages[1].reasons, reasons);
     assert.equal(Object.values(corrected)[0].importanceScore, 94);
     assert.equal(Object.values(corrected)[0].corrected, true);
+    assert.deepEqual(
+        JSON.parse(JSON.stringify(Object.values(corrected)[0].reasons)),
+        reasons
+    );
     assert.match(openedTabs[0].url, /single-mail-ui\.html\?messageId=42&summarize=1/u);
     assert.match(openedTabs[1].url, /single-mail-ui\.html\?messageId=42&reply=1/u);
 });
@@ -731,6 +740,30 @@ test('manifest routes global and message toolbar actions to separate popup pages
         path.join(repositoryRoot, 'thunderbird-ai/components/single-mail/SingleMailManager.js'),
         'utf8'
     );
+    const singleMailPage = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/pages/single-mail-ui.html'),
+        'utf8'
+    );
+    const settingsPage = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/pages/settings.html'),
+        'utf8'
+    );
+    const feedbackEditor = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/components/shared/ScoreFeedbackEditor.js'),
+        'utf8'
+    );
+    const dashboardFeedback = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/components/global-dashboard/DashboardFeedbackComponent.js'),
+        'utf8'
+    );
+    const singleResults = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/components/single-mail/ResultsComponent.js'),
+        'utf8'
+    );
+    const scoringArchive = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/components/settings/ScoringArchiveComponent.js'),
+        'utf8'
+    );
 
     assert.equal(manifest.action.default_popup, 'global-dashboard.html');
     assert.equal(manifest.message_display_action.default_popup, 'single-mail-ui.html');
@@ -768,11 +801,11 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(dashboard, /DashboardViewPreferences\.js/u);
     assert.match(dashboard, /DashboardAIService\.js/u);
     assert.match(dashboard, /DashboardMessageComponent\.js/u);
+    assert.match(dashboard, /ScoreFeedbackEditor\.js/u);
     assert.match(dashboard, /DashboardFeedbackComponent\.js/u);
     assert.match(dashboard, /id="dashboardFeedbackDialog"/u);
-    assert.match(dashboard, /id="dashboardFeedbackImportanceRange"/u);
-    assert.match(dashboard, /id="dashboardFeedbackSpamRange"/u);
-    assert.match(dashboard, /id="dashboardFeedbackReason"/u);
+    assert.match(dashboard, /id="dashboardFeedbackEditors"/u);
+    assert.doesNotMatch(dashboard, /id="dashboardFeedbackReason"/u);
     assert.match(dashboard, /GlobalDashboardManager\.js/u);
     assert.doesNotMatch(dashboard, /openai\.js|OpenAIService/u);
     assert.match(dashboardStyles, /overflow-y:\s*auto/u);
@@ -790,4 +823,13 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(messageComponent, /dashboard-message-action-group/u);
     assert.match(messageComponent, /dashboard-action-icon/u);
     assert.match(singleMailManager, /parameters\.get\('summarize'\) === '1'[\s\S]*executeAIAction\('SUMMARIZE_EMAIL'\)/u);
+    assert.match(singleMailPage, /ScoreFeedbackEditor\.js/u);
+    assert.match(settingsPage, /ScoreFeedbackEditor\.js/u);
+    assert.match(feedbackEditor, /SCORE_FEEDBACK_CATEGORIES/u);
+    assert.match(feedbackEditor, /readReasons\(editor\)/u);
+    assert.equal((dashboardFeedback.match(/ScoreFeedbackEditor\.create/gu) || []).length, 2);
+    assert.equal((singleResults.match(/ScoreFeedbackEditor\.create/gu) || []).length, 2);
+    assert.equal((scoringArchive.match(/ScoreFeedbackEditor\.create/gu) || []).length, 2);
+    assert.match(dashboardFeedback, /importance:\s*ScoreFeedbackEditor\.readReasons/u);
+    assert.match(dashboardFeedback, /spam:\s*ScoreFeedbackEditor\.readReasons/u);
 });

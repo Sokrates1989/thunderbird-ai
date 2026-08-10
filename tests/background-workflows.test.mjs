@@ -53,6 +53,7 @@ async function loadBackground(options = {}) {
         removeArchivedFeedback: async storageKey => storageKey === 'known',
         archiveFeedback: options.archiveFeedback || (async (_message, feedback) => ({
             correctedScores: feedback.correctedScores,
+            reasons: feedback.reasons,
             updatedAt: '2026-08-10T12:00:00.000Z'
         }))
     };
@@ -188,7 +189,10 @@ test('dashboard score feedback is routed to the independent background archive',
         messageId: 7,
         originalScores: { importanceScore: 20, spamScore: 80 },
         correctedScores: { importanceScore: 90, spamScore: 5 },
-        reason: 'Trusted sender',
+        reasons: {
+            importance: { categories: ['sender'], text: 'Trusted sender' },
+            spam: { categories: ['content'], text: 'Expected content' }
+        },
         sourceModel: 'gpt-5.6-luna'
     });
 
@@ -197,9 +201,18 @@ test('dashboard score feedback is routed to the independent background archive',
         {
             importanceScore: response.data.importanceScore,
             spamScore: response.data.spamScore,
-            correctedAt: response.data.correctedAt
+            correctedAt: response.data.correctedAt,
+            reasons: response.data.reasons
         },
-        { importanceScore: 90, spamScore: 5, correctedAt: '2026-08-10T12:00:00.000Z' }
+        {
+            importanceScore: 90,
+            spamScore: 5,
+            correctedAt: '2026-08-10T12:00:00.000Z',
+            reasons: {
+                importance: { categories: ['sender'], text: 'Trusted sender' },
+                spam: { categories: ['content'], text: 'Expected content' }
+            }
+        }
     );
 });
 

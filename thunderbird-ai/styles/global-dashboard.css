@@ -85,7 +85,7 @@ body {
 }
 
 .dashboard-feedback-dialog h2,
-.dashboard-feedback-dialog p {
+.dashboard-feedback-dialog form > p {
     margin: 0;
 }
 
@@ -94,30 +94,13 @@ body {
     font-weight: 650;
 }
 
-.dashboard-feedback-field {
+.dashboard-feedback-editors {
     display: grid;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 650;
+    gap: 10px;
 }
 
-.dashboard-feedback-score-control {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 64px auto;
-    gap: 7px;
-    align-items: center;
-}
-
-.dashboard-feedback-score-control input[type="number"] {
-    min-width: 0;
-    padding: 5px;
-}
-
-.dashboard-feedback-field textarea {
-    box-sizing: border-box;
-    width: 100%;
-    padding: 7px;
-    resize: vertical;
+.dashboard-feedback-editor {
+    margin: 0;
 }
 
 .dashboard-feedback-privacy {

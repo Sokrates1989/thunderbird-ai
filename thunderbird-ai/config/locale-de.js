@@ -338,8 +338,6 @@ globalThis.LOCALE_MESSAGES.de = Object.freeze({
     dashboardFeedbackTitle: 'AI-Werte korrigieren',
     dashboardFeedbackImportance: 'Wichtigkeitswert',
     dashboardFeedbackSpam: 'Spam-Wahrscheinlichkeit',
-    dashboardFeedbackReason: 'Warum sollten diese Werte anders sein? (optional)',
-    dashboardFeedbackReasonPlaceholder: 'Zum Beispiel: Dieser Absender ist ein vertrauenswürdiger Lieferant und seine Rechnungen erfordern eine Aktion.',
     dashboardFeedbackPrivacy: 'Beim Speichern wird eine begrenzte Kopie dieser E-Mail unabhängig von Thunderbird-Löschvorgängen archiviert. Werte, Auszug und Begründung können bei späteren Luna-Bulk-Analysen als Kalibrierungsbeispiel verwendet werden.',
     dashboardFeedbackCancel: 'Abbrechen',
     dashboardFeedbackSave: 'Korrektur speichern',

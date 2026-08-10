@@ -338,8 +338,6 @@ globalThis.LOCALE_MESSAGES.en = Object.freeze({
     dashboardFeedbackTitle: 'Correct AI scores',
     dashboardFeedbackImportance: 'Importance score',
     dashboardFeedbackSpam: 'Spam probability',
-    dashboardFeedbackReason: 'Why should these scores be different? (optional)',
-    dashboardFeedbackReasonPlaceholder: 'For example: This sender is a trusted supplier, and invoices from them require action.',
     dashboardFeedbackPrivacy: 'Saving archives a bounded copy of this email independently from Thunderbird delete operations. The scores, excerpt, and reason can be used as a calibration example in later Luna bulk analyses.',
     dashboardFeedbackCancel: 'Cancel',
     dashboardFeedbackSave: 'Save correction',

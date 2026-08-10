@@ -37,7 +37,7 @@ Temporäre Netzwerkfehler, Zeitüberschreitungen, Anfragelimits und vorübergehe
 
 ## Datenschutz
 
-Bei AI-Aktionen werden Betreff, Absender, Nachrichtentext und Namen erkannter Anhänge direkt von Thunderbird an die OpenAI API gesendet. Beim Verbessern eines Antwortentwurfs werden außerdem der aktuelle Entwurf und die letzten Änderungswünsche übertragen. Die normale Dashboard-Bulk-Auswertung überträgt ausschließlich explizit ausgewählte Nachrichten ohne vorhandenen Dashboard-Score; bereits bewertete Nachrichten werden ohne API-Aufruf übersprungen. Nur **Auswahl neu bewerten** sendet sie nach einer Bestätigung erneut. Normale AI-Scores speichern lokal ausschließlich eine stabile Nachrichtenidentität aus Konto und RFC Message-ID, Prozentwerte, Modell und Analysezeitpunkt. Fehlt die RFC Message-ID, werden Konto, Datum, Absender, Betreff und Größe als Ersatzidentität verwendet. Höchstens 1.000 dieser Score-Datensätze bleiben erhalten.
+Bei AI-Aktionen werden Betreff, Absender, Nachrichtentext und Namen erkannter Anhänge direkt von Thunderbird an die OpenAI API gesendet. Beim Verbessern eines Antwortentwurfs werden außerdem der aktuelle Entwurf und die letzten Änderungswünsche übertragen. Die normale Dashboard-Bulk-Auswertung überträgt ausschließlich explizit ausgewählte Nachrichten ohne vorhandenen Dashboard-Score; bereits bewertete Nachrichten werden ohne API-Aufruf übersprungen. Nur **Auswahl neu bewerten** sendet sie nach einer Bestätigung erneut. Nicht korrigierte AI-Scores speichern lokal ausschließlich eine stabile Nachrichtenidentität aus Konto und RFC Message-ID, Prozentwerte, Modell und Analysezeitpunkt. Bei einer Dashboard-Korrektur kommen die getrennten Kategorien und Freitexte für Wichtigkeit und Spam hinzu, damit sie beim erneuten Öffnen vorausgewählt werden können. Fehlt die RFC Message-ID, werden Konto, Datum, Absender, Betreff und Größe als Ersatzidentität verwendet. Höchstens 1.000 dieser Score-Datensätze bleiben erhalten.
 
 Bei einem als temporär erkannten Fehler kann derselbe AI-Inhalt innerhalb einer Benutzeraktion bis zu drei Mal an OpenAI gesendet werden. Ein bereits vom Server angenommener, aber lokal nicht mehr bestätigter Versuch kann dadurch zusätzliche API-Kosten verursachen; die lokale Statistik zählt deshalb die tatsächlich gestarteten API-Versuche. Ab Version 2.3.0 werden zusätzlich die von erfolgreichen OpenAI-Antworten gemeldeten Input-, Cache- und Output-Text-Tokens getrennt nach Modell lokal summiert. Die Einstellungen zeigen daraus eine USD-Schätzung mit fest ausgewiesenem Preisstand. Frühere Aufrufe, Steuern, Sondertarife sowie mögliche Langkontext- oder Cache-Schreibaufschläge sind nicht enthalten. Scoring-Korrekturen werden unter ihrer stabilen Nachrichtenidentität aktualisiert statt dupliziert.
 
@@ -47,7 +47,7 @@ Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speic
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-2.3.0-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-2.3.1-win-x64.exe` herunterladen und starten.
 2. Im Setup **Deutsch** oder **English** wählen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung und zur neuen Berechtigung zum Ändern von Nachrichteneigenschaften bestätigen.
@@ -77,7 +77,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-2.3.0-win-x64.exe`
+- `artifacts\Thunderbird-AI-Setup-2.3.1-win-x64.exe`
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
@@ -93,8 +93,8 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 8. Eine Mischung aus noch nicht bewerteten und bereits bewerteten Nachrichten markieren und **Unbewertete Auswahl analysieren** anklicken. Während der Verarbeitung muss der Ladehinweis mit Animation sichtbar sein. Danach müssen nur die vorher unbewerteten Nachrichten neue Prozentwerte erhalten und die Meldung muss die Anzahl der ohne API-Aufruf übersprungenen Nachrichten nennen. Nur bereits bewertete Nachrichten auswählen und dieselbe Aktion erneut ausführen; es darf keine API-Anfrage erfolgen. Anschließend **Auswahl neu bewerten** anklicken, den Bestätigungsdialog zunächst abbrechen und beim zweiten Versuch bestätigen. Erst dann dürfen vorhandene sichtbare Scores ersetzt werden; gespeicherte Nutzerkorrekturen müssen im Lernarchiv erhalten bleiben.
 9. Alle vier lokalen Score-Sortierungen und die vier Varianten **über alle Konten** prüfen: Wichtigkeit und Spam-Wahrscheinlichkeit jeweils auf- und absteigend. Die kontenübergreifenden Varianten müssen in der sonst kontogetrennten Ansicht genau eine global sortierte Liste erzeugen. Nicht analysierte Nachrichten müssen hinter analysierten Ergebnissen stehen.
 10. Die AI-Filter **Nur analysierte**, **Nur nicht analysierte**, **Wahrscheinlich Spam** und **Wahrscheinlich kein Spam** sowie beide Mindestwerte testen. Einstellungen müssen nach erneutem Öffnen erhalten bleiben.
-11. An einer analysierten Nachricht **Werte korrigieren** anklicken. Beide Regler und Zahlenfelder müssen mit den aktuellen Werten starten und synchron bleiben. Ohne Änderung muss das Speichern abgewiesen werden.
-12. Wichtigkeit und Spam-Wahrscheinlichkeit ändern, optional eine Begründung eingeben und speichern. Die neuen Werte und **Vom Nutzer korrigiert** müssen sofort erscheinen und von Sortierung/Filtern verwendet werden. Dashboard schließen und erneut öffnen; die Korrektur muss erhalten bleiben.
+11. An einer analysierten Nachricht **Werte korrigieren** anklicken. Wichtigkeit und Spam müssen jeweils einen eigenen Regler, ein synchrones Zahlenfeld, sechs Begründungs-Kontrollkästchen und ein eigenes Freitextfeld zeigen. Ohne Änderung muss das Speichern abgewiesen werden.
+12. Wichtigkeit und Spam-Wahrscheinlichkeit ändern, für beide Werte unterschiedliche Gründe auswählen sowie getrennte Freitexte eingeben und speichern. Die neuen Werte und **Vom Nutzer korrigiert** müssen sofort erscheinen und von Sortierung/Filtern verwendet werden. Dashboard schließen und erneut öffnen; Werte und getrennte Gründe müssen erhalten bleiben und beim erneuten Korrigieren vorausgewählt sein.
 13. Die korrigierte Testnachricht löschen. Das separate Lernarchiv darf dadurch nicht verändert werden; eine spätere Bulk-Analyse mit einer ähnlichen Nachricht muss weiterhin erfolgreich laufen.
 14. An einer Nachricht **Zusammenfassen** anklicken. Ein eigener Tab muss die vorhandene Einzelmail-Oberfläche öffnen und dort automatisch die Zusammenfassung erstellen.
 15. An einer Nachricht **Antwort vorschlagen** anklicken. Der vorhandene interaktive Antworteditor muss in einem eigenen Tab erscheinen.
@@ -119,7 +119,7 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 34. Eine Scoring-Korrektur nur einmal speichern. Ein kurzzeitiger Thunderbird- oder lokaler Speicherfehler muss intern erneut versucht werden; die Referenz darf höchstens einmal unter ihrer stabilen Nachrichtenidentität im Archiv erscheinen.
 35. Im Dashboard müssen AI- und E-Mail-Aktionen sowohl im Bulk-Bereich als auch pro Nachricht in zwei klar beschrifteten Spalten mit Icons erscheinen. Eine einzelne Nachricht über **Als gelesen markieren** bearbeiten; sie muss ohne Rückfrage aus der ungelesenen Ansicht verschwinden. Danach mehrere Nachrichten auswählen und **Ausgewählte als gelesen markieren** verwenden. Erfolgreich geänderte Nachrichten müssen verschwinden, während mögliche Einzelfehler gemeldet werden, ohne die übrigen Änderungen zurückzunehmen.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.3.0** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.3.1** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 ## Technische Struktur
 

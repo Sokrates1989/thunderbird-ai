@@ -457,28 +457,6 @@ body {
     gap: 10px;
 }
 
-.score-archive-reasons {
-    min-width: 0;
-}
-
-.score-archive-reasons > label {
-    display: block;
-    margin: 5px 0;
-    font-size: 12px;
-}
-
-.score-archive-reasons input[type="number"] {
-    width: 62px;
-    margin-right: 4px;
-}
-
-.score-archive-reasons textarea {
-    box-sizing: border-box;
-    width: 100%;
-    margin-top: 8px;
-    resize: vertical;
-}
-
 .score-archive-actions {
     display: flex;
     align-items: center;

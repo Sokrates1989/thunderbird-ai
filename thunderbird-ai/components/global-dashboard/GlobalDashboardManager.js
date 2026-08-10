@@ -81,7 +81,7 @@ const GlobalDashboardManager = class {
             }
         });
         this.feedbackComponent = new DashboardFeedbackComponent({
-            onSave: (message, reason) => this.saveScoreFeedback(message, reason)
+            onSave: (message, reasons) => this.saveScoreFeedback(message, reasons)
         });
     }
 
@@ -507,11 +507,11 @@ const GlobalDashboardManager = class {
     }
 
     /** Archive an operator correction and immediately reapply score sort/filter controls. */
-    async saveScoreFeedback(message, reason) {
+    async saveScoreFeedback(message, reasons) {
         const account = this.sourceAccounts.find(candidate => (
             (candidate.messages || []).some(item => item.id === message.id)
         ));
-        const correction = await DashboardAIService.submitFeedback(message, reason);
+        const correction = await DashboardAIService.submitFeedback(message, reasons);
         this.aiResults = await DashboardAIService.saveCorrection(
             this.aiResults,
             account,

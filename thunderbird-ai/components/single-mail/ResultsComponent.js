@@ -47,18 +47,16 @@ const ResultsComponent = class {
             spamScore: result.spamScore
         };
         this.scoreEditors = {
-            importance: this.createScoreEditor(
-                'importance',
-                'dashboardFeedbackImportance',
-                initialScores.importanceScore,
-                archived?.reasons?.importance
-            ),
-            spam: this.createScoreEditor(
-                'spam',
-                'dashboardFeedbackSpam',
-                initialScores.spamScore,
-                archived?.reasons?.spam
-            )
+            importance: ScoreFeedbackEditor.create({
+                name: 'importance',
+                score: initialScores.importanceScore,
+                reasons: archived?.reasons?.importance
+            }),
+            spam: ScoreFeedbackEditor.create({
+                name: 'spam',
+                score: initialScores.spamScore,
+                reasons: archived?.reasons?.spam
+            })
         };
         this.elements.content.append(
             this.scoreEditors.importance.root,
@@ -78,65 +76,11 @@ const ResultsComponent = class {
         this.container.style.display = 'block';
     }
 
-    createScoreEditor(name, labelKey, score, reasons = {}) {
-        const root = document.createElement('fieldset');
-        root.className = 'score-editor';
-        const legend = document.createElement('legend');
-        legend.textContent = I18n.t(labelKey);
-        root.appendChild(legend);
-
-        const valueRow = document.createElement('label');
-        valueRow.className = 'score-value-row';
-        const range = document.createElement('input');
-        range.type = 'range';
-        range.min = '0';
-        range.max = '100';
-        range.value = String(score);
-        range.setAttribute('aria-label', I18n.t(labelKey));
-        const number = document.createElement('input');
-        number.type = 'number';
-        number.min = '0';
-        number.max = '100';
-        number.value = String(score);
-        range.addEventListener('input', () => { number.value = range.value; });
-        number.addEventListener('input', () => {
-            const normalized = this.normalizeScore(number.value);
-            if (normalized !== null) {
-                range.value = String(normalized);
-            }
-        });
-        valueRow.append(range, number, document.createTextNode('%'));
-        root.appendChild(valueRow);
-
-        const prompt = document.createElement('p');
-        prompt.className = 'score-reason-prompt';
-        prompt.textContent = I18n.t(name === 'importance'
-            ? 'singleScoreImportanceReason'
-            : 'singleScoreSpamReason');
-        root.appendChild(prompt);
-        const categories = new Map();
-        for (const category of CONFIG.OPENAI.SCORE_FEEDBACK_CATEGORIES) {
-            const label = document.createElement('label');
-            label.className = 'score-reason-option';
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.checked = reasons?.categories?.includes(category) || false;
-            label.append(checkbox, document.createTextNode(I18n.t(`scoreReason${category[0].toUpperCase()}${category.slice(1)}`)));
-            root.appendChild(label);
-            categories.set(category, checkbox);
-        }
-        const text = document.createElement('textarea');
-        text.rows = 3;
-        text.maxLength = CONFIG.OPENAI.DASHBOARD_FEEDBACK_REASON_CHARACTERS;
-        text.placeholder = I18n.t('singleScoreReasonPlaceholder');
-        text.value = reasons?.text || '';
-        root.appendChild(text);
-        return { root, range, number, categories, text };
-    }
-
     async saveScoringFeedback(button) {
-        const importanceScore = this.normalizeScore(this.scoreEditors.importance.number.value);
-        const spamScore = this.normalizeScore(this.scoreEditors.spam.number.value);
+        const importanceScore = ScoreFeedbackEditor.normalizeScore(
+            this.scoreEditors.importance.number.value
+        );
+        const spamScore = ScoreFeedbackEditor.normalizeScore(this.scoreEditors.spam.number.value);
         if (importanceScore === null || spamScore === null) {
             this.manager.showError(I18n.t('dashboardFeedbackInvalid'));
             return;
@@ -154,8 +98,8 @@ const ResultsComponent = class {
                     },
                     correctedScores: { importanceScore, spamScore },
                     reasons: {
-                        importance: this.readReasons(this.scoreEditors.importance),
-                        spam: this.readReasons(this.scoreEditors.spam)
+                        importance: ScoreFeedbackEditor.readReasons(this.scoreEditors.importance),
+                        spam: ScoreFeedbackEditor.readReasons(this.scoreEditors.spam)
                     },
                     sourceModel: this.currentResult.model
                 }
@@ -171,20 +115,6 @@ const ResultsComponent = class {
         } finally {
             button.disabled = false;
         }
-    }
-
-    readReasons(editor) {
-        return {
-            categories: [...editor.categories]
-                .filter(([_category, checkbox]) => checkbox.checked)
-                .map(([category]) => category),
-            text: editor.text.value.trim()
-        };
-    }
-
-    normalizeScore(value) {
-        const score = Number(value);
-        return Number.isFinite(score) && score >= 0 && score <= 100 ? Math.round(score) : null;
     }
 
     createActionButtons(actions) {

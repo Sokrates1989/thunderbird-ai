@@ -210,7 +210,8 @@ class ThunderbirdAI {
                     data: {
                         importanceScore: feedback.correctedScores.importanceScore,
                         spamScore: feedback.correctedScores.spamScore,
-                        correctedAt: feedback.updatedAt
+                        correctedAt: feedback.updatedAt,
+                        reasons: feedback.reasons
                     }
                 };
             },

@@ -71,16 +71,20 @@ const ScoringArchiveComponent = class {
         content.textContent = record.message.content || I18n.t('emptyMessage');
         const editor = document.createElement('div');
         editor.className = 'score-archive-editor';
-        const importance = this.createReasonSection(
-            'importance',
-            record.correctedScores.importanceScore,
-            record.reasons?.importance
-        );
-        const spam = this.createReasonSection(
-            'spam',
-            record.correctedScores.spamScore,
-            record.reasons?.spam
-        );
+        const importance = ScoreFeedbackEditor.create({
+            name: 'importance',
+            score: record.correctedScores.importanceScore,
+            reasons: record.reasons?.importance,
+            showRange: false,
+            rootClass: 'score-archive-reasons'
+        });
+        const spam = ScoreFeedbackEditor.create({
+            name: 'spam',
+            score: record.correctedScores.spamScore,
+            reasons: record.reasons?.spam,
+            showRange: false,
+            rootClass: 'score-archive-reasons'
+        });
         editor.append(importance.root, spam.root);
 
         const actions = document.createElement('div');
@@ -108,45 +112,10 @@ const ScoringArchiveComponent = class {
         return details;
     }
 
-    createReasonSection(name, score, reasons = {}) {
-        const root = document.createElement('fieldset');
-        root.className = 'score-archive-reasons';
-        const legend = document.createElement('legend');
-        legend.textContent = I18n.t(name === 'importance'
-            ? 'dashboardFeedbackImportance'
-            : 'dashboardFeedbackSpam');
-        const number = document.createElement('input');
-        number.type = 'number';
-        number.min = '0';
-        number.max = '100';
-        number.value = String(score);
-        number.setAttribute('aria-label', legend.textContent);
-        root.append(legend, number, document.createTextNode('%'));
-        const categories = new Map();
-        for (const category of CONFIG.OPENAI.SCORE_FEEDBACK_CATEGORIES) {
-            const label = document.createElement('label');
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.checked = reasons?.categories?.includes(category) || false;
-            label.append(checkbox, document.createTextNode(I18n.t(
-                `scoreReason${category[0].toUpperCase()}${category.slice(1)}`
-            )));
-            root.appendChild(label);
-            categories.set(category, checkbox);
-        }
-        const text = document.createElement('textarea');
-        text.rows = 3;
-        text.maxLength = CONFIG.OPENAI.DASHBOARD_FEEDBACK_REASON_CHARACTERS;
-        text.placeholder = I18n.t('singleScoreReasonPlaceholder');
-        text.value = reasons?.text || '';
-        root.appendChild(text);
-        return { root, number, categories, text };
-    }
-
     async saveRecord(record, importance, spam, button, status) {
         const correctedScores = {
-            importanceScore: this.normalizeScore(importance.number.value),
-            spamScore: this.normalizeScore(spam.number.value)
+            importanceScore: ScoreFeedbackEditor.normalizeScore(importance.number.value),
+            spamScore: ScoreFeedbackEditor.normalizeScore(spam.number.value)
         };
         if (correctedScores.importanceScore === null || correctedScores.spamScore === null) {
             status.textContent = I18n.t('dashboardFeedbackInvalid');
@@ -161,8 +130,8 @@ const ScoringArchiveComponent = class {
                     storageKey: record.storageKey,
                     correctedScores,
                     reasons: {
-                        importance: this.readReasons(importance),
-                        spam: this.readReasons(spam)
+                        importance: ScoreFeedbackEditor.readReasons(importance),
+                        spam: ScoreFeedbackEditor.readReasons(spam)
                     }
                 }
             );
@@ -200,20 +169,6 @@ const ScoringArchiveComponent = class {
             status.textContent = I18n.t('scoreArchiveRemoveFailed');
             button.disabled = false;
         }
-    }
-
-    readReasons(section) {
-        return {
-            categories: [...section.categories]
-                .filter(([_category, checkbox]) => checkbox.checked)
-                .map(([category]) => category),
-            text: section.text.value.trim()
-        };
-    }
-
-    normalizeScore(value) {
-        const score = Number(value);
-        return Number.isFinite(score) && score >= 0 && score <= 100 ? Math.round(score) : null;
     }
 
     formatDate(value) {

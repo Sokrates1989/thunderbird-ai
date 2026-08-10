@@ -1,0 +1,55 @@
+.score-feedback-editor {
+    min-width: 0;
+    margin: 12px 0;
+    padding: 10px;
+    border: 1px solid #cbd1d6;
+    border-radius: 6px;
+}
+
+.score-feedback-editor legend {
+    padding: 0 5px;
+    font-weight: bold;
+}
+
+.score-feedback-value-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 58px auto;
+    gap: 7px;
+    align-items: center;
+}
+
+.score-feedback-value-row.number-only {
+    grid-template-columns: 62px auto;
+    justify-content: start;
+}
+
+.score-feedback-value-row input[type="number"] {
+    box-sizing: border-box;
+    width: 58px;
+    min-width: 0;
+    padding: 5px;
+}
+
+.score-feedback-reason-prompt {
+    margin: 10px 0 6px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.score-feedback-reason-option {
+    display: block;
+    margin: 5px 0;
+    font-size: 12px;
+}
+
+.score-feedback-reason-option input {
+    margin-right: 6px;
+}
+
+.score-feedback-editor textarea {
+    box-sizing: border-box;
+    width: 100%;
+    margin-top: 7px;
+    padding: 7px;
+    resize: vertical;
+}
