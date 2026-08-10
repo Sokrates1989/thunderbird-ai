@@ -52,6 +52,8 @@ const SingleMailManager = class {
                 await this.openReplyComposer();
             } else if (parameters.get('chat') === '1') {
                 this.openChat();
+            } else if (parameters.get('summarize') === '1') {
+                await this.executeAIAction('SUMMARIZE_EMAIL');
             }
         } catch (error) {
             console.error('Could not initialize the message UI:', error);

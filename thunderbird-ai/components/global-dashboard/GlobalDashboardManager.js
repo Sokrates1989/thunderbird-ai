@@ -1,6 +1,6 @@
 /**
- * Owns the AI-free global toolbar dashboard, its persisted view preferences,
- * and explicit mailbox triage actions.
+ * Owns the global toolbar dashboard, its persisted view preferences, and
+ * explicit local or AI-assisted mailbox triage actions.
  */
 const GlobalDashboardManager = class {
     constructor() {
@@ -15,11 +15,17 @@ const GlobalDashboardManager = class {
             messageLimit: document.getElementById('dashboardMessageLimit'),
             dateFrom: document.getElementById('dashboardDateFrom'),
             dateTo: document.getElementById('dashboardDateTo'),
+            aiStatusFilter: document.getElementById('dashboardAIStatusFilter'),
+            importanceMinimum: document.getElementById('dashboardImportanceMinimum'),
+            spamMinimum: document.getElementById('dashboardSpamMinimum'),
             senderFilterDetails: document.getElementById('dashboardSenderFilter'),
             senderSummary: document.getElementById('dashboardSenderSummary'),
             senderOptions: document.getElementById('dashboardSenderOptions'),
             selectAll: document.getElementById('dashboardSelectAll'),
             selectedCount: document.getElementById('dashboardSelectedCount'),
+            analyzeSelected: document.getElementById('dashboardAnalyzeSelected'),
+            loadingIndicator: document.getElementById('dashboardLoadingIndicator'),
+            loadingText: document.getElementById('dashboardLoadingText'),
             trashSelected: document.getElementById('dashboardTrashSelected')
         };
         this.sourceAccounts = [];
@@ -33,6 +39,10 @@ const GlobalDashboardManager = class {
         this.messageLimit = GlobalMailViewService.DEFAULT_LIMIT;
         this.dateFrom = '';
         this.dateTo = '';
+        this.aiStatusFilter = 'all';
+        this.importanceMinimum = 0;
+        this.spamMinimum = 0;
+        this.aiResults = {};
         this.busy = false;
         this.dateFormatter = new Intl.DateTimeFormat(I18n.getLanguage(), {
             dateStyle: 'short',
@@ -44,6 +54,21 @@ const GlobalDashboardManager = class {
             options: this.elements.senderOptions,
             onSelectionChanged: selection => this.handleSenderSelectionChange(selection),
             onError: error => this.showUnexpectedError(error)
+        });
+        this.messageComponent = new DashboardMessageComponent({
+            formatDate: value => this.formatDate(value),
+            onSelectionChanged: (messageId, selected) => this.handleMessageSelection(messageId, selected),
+            onSummarize: message => {
+                this.openMessageWorkspace(message, 'summarize')
+                    .catch(error => this.showWorkspaceError(error));
+            },
+            onReply: message => {
+                this.openMessageWorkspace(message, 'reply')
+                    .catch(error => this.showWorkspaceError(error));
+            },
+            onTrash: message => {
+                this.trashOne(message).catch(error => this.showUnexpectedError(error));
+            }
         });
     }
 
@@ -65,7 +90,10 @@ const GlobalDashboardManager = class {
             this.elements.sortOrder,
             this.elements.messageLimit,
             this.elements.dateFrom,
-            this.elements.dateTo
+            this.elements.dateTo,
+            this.elements.aiStatusFilter,
+            this.elements.importanceMinimum,
+            this.elements.spamMinimum
         ]) {
             element.addEventListener('change', () => {
                 this.handleViewControlChange().catch(error => this.showUnexpectedError(error));
@@ -75,6 +103,9 @@ const GlobalDashboardManager = class {
         this.elements.trashSelected.addEventListener('click', () => {
             this.trashSelected().catch(error => this.showUnexpectedError(error));
         });
+        this.elements.analyzeSelected.addEventListener('click', () => {
+            this.analyzeSelected().catch(error => this.showUnexpectedError(error));
+        });
 
         await this.loadPreferences();
         this.applyPreferenceControls();
@@ -83,49 +114,13 @@ const GlobalDashboardManager = class {
 
     /** Restore persisted view state while normalizing every untrusted storage value. */
     async loadPreferences() {
-        const stored = await browser.storage.local.get([
-            CONFIG.STORAGE_KEYS.DASHBOARD_SHOW_PREVIEW,
-            CONFIG.STORAGE_KEYS.DASHBOARD_PREVIEW_LINES,
-            CONFIG.STORAGE_KEYS.DASHBOARD_SORT_ORDER,
-            CONFIG.STORAGE_KEYS.DASHBOARD_MESSAGE_LIMIT,
-            CONFIG.STORAGE_KEYS.DASHBOARD_DATE_FROM,
-            CONFIG.STORAGE_KEYS.DASHBOARD_DATE_TO,
-            CONFIG.STORAGE_KEYS.DASHBOARD_SENDER_FILTER
-        ]);
-        this.previewEnabled = stored[CONFIG.STORAGE_KEYS.DASHBOARD_SHOW_PREVIEW] === true;
-        this.previewLineCount = this.normalizePreviewLines(
-            stored[CONFIG.STORAGE_KEYS.DASHBOARD_PREVIEW_LINES]
-        );
-        this.sortOrder = GlobalMailViewService.normalizeSortOrder(
-            stored[CONFIG.STORAGE_KEYS.DASHBOARD_SORT_ORDER]
-        );
-        this.messageLimit = GlobalMailViewService.normalizeLimit(
-            stored[CONFIG.STORAGE_KEYS.DASHBOARD_MESSAGE_LIMIT]
-        );
-        this.dateFrom = GlobalMailViewService.normalizeDate(
-            stored[CONFIG.STORAGE_KEYS.DASHBOARD_DATE_FROM]
-        );
-        this.dateTo = GlobalMailViewService.normalizeDate(
-            stored[CONFIG.STORAGE_KEYS.DASHBOARD_DATE_TO]
-        );
-        const senderFilter = stored[CONFIG.STORAGE_KEYS.DASHBOARD_SENDER_FILTER];
-        this.selectedSenderKeys = Array.isArray(senderFilter) ? new Set(senderFilter) : null;
+        Object.assign(this, await DashboardViewPreferences.load());
     }
 
     /** Persist the complete dashboard view without exposing mailbox data. */
     async savePreferences() {
         try {
-            await browser.storage.local.set({
-                [CONFIG.STORAGE_KEYS.DASHBOARD_SHOW_PREVIEW]: this.previewEnabled,
-                [CONFIG.STORAGE_KEYS.DASHBOARD_PREVIEW_LINES]: this.previewLineCount,
-                [CONFIG.STORAGE_KEYS.DASHBOARD_SORT_ORDER]: this.sortOrder,
-                [CONFIG.STORAGE_KEYS.DASHBOARD_MESSAGE_LIMIT]: this.messageLimit,
-                [CONFIG.STORAGE_KEYS.DASHBOARD_DATE_FROM]: this.dateFrom,
-                [CONFIG.STORAGE_KEYS.DASHBOARD_DATE_TO]: this.dateTo,
-                [CONFIG.STORAGE_KEYS.DASHBOARD_SENDER_FILTER]: this.selectedSenderKeys === null
-                    ? null
-                    : [...this.selectedSenderKeys]
-            });
+            await DashboardViewPreferences.save(this);
         } catch (error) {
             console.error('Could not save dashboard display preferences:', error);
             this.setStatus(I18n.t('dashboardPreferencesSaveFailed'), 'error');
@@ -140,6 +135,9 @@ const GlobalDashboardManager = class {
         this.elements.messageLimit.value = String(this.messageLimit);
         this.elements.dateFrom.value = this.dateFrom;
         this.elements.dateTo.value = this.dateTo;
+        this.elements.aiStatusFilter.value = this.aiStatusFilter;
+        this.elements.importanceMinimum.value = String(this.importanceMinimum);
+        this.elements.spamMinimum.value = String(this.spamMinimum);
         this.elements.previewLines.disabled = !this.previewEnabled;
     }
 
@@ -165,7 +163,9 @@ const GlobalDashboardManager = class {
 
     /** Persist and apply the bounded preview viewport height. */
     async handlePreviewLineChange() {
-        this.previewLineCount = this.normalizePreviewLines(this.elements.previewLines.value);
+        this.previewLineCount = DashboardViewPreferences.normalizePreviewLines(
+            this.elements.previewLines.value
+        );
         this.elements.previewLines.value = String(this.previewLineCount);
         await this.savePreferences();
         this.render(this.accounts);
@@ -188,6 +188,15 @@ const GlobalDashboardManager = class {
         this.messageLimit = GlobalMailViewService.normalizeLimit(this.elements.messageLimit.value);
         this.dateFrom = fromDate;
         this.dateTo = toDate;
+        this.aiStatusFilter = GlobalMailViewService.normalizeAIStatusFilter(
+            this.elements.aiStatusFilter.value
+        );
+        this.importanceMinimum = GlobalMailViewService.normalizePercentage(
+            this.elements.importanceMinimum.value
+        );
+        this.spamMinimum = GlobalMailViewService.normalizePercentage(
+            this.elements.spamMinimum.value
+        );
         this.applyPreferenceControls();
         await this.savePreferences();
         await this.applyCurrentView();
@@ -198,16 +207,16 @@ const GlobalDashboardManager = class {
         this.elements.dateTo.setCustomValidity('');
     }
 
-    normalizePreviewLines(value) {
-        const lines = Number.parseInt(value, 10);
-        return Number.isFinite(lines) ? Math.min(20, Math.max(1, lines)) : 3;
-    }
-
     /** Reload every unread header page, then apply the persisted local view. */
     async refresh() {
         this.setBusy(true, I18n.t('dashboardLoading'));
         try {
-            this.sourceAccounts = await GlobalMailService.listUnreadByAccount();
+            const [sourceAccounts, aiResults] = await Promise.all([
+                GlobalMailService.listUnreadByAccount(),
+                DashboardAIService.loadResults()
+            ]);
+            this.aiResults = aiResults;
+            this.sourceAccounts = DashboardAIService.attachResults(sourceAccounts, aiResults);
             this.availableSenders = GlobalMailViewService.availableSenders(this.sourceAccounts);
             this.renderSenderOptions();
             this.selectedMessageIds.clear();
@@ -246,6 +255,9 @@ const GlobalDashboardManager = class {
             selectedSenders: this.selectedSenderKeys,
             fromDate: this.dateFrom,
             toDate: this.dateTo,
+            aiStatusFilter: this.aiStatusFilter,
+            importanceMinimum: this.importanceMinimum,
+            spamMinimum: this.spamMinimum,
             language: I18n.getLanguage()
         });
         if (this.previewEnabled) {
@@ -319,68 +331,24 @@ const GlobalDashboardManager = class {
         return section;
     }
 
-    /** Render one selectable message row with an explicit delete action. */
+    /** Delegate one message row while retaining dashboard state ownership. */
     renderMessage(message) {
-        const subject = message.subject || I18n.t('dashboardNoSubject');
-        const item = document.createElement('li');
-        item.className = 'dashboard-message';
-
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.className = 'dashboard-message-select';
-        checkbox.checked = this.selectedMessageIds.has(message.id);
-        checkbox.setAttribute('aria-label', I18n.t('dashboardSelectMessage', { subject }));
-        checkbox.addEventListener('change', () => {
-            if (checkbox.checked) {
-                this.selectedMessageIds.add(message.id);
-            } else {
-                this.selectedMessageIds.delete(message.id);
-            }
-            this.updateSelectionControls();
+        return this.messageComponent.render(message, {
+            selected: this.selectedMessageIds.has(message.id),
+            busy: this.busy,
+            previewEnabled: this.previewEnabled,
+            previewLineCount: this.previewLineCount
         });
-
-        const content = document.createElement('div');
-        content.className = 'dashboard-message-content';
-        content.appendChild(this.textElement('div', 'dashboard-message-subject', subject));
-        content.appendChild(this.textElement(
-            'div',
-            'dashboard-message-meta',
-            I18n.t('dashboardMessageMeta', {
-                author: message.author || I18n.t('dashboardUnknownSender'),
-                date: this.formatDate(message.date)
-            })
-        ));
-        if (this.previewEnabled) {
-            content.appendChild(this.renderPreview(message));
-        }
-
-        const trash = document.createElement('button');
-        trash.type = 'button';
-        trash.className = 'dashboard-message-trash';
-        trash.textContent = I18n.t('dashboardTrashOne');
-        trash.setAttribute('aria-label', I18n.t('dashboardTrashMessage', { subject }));
-        trash.addEventListener('click', () => {
-            this.trashOne(message).catch(error => this.showUnexpectedError(error));
-        });
-
-        item.append(checkbox, content, trash);
-        return item;
     }
 
-    /** Render a scrollable, line-bounded local body preview. */
-    renderPreview(message) {
-        const preview = this.textElement(
-            'div',
-            'dashboard-message-preview',
-            message.previewFailed
-                ? I18n.t('dashboardPreviewUnavailable')
-                : message.preview || I18n.t('dashboardPreviewEmpty')
-        );
-        preview.style.setProperty('--dashboard-preview-lines', String(this.previewLineCount));
-        if (message.previewFailed) {
-            preview.dataset.type = 'error';
+    /** Apply one row checkbox change to the shared visible selection. */
+    handleMessageSelection(messageId, selected) {
+        if (selected) {
+            this.selectedMessageIds.add(messageId);
+        } else {
+            this.selectedMessageIds.delete(messageId);
         }
-        return preview;
+        this.updateSelectionControls();
     }
 
     /** Delegate the checkbox dropdown while retaining preference ownership here. */
@@ -408,6 +376,49 @@ const GlobalDashboardManager = class {
             this.selectedMessageIds.clear();
         }
         this.render(this.accounts);
+    }
+
+    /** Analyze the selected visible messages and persist only normalized score metadata. */
+    async analyzeSelected() {
+        const messageIds = [...this.selectedMessageIds];
+        if (!messageIds.length) {
+            return;
+        }
+        this.setBusy(true, I18n.t('dashboardAnalysisInProgress', { count: messageIds.length }));
+        try {
+            const data = await DashboardAIService.analyze(messageIds);
+            this.aiResults = await DashboardAIService.saveResults(
+                this.aiResults,
+                DashboardAIService.addStorageKeys(this.sourceAccounts, data.results),
+                data.model
+            );
+            DashboardAIService.attachResults(this.sourceAccounts, this.aiResults);
+            await this.rebuildCurrentView();
+            const statusKey = data.failedCount
+                ? 'dashboardAnalysisPartial'
+                : 'dashboardAnalysisSuccess';
+            this.setStatus(I18n.t(statusKey, {
+                count: data.results.length,
+                failed: data.failedCount,
+                model: I18n.modelLabel(data.model)
+            }), data.failedCount ? 'warning' : 'success');
+        } catch (error) {
+            console.error('Could not analyze selected dashboard messages:', error);
+            this.setStatus(I18n.t('dashboardAnalysisFailed'), 'error');
+        } finally {
+            this.setBusy(false);
+        }
+    }
+
+    /** Open the existing single-message summary or reply workspace. */
+    async openMessageWorkspace(message, mode) {
+        await DashboardAIService.openWorkspace(message.id, mode);
+    }
+
+    /** Report a direct-workspace failure without mislabeling it as a mailbox load failure. */
+    showWorkspaceError(error) {
+        console.error('Could not open the single-message AI workspace:', error);
+        this.setStatus(I18n.t('dashboardWorkspaceOpenFailed'), 'error');
     }
 
     /** Confirm and delete only the directly targeted message. */
@@ -465,9 +476,10 @@ const GlobalDashboardManager = class {
         this.elements.selectAll.indeterminate = selected > 0 && selected < total;
         this.elements.selectAll.disabled = this.busy || total === 0;
         this.elements.trashSelected.disabled = this.busy || selected === 0;
+        this.elements.analyzeSelected.disabled = this.busy || selected === 0;
         this.elements.selectedCount.textContent = I18n.t('dashboardSelectedCount', { count: selected });
         for (const element of this.elements.accounts.querySelectorAll(
-            '.dashboard-message-select, .dashboard-message-trash'
+            '.dashboard-message-select, .dashboard-message-action'
         )) {
             element.disabled = this.busy;
         }
@@ -497,9 +509,14 @@ const GlobalDashboardManager = class {
         this.elements.messageLimit.disabled = busy;
         this.elements.dateFrom.disabled = busy;
         this.elements.dateTo.disabled = busy;
+        this.elements.aiStatusFilter.disabled = busy;
+        this.elements.importanceMinimum.disabled = busy;
+        this.elements.spamMinimum.disabled = busy;
         this.senderFilterComponent.setBusy(busy);
+        this.elements.loadingIndicator.hidden = !busy;
         if (message) {
             this.setStatus(message);
+            this.elements.loadingText.textContent = message;
         }
         this.updateSelectionControls();
     }

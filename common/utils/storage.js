@@ -79,8 +79,8 @@ const StorageManager = {
         });
     },
 
-    /** Increment one usage counter after a completed operation. */
-    async updateStatistics(type) {
+    /** Increment one usage counter by the number of completed operations. */
+    async updateStatistics(type, amount = 1) {
         const keys = [
             CONFIG.STORAGE_KEYS.EMAILS_ANALYZED,
             CONFIG.STORAGE_KEYS.API_CALLS
@@ -90,8 +90,8 @@ const StorageManager = {
         const apiCalls = Number(current[CONFIG.STORAGE_KEYS.API_CALLS]) || 0;
 
         await this.setMultiple({
-            [CONFIG.STORAGE_KEYS.EMAILS_ANALYZED]: emailsAnalyzed + (type === 'email' ? 1 : 0),
-            [CONFIG.STORAGE_KEYS.API_CALLS]: apiCalls + (type === 'api' ? 1 : 0),
+            [CONFIG.STORAGE_KEYS.EMAILS_ANALYZED]: emailsAnalyzed + (type === 'email' ? amount : 0),
+            [CONFIG.STORAGE_KEYS.API_CALLS]: apiCalls + (type === 'api' ? amount : 0),
             [CONFIG.STORAGE_KEYS.LAST_USED]: new Date().toISOString()
         });
     },

@@ -1,4 +1,4 @@
-/** Initialize the AI-free global toolbar dashboard. */
+/** Initialize the global toolbar dashboard and its opt-in AI actions. */
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         await I18n.initialize();

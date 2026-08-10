@@ -67,6 +67,36 @@ function loadSenderFilterComponent() {
     return context.DashboardSenderFilterComponent;
 }
 
+function loadDashboardAIService() {
+    const storageState = {};
+    const openedTabs = [];
+    const sentMessages = [];
+    const context = createContext({
+        browser: {
+            i18n: { getUILanguage: () => 'en-US' },
+            runtime: {
+                getURL: value => `moz-extension://test/${value}`,
+                sendMessage: async message => {
+                    sentMessages.push(message);
+                    return { success: true, data: { results: [], failedCount: 0, model: 'gpt-5.6-luna' } };
+                }
+            },
+            storage: {
+                local: {
+                    get: async key => ({ [key]: storageState[key] }),
+                    set: async values => Object.assign(storageState, values)
+                }
+            },
+            tabs: { create: async details => openedTabs.push(details) }
+        }
+    });
+    loadScript(context, 'thunderbird-ai/config/locale-de.js');
+    loadScript(context, 'thunderbird-ai/config/locale-en.js');
+    loadScript(context, 'thunderbird-ai/config/constants.js');
+    loadScript(context, 'thunderbird-ai/components/global-dashboard/DashboardAIService.js');
+    return { context, openedTabs, sentMessages, service: context.DashboardAIService, storageState };
+}
+
 test('global dashboard reads every unread-header page for each Inbox', async () => {
     const firstInbox = inbox('inbox-a', 'Posteingang');
     const nestedInbox = inbox('inbox-b');
@@ -155,6 +185,70 @@ test('sender and inclusive date filters run before participant sorting and limit
         limit: 10
     });
     assert.deepEqual(Array.from(ascending[0].messages, item => item.id), [2, 3]);
+});
+
+test('AI scores support importance and spam sorting plus analyzed-state filters', () => {
+    const service = loadViewService();
+    const accounts = [{ messages: [
+        { ...message(1, 1), aiAnalysis: { importanceScore: 25, spamScore: 92 } },
+        { ...message(2, 2), aiAnalysis: { importanceScore: 88, spamScore: 12 } },
+        { ...message(3, 3) }
+    ] }];
+
+    const important = service.apply(accounts, { sortOrder: 'importance-desc', limit: 10 });
+    const leastImportant = service.apply(accounts, { sortOrder: 'importance-asc', limit: 10 });
+    const leastSpam = service.apply(accounts, { sortOrder: 'spam-asc', limit: 10 });
+    const spam = service.apply(accounts, {
+        sortOrder: 'spam-desc',
+        aiStatusFilter: 'probably-spam',
+        importanceMinimum: 20,
+        limit: 10
+    });
+    const unanalyzed = service.apply(accounts, { aiStatusFilter: 'unanalyzed', limit: 10 });
+
+    assert.deepEqual(Array.from(important[0].messages, item => item.id), [2, 1, 3]);
+    assert.deepEqual(Array.from(leastImportant[0].messages, item => item.id), [1, 2, 3]);
+    assert.deepEqual(Array.from(leastSpam[0].messages, item => item.id), [2, 1, 3]);
+    assert.deepEqual(Array.from(spam[0].messages, item => item.id), [1]);
+    assert.deepEqual(Array.from(unanalyzed[0].messages, item => item.id), [3]);
+});
+
+test('dashboard AI scores persist without mail content and direct actions open shared workspaces', async () => {
+    const { context, openedTabs, sentMessages, service, storageState } = loadDashboardAIService();
+
+    const accounts = [{ accountId: 'personal', messages: [{
+        id: 42,
+        headerMessageId: 'stable@example.test',
+        subject: 'Private body stays out of storage'
+    }] }];
+    const scores = service.addStorageKeys(accounts, [{
+        messageId: 42,
+        importanceScore: 81,
+        spamScore: 9
+    }]);
+    const saved = await service.saveResults({}, scores, 'gpt-5.6-luna');
+    const restartedAccounts = [{ accountId: 'personal', messages: [{
+        id: 999,
+        headerMessageId: 'stable@example.test',
+        subject: 'Private body stays out of storage'
+    }] }];
+    service.attachResults(restartedAccounts, saved);
+    await service.analyze([42]);
+    await service.openWorkspace(42, 'summarize');
+    await service.openWorkspace(42, 'reply');
+
+    const [persisted] = Object.values(
+        storageState[context.CONFIG.STORAGE_KEYS.DASHBOARD_AI_RESULTS]
+    );
+    assert.deepEqual(
+        { importanceScore: persisted.importanceScore, spamScore: persisted.spamScore, model: persisted.model },
+        { importanceScore: 81, spamScore: 9, model: 'gpt-5.6-luna' }
+    );
+    assert.doesNotMatch(JSON.stringify(storageState), /Private body/u);
+    assert.equal(restartedAccounts[0].messages[0].aiAnalysis.importanceScore, 81);
+    assert.equal(sentMessages[0].action, context.CONFIG.ACTIONS.DASHBOARD_BULK_TRIAGE);
+    assert.match(openedTabs[0].url, /single-mail-ui\.html\?messageId=42&summarize=1/u);
+    assert.match(openedTabs[1].url, /single-mail-ui\.html\?messageId=42&reply=1/u);
 });
 
 test('only the limited visible slice requests content previews', async () => {
@@ -312,6 +406,10 @@ test('manifest routes global and message toolbar actions to separate popup pages
         path.join(repositoryRoot, 'thunderbird-ai/styles/global-dashboard.css'),
         'utf8'
     );
+    const singleMailManager = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/components/single-mail/SingleMailManager.js'),
+        'utf8'
+    );
 
     assert.equal(manifest.action.default_popup, 'global-dashboard.html');
     assert.equal(manifest.message_display_action.default_popup, 'single-mail-ui.html');
@@ -325,12 +423,22 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(dashboard, /id="dashboardDateFrom"[^>]*type="date"|type="date"[^>]*id="dashboardDateFrom"/u);
     assert.match(dashboard, /id="dashboardDateTo"[^>]*type="date"|type="date"[^>]*id="dashboardDateTo"/u);
     assert.match(dashboard, /id="dashboardSenderFilter"/u);
+    assert.match(dashboard, /id="dashboardAIStatusFilter"/u);
+    assert.match(dashboard, /id="dashboardImportanceMinimum"/u);
+    assert.match(dashboard, /id="dashboardSpamMinimum"/u);
+    assert.match(dashboard, /id="dashboardAnalyzeSelected"/u);
+    assert.match(dashboard, /id="dashboardLoadingIndicator"/u);
     assert.match(dashboard, /message\.js/u);
     assert.match(dashboard, /GlobalMailService\.js/u);
     assert.match(dashboard, /GlobalMailViewService\.js/u);
     assert.match(dashboard, /DashboardSenderFilterComponent\.js/u);
+    assert.match(dashboard, /DashboardViewPreferences\.js/u);
+    assert.match(dashboard, /DashboardAIService\.js/u);
+    assert.match(dashboard, /DashboardMessageComponent\.js/u);
     assert.match(dashboard, /GlobalDashboardManager\.js/u);
     assert.doesNotMatch(dashboard, /openai\.js|OpenAIService/u);
     assert.match(dashboardStyles, /overflow-y:\s*auto/u);
     assert.match(dashboardStyles, /--dashboard-preview-lines/u);
+    assert.match(dashboardStyles, /@keyframes dashboard-spin/u);
+    assert.match(singleMailManager, /parameters\.get\('summarize'\) === '1'[\s\S]*executeAIAction\('SUMMARIZE_EMAIL'\)/u);
 });

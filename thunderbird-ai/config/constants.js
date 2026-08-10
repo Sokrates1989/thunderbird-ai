@@ -2,7 +2,7 @@
 
 const CONFIG = {
     ADDON_NAME: 'Thunderbird AI Assistant',
-    ADDON_VERSION: '1.7.0',
+    ADDON_VERSION: '1.8.0',
     ADDON_ID: 'thunderbird-ai@example.com',
 
     OPENAI: {
@@ -36,10 +36,15 @@ const CONFIG = {
             translate: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'medium', maxOutputTokens: 1800 },
             extract: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
             spam: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'low', maxOutputTokens: 450 },
+            bulkTriage: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'low', maxOutputTokens: 1200 },
             improve: { model: 'gpt-5.6-terra', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
             test: { model: 'gpt-5.6-luna', effort: 'none', verbosity: 'low', maxOutputTokens: 20 }
         },
         MAX_EMAIL_CHARACTERS: 50000,
+        BULK_TRIAGE_MODEL: 'gpt-5.6-luna',
+        BULK_TRIAGE_BATCH_SIZE: 8,
+        BULK_TRIAGE_CONCURRENCY: 2,
+        BULK_TRIAGE_EMAIL_CHARACTERS: 6000,
         MAX_REPLY_DRAFT_CHARACTERS: 20000,
         MAX_REPLY_INSTRUCTION_CHARACTERS: 4000
     },
@@ -64,7 +69,11 @@ const CONFIG = {
         DASHBOARD_MESSAGE_LIMIT: 'dashboardMessageLimit',
         DASHBOARD_DATE_FROM: 'dashboardDateFrom',
         DASHBOARD_DATE_TO: 'dashboardDateTo',
-        DASHBOARD_SENDER_FILTER: 'dashboardSenderFilter'
+        DASHBOARD_SENDER_FILTER: 'dashboardSenderFilter',
+        DASHBOARD_AI_STATUS_FILTER: 'dashboardAiStatusFilter',
+        DASHBOARD_IMPORTANCE_MINIMUM: 'dashboardImportanceMinimum',
+        DASHBOARD_SPAM_MINIMUM: 'dashboardSpamMinimum',
+        DASHBOARD_AI_RESULTS: 'dashboardAiResults'
     },
 
     UI: {
@@ -91,7 +100,8 @@ const CONFIG = {
         TRANSLATE: 'translateMessage',
         EXTRACT_INFO: 'extractInfo',
         CHECK_SPAM: 'checkSpam',
-        FIND_SIMILAR: 'findSimilar'
+        FIND_SIMILAR: 'findSimilar',
+        DASHBOARD_BULK_TRIAGE: 'analyzeDashboardMessages'
     },
 
     SHORTCUTS: {

@@ -29,6 +29,10 @@
                         <option value="date-asc" data-i18n="dashboardSortOldest"></option>
                         <option value="sender-asc" data-i18n="dashboardSortSenderAscending"></option>
                         <option value="sender-desc" data-i18n="dashboardSortSenderDescending"></option>
+                        <option value="importance-desc" data-i18n="dashboardSortImportanceDescending"></option>
+                        <option value="importance-asc" data-i18n="dashboardSortImportanceAscending"></option>
+                        <option value="spam-desc" data-i18n="dashboardSortSpamDescending"></option>
+                        <option value="spam-asc" data-i18n="dashboardSortSpamAscending"></option>
                     </select>
                 </label>
                 <label>
@@ -47,6 +51,24 @@
                     <summary id="dashboardSenderSummary" data-i18n="dashboardSenderFilter"></summary>
                     <div id="dashboardSenderOptions" class="dashboard-sender-options"></div>
                 </details>
+                <label>
+                    <span data-i18n="dashboardAIStatusFilter"></span>
+                    <select id="dashboardAIStatusFilter">
+                        <option value="all" data-i18n="dashboardAIStatusAll"></option>
+                        <option value="analyzed" data-i18n="dashboardAIStatusAnalyzed"></option>
+                        <option value="unanalyzed" data-i18n="dashboardAIStatusUnanalyzed"></option>
+                        <option value="probably-spam" data-i18n="dashboardAIStatusProbablySpam"></option>
+                        <option value="probably-not-spam" data-i18n="dashboardAIStatusProbablyNotSpam"></option>
+                    </select>
+                </label>
+                <label>
+                    <span data-i18n="dashboardImportanceMinimum"></span>
+                    <input type="number" id="dashboardImportanceMinimum" min="0" max="100" step="1" inputmode="numeric">
+                </label>
+                <label>
+                    <span data-i18n="dashboardSpamMinimum"></span>
+                    <input type="number" id="dashboardSpamMinimum" min="0" max="100" step="1" inputmode="numeric">
+                </label>
             </div>
             <p data-i18n="dashboardLimitHint"></p>
             <div class="dashboard-display-controls">
@@ -58,14 +80,21 @@
                 <input type="number" id="dashboardPreviewLines" min="1" max="20" step="1" inputmode="numeric">
             </div>
             <p data-i18n="dashboardPreviewPrivacy"></p>
+            <p data-i18n="dashboardAIPrivacy"></p>
+            <p data-i18n="dashboardAIThresholdHint"></p>
         </section>
         <p id="dashboardStatus" class="dashboard-status" role="status" aria-live="polite"></p>
+        <div id="dashboardLoadingIndicator" class="dashboard-loading" role="status" aria-live="polite" hidden>
+            <span class="dashboard-spinner" aria-hidden="true"></span>
+            <span id="dashboardLoadingText"></span>
+        </div>
         <div class="dashboard-bulk-actions">
             <label>
                 <input type="checkbox" id="dashboardSelectAll">
                 <span data-i18n="dashboardSelectAll"></span>
             </label>
             <span id="dashboardSelectedCount" class="dashboard-selected-count"></span>
+            <button type="button" id="dashboardAnalyzeSelected" class="dashboard-analyze-selected" data-i18n="dashboardAnalyzeSelected"></button>
             <button type="button" id="dashboardTrashSelected" data-i18n="dashboardTrashSelected"></button>
         </div>
         <div id="dashboardAccounts" class="dashboard-accounts"></div>
@@ -76,7 +105,10 @@
     <script src="message.js"></script>
     <script src="GlobalMailService.js"></script>
     <script src="GlobalMailViewService.js"></script>
+    <script src="DashboardViewPreferences.js"></script>
     <script src="DashboardSenderFilterComponent.js"></script>
+    <script src="DashboardAIService.js"></script>
+    <script src="DashboardMessageComponent.js"></script>
     <script src="GlobalDashboardManager.js"></script>
     <script src="global-dashboard.js"></script>
 </body>

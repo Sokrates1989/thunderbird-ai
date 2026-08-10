@@ -122,6 +122,87 @@ const OpenAIService = {
         return this.runEmailTask('spam', message, I18n.t('spamPrompt'));
     },
 
+    /** Classify several messages in bounded Luna batches and retain successful partial batches. */
+    async analyzeBulkTriage(messages) {
+        const batches = [];
+        for (let index = 0; index < messages.length; index += CONFIG.OPENAI.BULK_TRIAGE_BATCH_SIZE) {
+            batches.push(messages.slice(index, index + CONFIG.OPENAI.BULK_TRIAGE_BATCH_SIZE));
+        }
+        const results = new Array(batches.length);
+        const failures = [];
+        let nextBatch = 0;
+        const worker = async () => {
+            while (nextBatch < batches.length) {
+                const batchIndex = nextBatch;
+                nextBatch += 1;
+                const batch = batches[batchIndex];
+                try {
+                    results[batchIndex] = await this.analyzeBulkTriageBatch(batch);
+                } catch (error) {
+                    failures.push({ batchIndex, count: batch.length, error });
+                }
+            }
+        };
+        const workerCount = Math.min(CONFIG.OPENAI.BULK_TRIAGE_CONCURRENCY, batches.length);
+        await Promise.all(Array.from({ length: workerCount }, () => worker()));
+        const scores = results.filter(Boolean).flat();
+        if (!scores.length && messages.length) {
+            throw failures[0]?.error || new Error(I18n.t('bulkTriageInvalidResponse'));
+        }
+        return {
+            scores,
+            failedCount: failures.reduce((total, failure) => total + failure.count, 0),
+            apiCalls: results.filter(Boolean).length,
+            model: CONFIG.OPENAI.BULK_TRIAGE_MODEL
+        };
+    },
+
+    /** Request one strict score pair per message while forcing the low-cost Luna model. */
+    async analyzeBulkTriageBatch(messages) {
+        const input = messages.map((message, index) => [
+            `<bulk-email index="${index}">`,
+            this.formatEmailContext(message, CONFIG.OPENAI.BULK_TRIAGE_EMAIL_CHARACTERS),
+            '</bulk-email>'
+        ].join('\n')).join('\n\n');
+        const response = await this.request('bulkTriage', {
+            instructions: this.baseInstructions(I18n.t('bulkTriagePrompt')),
+            input
+        }, { preferredModel: CONFIG.OPENAI.BULK_TRIAGE_MODEL });
+        return this.parseBulkTriageScores(response.content, messages);
+    },
+
+    /** Validate untrusted model output and map its local indices back to Thunderbird IDs. */
+    parseBulkTriageScores(content, messages) {
+        const normalized = String(content || '').trim()
+            .replace(/^```(?:json)?\s*/iu, '')
+            .replace(/\s*```$/u, '');
+        let rows;
+        try {
+            rows = JSON.parse(normalized);
+        } catch (_error) {
+            throw new Error(I18n.t('bulkTriageInvalidResponse'));
+        }
+        if (!Array.isArray(rows) || rows.length !== messages.length) {
+            throw new Error(I18n.t('bulkTriageInvalidResponse'));
+        }
+        const byIndex = new Map(rows.map(row => [Number(row?.index), row]));
+        return messages.map((message, index) => {
+            const row = byIndex.get(index);
+            const importanceScore = this.normalizeScore(row?.importanceScore);
+            const spamScore = this.normalizeScore(row?.spamScore);
+            if (!row || importanceScore === null || spamScore === null) {
+                throw new Error(I18n.t('bulkTriageInvalidResponse'));
+            }
+            return { messageId: message.id, importanceScore, spamScore };
+        });
+    },
+
+    /** Accept finite percentage values only and round them to stable integer scores. */
+    normalizeScore(value) {
+        const score = Number(value);
+        return Number.isFinite(score) && score >= 0 && score <= 100 ? Math.round(score) : null;
+    },
+
     async processChat(query, message, history = []) {
         const trimmedQuery = String(query || '').trim();
         if (!trimmedQuery) {
@@ -174,8 +255,7 @@ const OpenAIService = {
         ].join('\n');
     },
 
-    formatEmailContext(message) {
-        const maximum = CONFIG.OPENAI.MAX_EMAIL_CHARACTERS;
+    formatEmailContext(message, maximum = CONFIG.OPENAI.MAX_EMAIL_CHARACTERS) {
         const content = String(message.content || '');
         const clipped = content.length > maximum
             ? `${content.slice(0, maximum)}\n\n${I18n.t('contentTruncated', { maximum })}`

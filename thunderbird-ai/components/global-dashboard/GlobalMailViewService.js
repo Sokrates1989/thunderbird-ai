@@ -3,7 +3,17 @@ const GlobalMailViewService = {
     DEFAULT_LIMIT: 10,
     MAX_LIMIT: 50,
     DEFAULT_SORT_ORDER: 'date-desc',
-    SORT_ORDERS: new Set(['date-desc', 'date-asc', 'sender-asc', 'sender-desc']),
+    SORT_ORDERS: new Set([
+        'date-desc',
+        'date-asc',
+        'sender-asc',
+        'sender-desc',
+        'importance-desc',
+        'importance-asc',
+        'spam-desc',
+        'spam-asc'
+    ]),
+    AI_STATUS_FILTERS: new Set(['all', 'analyzed', 'unanalyzed', 'probably-spam', 'probably-not-spam']),
     UNKNOWN_SENDER_KEY: '__unknown_sender__',
 
     /** Clamp a persisted or user-entered per-account limit to the supported range. */
@@ -17,6 +27,17 @@ const GlobalMailViewService = {
     /** Resolve unknown persisted sort values to the newest-first default. */
     normalizeSortOrder(value) {
         return this.SORT_ORDERS.has(value) ? value : this.DEFAULT_SORT_ORDER;
+    },
+
+    /** Resolve unknown persisted AI filters to the inclusive default. */
+    normalizeAIStatusFilter(value) {
+        return this.AI_STATUS_FILTERS.has(value) ? value : 'all';
+    },
+
+    /** Clamp score thresholds to an inclusive percentage range. */
+    normalizePercentage(value) {
+        const percentage = Number.parseInt(value, 10);
+        return Number.isFinite(percentage) ? Math.min(100, Math.max(0, percentage)) : 0;
     },
 
     /** Accept only native date-input values in the stable ISO calendar format. */
@@ -58,6 +79,9 @@ const GlobalMailViewService = {
             : new Set(options.selectedSenders);
         const fromDate = this.startOfDay(this.normalizeDate(options.fromDate));
         const toDate = this.endOfDay(this.normalizeDate(options.toDate));
+        const aiStatusFilter = this.normalizeAIStatusFilter(options.aiStatusFilter);
+        const importanceMinimum = this.normalizePercentage(options.importanceMinimum);
+        const spamMinimum = this.normalizePercentage(options.spamMinimum);
         const collator = new Intl.Collator(options.language || I18n.getLanguage(), {
             numeric: true,
             sensitivity: 'base'
@@ -67,6 +91,12 @@ const GlobalMailViewService = {
             const matches = (account.messages || [])
                 .filter(message => this.matchesSender(message, selectedSenders))
                 .filter(message => this.matchesDate(message, fromDate, toDate))
+                .filter(message => this.matchesAI(
+                    message,
+                    aiStatusFilter,
+                    importanceMinimum,
+                    spamMinimum
+                ))
                 .sort((left, right) => this.compare(left, right, sortOrder, collator));
             return {
                 ...account,
@@ -93,6 +123,24 @@ const GlobalMailViewService = {
             && (!toDate || timestamp <= toDate);
     },
 
+    /** Apply analysis state and score thresholds after local mailbox filters. */
+    matchesAI(message, statusFilter, importanceMinimum, spamMinimum) {
+        const analysis = message.aiAnalysis;
+        if (statusFilter === 'unanalyzed') {
+            return !analysis;
+        }
+        if (!analysis) {
+            return statusFilter === 'all' && importanceMinimum === 0 && spamMinimum === 0;
+        }
+        if (statusFilter === 'probably-spam' && analysis.spamScore < 50) {
+            return false;
+        }
+        if (statusFilter === 'probably-not-spam' && analysis.spamScore >= 50) {
+            return false;
+        }
+        return analysis.importanceScore >= importanceMinimum && analysis.spamScore >= spamMinimum;
+    },
+
     /** Compare headers using the requested primary order and deterministic tie breakers. */
     compare(left, right, sortOrder, collator) {
         if (sortOrder === 'sender-asc' || sortOrder === 'sender-desc') {
@@ -102,12 +150,34 @@ const GlobalMailViewService = {
             }
         }
 
+        if (sortOrder.startsWith('importance-') || sortOrder.startsWith('spam-')) {
+            const scoreName = sortOrder.startsWith('importance-') ? 'importanceScore' : 'spamScore';
+            const direction = sortOrder.endsWith('-asc') ? 1 : -1;
+            const scoreResult = this.compareAIScores(left, right, scoreName, direction);
+            if (scoreResult !== 0) {
+                return scoreResult;
+            }
+        }
+
         const dateDirection = sortOrder === 'date-asc' ? 1 : -1;
         const dateResult = this.compareDates(left.date, right.date, dateDirection);
         if (dateResult !== 0) {
             return dateResult;
         }
         return collator.compare(String(left.subject || ''), String(right.subject || ''));
+    },
+
+    /** Compare analyzed scores while consistently placing unanalysed messages last. */
+    compareAIScores(left, right, scoreName, direction) {
+        const leftScore = left.aiAnalysis?.[scoreName];
+        const rightScore = right.aiAnalysis?.[scoreName];
+        if (!Number.isFinite(leftScore)) {
+            return Number.isFinite(rightScore) ? 1 : 0;
+        }
+        if (!Number.isFinite(rightScore)) {
+            return -1;
+        }
+        return (leftScore - rightScore) * direction;
     },
 
     /** Compare valid dates in either direction while always placing invalid dates last. */

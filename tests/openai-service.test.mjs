@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import { createContext, loadScript } from '../test-support/load-script.mjs';
 
-function loadOpenAIService({ model = 'auto', fetchImplementation } = {}) {
+function loadOpenAIService({ model = 'auto', fetchImplementation, responseText = 'Ergebnis' } = {}) {
     const requests = [];
     const context = createContext({
         browser: { i18n: { getUILanguage: () => 'de-DE' } },
@@ -14,7 +14,7 @@ function loadOpenAIService({ model = 'auto', fetchImplementation } = {}) {
                 json: async () => ({
                     output: [{
                         type: 'message',
-                        content: [{ type: 'output_text', text: 'Ergebnis' }]
+                        content: [{ type: 'output_text', text: responseText }]
                     }]
                 })
             };
@@ -49,6 +49,66 @@ test('an explicit supported model overrides task routing', async () => {
 
     assert.equal(requests[0].model, 'gpt-5.6-sol');
     assert.equal(result.content, 'Ergebnis');
+});
+
+test('bulk triage always forces Luna and maps strict percentage scores to message IDs', async () => {
+    const responseText = JSON.stringify([
+        { index: 0, importanceScore: 91, spamScore: 8 },
+        { index: 1, importanceScore: 12, spamScore: 97 }
+    ]);
+    const { service, requests } = loadOpenAIService({
+        model: 'gpt-5.6-sol',
+        responseText
+    });
+
+    const result = await service.analyzeBulkTriage([
+        { id: 17, subject: 'Invoice', author: 'Ada', content: 'Please review.', attachments: [] },
+        { id: 18, subject: 'Prize', author: 'Unknown', content: 'Click now.', attachments: [] }
+    ]);
+
+    assert.equal(requests[0].model, 'gpt-5.6-luna');
+    assert.equal(result.model, 'gpt-5.6-luna');
+    assert.deepEqual(Array.from(result.scores, score => ({
+        messageId: score.messageId,
+        importanceScore: score.importanceScore,
+        spamScore: score.spamScore
+    })), [
+        { messageId: 17, importanceScore: 91, spamScore: 8 },
+        { messageId: 18, importanceScore: 12, spamScore: 97 }
+    ]);
+    assert.equal(result.apiCalls, 1);
+});
+
+test('bulk triage rejects missing or out-of-range score rows', () => {
+    const { service } = loadOpenAIService();
+
+    assert.throws(
+        () => service.parseBulkTriageScores(
+            '[{"index":0,"importanceScore":101,"spamScore":20}]',
+            [{ id: 17 }]
+        ),
+        /gültigen Wichtigkeits/u
+    );
+});
+
+test('bulk triage bounds request batches and preserves message order', async () => {
+    const { service } = loadOpenAIService();
+    const batchSizes = [];
+    service.analyzeBulkTriageBatch = async messages => {
+        batchSizes.push(messages.length);
+        return messages.map(message => ({
+            messageId: message.id,
+            importanceScore: message.id,
+            spamScore: 100 - message.id
+        }));
+    };
+    const messages = Array.from({ length: 9 }, (_value, index) => ({ id: index + 1 }));
+
+    const result = await service.analyzeBulkTriage(messages);
+
+    assert.deepEqual(batchSizes.sort((left, right) => right - left), [8, 1]);
+    assert.deepEqual(Array.from(result.scores, score => score.messageId), [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    assert.equal(result.apiCalls, 2);
 });
 
 test('extractOutputText aggregates message output items safely', () => {

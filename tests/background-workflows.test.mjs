@@ -54,12 +54,25 @@ async function loadBackground() {
         translateMessage: result('translate'),
         extractInfo: result('extract'),
         checkSpam: result('spam'),
+        analyzeBulkTriage: async messages => {
+            serviceCalls.push(`bulk:${messages.length}`);
+            return {
+                scores: messages.map((message, index) => ({
+                    messageId: message.id,
+                    importanceScore: 80 - index,
+                    spamScore: 10 + index
+                })),
+                failedCount: 0,
+                apiCalls: 1,
+                model: 'gpt-5.6-luna'
+            };
+        },
         processChat: result('chat'),
         improveText: result('improve'),
         testConnection: async () => ({ success: true, message: 'ok' })
     };
     context.StorageManager = {
-        updateStatistics: async type => stats.push(type),
+        updateStatistics: async (type, amount = 1) => stats.push(amount === 1 ? type : `${type}:${amount}`),
         getSettings: async () => ({ autoProcess: false }),
         saveSettings: async () => true,
         getAutomaticResult: async () => null,
@@ -122,6 +135,28 @@ test('reply refinement uses the source message and returns an editable reply res
     assert.ok(response.data.actions.some(action => action.type === 'reply'));
     assert.deepEqual(serviceCalls, ['reply-refine']);
     assert.deepEqual(stats, ['email', 'api']);
+});
+
+test('dashboard bulk triage uses the shared background message loader and score contract', async () => {
+    const { ai, config, serviceCalls, stats } = await loadBackground();
+
+    const response = await ai.handleMessage({
+        action: config.ACTIONS.DASHBOARD_BULK_TRIAGE,
+        messageIds: [7, 8, 7]
+    });
+
+    assert.equal(response.success, true);
+    assert.equal(response.data.model, 'gpt-5.6-luna');
+    assert.deepEqual(Array.from(response.data.results, result => ({
+        messageId: result.messageId,
+        importanceScore: result.importanceScore,
+        spamScore: result.spamScore
+    })), [
+        { messageId: 7, importanceScore: 80, spamScore: 10 },
+        { messageId: 8, importanceScore: 79, spamScore: 11 }
+    ]);
+    assert.deepEqual(serviceCalls, ['bulk:2']);
+    assert.deepEqual(stats, ['email:2', 'api']);
 });
 
 test('packaged UI sources contain no unfinished actions or retired models', () => {

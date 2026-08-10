@@ -65,6 +65,8 @@ class ThunderbirdAI {
                     return this.runEmailAction('spam', request.messageId);
                 case CONFIG.ACTIONS.FIND_SIMILAR:
                     return this.findSimilar(request.messageId);
+                case CONFIG.ACTIONS.DASHBOARD_BULK_TRIAGE:
+                    return this.analyzeDashboardMessages(request.messageIds || []);
                 case CONFIG.ACTIONS.CHAT:
                     return this.processChatQuery(
                         request.query,
@@ -138,6 +140,31 @@ class ThunderbirdAI {
             await StorageManager.updateStatistics('api');
         }
         return this.successResult(task, result, messageId);
+    }
+
+    /** Load selected messages once and return Luna-only importance and spam scores. */
+    async analyzeDashboardMessages(messageIds) {
+        const uniqueIds = [...new Set(messageIds)]
+            .filter(messageId => messageId !== undefined && messageId !== null);
+        if (!uniqueIds.length) {
+            return { success: true, data: { results: [], failedCount: 0, model: null } };
+        }
+        const messages = await Promise.all(
+            uniqueIds.map(messageId => MessageService.getFullMessage(messageId))
+        );
+        const analysis = await OpenAIService.analyzeBulkTriage(messages);
+        await StorageManager.updateStatistics('email', analysis.scores.length);
+        if (analysis.apiCalls) {
+            await StorageManager.updateStatistics('api', analysis.apiCalls);
+        }
+        return {
+            success: true,
+            data: {
+                results: analysis.scores,
+                failedCount: analysis.failedCount,
+                model: analysis.model
+            }
+        };
     }
 
     successResult(task, result, messageId) {
