@@ -24,10 +24,10 @@ class ThunderbirdAI {
         try {
             await browser.menus.removeAll();
             const items = [
-                ['ai-summarize', '📄 E-Mail zusammenfassen'],
-                ['ai-categorize', '📂 E-Mail kategorisieren'],
-                ['ai-suggest-reply', '✍️ Antwort vorschlagen'],
-                ['ai-chat', '💬 AI Chat öffnen']
+                ['ai-summarize', I18n.t('contextSummarize')],
+                ['ai-categorize', I18n.t('contextCategorize')],
+                ['ai-suggest-reply', I18n.t('contextReply')],
+                ['ai-chat', I18n.t('contextChat')]
             ];
             for (const [id, title] of items) {
                 await browser.menus.create({ id, title, contexts: ['message_list'] });
@@ -44,6 +44,13 @@ class ThunderbirdAI {
                     return this.runEmailAction('summarize', request.messageId);
                 case CONFIG.ACTIONS.REPLY:
                     return this.runEmailAction('reply', request.messageId, request.context || {});
+                case CONFIG.ACTIONS.REFINE_REPLY:
+                    return this.refineReply(
+                        request.messageId,
+                        request.currentDraft,
+                        request.instruction,
+                        request.history || []
+                    );
                 case CONFIG.ACTIONS.CATEGORIZE:
                     return this.runEmailAction('categorize', request.messageId);
                 case CONFIG.ACTIONS.IMPORTANCE:
@@ -165,6 +172,22 @@ class ThunderbirdAI {
         };
     }
 
+    /** Refine an editable draft against the source email and return the shared result contract. */
+    async refineReply(messageId, currentDraft, instruction, history) {
+        const message = await MessageService.getFullMessage(messageId);
+        const result = await OpenAIService.refineReply(
+            message,
+            currentDraft,
+            instruction,
+            history
+        );
+        await StorageManager.updateStatistics('email');
+        if (result.usedApi) {
+            await StorageManager.updateStatistics('api');
+        }
+        return this.successResult('reply', result, messageId);
+    }
+
     async improveText(text, type) {
         const result = await OpenAIService.improveText(text, type);
         await StorageManager.updateStatistics('api');
@@ -222,22 +245,25 @@ class ThunderbirdAI {
             return;
         }
         try {
-            if (info.menuItemId === 'ai-chat') {
+            const mode = {
+                'ai-chat': 'chat',
+                'ai-suggest-reply': 'reply'
+            }[info.menuItemId];
+            if (mode) {
                 await browser.tabs.create({
-                    url: `${browser.runtime.getURL('single-mail-ui.html')}?messageId=${encodeURIComponent(messageId)}&chat=1`
+                    url: `${browser.runtime.getURL('single-mail-ui.html')}?messageId=${encodeURIComponent(messageId)}&${mode}=1`
                 });
                 return;
             }
             const taskByMenu = {
                 'ai-summarize': 'summarize',
-                'ai-categorize': 'categorize',
-                'ai-suggest-reply': 'reply'
+                'ai-categorize': 'categorize'
             };
             const response = await this.runEmailAction(taskByMenu[info.menuItemId], messageId);
             const preview = response.data.content.replace(/\s+/gu, ' ').slice(0, 220);
             await this.showNotification(response.data.title, preview);
         } catch (error) {
-            await this.showNotification('Fehler', error.message);
+            await this.showNotification(I18n.t('errorTitle'), error.message);
         }
     }
 

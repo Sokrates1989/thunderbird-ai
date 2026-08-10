@@ -4,13 +4,14 @@ const QuickActionsComponent = class {
         this.manager = manager;
         this.container = manager.elements.quickActionsGrid;
         this.buttons = {};
+        const shortcut = key => `${I18n.t('shortcutControl')}+Alt+${key}`;
         this.actions = [
-            { id: 'summarizeBtn', icon: '📄', text: 'Zusammenfassen', shortcut: 'Strg+Alt+S', action: 'SUMMARIZE', className: 'primary', description: 'Erstellt eine Zusammenfassung der E-Mail' },
-            { id: 'replyBtn', icon: '✍️', text: 'Antwort vorschlagen', shortcut: 'Strg+Alt+R', action: 'SUGGEST_REPLY', description: 'Erstellt einen Antwortentwurf' },
-            { id: 'categorizeBtn', icon: '📂', text: 'Kategorisieren', shortcut: 'Strg+Alt+C', action: 'CATEGORIZE', description: 'Analysiert die passende Kategorie' },
-            { id: 'importanceBtn', icon: '⚡', text: 'Wichtigkeit prüfen', action: 'CHECK_IMPORTANCE', description: 'Bewertet die praktische Wichtigkeit' },
-            { id: 'chatBtn', icon: '💬', text: 'AI Chat', action: 'OPEN_CHAT', description: 'Öffnet den Chat zu dieser E-Mail' },
-            { id: 'testBtn', icon: '🧪', text: 'API testen', action: 'TEST', className: 'test', description: 'Testet Schlüssel und Modellauswahl' }
+            { id: 'summarizeBtn', icon: '📄', text: I18n.t('quickSummarize'), shortcut: shortcut('S'), action: 'SUMMARIZE', className: 'primary', description: I18n.t('quickSummarizeDescription') },
+            { id: 'replyBtn', icon: '✍️', text: I18n.t('quickReply'), shortcut: shortcut('R'), action: 'SUGGEST_REPLY', description: I18n.t('quickReplyDescription') },
+            { id: 'categorizeBtn', icon: '📂', text: I18n.t('quickCategorize'), shortcut: shortcut('C'), action: 'CATEGORIZE', description: I18n.t('quickCategorizeDescription') },
+            { id: 'importanceBtn', icon: '⚡', text: I18n.t('quickImportance'), action: 'CHECK_IMPORTANCE', description: I18n.t('quickImportanceDescription') },
+            { id: 'chatBtn', icon: '💬', text: I18n.t('quickChat'), action: 'OPEN_CHAT', description: I18n.t('quickChatDescription') },
+            { id: 'testBtn', icon: '🧪', text: I18n.t('quickTest'), action: 'TEST', className: 'test', description: I18n.t('quickTestDescription') }
         ];
         this.keydownHandler = event => this.handleShortcut(event);
     }
@@ -52,7 +53,6 @@ const QuickActionsComponent = class {
     async executeAction(action) {
         const actions = {
             SUMMARIZE: 'SUMMARIZE_EMAIL',
-            SUGGEST_REPLY: 'SUGGEST_REPLY',
             CATEGORIZE: 'CATEGORIZE_EMAIL',
             CHECK_IMPORTANCE: 'CHECK_IMPORTANCE'
         };
@@ -61,6 +61,9 @@ const QuickActionsComponent = class {
         }
         if (action === 'OPEN_CHAT') {
             return this.manager.openChat();
+        }
+        if (action === 'SUGGEST_REPLY') {
+            return this.manager.openReplyComposer();
         }
         if (action === 'TEST') {
             const response = await this.manager.sendToBackground(CONFIG.ACTIONS.TEST);

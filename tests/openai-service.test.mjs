@@ -76,3 +76,29 @@ test('summary fallback is used only when no API key is configured', async () => 
     assert.equal(result.usedApi, false);
     assert.match(result.content, /Erster Satz/);
 });
+
+test('reply refinement sends the current draft and only prior operator requests', async () => {
+    const { service, requests } = loadOpenAIService();
+
+    await service.refineReply(
+        {
+            subject: 'Termin',
+            author: 'Ada',
+            content: 'Passt Dienstag um zehn Uhr?',
+            attachments: []
+        },
+        'Hallo Ada, Dienstag passt.',
+        'Bitte bestätige auch die Uhrzeit.',
+        [
+            { role: 'user', content: 'Freundlicher formulieren' },
+            { role: 'assistant', content: 'Alter vollständiger Entwurf' }
+        ]
+    );
+
+    assert.equal(requests[0].model, 'gpt-5.6-terra');
+    assert.match(requests[0].input, /Hallo Ada, Dienstag passt\./u);
+    assert.match(requests[0].input, /Bitte bestätige auch die Uhrzeit\./u);
+    assert.match(requests[0].input, /Freundlicher formulieren/u);
+    assert.doesNotMatch(requests[0].input, /Alter vollständiger Entwurf/u);
+    assert.equal(requests[0].store, false);
+});

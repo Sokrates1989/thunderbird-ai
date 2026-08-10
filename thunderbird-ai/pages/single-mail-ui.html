@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Assistant</title>
     <link rel="stylesheet" href="single-mail-ui.css">
+    <link rel="stylesheet" href="reply-composer.css">
 </head>
 <body>
     <div class="container">
         <!-- Header Section -->
         <div class="header">
             <h1>🤖 AI Assistant</h1>
-            <div class="subtitle" id="emailSubject">E-Mail wird geladen...</div>
+            <div class="subtitle" id="emailSubject"></div>
+            <div class="addon-version" id="addonVersion"></div>
         </div>
 
         <!-- Quick Actions Section -->
@@ -102,6 +104,7 @@
     <script src="LoadingComponent.js"></script>
     <script src="ErrorDialogComponent.js"></script>
     <script src="ChatComponent.js"></script>
+    <script src="ReplyComposerComponent.js"></script>
     
     <!-- Load main manager (flattened path) -->
     <script src="SingleMailManager.js"></script>

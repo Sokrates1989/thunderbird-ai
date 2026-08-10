@@ -29,6 +29,7 @@ const SingleMailManager = class {
         this.components.loading = new LoadingComponent(this);
         this.components.errorDialog = new ErrorDialogComponent(this);
         this.components.chat = new ChatComponent(this);
+        this.components.replyComposer = new ReplyComposerComponent(this);
     }
 
     async initialize() {
@@ -46,7 +47,10 @@ const SingleMailManager = class {
             this.isInitialized = true;
             this.log('SingleMailManager initialized successfully', 'success');
 
-            if (new URLSearchParams(window.location.search).get('chat') === '1') {
+            const parameters = new URLSearchParams(window.location.search);
+            if (parameters.get('reply') === '1') {
+                await this.openReplyComposer();
+            } else if (parameters.get('chat') === '1') {
                 this.openChat();
             }
         } catch (error) {
@@ -160,6 +164,26 @@ const SingleMailManager = class {
             return;
         }
         this.components.chat.open();
+    }
+
+    /** Open the durable reply workspace in a Thunderbird tab, with an in-page fallback. */
+    async openReplyComposer() {
+        if (this.emailId === undefined || this.emailId === null) {
+            this.showError(I18n.t('messageNotFound'));
+            return;
+        }
+        const parameters = new URLSearchParams(window.location.search);
+        if (parameters.get('reply') !== '1') {
+            try {
+                await browser.tabs.create({
+                    url: `${browser.runtime.getURL('single-mail-ui.html')}?messageId=${encodeURIComponent(this.emailId)}&reply=1`
+                });
+                return;
+            } catch (error) {
+                this.log(`Could not open reply workspace tab: ${error.message}`, 'warning');
+            }
+        }
+        await this.components.replyComposer.open();
     }
 
     showLoading(show) {

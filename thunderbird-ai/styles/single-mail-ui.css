@@ -31,6 +31,12 @@ body {
     margin-top: 5px;
 }
 
+.header .addon-version {
+    margin-top: 4px;
+    color: #777;
+    font-size: 11px;
+}
+
 .section {
     margin-bottom: 20px;
 }

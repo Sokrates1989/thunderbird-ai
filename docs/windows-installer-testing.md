@@ -1,7 +1,7 @@
 # Windows-Installer testen
 
 Das primäre Windows-Artefakt heißt
-`Thunderbird-AI-Setup-1.1.0-win-x64.exe`. Es installiert das Add-on nur für den
+`Thunderbird-AI-Setup-1.2.0-win-x64.exe`. Es installiert das Add-on nur für den
 aktuellen Benutzer und benötigt keine Administratorrechte.
 
 ## Automatisierter Isolationstest
@@ -31,7 +31,7 @@ beendet oder gestartet.
 5. Prüfen, dass **Thunderbird AI Assistant** unter Add-ons erscheint und die
    vorhandenen API-Einstellungen erhalten geblieben sind.
 6. Eine E-Mail öffnen, die Zusammenfassung ausführen und den API-Test in den
-   Einstellungen aufrufen.
+   Einstellungen aufrufen. Im Popup muss **Version 1.2.0** stehen.
 7. Den Installer erneut ausführen und kontrollieren, dass das Update ohne
    vorherige Deinstallation funktioniert.
 8. Über Windows **Installierte Apps** deinstallieren und nach einem

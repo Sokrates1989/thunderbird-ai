@@ -21,7 +21,8 @@ const HeaderComponent = class {
         this.manager = manager;
         this.elements = {
             title: document.querySelector('.header h1'),
-            subtitle: document.getElementById('emailSubject')
+            subtitle: document.getElementById('emailSubject'),
+            version: document.getElementById('addonVersion')
         };
     }
 
@@ -34,7 +35,12 @@ const HeaderComponent = class {
      * this.initialize();
      */
     initialize() {
-        // Component is ready, no additional setup needed
+        document.title = CONFIG.ADDON_NAME;
+        this.elements.title.textContent = I18n.t('appTitle');
+        this.elements.subtitle.textContent = I18n.t('emailLoading');
+        this.elements.version.textContent = I18n.t('versionLabel', {
+            version: CONFIG.ADDON_VERSION
+        });
     }
 
     /**
@@ -48,7 +54,7 @@ const HeaderComponent = class {
      */
     updateEmailSubject(subject) {
         if (this.elements.subtitle) {
-            this.elements.subtitle.textContent = subject || 'E-Mail wird geladen...';
+            this.elements.subtitle.textContent = subject || I18n.t('emailLoading');
         }
     }
 
@@ -64,7 +70,7 @@ const HeaderComponent = class {
     showLoading(loading) {
         if (this.elements.subtitle) {
             if (loading) {
-                this.elements.subtitle.textContent = 'Lade E-Mail...';
+                this.elements.subtitle.textContent = I18n.t('emailLoadingShort');
             }
         }
     }
@@ -87,4 +93,4 @@ const HeaderComponent = class {
  */
 if (typeof window !== 'undefined') {
     window.HeaderComponent = HeaderComponent;
-} 
+}

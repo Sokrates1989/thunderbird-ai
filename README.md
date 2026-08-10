@@ -5,7 +5,7 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 ## Funktionen
 
 - Zusammenfassung des tatsächlichen Nachrichtentexts aus dem dekodierten MIME-Baum
-- Antwortvorschläge mit Übergabe an einen neuen Thunderbird-Antwortentwurf
+- iterativer Antworteditor mit AI-Überarbeitung, direkter Textbearbeitung und Übergabe an einen neuen Thunderbird-Antwortentwurf
 - Kategorie- und Wichtigkeitsanalyse
 - Übersetzung nach Deutsch, Englisch, Französisch oder Spanisch
 - Extraktion von Kontakten, Terminen, Beträgen, Referenzen und Aufgaben
@@ -27,13 +27,13 @@ Alternativ kann Luna, Terra oder `gpt-5.6-sol` für alle Aufgaben fest ausgewäh
 
 ## Datenschutz
 
-Bei AI-Aktionen werden Betreff, Absender, Nachrichtentext und Namen erkannter Anhänge direkt von Thunderbird an die OpenAI API gesendet. Die Suche nach ähnlichen Nachrichten läuft ausschließlich lokal. Automatische Verarbeitung ist standardmäßig deaktiviert.
+Bei AI-Aktionen werden Betreff, Absender, Nachrichtentext und Namen erkannter Anhänge direkt von Thunderbird an die OpenAI API gesendet. Beim Verbessern eines Antwortentwurfs werden außerdem der aktuelle Entwurf und die letzten Änderungswünsche übertragen. Die Suche nach ähnlichen Nachrichten läuft ausschließlich lokal. Automatische Verarbeitung ist standardmäßig deaktiviert.
 
 Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speicher des Thunderbird-Profils. Für eine breitere Veröffentlichung sollte zusätzlich geprüft werden, ob dieses Sicherheitsmodell den eigenen Anforderungen entspricht.
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-1.1.0-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-1.2.0-win-x64.exe` herunterladen und starten.
 2. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 3. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung bestätigen.
 4. Unter **Einstellungen** den OpenAI API-Schlüssel eintragen, **Automatisch (empfohlen)** wählen, die Verbindung testen und speichern.
@@ -60,20 +60,24 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-1.1.0-win-x64.exe`
+- `artifacts\Thunderbird-AI-Setup-1.2.0-win-x64.exe`
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
 ## Manueller Funktionstest
 
 1. Eine reine Text-E-Mail und eine HTML-E-Mail öffnen und jeweils **Zusammenfassen** ausführen.
-2. **Antwort vorschlagen** ausführen und **Als Antwort verwenden** anklicken; ein vorausgefüllter Thunderbird-Entwurf muss erscheinen.
-3. Kategorie, Wichtigkeit, Übersetzung, Extraktion und Spam-Prüfung ausführen.
-4. **Ähnliche finden** prüfen; diese Aktion benötigt keinen OpenAI-Aufruf.
-5. Beide **AI Chat**-Schaltflächen testen.
-6. Das Ergebnis kopieren und lokal speichern.
-7. Unter **Einstellungen** jedes Modell testen; anschließend **Automatisch** speichern.
-8. Optional die automatische Verarbeitung aktivieren, eine andere E-Mail öffnen und das Popup erneut öffnen. Die automatische Analyse muss angezeigt werden.
+2. **Antwort vorschlagen** ausführen; ein eigener Thunderbird-Tab muss den ersten, direkt bearbeitbaren Entwurf anzeigen.
+3. Einen Änderungswunsch eingeben und **Entwurf verbessern** anklicken. Der bisherige Chat muss sichtbar bleiben und der aktuelle Entwurf aktualisiert werden.
+4. Den Entwurf zusätzlich von Hand ändern und **In Thunderbird vorbereiten** anklicken. Ein vorausgefüllter Antwortentwurf muss erscheinen; bei einem Compose-Fehler muss der aktuelle Text stattdessen in die Zwischenablage kopiert werden.
+5. Kategorie, Wichtigkeit, Übersetzung, Extraktion und Spam-Prüfung ausführen.
+6. **Ähnliche finden** prüfen; diese Aktion benötigt keinen OpenAI-Aufruf.
+7. Beide **AI Chat**-Schaltflächen testen.
+8. Das Ergebnis kopieren und lokal speichern.
+9. Unter **Einstellungen** jedes Modell testen; anschließend **Automatisch** speichern.
+10. Optional die automatische Verarbeitung aktivieren, eine andere E-Mail öffnen und das Popup erneut öffnen. Die automatische Analyse muss angezeigt werden.
+
+Im Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 1.2.0** stehen.
 
 ## Technische Struktur
 

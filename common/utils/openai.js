@@ -69,6 +69,40 @@ const OpenAIService = {
         ].join('\n'));
     },
 
+    /** Revise the current operator-edited draft while keeping the original email as context. */
+    async refineReply(message, currentDraft, instruction, history = []) {
+        if (!message?.content) {
+            throw new Error(I18n.t('emptyMessage'));
+        }
+        const draft = String(currentDraft || '').trim();
+        const requestedChange = String(instruction || '').trim();
+        if (!draft) {
+            throw new Error(I18n.t('replyEmptyDraft'));
+        }
+        if (!requestedChange) {
+            throw new Error(I18n.t('replyRefinementRequired'));
+        }
+
+        const clippedDraft = draft.slice(0, CONFIG.OPENAI.MAX_REPLY_DRAFT_CHARACTERS);
+        const clippedInstruction = requestedChange.slice(0, CONFIG.OPENAI.MAX_REPLY_INSTRUCTION_CHARACTERS);
+        const previousRequests = history
+            .filter(entry => entry?.role === 'user' && typeof entry.content === 'string')
+            .slice(-4)
+            .map(entry => entry.content.trim().slice(0, 1000))
+            .filter(Boolean);
+        return this.request('replyRefine', {
+            instructions: this.baseInstructions(I18n.t('replyRefinePrompt')),
+            input: [
+                this.formatEmailContext(message),
+                previousRequests.length
+                    ? `<previous-operator-requests>\n${previousRequests.join('\n')}\n</previous-operator-requests>`
+                    : '',
+                `<current-reply-draft>\n${clippedDraft}\n</current-reply-draft>`,
+                `<latest-operator-request>\n${clippedInstruction}\n</latest-operator-request>`
+            ].filter(Boolean).join('\n\n')
+        });
+    },
+
     async categorizeEmail(message) {
         return this.runEmailTask('categorize', message, [
             'Ordne die E-Mail genau einer Kategorie zu: Geschäftlich, Persönlich, Newsletter, Rechnung, Support, Spam, Wichtig oder Archiv/Referenz.',
