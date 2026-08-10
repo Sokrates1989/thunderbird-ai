@@ -6,6 +6,7 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 
 - Zusammenfassung des tatsächlichen Nachrichtentexts aus dem dekodierten MIME-Baum
 - iterativer Antworteditor mit AI-Überarbeitung, direkter Textbearbeitung und Übergabe an einen neuen Thunderbird-Antwortentwurf
+- persistente Antwortoptionen für Originalzitat, „Allen antworten“ und erneutes Anhängen der ursprünglichen Dateien
 - Kategorie- und Wichtigkeitsanalyse
 - Übersetzung nach Deutsch, Englisch, Französisch oder Spanisch
 - Extraktion von Kontakten, Terminen, Beträgen, Referenzen und Aufgaben
@@ -34,7 +35,7 @@ Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speic
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-1.3.0-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-1.4.0-win-x64.exe` herunterladen und starten.
 2. Im Setup **Deutsch** oder **English** wählen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung bestätigen.
@@ -62,7 +63,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-1.3.0-win-x64.exe`
+- `artifacts\Thunderbird-AI-Setup-1.4.0-win-x64.exe`
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
@@ -71,16 +72,19 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 1. Eine reine Text-E-Mail und eine HTML-E-Mail öffnen und jeweils **Zusammenfassen** ausführen.
 2. **Antwort vorschlagen** ausführen; ein eigener Thunderbird-Tab muss den ersten, direkt bearbeitbaren Entwurf anzeigen.
 3. Einen Änderungswunsch eingeben und **Entwurf verbessern** anklicken. Der bisherige Chat muss sichtbar bleiben und der aktuelle Entwurf aktualisiert werden.
-4. Den Entwurf zusätzlich von Hand ändern und **In Thunderbird vorbereiten** anklicken. Ein vorausgefüllter Antwortentwurf muss erscheinen; bei einem Compose-Fehler muss der aktuelle Text stattdessen in die Zwischenablage kopiert werden.
-5. Kategorie, Wichtigkeit, Übersetzung, Extraktion und Spam-Prüfung ausführen.
-6. **Ähnliche finden** prüfen; diese Aktion benötigt keinen OpenAI-Aufruf.
-7. Beide **AI Chat**-Schaltflächen testen.
-8. Das Ergebnis kopieren und lokal speichern.
-9. Unter **Einstellungen** jedes Modell testen; anschließend **Automatisch** speichern.
-10. Die Oberflächensprache auf **English** umstellen und Popup, Antworteditor, Einstellungen und Hilfe prüfen. Danach zurück auf **Deutsch** wechseln. Alle sichtbaren Texte und Meldungen müssen der Auswahl folgen.
-11. Optional die automatische Verarbeitung aktivieren, eine andere E-Mail öffnen und das Popup erneut öffnen. Die automatische Analyse muss angezeigt werden.
+4. Die drei Antwortoptionen in ihren Standardwerten prüfen: Originalnachricht und **Allen antworten** aktiviert, ursprüngliche Anhänge deaktiviert.
+5. Den Entwurf zusätzlich von Hand ändern und **In Thunderbird vorbereiten** anklicken. Der neue Antwortentwurf muss an alle Teilnehmer adressiert sein, den AI-Text vor dem nativen Thunderbird-Zitat enthalten und keine ursprünglichen Anhänge besitzen.
+6. Den Antworteditor erneut öffnen, alle drei Optionen umschalten und wieder vorbereiten. Der Entwurf muss nur an den Absender gehen, kein Originalzitat enthalten und alle ursprünglichen Anhänge besitzen. Beim nächsten Öffnen müssen diese Werte vorausgewählt bleiben.
+7. Bei einem Compose-Fehler muss der aktuelle Text stattdessen in die Zwischenablage kopiert werden.
+8. Kategorie, Wichtigkeit, Übersetzung, Extraktion und Spam-Prüfung ausführen.
+9. **Ähnliche finden** prüfen; diese Aktion benötigt keinen OpenAI-Aufruf.
+10. Beide **AI Chat**-Schaltflächen testen.
+11. Das Ergebnis kopieren und lokal speichern.
+12. Unter **Einstellungen** jedes Modell testen; anschließend **Automatisch** speichern.
+13. Die Oberflächensprache auf **English** umstellen und Popup, Antworteditor, Einstellungen und Hilfe prüfen. Danach zurück auf **Deutsch** wechseln. Alle sichtbaren Texte und Meldungen müssen der Auswahl folgen.
+14. Optional die automatische Verarbeitung aktivieren, eine andere E-Mail öffnen und das Popup erneut öffnen. Die automatische Analyse muss angezeigt werden.
 
-Im Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 1.3.0** stehen.
+Im Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 1.4.0** stehen.
 
 ## Technische Struktur
 

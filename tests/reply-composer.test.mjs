@@ -36,18 +36,41 @@ function replyComponentElements(draft) {
         refine: interactiveElement(),
         prepare: interactiveElement(),
         copy: interactiveElement(),
+        includeOriginal: { checked: true, disabled: false },
+        replyToAll: { checked: true, disabled: false },
+        includeAttachments: { checked: false, disabled: false },
         messages: messageList(),
         status: { dataset: {}, textContent: '' }
     };
 }
 
-function loadReplyUi({ beginReply, writeText }) {
+function loadReplyUi({
+    addAttachment = async () => {},
+    beginReply = async () => ({ id: 7 }),
+    getAttachmentFile = async (_messageId, partName) => ({ name: partName }),
+    getComposeDetails = async () => ({ isPlainText: true, plainTextBody: '> Original' }),
+    listAttachments = async () => [],
+    setComposeDetails = async () => {},
+    stored = {},
+    writeText = async () => {}
+} = {}) {
     const statusUpdates = [];
     const logs = [];
+    const storageState = { ...stored };
     const context = createContext({
         browser: {
             i18n: { getUILanguage: () => 'de-DE' },
-            compose: { beginReply }
+            compose: { addAttachment, beginReply, getComposeDetails, setComposeDetails },
+            messages: { getAttachmentFile, listAttachments },
+            storage: {
+                local: {
+                    get: async keys => Object.fromEntries(
+                        keys.filter(key => Object.hasOwn(storageState, key))
+                            .map(key => [key, storageState[key]])
+                    ),
+                    set: async values => Object.assign(storageState, values)
+                }
+            }
         },
         document: {
             createElement: () => ({
@@ -61,7 +84,9 @@ function loadReplyUi({ beginReply, writeText }) {
     loadScript(context, 'thunderbird-ai/config/locale-de.js');
     loadScript(context, 'thunderbird-ai/config/locale-en.js');
     loadScript(context, 'thunderbird-ai/config/constants.js');
+    loadScript(context, 'common/utils/storage.js');
     loadScript(context, 'thunderbird-ai/components/single-mail/QuickActionsComponent.js');
+    loadScript(context, 'thunderbird-ai/components/single-mail/ReplyPreparationService.js');
     loadScript(context, 'thunderbird-ai/components/single-mail/ReplyComposerComponent.js');
     const manager = {
         emailId: 42,
@@ -70,7 +95,7 @@ function loadReplyUi({ beginReply, writeText }) {
         showError() {},
         updateStatus: (message, level) => statusUpdates.push({ message, level })
     };
-    return { context, logs, manager, statusUpdates };
+    return { context, logs, manager, statusUpdates, storageState };
 }
 
 test('German and English UI catalogs expose the same keys', () => {
@@ -116,7 +141,7 @@ test('explicit language selection changes text and every static page key resolve
         path.join(repositoryRoot, 'thunderbird-ai/install-defaults.json'),
         'utf8'
     ));
-    assert.deepEqual(defaults, { language: 'auto', version: '1.3.0' });
+    assert.deepEqual(defaults, { language: 'auto', version: '1.4.0' });
 });
 
 test('Thunderbird manifest localization has German and English key parity', () => {
@@ -212,8 +237,8 @@ test('compose failure copies the edited draft and keeps it visible', async () =>
 
     assert.equal(composeCalls.length, 1);
     assert.equal(composeCalls[0][0], 42);
-    assert.equal(composeCalls[0][1], 'replyToSender');
-    assert.equal(composeCalls[0][2].plainTextBody, 'Bearbeiteter Antworttext');
+    assert.equal(composeCalls[0][1], 'replyToAll');
+    assert.equal(composeCalls[0].length, 2);
     assert.deepEqual(clipboardWrites, ['Bearbeiteter Antworttext']);
     assert.match(component.elements.status.textContent, /Zwischenablage/u);
     assert.equal(component.elements.overlay.hidden, false);
@@ -222,9 +247,18 @@ test('compose failure copies the edited draft and keeps it visible', async () =>
 
 test('successful hand-off opens a native reply and closes the editor', async () => {
     const composeCalls = [];
+    const composeUpdates = [];
     const clipboardWrites = [];
     const { context, manager, statusUpdates } = loadReplyUi({
-        beginReply: async (...args) => composeCalls.push(args),
+        beginReply: async (...args) => {
+            composeCalls.push(args);
+            return { id: 17 };
+        },
+        getComposeDetails: async () => ({
+            isPlainText: true,
+            plainTextBody: '> Zitierte ursprüngliche Nachricht'
+        }),
+        setComposeDetails: async (...args) => composeUpdates.push(args),
         writeText: async value => clipboardWrites.push(value)
     });
     const component = new context.ReplyComposerComponent(manager);
@@ -233,8 +267,102 @@ test('successful hand-off opens a native reply and closes the editor', async () 
     await component.prepare();
 
     assert.equal(composeCalls.length, 1);
-    assert.equal(composeCalls[0][2].plainTextBody, 'Sendefertiger Antworttext');
+    assert.equal(composeCalls[0][1], 'replyToAll');
+    assert.equal(composeUpdates.length, 1);
+    assert.equal(composeUpdates[0][0], 17);
+    assert.equal(
+        composeUpdates[0][1].plainTextBody,
+        'Sendefertiger Antworttext\n\n> Zitierte ursprüngliche Nachricht'
+    );
     assert.deepEqual(clipboardWrites, []);
     assert.equal(component.elements.overlay.hidden, true);
     assert.equal(statusUpdates.at(-1).level, 'success');
+});
+
+test('HTML replies escape the AI draft and preserve Thunderbird native content', async () => {
+    const composeUpdates = [];
+    const { context, manager } = loadReplyUi({
+        getComposeDetails: async () => ({
+            isPlainText: false,
+            body: '<blockquote>Original &amp; signature</blockquote>'
+        }),
+        setComposeDetails: async (...args) => composeUpdates.push(args)
+    });
+    const component = new context.ReplyComposerComponent(manager);
+    component.elements = replyComponentElements('Hallo <Team>\nDanke & bis bald.');
+
+    await component.prepare();
+
+    assert.equal(
+        composeUpdates[0][1].body,
+        '<div>Hallo &lt;Team&gt;<br>Danke &amp; bis bald.</div><br><blockquote>Original &amp; signature</blockquote>'
+    );
+});
+
+test('reply options persist and become the defaults for the next session', async () => {
+    const { context, manager, storageState } = loadReplyUi({
+        stored: {
+            replyIncludeOriginal: false,
+            replyToAll: false,
+            replyIncludeAttachments: true
+        }
+    });
+    const component = new context.ReplyComposerComponent(manager);
+    component.elements = replyComponentElements('Antwort');
+
+    await component.loadReplyPreferences();
+    assert.equal(component.elements.includeOriginal.checked, false);
+    assert.equal(component.elements.replyToAll.checked, false);
+    assert.equal(component.elements.includeAttachments.checked, true);
+
+    component.elements.includeOriginal.checked = true;
+    component.elements.replyToAll.checked = true;
+    component.elements.includeAttachments.checked = false;
+    await component.saveReplyPreferences();
+
+    assert.equal(storageState.replyIncludeOriginal, true);
+    assert.equal(storageState.replyToAll, true);
+    assert.equal(storageState.replyIncludeAttachments, false);
+});
+
+test('sender-only reply can omit the quote and reattach every source attachment', async () => {
+    const composeCalls = [];
+    const composeUpdates = [];
+    const attachmentAdds = [];
+    const sourceAttachments = [
+        { name: 'invoice.pdf', partName: '1.2' },
+        { name: 'photo.jpg', partName: '1.3' }
+    ];
+    const { context, manager } = loadReplyUi({
+        beginReply: async (...args) => {
+            composeCalls.push(args);
+            return { id: 23 };
+        },
+        getComposeDetails: async () => ({
+            isPlainText: true,
+            plainTextBody: '> Must not be retained'
+        }),
+        setComposeDetails: async (...args) => composeUpdates.push(args),
+        listAttachments: async () => sourceAttachments,
+        getAttachmentFile: async (_messageId, partName) => ({ name: `${partName}.bin` }),
+        addAttachment: async (...args) => attachmentAdds.push(args)
+    });
+    const component = new context.ReplyComposerComponent(manager);
+    component.elements = replyComponentElements('Nur die neue Antwort');
+    component.elements.includeOriginal.checked = false;
+    component.elements.replyToAll.checked = false;
+    component.elements.includeAttachments.checked = true;
+
+    await component.prepare();
+
+    assert.equal(composeCalls[0][1], 'replyToSender');
+    assert.equal(composeCalls[0][2].plainTextBody, 'Nur die neue Antwort');
+    assert.equal(composeUpdates.length, 0);
+    assert.equal(attachmentAdds.length, 2);
+    assert.equal(attachmentAdds[0][0], 23);
+    assert.equal(attachmentAdds[0][1].file.name, '1.2.bin');
+    assert.equal(attachmentAdds[0][1].name, 'invoice.pdf');
+    assert.equal(attachmentAdds[1][0], 23);
+    assert.equal(attachmentAdds[1][1].file.name, '1.3.bin');
+    assert.equal(attachmentAdds[1][1].name, 'photo.jpg');
 });

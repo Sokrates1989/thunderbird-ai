@@ -37,6 +37,12 @@ const ReplyComposerComponent = class {
                     <button type="button" class="reply-composer-refine">${I18n.t('replyRefine')}</button>
                 </div>
                 <p class="reply-composer-status" role="status" aria-live="polite"></p>
+                <fieldset class="reply-composer-options">
+                    <legend>${I18n.t('replyOptionsHeading')}</legend>
+                    <label><input type="checkbox" class="reply-include-original" checked> ${I18n.t('replyIncludeOriginal')}</label>
+                    <label><input type="checkbox" class="reply-to-all" checked> ${I18n.t('replyToAll')}</label>
+                    <label><input type="checkbox" class="reply-include-attachments"> ${I18n.t('replyIncludeAttachments')}</label>
+                </fieldset>
                 <div class="reply-composer-actions">
                     <button type="button" class="reply-composer-copy">${I18n.t('replyCopy')}</button>
                     <button type="button" class="reply-composer-prepare">${I18n.t('replyPrepare')}</button>
@@ -52,7 +58,10 @@ const ReplyComposerComponent = class {
             prepare: overlay.querySelector('.reply-composer-prepare'),
             copy: overlay.querySelector('.reply-composer-copy'),
             close: overlay.querySelector('.reply-composer-close'),
-            status: overlay.querySelector('.reply-composer-status')
+            status: overlay.querySelector('.reply-composer-status'),
+            includeOriginal: overlay.querySelector('.reply-include-original'),
+            replyToAll: overlay.querySelector('.reply-to-all'),
+            includeAttachments: overlay.querySelector('.reply-include-attachments')
         };
         this.elements.close.addEventListener('click', () => this.close());
         this.elements.refine.addEventListener('click', () => {
@@ -70,6 +79,13 @@ const ReplyComposerComponent = class {
                 this.refine().catch(error => this.reportUnexpected(error, 'replyRefineFailed'));
             }
         });
+        for (const option of this.replyOptionElements()) {
+            option.addEventListener('change', () => {
+                this.saveReplyPreferences().catch(error => {
+                    this.reportUnexpected(error, 'replyPreferencesSaveFailed');
+                });
+            });
+        }
         document.addEventListener('keydown', this.keydownHandler);
     }
 
@@ -82,6 +98,7 @@ const ReplyComposerComponent = class {
         this.setBusy(true);
 
         try {
+            await this.loadReplyPreferences();
             const response = await this.manager.sendToBackground(CONFIG.ACTIONS.REPLY, {
                 messageId: this.manager.emailId
             });
@@ -185,13 +202,24 @@ const ReplyComposerComponent = class {
         }
 
         const sessionId = this.sessionId;
+        const preferences = this.getReplyPreferences();
         this.setBusy(true);
         try {
-            await browser.compose.beginReply(this.manager.emailId, 'replyToSender', {
-                plainTextBody: draft
-            });
+            const attachmentResult = await ReplyPreparationService.prepare(
+                this.manager.emailId,
+                draft,
+                preferences,
+                message => this.manager.log(message, 'error')
+            );
             if (sessionId === this.sessionId) {
-                this.manager.updateStatus(I18n.t('replyOpened'), 'success');
+                const attachmentsFailed = attachmentResult.failed === null;
+                const attachmentsIncomplete = attachmentsFailed || attachmentResult.failed > 0;
+                const status = attachmentsFailed
+                    ? I18n.t('replyAttachmentsFailed')
+                    : attachmentResult.failed > 0
+                        ? I18n.t('replyAttachmentsPartial', { failed: attachmentResult.failed })
+                        : I18n.t('replyOpened');
+                this.manager.updateStatus(status, attachmentsIncomplete ? 'warning' : 'success');
                 this.close();
             }
         } catch (composeError) {
@@ -212,6 +240,52 @@ const ReplyComposerComponent = class {
             if (sessionId === this.sessionId) {
                 this.setBusy(false);
             }
+        }
+    }
+
+    getReplyPreferences() {
+        return {
+            includeOriginal: this.elements.includeOriginal.checked,
+            replyToAll: this.elements.replyToAll.checked,
+            includeAttachments: this.elements.includeAttachments.checked
+        };
+    }
+
+    replyOptionElements() {
+        return [
+            this.elements.includeOriginal,
+            this.elements.replyToAll,
+            this.elements.includeAttachments
+        ].filter(Boolean);
+    }
+
+    async loadReplyPreferences() {
+        const keys = [
+            CONFIG.STORAGE_KEYS.REPLY_INCLUDE_ORIGINAL,
+            CONFIG.STORAGE_KEYS.REPLY_TO_ALL,
+            CONFIG.STORAGE_KEYS.REPLY_INCLUDE_ATTACHMENTS
+        ];
+        const stored = await StorageManager.getMultiple(keys);
+        this.elements.includeOriginal.checked = typeof stored[keys[0]] === 'boolean'
+            ? stored[keys[0]]
+            : true;
+        this.elements.replyToAll.checked = typeof stored[keys[1]] === 'boolean'
+            ? stored[keys[1]]
+            : true;
+        this.elements.includeAttachments.checked = typeof stored[keys[2]] === 'boolean'
+            ? stored[keys[2]]
+            : false;
+    }
+
+    async saveReplyPreferences() {
+        const preferences = this.getReplyPreferences();
+        const saved = await StorageManager.setMultiple({
+            [CONFIG.STORAGE_KEYS.REPLY_INCLUDE_ORIGINAL]: preferences.includeOriginal,
+            [CONFIG.STORAGE_KEYS.REPLY_TO_ALL]: preferences.replyToAll,
+            [CONFIG.STORAGE_KEYS.REPLY_INCLUDE_ATTACHMENTS]: preferences.includeAttachments
+        });
+        if (!saved) {
+            throw new Error('Could not persist reply preferences.');
         }
     }
 
@@ -243,6 +317,9 @@ const ReplyComposerComponent = class {
         this.elements.refine.disabled = busy || !hasDraft;
         this.elements.prepare.disabled = busy || !hasDraft;
         this.elements.copy.disabled = busy || !hasDraft;
+        for (const option of this.replyOptionElements()) {
+            option.disabled = busy;
+        }
     }
 
     setStatus(message, type = 'info') {

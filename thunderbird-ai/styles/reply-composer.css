@@ -97,6 +97,34 @@
     color: #666;
 }
 
+.reply-composer-options {
+    display: grid;
+    gap: 7px;
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid #c8cdd2;
+    border-radius: 6px;
+}
+
+.reply-composer-options legend {
+    padding: 0 4px;
+    color: #333;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.reply-composer-options label {
+    display: flex;
+    gap: 7px;
+    align-items: flex-start;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.reply-composer-options input {
+    margin: 2px 0 0;
+}
+
 .reply-composer-refine,
 .reply-composer-copy,
 .reply-composer-prepare {
