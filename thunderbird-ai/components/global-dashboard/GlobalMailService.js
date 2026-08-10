@@ -50,6 +50,15 @@ const GlobalMailService = {
         await browser.messages.delete(uniqueIds, false);
     },
 
+    /** Archive every unique message through its Thunderbird account and identity settings. */
+    async archiveMessages(messageIds) {
+        const uniqueIds = [...new Set(messageIds)].filter(id => id !== undefined && id !== null);
+        if (!uniqueIds.length) {
+            return;
+        }
+        await browser.messages.archive(uniqueIds);
+    },
+
     /** Mark every unique message as read while isolating individual update failures. */
     async markAsRead(messageIds) {
         const uniqueIds = [...new Set(messageIds)].filter(id => id !== undefined && id !== null);

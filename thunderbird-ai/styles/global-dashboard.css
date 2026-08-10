@@ -427,6 +427,11 @@ body {
     background: #2e7d32;
 }
 
+.dashboard-bulk-actions .dashboard-archive,
+.dashboard-message-action.archive {
+    background: #526d82;
+}
+
 .dashboard-bulk-actions .dashboard-danger-action,
 .dashboard-message-action.danger {
     background: #b42318;

@@ -29,6 +29,7 @@ const GlobalDashboardManager = class {
             analyzeSelected: document.getElementById('dashboardAnalyzeSelected'),
             rescoreSelected: document.getElementById('dashboardRescoreSelected'),
             markReadSelected: document.getElementById('dashboardMarkReadSelected'),
+            archiveSelected: document.getElementById('dashboardArchiveSelected'),
             loadingIndicator: document.getElementById('dashboardLoadingIndicator'),
             loadingText: document.getElementById('dashboardLoadingText'),
             trashSelected: document.getElementById('dashboardTrashSelected')
@@ -76,6 +77,9 @@ const GlobalDashboardManager = class {
             onMarkRead: message => {
                 this.markOneAsRead(message).catch(error => this.showUnexpectedError(error));
             },
+            onArchive: message => {
+                this.archiveOne(message).catch(error => this.showUnexpectedError(error));
+            },
             onTrash: message => {
                 this.trashOne(message).catch(error => this.showUnexpectedError(error));
             }
@@ -120,6 +124,9 @@ const GlobalDashboardManager = class {
         });
         this.elements.markReadSelected.addEventListener('click', () => {
             this.markSelectedAsRead().catch(error => this.showUnexpectedError(error));
+        });
+        this.elements.archiveSelected.addEventListener('click', () => {
+            this.archiveSelected().catch(error => this.showUnexpectedError(error));
         });
         this.elements.analyzeSelected.addEventListener('click', () => {
             this.analyzeSelected().catch(error => this.showUnexpectedError(error));
@@ -562,6 +569,36 @@ const GlobalDashboardManager = class {
         }
     }
 
+    /** Archive one directly targeted message without an unnecessary confirmation. */
+    async archiveOne(message) {
+        await this.performArchive([message.id], 'dashboardArchiveOneSuccess');
+    }
+
+    /** Archive all selected visible messages using each account's Thunderbird settings. */
+    async archiveSelected() {
+        const messageIds = [...this.selectedMessageIds];
+        if (!messageIds.length) {
+            return;
+        }
+        await this.performArchive(messageIds, 'dashboardArchiveSelectedSuccess');
+    }
+
+    /** Apply native archiving, refresh the unread view, and report the moved count. */
+    async performArchive(messageIds, successKey) {
+        this.setBusy(true, I18n.t('dashboardArchiveInProgress'));
+        try {
+            await GlobalMailService.archiveMessages(messageIds);
+            this.selectedMessageIds.clear();
+            await this.refresh();
+            this.setStatus(I18n.t(successKey, { count: messageIds.length }), 'success');
+        } catch (error) {
+            console.error('Could not archive dashboard messages:', error);
+            this.setStatus(I18n.t('dashboardArchiveFailed'), 'error');
+        } finally {
+            this.setBusy(false);
+        }
+    }
+
     /** Report a direct-workspace failure without mislabeling it as a mailbox load failure. */
     showWorkspaceError(error) {
         console.error('Could not open the single-message AI workspace:', error);
@@ -624,6 +661,7 @@ const GlobalDashboardManager = class {
         this.elements.selectAll.disabled = this.busy || total === 0;
         this.elements.trashSelected.disabled = this.busy || selected === 0;
         this.elements.markReadSelected.disabled = this.busy || selected === 0;
+        this.elements.archiveSelected.disabled = this.busy || selected === 0;
         this.elements.analyzeSelected.disabled = this.busy || selected === 0;
         this.elements.rescoreSelected.disabled = this.busy || selected === 0;
         this.elements.selectedCount.textContent = I18n.t('dashboardSelectedCount', { count: selected });

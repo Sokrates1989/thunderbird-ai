@@ -28,6 +28,7 @@ function loadService({
     continueList = async () => ({ id: null, messages: [] }),
     getMessageContent = async () => '',
     deleteMessages = async () => {},
+    archiveMessages = async () => {},
     updateMessage = async () => {}
 }) {
     const aborted = [];
@@ -44,6 +45,7 @@ function loadService({
                 continueList,
                 abortList: async id => aborted.push(id),
                 delete: deleteMessages,
+                archive: archiveMessages,
                 update: updateMessage
             }
         }
@@ -134,9 +136,13 @@ function loadDashboardAIService() {
     return { context, openedTabs, sentMessages, service: context.DashboardAIService, storageState };
 }
 
-function loadDashboardManager(markAsRead) {
+function loadDashboardManager(services) {
+    const globalMailService = typeof services === 'function'
+        ? { markAsRead: services }
+        : services;
     const context = createContext({
-        GlobalMailService: { markAsRead },
+        console: { error() {}, log() {}, warn() {} },
+        GlobalMailService: globalMailService,
         I18n: {
             t: (key, replacements = {}) => `${key}:${JSON.stringify(replacements)}`
         }
@@ -650,6 +656,17 @@ test('dashboard deletion uses the Thunderbird 128 non-permanent signature', asyn
     assert.deepEqual(calls.map(([ids, permanent]) => [Array.from(ids), permanent]), [[[7, 8], false]]);
 });
 
+test('dashboard archiving delegates unique messages to the native Thunderbird archive action', async () => {
+    const calls = [];
+    const { service } = loadService({
+        archiveMessages: async messageIds => calls.push([...messageIds])
+    });
+
+    await service.archiveMessages([7, 8, 7, null, undefined]);
+
+    assert.deepEqual(calls, [[7, 8]]);
+});
+
 test('mark as read updates each unique message and isolates partial failures', async () => {
     const calls = [];
     const { service } = loadService({
@@ -695,6 +712,54 @@ test('selected mark-as-read refreshes the unread view and reports partial succes
     assert.deepEqual(statuses, [[
         'dashboardMarkReadPartial:{"updated":1,"failed":1}',
         'warning'
+    ]]);
+});
+
+test('selected archive refreshes the unread view and reports the archived count', async () => {
+    const calls = [];
+    const DashboardManager = loadDashboardManager({
+        archiveMessages: async messageIds => calls.push([...messageIds])
+    });
+    const manager = Object.create(DashboardManager.prototype);
+    const busyStates = [];
+    const statuses = [];
+    let refreshCount = 0;
+    manager.selectedMessageIds = new Set([7, 8]);
+    manager.setBusy = busy => busyStates.push(busy);
+    manager.refresh = async () => { refreshCount += 1; };
+    manager.setStatus = (messageText, type) => statuses.push([messageText, type]);
+
+    await manager.archiveSelected();
+
+    assert.deepEqual(calls, [[7, 8]]);
+    assert.equal(refreshCount, 1);
+    assert.equal(manager.selectedMessageIds.size, 0);
+    assert.deepEqual(busyStates, [true, false]);
+    assert.deepEqual(statuses, [[
+        'dashboardArchiveSelectedSuccess:{"count":2}',
+        'success'
+    ]]);
+});
+
+test('failed archive keeps the selection and reports the Thunderbird archive setup error', async () => {
+    const DashboardManager = loadDashboardManager({
+        archiveMessages: async () => { throw new Error('Archive is not configured'); }
+    });
+    const manager = Object.create(DashboardManager.prototype);
+    const statuses = [];
+    let refreshCount = 0;
+    manager.selectedMessageIds = new Set([7]);
+    manager.setBusy = () => {};
+    manager.refresh = async () => { refreshCount += 1; };
+    manager.setStatus = (messageText, type) => statuses.push([messageText, type]);
+
+    await manager.archiveSelected();
+
+    assert.equal(refreshCount, 0);
+    assert.deepEqual([...manager.selectedMessageIds], [7]);
+    assert.deepEqual(statuses, [[
+        'dashboardArchiveFailed:{}',
+        'error'
     ]]);
 });
 
@@ -769,6 +834,7 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.equal(manifest.message_display_action.default_popup, 'single-mail-ui.html');
     assert.ok(manifest.permissions.includes('messagesDelete'));
     assert.ok(manifest.permissions.includes('messagesUpdate'));
+    assert.ok(manifest.permissions.includes('messagesMove'));
     assert.ok(manifest.background.scripts.indexOf('dashboard-training.js')
         > manifest.background.scripts.indexOf('message.js'));
     assert.ok(manifest.background.scripts.indexOf('dashboard-training.js')
@@ -776,6 +842,7 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(dashboard, /id="dashboardSelectAll"/u);
     assert.match(dashboard, /id="dashboardTrashSelected"/u);
     assert.match(dashboard, /id="dashboardMarkReadSelected"/u);
+    assert.match(dashboard, /id="dashboardArchiveSelected"/u);
     assert.match(dashboard, /class="dashboard-bulk-action-groups"/u);
     assert.match(dashboard, /class="dashboard-action-icon" aria-hidden="true"/u);
     assert.match(dashboard, /id="dashboardShowPreview"/u);
@@ -820,6 +887,7 @@ test('manifest routes global and message toolbar actions to separate popup pages
         /\.dashboard-bulk-action-groups\s*\{[^}]*grid-template-columns:\s*repeat\(2,/su
     );
     assert.match(messageComponent, /dashboardMarkReadOne/u);
+    assert.match(messageComponent, /dashboardArchiveOne/u);
     assert.match(messageComponent, /dashboard-message-action-group/u);
     assert.match(messageComponent, /dashboard-action-icon/u);
     assert.match(singleMailManager, /parameters\.get\('summarize'\) === '1'[\s\S]*executeAIAction\('SUMMARIZE_EMAIL'\)/u);

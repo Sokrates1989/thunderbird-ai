@@ -7,6 +7,7 @@ const DashboardMessageComponent = class {
         this.onReply = options.onReply;
         this.onCorrectScores = options.onCorrectScores;
         this.onMarkRead = options.onMarkRead;
+        this.onArchive = options.onArchive;
         this.onTrash = options.onTrash;
     }
 
@@ -139,6 +140,14 @@ const DashboardMessageComponent = class {
                 busy,
                 () => this.onMarkRead(message),
                 { icon: '✓', className: 'mark-read' }
+            ),
+            this.actionButton(
+                'dashboardArchiveOne',
+                'dashboardArchiveMessage',
+                subject,
+                busy,
+                () => this.onArchive(message),
+                { icon: '📦', className: 'archive' }
             ),
             this.actionButton(
                 'dashboardTrashOne',

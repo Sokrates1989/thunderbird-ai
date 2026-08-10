@@ -19,7 +19,7 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 - standardmäßig Luna-basierte Bulk-Auswertung noch nicht bewerteter ausgewählter Dashboard-Nachrichten mit Wichtigkeits- und Spam-Wahrscheinlichkeit von 0–100 %, dauerhaften Score-Filtern, Score-Sortierungen und ausdrücklicher Neu-Bewertung
 - leicht korrigierbare Scores mit separatem, löschunabhängigem Lernarchiv, getrennten Gründen für Wichtigkeit und Spam sowie manueller Referenzverwaltung unter **Einstellungen**
 - direkte Dashboard-Aktionen für die bestehende Zusammenfassung und den bestehenden interaktiven Antworteditor
-- klar getrennte, zweispaltige AI- und E-Mail-Aktionen mit Icons sowie direktes oder gebündeltes Markieren ungelesener Nachrichten als gelesen
+- klar getrennte, zweispaltige AI- und E-Mail-Aktionen mit Icons, direktes oder gebündeltes Markieren als gelesen sowie native Thunderbird-Archivierung in die kontobezogenen Jahresarchive
 - vollständig deutsch- oder englischsprachige Oberfläche mit expliziter Sprachauswahl
 - Windows-Ein-Klick-Installer mit kontrolliertem Thunderbird-Neustart
 
@@ -35,6 +35,10 @@ Kategorisierung, bisherige Wichtigkeits- und Spam-Analyse, Übersetzung, Extrakt
 
 Temporäre Netzwerkfehler, Zeitüberschreitungen, Anfragelimits und vorübergehende OpenAI-Serverfehler werden mit begrenzten Wartezeiten automatisch bis zu zweimal wiederholt. Ein `Retry-After`-Hinweis von OpenAI wird bis zu zehn Sekunden berücksichtigt. Fehlerhafte oder unberechtigte API-Schlüssel, ausgeschöpftes Guthaben und dauerhafte Clientfehler werden ohne nutzlose Wiederholung eindeutig gemeldet. Thunderbird-Verbindungsfehler werden nur dann wiederholt, wenn Thunderbird bestätigt, dass die Nachricht den Hintergrundprozess nicht erreicht hat.
 
+## Dashboard-Archivierung
+
+**Archivieren** und **Ausgewählte archivieren** verwenden Thunderbirds native Archivfunktion. Dadurch gelten für jede Nachricht die Archiveinstellungen ihres Kontos und ihrer Identität; das Add-on errät keine lokalisierten Ordnernamen und verschiebt Nachrichten unterschiedlicher Konten nicht versehentlich in dasselbe Archiv. Damit das Ziel `Archiv/<Sendejahr>` entsteht, muss unter **Konten-Einstellungen → Kopien & Ordner → Nachrichtenarchiv → Archivoptionen** für die jeweilige Identität **Jährliche archivierte Ordner** ausgewählt sein. Konten wie Gmail können serverseitig ein anderes Archivmodell vorgeben.
+
 ## Datenschutz
 
 Bei AI-Aktionen werden Betreff, Absender, Nachrichtentext und Namen erkannter Anhänge direkt von Thunderbird an die OpenAI API gesendet. Beim Verbessern eines Antwortentwurfs werden außerdem der aktuelle Entwurf und die letzten Änderungswünsche übertragen. Die normale Dashboard-Bulk-Auswertung überträgt ausschließlich explizit ausgewählte Nachrichten ohne vorhandenen Dashboard-Score; bereits bewertete Nachrichten werden ohne API-Aufruf übersprungen. Nur **Auswahl neu bewerten** sendet sie nach einer Bestätigung erneut. Nicht korrigierte AI-Scores speichern lokal ausschließlich eine stabile Nachrichtenidentität aus Konto und RFC Message-ID, Prozentwerte, Modell und Analysezeitpunkt. Bei einer Dashboard-Korrektur kommen die getrennten Kategorien und Freitexte für Wichtigkeit und Spam hinzu, damit sie beim erneuten Öffnen vorausgewählt werden können. Fehlt die RFC Message-ID, werden Konto, Datum, Absender, Betreff und Größe als Ersatzidentität verwendet. Höchstens 1.000 dieser Score-Datensätze bleiben erhalten.
@@ -47,10 +51,10 @@ Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speic
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-2.3.1-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-2.4.0-win-x64.exe` herunterladen und starten.
 2. Im Setup **Deutsch** oder **English** wählen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
-4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung und zur neuen Berechtigung zum Ändern von Nachrichteneigenschaften bestätigen.
+4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung und zu den Berechtigungen zum Ändern, Verschieben und Löschen von Nachrichten bestätigen.
 5. Unter **Einstellungen** den OpenAI API-Schlüssel eintragen, die aufgabenspezifischen Modelle prüfen, die Verbindung testen und speichern. Die Oberflächensprache kann dort jederzeit unabhängig von der Thunderbird-Sprache geändert werden.
 
 Der benutzerbezogene Installer benötigt keine Administratorrechte. Eine neue Setup-Datei aktualisiert die vorhandene Version; eine Deinstallation ist nicht nötig. Die feste Add-on-ID erhält die Einstellungen. Der aktuelle Test-Installer ist nicht Authenticode-signiert und kann deshalb eine SmartScreen-Warnung auslösen.
@@ -77,7 +81,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-2.3.1-win-x64.exe`
+- `artifacts\Thunderbird-AI-Setup-2.4.0-win-x64.exe`
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
@@ -118,8 +122,9 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 33. Den API-Verbindungstest nur einmal anklicken. Bei einem kurzzeitigen Verbindungsproblem muss die Oberfläche im Ladezustand bleiben, während das Add-on selbstständig erneut versucht. Erst nach allen erfolglosen Versuchen darf eine konkrete Netzwerk-, Zeitlimit-, Rate-Limit-, Server-, Schlüssel- oder Guthabenmeldung erscheinen.
 34. Eine Scoring-Korrektur nur einmal speichern. Ein kurzzeitiger Thunderbird- oder lokaler Speicherfehler muss intern erneut versucht werden; die Referenz darf höchstens einmal unter ihrer stabilen Nachrichtenidentität im Archiv erscheinen.
 35. Im Dashboard müssen AI- und E-Mail-Aktionen sowohl im Bulk-Bereich als auch pro Nachricht in zwei klar beschrifteten Spalten mit Icons erscheinen. Eine einzelne Nachricht über **Als gelesen markieren** bearbeiten; sie muss ohne Rückfrage aus der ungelesenen Ansicht verschwinden. Danach mehrere Nachrichten auswählen und **Ausgewählte als gelesen markieren** verwenden. Erfolgreich geänderte Nachrichten müssen verschwinden, während mögliche Einzelfehler gemeldet werden, ohne die übrigen Änderungen zurückzunehmen.
+36. In Thunderbird unter **Konten-Einstellungen → Kopien & Ordner → Nachrichtenarchiv** für die Testkonten jährliche Archivordner konfigurieren. Eine Nachricht aus einem früheren Jahr direkt über **Archivieren** verschieben und prüfen, dass Thunderbird sie im kontobezogenen Ordner `Archiv/<Sendejahr>` ablegt. Danach Nachrichten unterschiedlicher Jahre und Konten auswählen und **Ausgewählte archivieren** verwenden; jede Nachricht muss gemäß ihrer Konto- und Identitätseinstellungen im passenden Jahresarchiv landen und aus dem ungelesenen Dashboard verschwinden.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.3.1** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.4.0** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 ## Technische Struktur
 
