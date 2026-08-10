@@ -99,12 +99,12 @@ const DashboardAIService = {
 
     /** Request the shared background coordinator to analyze selected messages. */
     async analyze(messageIds) {
-        const response = await browser.runtime.sendMessage({
+        const response = await this.sendRequest({
             action: CONFIG.ACTIONS.DASHBOARD_BULK_TRIAGE,
             messageIds
-        });
+        }, 'dashboardAnalysisFailed');
         if (!response?.success) {
-            throw new Error(response?.error || I18n.t('dashboardAnalysisFailed'));
+            throw this.presentationError(response?.error || I18n.t('dashboardAnalysisFailed'));
         }
         return response.data;
     },
@@ -112,7 +112,7 @@ const DashboardAIService = {
     /** Archive one correction in the background and return its validated score metadata. */
     async submitFeedback(message, reason = '') {
         const analysis = message?.aiAnalysis;
-        const response = await browser.runtime.sendMessage({
+        const response = await this.sendRequest({
             action: CONFIG.ACTIONS.DASHBOARD_SAVE_FEEDBACK,
             messageId: message.id,
             originalScores: {
@@ -125,11 +125,26 @@ const DashboardAIService = {
             },
             reason,
             sourceModel: analysis.model
-        });
+        }, 'dashboardFeedbackSaveFailed');
         if (!response?.success) {
-            throw new Error(response?.error || I18n.t('dashboardFeedbackSaveFailed'));
+            throw this.presentationError(response?.error || I18n.t('dashboardFeedbackSaveFailed'));
         }
         return response.data;
+    },
+
+    /** Hide raw runtime details after safe delivery retries are exhausted. */
+    async sendRequest(message, fallbackKey) {
+        try {
+            return await RetryService.sendRuntimeMessage(message);
+        } catch (error) {
+            console.error('Dashboard background request failed:', error);
+            throw this.presentationError(I18n.t(fallbackKey));
+        }
+    },
+
+    /** Mark localized background responses as safe for the dashboard status area. */
+    presentationError(message) {
+        return Object.assign(new Error(message), { userFacing: true });
     },
 
     /** Replace the visible score while retaining a durable user-correction marker. */

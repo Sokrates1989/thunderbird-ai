@@ -2,12 +2,15 @@
 
 const CONFIG = {
     ADDON_NAME: 'Thunderbird AI Assistant',
-    ADDON_VERSION: '2.1.1',
+    ADDON_VERSION: '2.1.2',
     ADDON_ID: 'thunderbird-ai@example.com',
 
     OPENAI: {
         BASE_URL: 'https://api.openai.com/v1',
         DEFAULT_MODEL: 'auto',
+        REQUEST_MAX_ATTEMPTS: 3,
+        RETRY_BASE_DELAY_MS: 500,
+        RETRY_MAX_DELAY_MS: 10000,
         AVAILABLE_MODELS: [
             {
                 value: 'auto',

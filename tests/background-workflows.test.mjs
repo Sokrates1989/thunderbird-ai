@@ -9,7 +9,7 @@ function eventTarget() {
     return { addListener() {} };
 }
 
-async function loadBackground() {
+async function loadBackground(options = {}) {
     const stats = [];
     const serviceCalls = [];
     const context = createContext({
@@ -26,14 +26,14 @@ async function loadBackground() {
     loadScript(context, 'thunderbird-ai/config/locale-en.js');
     loadScript(context, 'thunderbird-ai/config/constants.js');
     context.MessageService = {
-        getFullMessage: async id => ({
+        getFullMessage: options.getFullMessage || (async id => ({
             id,
             subject: 'Test',
             author: 'Ada',
             formattedDate: '10.08.2026',
             content: 'Nachrichtentext',
             attachments: []
-        }),
+        })),
         findSimilarMessages: async () => [{
             id: 8,
             subject: 'Ähnlich',
@@ -51,10 +51,10 @@ async function loadBackground() {
         loadArchive: async () => [{ storageKey: 'known' }],
         updateArchivedFeedback: async (storageKey, feedback) => ({ storageKey, ...feedback }),
         removeArchivedFeedback: async storageKey => storageKey === 'known',
-        archiveFeedback: async (_message, feedback) => ({
+        archiveFeedback: options.archiveFeedback || (async (_message, feedback) => ({
             correctedScores: feedback.correctedScores,
             updatedAt: '2026-08-10T12:00:00.000Z'
-        })
+        }))
     };
     const result = method => async () => {
         serviceCalls.push(method);
@@ -99,6 +99,8 @@ async function loadBackground() {
         getAutomaticResult: async () => null,
         saveAutomaticResult: async () => true
     };
+    loadScript(context, 'common/utils/retry.js');
+    context.RetryService.wait = async () => {};
     loadScript(context, 'common/background.js');
     await context.thunderbirdAIInitialization;
     return { ai: context.thunderbirdAI, config: context.CONFIG, serviceCalls, stats };
@@ -203,6 +205,38 @@ test('dashboard score feedback is routed to the independent background archive',
     );
 });
 
+test('dashboard score feedback retries a transient local read before reporting failure', async () => {
+    let attempts = 0;
+    const { ai, config } = await loadBackground({
+        getFullMessage: async id => {
+            attempts += 1;
+            if (attempts === 1) {
+                throw new Error('Message temporarily unavailable');
+            }
+            return {
+                id,
+                subject: 'Test',
+                author: 'Ada',
+                formattedDate: '10.08.2026',
+                content: 'Nachrichtentext',
+                attachments: []
+            };
+        }
+    });
+
+    const response = await ai.handleMessage({
+        action: config.ACTIONS.DASHBOARD_SAVE_FEEDBACK,
+        messageId: 7,
+        originalScores: { importanceScore: 20, spamScore: 80 },
+        correctedScores: { importanceScore: 90, spamScore: 5 },
+        reason: 'Trusted sender',
+        sourceModel: 'gpt-5.6-luna'
+    });
+
+    assert.equal(response.success, true);
+    assert.equal(attempts, 2);
+});
+
 test('single scoring reuses archived feedback and archive management stays background-owned', async () => {
     const { ai, config, stats } = await loadBackground();
 
@@ -227,6 +261,14 @@ test('single scoring reuses archived feedback and archive management stays backg
     assert.equal(removed.success, true);
 });
 
+test('API statistics count recovered physical attempts without inventing retries', async () => {
+    const { ai } = await loadBackground();
+
+    assert.equal(ai.apiAttemptCount({ retryCount: 2 }), 3);
+    assert.equal(ai.apiAttemptCount({ retryCount: 0 }), 1);
+    assert.equal(ai.apiAttemptCount({}), 1);
+});
+
 test('packaged UI sources contain no unfinished actions or retired models', () => {
     const sourceRoots = ['common', 'thunderbird-ai'];
     const files = sourceRoots.flatMap(root => {
@@ -249,4 +291,16 @@ test('packaged UI sources contain no unfinished actions or retired models', () =
     assert.match(source, /messages\.getFull/u);
     assert.ok(manifest.permissions.includes('clipboardWrite'));
     assert.equal(manifest.compose_action, undefined);
+    assert.ok(
+        manifest.background.scripts.indexOf('retry.js')
+            < manifest.background.scripts.indexOf('openai.js')
+    );
+    for (const [page, entryPoint] of [
+        ['global-dashboard.html', 'global-dashboard.js'],
+        ['settings.html', 'settingsEntry.js'],
+        ['single-mail-ui.html', 'single-mail-ui.js']
+    ]) {
+        const html = fs.readFileSync(path.join(repositoryRoot, 'thunderbird-ai/pages', page), 'utf8');
+        assert.ok(html.indexOf('retry.js') < html.indexOf(entryPoint), page);
+    }
 });

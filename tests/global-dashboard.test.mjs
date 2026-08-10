@@ -124,6 +124,8 @@ function loadDashboardAIService() {
     loadScript(context, 'thunderbird-ai/config/locale-de.js');
     loadScript(context, 'thunderbird-ai/config/locale-en.js');
     loadScript(context, 'thunderbird-ai/config/constants.js');
+    loadScript(context, 'common/utils/retry.js');
+    context.RetryService.wait = async () => {};
     loadScript(context, 'common/utils/message.js');
     loadScript(context, 'thunderbird-ai/components/global-dashboard/DashboardAIService.js');
     return { context, openedTabs, sentMessages, service: context.DashboardAIService, storageState };

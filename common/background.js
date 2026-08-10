@@ -103,8 +103,15 @@ class ThunderbirdAI {
             }
         } catch (error) {
             console.error('Background action failed:', error);
-            return { success: false, error: I18n.t('unknownError') };
+            return { success: false, error: this.safeErrorMessage(error) };
         }
+    }
+
+    /** Expose only errors explicitly marked as localized presentation-safe messages. */
+    safeErrorMessage(error) {
+        return error?.userFacing === true && error.message
+            ? error.message
+            : I18n.t('unknownError');
     }
 
     async saveSettings(settings) {
@@ -147,7 +154,7 @@ class ThunderbirdAI {
 
         await StorageManager.updateStatistics('email');
         if (result.usedApi) {
-            await StorageManager.updateStatistics('api');
+            await StorageManager.updateStatistics('api', this.apiAttemptCount(result));
         }
         return this.successResult(task, result, messageId);
     }
@@ -187,7 +194,7 @@ class ThunderbirdAI {
         ]);
         const result = await OpenAIService.analyzeSingleScore(message, feedbackExamples);
         await StorageManager.updateStatistics('email');
-        await StorageManager.updateStatistics('api');
+        await StorageManager.updateStatistics('api', this.apiAttemptCount(result));
         return {
             success: true,
             data: {
@@ -203,22 +210,37 @@ class ThunderbirdAI {
 
     /** Persist explicit operator corrections independently from Thunderbird mail state. */
     async saveDashboardScoreFeedback(request) {
-        const message = await MessageService.getFullMessage(request.messageId);
-        const feedback = await DashboardTrainingService.archiveFeedback(message, {
-            originalScores: request.originalScores,
-            correctedScores: request.correctedScores,
-            reason: request.reason,
-            reasons: request.reasons,
-            sourceModel: request.sourceModel
-        });
-        return {
-            success: true,
-            data: {
-                importanceScore: feedback.correctedScores.importanceScore,
-                spamScore: feedback.correctedScores.spamScore,
-                correctedAt: feedback.updatedAt
+        return RetryService.run(
+            async () => {
+                const message = await MessageService.getFullMessage(request.messageId);
+                const feedback = await DashboardTrainingService.archiveFeedback(message, {
+                    originalScores: request.originalScores,
+                    correctedScores: request.correctedScores,
+                    reason: request.reason,
+                    reasons: request.reasons,
+                    sourceModel: request.sourceModel
+                });
+                return {
+                    success: true,
+                    data: {
+                        importanceScore: feedback.correctedScores.importanceScore,
+                        spamScore: feedback.correctedScores.spamScore,
+                        correctedAt: feedback.updatedAt
+                    }
+                };
+            },
+            {
+                maxAttempts: 3,
+                shouldRetry: error => error?.message !== I18n.t('dashboardFeedbackInvalid'),
+                delayMs: (_error, attempt) => RetryService.exponentialDelay(attempt, {
+                    baseDelayMs: 150,
+                    maxDelayMs: 750
+                }),
+                onRetry: (_error, attempt, delayMs) => {
+                    console.warn('Retrying idempotent score feedback save.', { attempt, delayMs });
+                }
             }
-        };
+        );
     }
 
     async updateScoreArchive(request) {
@@ -267,7 +289,7 @@ class ThunderbirdAI {
         const message = await MessageService.getFullMessage(messageId);
         const result = await OpenAIService.processChat(query, message, history);
         await StorageManager.updateStatistics('email');
-        await StorageManager.updateStatistics('api');
+        await StorageManager.updateStatistics('api', this.apiAttemptCount(result));
         return {
             success: true,
             data: {
@@ -289,15 +311,21 @@ class ThunderbirdAI {
         );
         await StorageManager.updateStatistics('email');
         if (result.usedApi) {
-            await StorageManager.updateStatistics('api');
+            await StorageManager.updateStatistics('api', this.apiAttemptCount(result));
         }
         return this.successResult('reply', result, messageId);
     }
 
     async improveText(text, type) {
         const result = await OpenAIService.improveText(text, type);
-        await StorageManager.updateStatistics('api');
+        await StorageManager.updateStatistics('api', this.apiAttemptCount(result));
         return this.successResult('improve', result, null);
+    }
+
+    /** Count physical API attempts so retry recovery remains visible in local statistics. */
+    apiAttemptCount(result) {
+        const retryCount = Number(result?.retryCount);
+        return 1 + (Number.isInteger(retryCount) && retryCount > 0 ? retryCount : 0);
     }
 
     async findSimilar(messageId) {

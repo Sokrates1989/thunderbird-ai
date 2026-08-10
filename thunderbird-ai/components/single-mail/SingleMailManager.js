@@ -118,7 +118,7 @@ const SingleMailManager = class {
     }
 
     async sendToBackground(action, data = {}) {
-        return browser.runtime.sendMessage({ action, ...data });
+        return RetryService.sendRuntimeMessage({ action, ...data });
     }
 
     async executeAIAction(action, options = {}) {

@@ -40,7 +40,12 @@ const OpenAIService = {
             };
         } catch (error) {
             console.error('OpenAI connection test failed:', error);
-            return { success: false, message: I18n.t('apiTestFailed') };
+            return {
+                success: false,
+                message: error?.userFacing === true
+                    ? error.message
+                    : I18n.t('apiTestFailed')
+            };
         }
     },
 
@@ -153,7 +158,10 @@ const OpenAIService = {
         return {
             scores,
             failedCount: failures.reduce((total, failure) => total + failure.count, 0),
-            apiCalls: results.filter(Boolean).length,
+            apiCalls: results.filter(Boolean).reduce(
+                (total, result) => total + (result.apiCalls || 1),
+                0
+            ),
             model: results.find(Boolean)?.model || null
         };
     },
@@ -172,6 +180,7 @@ const OpenAIService = {
         });
         const scores = this.parseBulkTriageScores(response.content, messages);
         scores.model = response.model;
+        scores.apiCalls = 1 + response.retryCount;
         return scores;
     },
 
@@ -188,7 +197,12 @@ const OpenAIService = {
             input: [feedbackInput, messageInput].filter(Boolean).join('\n\n')
         });
         const [score] = this.parseBulkTriageScores(response.content, [message]);
-        return { ...score, model: response.model, usedApi: true };
+        return {
+            ...score,
+            model: response.model,
+            usedApi: true,
+            retryCount: response.retryCount
+        };
     },
 
     /** Format bounded operator corrections as examples, never as executable instructions. */
@@ -329,12 +343,12 @@ const OpenAIService = {
         ].join('\n');
     },
 
-    /** Send one stateless request; email content is not retained by this client (`store: false`). */
+    /** Send one stateless request with bounded retries for classified transient failures. */
     async request(task, payload, overrides = {}) {
         const settings = await this.getSettings();
         const apiKey = String(overrides.apiKey || settings.apiKey || '').trim();
         if (!apiKey) {
-            throw new Error(I18n.t('apiKeyMissing'));
+            throw this.createRequestError('apiKeyMissing');
         }
 
         const profile = CONFIG.OPENAI.TASK_PROFILES[task] || CONFIG.OPENAI.TASK_PROFILES.summarize;
@@ -342,53 +356,181 @@ const OpenAIService = {
             || settings.taskModels?.[task]
             || settings.model;
         const model = this.resolveModel(task, preferredModel);
+        let attempts = 0;
+        const result = await RetryService.run(
+            async attempt => {
+                attempts = attempt;
+                return this.performRequest(settings, apiKey, model, profile, payload);
+            },
+            {
+                maxAttempts: CONFIG.OPENAI.REQUEST_MAX_ATTEMPTS,
+                shouldRetry: error => this.shouldRetryRequest(error),
+                delayMs: (error, attempt) => this.requestRetryDelay(error, attempt),
+                onRetry: (error, attempt, delayMs) => {
+                    console.warn('Retrying transient OpenAI request.', {
+                        attempt,
+                        delayMs,
+                        status: error.status || null,
+                        reason: error.reason || 'network'
+                    });
+                }
+            }
+        );
+        return { ...result, retryCount: Math.max(0, attempts - 1) };
+    },
+
+    /** Perform exactly one Responses API attempt with its own timeout controller. */
+    async performRequest(settings, apiKey, model, profile, payload) {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), CONFIG.UI.LOADING_TIMEOUT);
 
         try {
-            const response = await fetch(`${settings.baseUrl}/responses`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${apiKey}`
-                },
-                signal: controller.signal,
-                body: JSON.stringify({
-                    model,
-                    instructions: payload.instructions,
-                    input: payload.input,
-                    reasoning: { effort: profile.effort },
-                    text: { verbosity: profile.verbosity },
-                    max_output_tokens: profile.maxOutputTokens,
-                    store: false
-                })
-            });
+            let response;
+            try {
+                response = await fetch(`${settings.baseUrl}/responses`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${apiKey}`
+                    },
+                    signal: controller.signal,
+                    body: JSON.stringify({
+                        model,
+                        instructions: payload.instructions,
+                        input: payload.input,
+                        reasoning: { effort: profile.effort },
+                        text: { verbosity: profile.verbosity },
+                        max_output_tokens: profile.maxOutputTokens,
+                        store: false
+                    })
+                });
+            } catch (error) {
+                if (error?.name === 'AbortError') {
+                    throw this.createRequestError('apiTimeout', {}, {
+                        retryable: true,
+                        reason: 'timeout'
+                    });
+                }
+                throw this.createRequestError('apiNetworkFailed', {}, {
+                    retryable: true,
+                    reason: 'network'
+                });
+            }
             if (!response.ok) {
-                await response.json().catch(() => ({}));
-                throw new Error(I18n.t('apiRequestFailed', { status: response.status }));
+                const errorBody = await response.json().catch(() => ({}));
+                throw this.createHttpError(response, errorBody);
             }
 
-            const data = await response.json();
+            const data = await response.json().catch(() => null);
             const content = this.extractOutputText(data);
             if (!content) {
-                throw new Error(I18n.t('apiNoOutput'));
+                throw this.createRequestError('apiNoOutput');
             }
             return { content, usedApi: true, model };
-        } catch (error) {
-            if (error.name === 'AbortError') {
-                throw new Error(I18n.t('apiTimeout'));
-            }
-            throw error;
         } finally {
             clearTimeout(timeout);
         }
     },
 
+    /** Convert an HTTP failure into a localized error and retry classification. */
+    createHttpError(response, errorBody) {
+        const status = Number(response.status) || 0;
+        const apiError = errorBody?.error || {};
+        const code = String(apiError.code || '');
+        const type = String(apiError.type || '');
+        const retryAfterMs = this.parseRetryAfter(response.headers?.get?.('retry-after'));
+        const quotaError = [
+            'credit_balance_exhausted',
+            'insufficient_quota',
+            'billing_hard_limit_reached',
+            'organization_spend_limit_exceeded',
+            'project_spend_limit_exceeded',
+            'organization_usage_limit_exceeded'
+        ].includes(code) || type === 'insufficient_quota';
+        if (status === 401 || status === 403) {
+            return this.createRequestError('apiAuthenticationFailed', {}, { status, code });
+        }
+        if (status === 429 && quotaError) {
+            return this.createRequestError('apiQuotaFailed', {}, { status, code });
+        }
+        if (status === 429 && retryAfterMs > CONFIG.OPENAI.RETRY_MAX_DELAY_MS) {
+            return this.createRequestError('apiRateLimitLongWait', {}, {
+                status,
+                code,
+                retryAfterMs,
+                reason: 'rate-limit'
+            });
+        }
+        if (status === 429) {
+            return this.createRequestError('apiRateLimitFailed', {}, {
+                status,
+                code,
+                retryable: true,
+                retryAfterMs,
+                reason: 'rate-limit'
+            });
+        }
+        if ([500, 502, 503, 504].includes(status)) {
+            return this.createRequestError('apiServiceUnavailable', {}, {
+                status,
+                code,
+                retryable: true,
+                retryAfterMs,
+                reason: 'server'
+            });
+        }
+        return this.createRequestError('apiRequestFailed', { status }, { status, code });
+    },
+
+    /** Mark localized request errors so the background may safely present them. */
+    createRequestError(messageKey, replacements = {}, metadata = {}) {
+        const error = new Error(I18n.t(messageKey, replacements));
+        return Object.assign(error, {
+            userFacing: true,
+            retryable: false,
+            retryAfterMs: null,
+            ...metadata
+        });
+    },
+
+    /** Retry only bounded transient errors whose server delay can be honored. */
+    shouldRetryRequest(error) {
+        if (error?.retryable !== true) {
+            return false;
+        }
+        return error.retryAfterMs === null
+            || error.retryAfterMs <= CONFIG.OPENAI.RETRY_MAX_DELAY_MS;
+    },
+
+    /** Prefer Retry-After; otherwise use exponential backoff with jitter. */
+    requestRetryDelay(error, failedAttempt) {
+        if (Number.isFinite(error?.retryAfterMs)) {
+            return error.retryAfterMs;
+        }
+        return RetryService.exponentialDelay(failedAttempt, {
+            baseDelayMs: CONFIG.OPENAI.RETRY_BASE_DELAY_MS,
+            maxDelayMs: CONFIG.OPENAI.RETRY_MAX_DELAY_MS
+        });
+    },
+
+    /** Parse Retry-After seconds or an HTTP date into a non-negative delay. */
+    parseRetryAfter(value) {
+        if (value === undefined || value === null || value === '') {
+            return null;
+        }
+        const seconds = Number(value);
+        if (Number.isFinite(seconds) && seconds >= 0) {
+            return Math.round(seconds * 1000);
+        }
+        const date = Date.parse(String(value));
+        return Number.isFinite(date) ? Math.max(0, date - Date.now()) : null;
+    },
+
     extractOutputText(response) {
-        if (typeof response.output_text === 'string' && response.output_text.trim()) {
+        if (typeof response?.output_text === 'string' && response.output_text.trim()) {
             return response.output_text.trim();
         }
-        return (response.output || [])
+        return (response?.output || [])
             .filter(item => item.type === 'message')
             .flatMap(item => item.content || [])
             .filter(item => item.type === 'output_text' && typeof item.text === 'string')

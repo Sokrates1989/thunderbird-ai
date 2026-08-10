@@ -485,7 +485,10 @@ const GlobalDashboardManager = class {
             }), data.failedCount ? 'warning' : 'success');
         } catch (error) {
             console.error('Could not analyze selected dashboard messages:', error);
-            this.setStatus(I18n.t('dashboardAnalysisFailed'), 'error');
+            this.setStatus(
+                error?.userFacing === true ? error.message : I18n.t('dashboardAnalysisFailed'),
+                'error'
+            );
         } finally {
             this.setBusy(false);
         }

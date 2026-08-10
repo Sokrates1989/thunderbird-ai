@@ -43,6 +43,7 @@ thunderbird-ai/
 - `dashboard-training.js` owns the separate bounded archive of explicit operator corrections. It stores a clipped message snapshot, separate importance/spam reasons, and selects at most five relevant examples; Thunderbird deletion never accesses its storage key.
 - Bulk and single-email score bodies cross to `background.js`, which retrieves normalized messages through `MessageService`, selects relevant corrections through `DashboardTrainingService`, and calls the shared OpenAI score formatting and parser. Bulk defaults to Luna, single scoring defaults to Terra, and both honor their independent saved model preference.
 - `ScoringArchiveComponent.js` exposes the local reference archive in Settings for manual rescoring, reason editing, and removal without touching Thunderbird messages.
+- `retry.js` owns bounded backoff mechanics. Domain services still decide whether an error is safe to retry: OpenAI classifies transient HTTP/network failures, while UI runtime messages retry only when Thunderbird confirms that no background listener received the request. Score-feedback writes are idempotent upserts under the stable message identity.
 
 ## 🏗️ Architecture Overview
 
@@ -63,6 +64,7 @@ thunderbird-ai/
 
 #### **Utilities (`utils/`)**
 - **`storage.js`**: Browser storage operations and settings management (global `StorageManager`)
+- **`retry.js`**: Shared bounded retry and Thunderbird runtime-delivery backoff (global `RetryService`)
 - **`openai.js`**: OpenAI API integration and AI services (global `OpenAIService`)
 - **`message.js`**: Email message operations and data extraction (global `MessageService`)
 - **`ui.js`**: Common UI utilities and helper functions (global `UIUtils`)
@@ -258,6 +260,7 @@ HTML files must load scripts in correct dependency order:
 ```html
 <!-- Load utility modules first -->
 <script src="constants.js"></script>
+<script src="retry.js"></script>
 <script src="storage.js"></script>
 <script src="openai.js"></script>
 <script src="message.js"></script>

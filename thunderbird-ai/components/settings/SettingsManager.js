@@ -111,11 +111,7 @@ const SettingsManager = class {
      * const result = await this.sendToBackground('saveSettings', { apiKey: 'sk-...' });
      */
     async sendToBackground(action, data = {}) {
-        return new Promise((resolve, reject) => {
-            browser.runtime.sendMessage({ action, ...data })
-                .then(resolve)
-                .catch(reject);
-        });
+        return RetryService.sendRuntimeMessage({ action, ...data });
     }
 
     /**
