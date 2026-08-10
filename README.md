@@ -16,7 +16,7 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 - lokale Ergebnisablage mit Verwaltung unter **Einstellungen** und Zwischenablage-Aktion
 - optionale automatische Zusammenfassung beim Öffnen einer Nachricht
 - eigenes globales Posteingangs-Dashboard mit vollständiger Header-Paginierung, umschaltbarer Konto- oder kombinierter Neueste-50-Ansicht, kontenübergreifender Score-Sortierung, durchsuchbarem Absenderfilter, Datumsfiltern, frei wählbaren 1–50 Nachrichten pro Konto, Einzelauswahl, Mehrfachlöschen und optionaler lokaler Inhaltsvorschau
-- standardmäßig Luna-basierte Bulk-Auswertung ausgewählter Dashboard-Nachrichten mit Wichtigkeits- und Spam-Wahrscheinlichkeit von 0–100 %, dauerhaften Score-Filtern und Score-Sortierungen
+- standardmäßig Luna-basierte Bulk-Auswertung noch nicht bewerteter ausgewählter Dashboard-Nachrichten mit Wichtigkeits- und Spam-Wahrscheinlichkeit von 0–100 %, dauerhaften Score-Filtern, Score-Sortierungen und ausdrücklicher Neu-Bewertung
 - leicht korrigierbare Scores mit separatem, löschunabhängigem Lernarchiv, getrennten Gründen für Wichtigkeit und Spam sowie manueller Referenzverwaltung unter **Einstellungen**
 - direkte Dashboard-Aktionen für die bestehende Zusammenfassung und den bestehenden interaktiven Antworteditor
 - vollständig deutsch- oder englischsprachige Oberfläche mit expliziter Sprachauswahl
@@ -34,7 +34,7 @@ Kategorisierung, bisherige Wichtigkeits- und Spam-Analyse, Übersetzung, Extrakt
 
 ## Datenschutz
 
-Bei AI-Aktionen werden Betreff, Absender, Nachrichtentext und Namen erkannter Anhänge direkt von Thunderbird an die OpenAI API gesendet. Beim Verbessern eines Antwortentwurfs werden außerdem der aktuelle Entwurf und die letzten Änderungswünsche übertragen. Die Dashboard-Bulk-Auswertung überträgt ausschließlich die explizit ausgewählten Nachrichten. Normale AI-Scores speichern lokal nur eine stabile Nachrichtenidentität, Prozentwerte, Modell und Analysezeitpunkt.
+Bei AI-Aktionen werden Betreff, Absender, Nachrichtentext und Namen erkannter Anhänge direkt von Thunderbird an die OpenAI API gesendet. Beim Verbessern eines Antwortentwurfs werden außerdem der aktuelle Entwurf und die letzten Änderungswünsche übertragen. Die normale Dashboard-Bulk-Auswertung überträgt ausschließlich explizit ausgewählte Nachrichten ohne vorhandenen Dashboard-Score; bereits bewertete Nachrichten werden ohne API-Aufruf übersprungen. Nur **Auswahl neu bewerten** sendet sie nach einer Bestätigung erneut. Normale AI-Scores speichern lokal ausschließlich eine stabile Nachrichtenidentität aus Konto und RFC Message-ID, Prozentwerte, Modell und Analysezeitpunkt. Fehlt die RFC Message-ID, werden Konto, Datum, Absender, Betreff und Größe als Ersatzidentität verwendet. Höchstens 1.000 dieser Score-Datensätze bleiben erhalten.
 
 Eine ausdrücklich gespeicherte Bewertung wird zusätzlich in einem separaten lokalen Lernarchiv gespeichert: höchstens 250 Datensätze mit einem auf 6.000 Zeichen begrenzten E-Mail-Auszug, Anhangnamen, ursprünglichen und korrigierten Werten sowie getrennten Kategorien und Freitextbegründungen für Wichtigkeit und Spam. Normale Thunderbird-Löschvorgänge verändern dieses Archiv nicht. Bei einer späteren Einzel- oder Bulk-Auswertung werden höchstens fünf nach Absender und Betreff priorisierte Korrekturen als nicht vertrauenswürdige Kalibrierungsbeispiele an OpenAI gesendet. Das ist kontextbezogenes Lernen durch Beispiele und kein dauerhaftes Modell-Fine-Tuning. Unter **Einstellungen** lassen sich alle Referenzen einsehen, manuell neu bewerten und entfernen. Die Suche nach ähnlichen Nachrichten und die optionale Dashboard-Inhaltsvorschau laufen ausschließlich lokal. Automatische Verarbeitung ist standardmäßig deaktiviert.
 
@@ -42,7 +42,7 @@ Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speic
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-2.1.0-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-2.1.1-win-x64.exe` herunterladen und starten.
 2. Im Setup **Deutsch** oder **English** wählen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung bestätigen.
@@ -72,7 +72,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-2.1.0-win-x64.exe`
+- `artifacts\Thunderbird-AI-Setup-2.1.1-win-x64.exe`
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
@@ -84,8 +84,8 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 4. Den Absender-Filter öffnen, **Alle Absender** deaktivieren und einzelne Absender auswählen. Im Suchfeld nacheinander zwei unterschiedliche Absender suchen und jeweils aktivieren. Beide müssen ausgewählt bleiben, obwohl immer nur das aktuelle Suchergebnis sichtbar ist. Nur passende Nachrichten dürfen erscheinen; der Filter muss nach erneutem Öffnen erhalten bleiben.
 5. Mit den Kalenderfeldern **Datum von** und **Datum bis** einen inklusiven Bereich einstellen. Außerhalb liegende Nachrichten müssen verschwinden; ein Bis-Datum vor dem Von-Datum muss abgewiesen werden.
 6. **Nachrichteninhalt als Vorschau anzeigen** aktivieren und nacheinander 1 sowie 5 Vorschauzeilen einstellen. Nur die nach Sortierung, Filtern und Mengenbegrenzung sichtbaren Nachrichten dürfen Inhaltsvorschauen laden. Lange Vorschauen müssen innerhalb der Nachricht scrollbar sein.
-7. Mehrere Nachrichten einzeln auswählen und anschließend **Alle auswählen** testen. Anzahl, Auswahlzustand und beide Bulk-Schaltflächen müssen sich passend aktualisieren.
-8. **Ausgewählte mit AI analysieren** anklicken. Während der Verarbeitung muss der Luna-Ladehinweis mit Animation sichtbar sein. Danach müssen jede erfolgreich analysierte Nachricht zwei Prozentwerte und die Antwortmeldung das Luna-Modell nennen.
+7. Mehrere Nachrichten einzeln auswählen und anschließend **Alle auswählen** testen. Anzahl, Auswahlzustand und alle drei Bulk-Schaltflächen müssen sich passend aktualisieren.
+8. Eine Mischung aus noch nicht bewerteten und bereits bewerteten Nachrichten markieren und **Unbewertete Auswahl analysieren** anklicken. Während der Verarbeitung muss der Ladehinweis mit Animation sichtbar sein. Danach müssen nur die vorher unbewerteten Nachrichten neue Prozentwerte erhalten und die Meldung muss die Anzahl der ohne API-Aufruf übersprungenen Nachrichten nennen. Nur bereits bewertete Nachrichten auswählen und dieselbe Aktion erneut ausführen; es darf keine API-Anfrage erfolgen. Anschließend **Auswahl neu bewerten** anklicken, den Bestätigungsdialog zunächst abbrechen und beim zweiten Versuch bestätigen. Erst dann dürfen vorhandene sichtbare Scores ersetzt werden; gespeicherte Nutzerkorrekturen müssen im Lernarchiv erhalten bleiben.
 9. Alle vier lokalen Score-Sortierungen und die vier Varianten **über alle Konten** prüfen: Wichtigkeit und Spam-Wahrscheinlichkeit jeweils auf- und absteigend. Die kontenübergreifenden Varianten müssen in der sonst kontogetrennten Ansicht genau eine global sortierte Liste erzeugen. Nicht analysierte Nachrichten müssen hinter analysierten Ergebnissen stehen.
 10. Die AI-Filter **Nur analysierte**, **Nur nicht analysierte**, **Wahrscheinlich Spam** und **Wahrscheinlich kein Spam** sowie beide Mindestwerte testen. Einstellungen müssen nach erneutem Öffnen erhalten bleiben.
 11. An einer analysierten Nachricht **Werte korrigieren** anklicken. Beide Regler und Zahlenfelder müssen mit den aktuellen Werten starten und synchron bleiben. Ohne Änderung muss das Speichern abgewiesen werden.
@@ -111,7 +111,7 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 31. Die Oberflächensprache auf **English** umstellen und globales Dashboard, Einzelmail-Popup, Antworteditor, Einstellungen und Hilfe prüfen. Danach zurück auf **Deutsch** wechseln. Alle sichtbaren Texte und Meldungen müssen der Auswahl folgen.
 32. Optional die automatische Verarbeitung aktivieren, eine andere E-Mail öffnen und das Popup erneut öffnen. Die automatische Analyse muss angezeigt werden.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.1.0** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.1.1** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 ## Technische Struktur
 

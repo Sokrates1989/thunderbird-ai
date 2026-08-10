@@ -11,14 +11,16 @@ const DashboardAIService = {
         return this.normalizeResults(stored[CONFIG.STORAGE_KEYS.DASHBOARD_AI_RESULTS]);
     },
 
-    /** Merge successful scores and retain the newest bounded result set. */
-    async saveResults(existingResults, newResults, model) {
+    /** Merge successful scores while optionally protecting every existing record. */
+    async saveResults(existingResults, newResults, model, options = {}) {
         const analyzedAt = new Date().toISOString();
         const merged = { ...this.normalizeResults(existingResults) };
         for (const result of newResults) {
             const normalized = this.normalizeResult({ ...result, model, analyzedAt });
-            if (normalized && result.storageKey) {
-                merged[result.storageKey] = normalized;
+            const storageKey = result.storageKey;
+            const protectedResult = options.preserveExisting === true && merged[storageKey];
+            if (normalized && storageKey && !protectedResult) {
+                merged[storageKey] = normalized;
             }
         }
         const bounded = Object.fromEntries(
@@ -30,6 +32,40 @@ const DashboardAIService = {
             [CONFIG.STORAGE_KEYS.DASHBOARD_AI_RESULTS]: bounded
         });
         return bounded;
+    },
+
+    /** Split the current selection into messages to analyze and persisted scores to skip. */
+    createAnalysisPlan(accounts, selectedMessageIds, includeAnalyzed = false) {
+        const selectedIds = new Set(
+            [...(selectedMessageIds || [])]
+                .filter(messageId => messageId !== undefined && messageId !== null)
+                .map(messageId => String(messageId))
+        );
+        const selectedMessages = new Map();
+        for (const account of accounts || []) {
+            for (const message of account.messages || []) {
+                const messageId = String(message.id);
+                if (selectedIds.has(messageId) && !selectedMessages.has(messageId)) {
+                    selectedMessages.set(messageId, message);
+                }
+            }
+        }
+        const messageIds = [...selectedMessages.values()]
+            .filter(message => includeAnalyzed || !message.aiAnalysis)
+            .map(message => message.id);
+        return {
+            messageIds,
+            selectedCount: selectedMessages.size,
+            skippedCount: selectedMessages.size - messageIds.length
+        };
+    },
+
+    /** Send a prepared non-empty plan and avoid an API message for an empty plan. */
+    async analyzePlan(plan) {
+        if (!plan?.messageIds?.length) {
+            return null;
+        }
+        return this.analyze(plan.messageIds);
     },
 
     /** Attach matching stored scores to Thunderbird header objects. */

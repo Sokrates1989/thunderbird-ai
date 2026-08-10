@@ -407,6 +407,70 @@ test('dashboard AI scores persist without mail content and direct actions open s
     assert.match(openedTabs[1].url, /single-mail-ui\.html\?messageId=42&reply=1/u);
 });
 
+test('ordinary bulk scoring skips persisted results and protects them from replacement', async () => {
+    const { service, sentMessages } = loadDashboardAIService();
+    const analyzed = {
+        id: 1,
+        headerMessageId: 'scored@example.test',
+        aiAnalysis: { importanceScore: 91, spamScore: 4, corrected: true }
+    };
+    const unscored = { id: 2, headerMessageId: 'new@example.test', aiAnalysis: null };
+    const accounts = [{ accountId: 'personal', messages: [analyzed, unscored] }];
+
+    const ordinaryPlan = service.createAnalysisPlan(accounts, new Set([1, 2]), false);
+    const rescorePlan = service.createAnalysisPlan(accounts, new Set([1, 2]), true);
+    const allScoredPlan = service.createAnalysisPlan(accounts, new Set([1]), false);
+
+    assert.deepEqual(Array.from(ordinaryPlan.messageIds), [2]);
+    assert.equal(ordinaryPlan.selectedCount, 2);
+    assert.equal(ordinaryPlan.skippedCount, 1);
+    assert.deepEqual(Array.from(rescorePlan.messageIds), [1, 2]);
+    assert.equal(rescorePlan.selectedCount, 2);
+    assert.equal(rescorePlan.skippedCount, 0);
+    assert.deepEqual(Array.from(allScoredPlan.messageIds), []);
+    assert.equal(allScoredPlan.selectedCount, 1);
+    assert.equal(allScoredPlan.skippedCount, 1);
+    assert.equal(await service.analyzePlan(allScoredPlan), null);
+    assert.equal(sentMessages.length, 0);
+    await service.analyzePlan(ordinaryPlan);
+    assert.deepEqual(Array.from(sentMessages[0].messageIds), [2]);
+
+    const storageKey = service.messageKey(accounts[0], analyzed);
+    const existing = {
+        [storageKey]: {
+            importanceScore: 91,
+            spamScore: 4,
+            analyzedAt: '2026-08-10T10:00:00.000Z',
+            model: 'gpt-5.6-luna',
+            corrected: true,
+            correctedAt: '2026-08-10T10:30:00.000Z'
+        }
+    };
+    const replacement = [{
+        storageKey,
+        messageId: 1,
+        importanceScore: 10,
+        spamScore: 80
+    }];
+    const protectedResults = await service.saveResults(
+        existing,
+        replacement,
+        'gpt-5.6-luna',
+        { preserveExisting: true }
+    );
+    const replacedResults = await service.saveResults(
+        existing,
+        replacement,
+        'gpt-5.6-luna',
+        { preserveExisting: false }
+    );
+
+    assert.equal(protectedResults[storageKey].importanceScore, 91);
+    assert.equal(protectedResults[storageKey].corrected, true);
+    assert.equal(replacedResults[storageKey].importanceScore, 10);
+    assert.equal(replacedResults[storageKey].corrected, false);
+});
+
 test('only the limited visible slice requests content previews', async () => {
     const requested = [];
     const viewService = loadViewService();
@@ -622,6 +686,7 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(dashboard, /id="dashboardImportanceMinimum"/u);
     assert.match(dashboard, /id="dashboardSpamMinimum"/u);
     assert.match(dashboard, /id="dashboardAnalyzeSelected"/u);
+    assert.match(dashboard, /id="dashboardRescoreSelected"/u);
     assert.match(dashboard, /value="importance-global-desc"/u);
     assert.match(dashboard, /value="spam-global-desc"/u);
     assert.match(dashboard, /id="dashboardLoadingIndicator"/u);

@@ -387,6 +387,10 @@ body {
     background: #087cc1;
 }
 
+.dashboard-bulk-actions .dashboard-rescore-selected {
+    background: #66717a;
+}
+
 .dashboard-accounts {
     display: grid;
     gap: 12px;

@@ -27,6 +27,7 @@ const GlobalDashboardManager = class {
             selectAll: document.getElementById('dashboardSelectAll'),
             selectedCount: document.getElementById('dashboardSelectedCount'),
             analyzeSelected: document.getElementById('dashboardAnalyzeSelected'),
+            rescoreSelected: document.getElementById('dashboardRescoreSelected'),
             loadingIndicator: document.getElementById('dashboardLoadingIndicator'),
             loadingText: document.getElementById('dashboardLoadingText'),
             trashSelected: document.getElementById('dashboardTrashSelected')
@@ -115,6 +116,9 @@ const GlobalDashboardManager = class {
         });
         this.elements.analyzeSelected.addEventListener('click', () => {
             this.analyzeSelected().catch(error => this.showUnexpectedError(error));
+        });
+        this.elements.rescoreSelected.addEventListener('click', () => {
+            this.rescoreSelected().catch(error => this.showUnexpectedError(error));
         });
 
         await this.loadPreferences();
@@ -411,28 +415,72 @@ const GlobalDashboardManager = class {
         this.render(this.accounts);
     }
 
-    /** Analyze the selected visible messages and persist only normalized score metadata. */
+    /** Analyze only selected messages without persisted scores. */
     async analyzeSelected() {
-        const messageIds = [...this.selectedMessageIds];
-        if (!messageIds.length) {
+        await this.runSelectedAnalysis(false);
+    }
+
+    /** Confirm the intentional replacement of scores for every selected message. */
+    async rescoreSelected() {
+        const plan = DashboardAIService.createAnalysisPlan(
+            this.sourceAccounts,
+            this.selectedMessageIds,
+            true
+        );
+        if (!plan.messageIds.length
+            || !window.confirm(I18n.t('dashboardRescoreSelectedConfirm', {
+                count: plan.messageIds.length
+            }))) {
             return;
         }
-        this.setBusy(true, I18n.t('dashboardAnalysisInProgress', { count: messageIds.length }));
+        await this.runSelectedAnalysis(true);
+    }
+
+    /** Execute a protected first-time analysis or an explicitly confirmed replacement. */
+    async runSelectedAnalysis(includeAnalyzed) {
+        const plan = DashboardAIService.createAnalysisPlan(
+            this.sourceAccounts,
+            this.selectedMessageIds,
+            includeAnalyzed
+        );
+        if (!plan.selectedCount) {
+            return;
+        }
+        if (!plan.messageIds.length) {
+            this.setStatus(I18n.t('dashboardAnalysisAllSkipped', {
+                count: plan.skippedCount
+            }));
+            return;
+        }
+        const progressKey = includeAnalyzed
+            ? 'dashboardRescoreInProgress'
+            : 'dashboardAnalysisInProgress';
+        this.setBusy(true, I18n.t(progressKey, { count: plan.messageIds.length }));
         try {
-            const data = await DashboardAIService.analyze(messageIds);
+            const data = await DashboardAIService.analyzePlan(plan);
             this.aiResults = await DashboardAIService.saveResults(
                 this.aiResults,
                 DashboardAIService.addStorageKeys(this.sourceAccounts, data.results),
-                data.model
+                data.model,
+                { preserveExisting: !includeAnalyzed }
             );
             DashboardAIService.attachResults(this.sourceAccounts, this.aiResults);
             await this.rebuildCurrentView();
-            const statusKey = data.failedCount
-                ? 'dashboardAnalysisPartial'
-                : 'dashboardAnalysisSuccess';
+            const skipped = includeAnalyzed ? 0 : plan.skippedCount;
+            let statusKey;
+            if (data.failedCount) {
+                statusKey = skipped
+                    ? 'dashboardAnalysisPartialWithSkipped'
+                    : 'dashboardAnalysisPartial';
+            } else {
+                statusKey = skipped
+                    ? 'dashboardAnalysisSuccessWithSkipped'
+                    : 'dashboardAnalysisSuccess';
+            }
             this.setStatus(I18n.t(statusKey, {
                 count: data.results.length,
                 failed: data.failedCount,
+                skipped,
                 model: I18n.modelLabel(data.model)
             }), data.failedCount ? 'warning' : 'success');
         } catch (error) {
@@ -527,6 +575,7 @@ const GlobalDashboardManager = class {
         this.elements.selectAll.disabled = this.busy || total === 0;
         this.elements.trashSelected.disabled = this.busy || selected === 0;
         this.elements.analyzeSelected.disabled = this.busy || selected === 0;
+        this.elements.rescoreSelected.disabled = this.busy || selected === 0;
         this.elements.selectedCount.textContent = I18n.t('dashboardSelectedCount', { count: selected });
         for (const element of this.elements.accounts.querySelectorAll(
             '.dashboard-message-select, .dashboard-message-action'
