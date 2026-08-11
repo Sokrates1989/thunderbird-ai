@@ -4,6 +4,7 @@ const DashboardViewPreferences = {
     async load() {
         const keys = CONFIG.STORAGE_KEYS;
         const stored = await browser.storage.local.get([
+            keys.DASHBOARD_DISPLAY_OPTIONS_EXPANDED,
             keys.DASHBOARD_SHOW_PREVIEW,
             keys.DASHBOARD_PREVIEW_LINES,
             keys.DASHBOARD_SORT_ORDER,
@@ -19,6 +20,7 @@ const DashboardViewPreferences = {
         ]);
         const senderFilter = stored[keys.DASHBOARD_SENDER_FILTER];
         return {
+            displayOptionsExpanded: stored[keys.DASHBOARD_DISPLAY_OPTIONS_EXPANDED] !== false,
             previewEnabled: stored[keys.DASHBOARD_SHOW_PREVIEW] === true,
             previewLineCount: this.normalizePreviewLines(stored[keys.DASHBOARD_PREVIEW_LINES]),
             sortOrder: GlobalMailViewService.normalizeSortOrder(stored[keys.DASHBOARD_SORT_ORDER]),
@@ -46,6 +48,7 @@ const DashboardViewPreferences = {
     async save(state) {
         const keys = CONFIG.STORAGE_KEYS;
         await browser.storage.local.set({
+            [keys.DASHBOARD_DISPLAY_OPTIONS_EXPANDED]: state.displayOptionsExpanded,
             [keys.DASHBOARD_SHOW_PREVIEW]: state.previewEnabled,
             [keys.DASHBOARD_PREVIEW_LINES]: state.previewLineCount,
             [keys.DASHBOARD_SORT_ORDER]: state.sortOrder,

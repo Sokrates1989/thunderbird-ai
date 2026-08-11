@@ -9,6 +9,7 @@ const GlobalDashboardManager = class {
             status: document.getElementById('dashboardStatus'),
             refresh: document.getElementById('dashboardRefresh'),
             settings: document.getElementById('dashboardSettings'),
+            displayOptions: document.getElementById('dashboardDisplayOptions'),
             showPreview: document.getElementById('dashboardShowPreview'),
             previewLines: document.getElementById('dashboardPreviewLines'),
             viewMode: document.getElementById('dashboardViewMode'),
@@ -40,6 +41,7 @@ const GlobalDashboardManager = class {
         this.availableSenders = [];
         this.selectedSenderKeys = null;
         this.selectedMessageIds = new Set();
+        this.displayOptionsExpanded = true;
         this.previewEnabled = false;
         this.previewLineCount = 3;
         this.sortOrder = GlobalMailViewService.DEFAULT_SORT_ORDER;
@@ -98,6 +100,9 @@ const GlobalDashboardManager = class {
         });
         this.elements.settings.addEventListener('click', () => {
             browser.runtime.openOptionsPage().catch(error => this.showUnexpectedError(error));
+        });
+        this.elements.displayOptions.addEventListener('toggle', () => {
+            this.handleDisplayOptionsToggle().catch(error => this.showUnexpectedError(error));
         });
         this.elements.showPreview.addEventListener('change', () => {
             this.handlePreviewToggle().catch(error => this.showUnexpectedError(error));
@@ -160,6 +165,7 @@ const GlobalDashboardManager = class {
 
     /** Synchronize static form controls with the normalized in-memory view state. */
     applyPreferenceControls() {
+        this.elements.displayOptions.open = this.displayOptionsExpanded;
         this.elements.showPreview.checked = this.previewEnabled;
         this.elements.previewLines.value = String(this.previewLineCount);
         this.elements.viewMode.value = this.viewMode;
@@ -182,6 +188,16 @@ const GlobalDashboardManager = class {
         this.elements.spamMinimum.value = String(this.spamMinimum);
         this.elements.riskMinimum.value = String(this.riskMinimum);
         this.elements.previewLines.disabled = !this.previewEnabled;
+    }
+
+    /** Persist an explicit operator change without rebuilding the mailbox list. */
+    async handleDisplayOptionsToggle() {
+        const expanded = this.elements.displayOptions.open;
+        if (expanded === this.displayOptionsExpanded) {
+            return;
+        }
+        this.displayOptionsExpanded = expanded;
+        await this.savePreferences();
     }
 
     /** Persist preview visibility and load bodies only for the current visible slice. */

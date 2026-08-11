@@ -15,7 +15,7 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 - nachrichtenbezogener AI Chat
 - lokale Ergebnisablage mit Verwaltung unter **Einstellungen** und Zwischenablage-Aktion
 - lokale, tokenbasierte Schätzung der bisherigen OpenAI-API-Kosten mit transparentem Preisstand
-- eigenes globales Posteingangs-Dashboard mit vollständiger Header-Paginierung, umschaltbarer Konto- oder kombinierter Neueste-50-Ansicht, kontenübergreifender Score-Sortierung, durchsuchbarem Absenderfilter, Datumsfiltern, frei wählbaren 1–50 Nachrichten pro Konto, Einzelauswahl, Mehrfachlöschen und optionaler lokaler Inhaltsvorschau
+- eigenes globales Posteingangs-Dashboard mit vollständiger Header-Paginierung, einer übersichtlich gruppierten und dauerhaft ein-/ausklappbaren Ansichtskonfiguration, umschaltbarer Konto- oder kombinierter Neueste-50-Ansicht, kontenübergreifender Score-Sortierung, durchsuchbarem Absenderfilter, Datumsfiltern, frei wählbaren 1–50 Nachrichten pro Konto, Einzelauswahl, Mehrfachlöschen und optionaler lokaler Inhaltsvorschau
 - standardmäßig Luna-basierte Bulk-Auswertung noch nicht bewerteter ausgewählter Dashboard-Nachrichten mit Wichtigkeit, Spam-Wahrscheinlichkeit und Risikowert von 0–100 %, dauerhaften Score-Filtern, Score-Sortierungen und ausdrücklicher Neu-Bewertung
 - lokale, begrenzte Spam-Vorprüfung mit Absenderhäufigkeit der letzten 30/90 Tage und insgesamt sowie strukturellen Newsletter-/Massenversand-Signalen
 - leicht korrigierbare Scores mit separatem, löschunabhängigem Lernarchiv, getrennten Gründen für Wichtigkeit, Spam und Risiko sowie manueller Referenzverwaltung unter **Einstellungen**
@@ -60,7 +60,7 @@ Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speic
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-2.7.0-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-2.7.1-win-x64.exe` herunterladen und starten.
 2. Im Setup **Deutsch** oder **English** wählen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung und zu den Berechtigungen zum Ändern, Verschieben und Löschen von Nachrichten bestätigen.
@@ -90,13 +90,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-2.7.0-win-x64.exe`
+- `artifacts\Thunderbird-AI-Setup-2.7.1-win-x64.exe`
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
 ## Manueller Funktionstest
 
-1. In Thunderbirds Hauptsymbolleiste auf **Thunderbird AI Assistant** klicken. Während des Ladens muss der animierte Ladehinweis sichtbar sein. Danach muss das globale Dashboard die unterstützten Konten standardmäßig getrennt auflisten. **Datum: Neueste zuerst** ist der Standard; die aktuellsten ungelesenen Nachrichten müssen oben stehen, auch wenn ein Konto sehr viele ungelesene Nachrichten enthält.
+1. In Thunderbirds Hauptsymbolleiste auf **Thunderbird AI Assistant** klicken. Während des Ladens muss der animierte Ladehinweis sichtbar sein. Danach muss das globale Dashboard die unterstützten Konten standardmäßig getrennt auflisten. **Datum: Neueste zuerst** ist der Standard; die aktuellsten ungelesenen Nachrichten müssen oben stehen, auch wenn ein Konto sehr viele ungelesene Nachrichten enthält. Das Panel **Ansicht** muss beim ersten Start geöffnet und in die vier Bereiche Darstellung/Sortierung, Zeitraum/Absender, Inhaltsvorschau und AI-Filter gegliedert sein. Panel schließen, Dashboard erneut öffnen und den geschlossenen Zustand prüfen; danach wieder öffnen und auch diesen Zustand über ein erneutes Öffnen hinweg prüfen.
 2. Auf **Konten kombinieren: neueste 50 Nachrichten** umschalten. Es muss genau eine Liste mit höchstens 50 Nachrichten erscheinen, die aus allen Konten global nach Datum ausgewählt wurden. Ein selten genutztes Konto mit alten Nachrichten darf keine neueren Nachrichten eines aktiven Kontos verdrängen. Jede Zeile muss ihr Ursprungskonto anzeigen. Danach zurück zur kontogetrennten Ansicht wechseln; die Auswahl muss nach erneutem Öffnen erhalten bleiben.
 3. Die vier lokalen Sortierungen prüfen: neueste/älteste zuerst und **Beteiligte** A–Z/Z–A. Die maximale Anzahl erst auf 2 und dann auf 15 setzen. In der getrennten Ansicht dürfen pro Konto nie mehr Nachrichten als dieser Wert erscheinen; in der kombinierten oder global sortierten Ansicht ist die Grenze fest 50 und das Mengenfeld deaktiviert.
 4. Den Absender-Filter öffnen, **Alle Absender** deaktivieren und einzelne Absender auswählen. Im Suchfeld nacheinander zwei unterschiedliche Absender suchen und jeweils aktivieren. Beide müssen ausgewählt bleiben, obwohl immer nur das aktuelle Suchergebnis sichtbar ist. Nur passende Nachrichten dürfen erscheinen; der Filter muss nach erneutem Öffnen erhalten bleiben.
@@ -135,7 +135,7 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 37. Unter **Einstellungen → Thunderbird-Archivierung** auf **Archivordner prüfen** klicken. Ein von Thunderbird als Archiv gekennzeichneter Testordner muss mit Pfad, vorhandenen direkten Jahresordnern und Unterordner-Fähigkeit erscheinen. Ein lediglich gleich benannter, aber nicht als Archiv gekennzeichneter Ordner darf nicht fälschlich erkannt werden. Über **Thunderbird-Hilfe öffnen** muss die offizielle Anleitung im Standardbrowser erscheinen. Anschließend die nicht per Add-on auslesbare Auswahl **Jährliche archivierte Ordner** einmal manuell über den angezeigten Menüpfad kontrollieren.
 38. Für einen klaren Newsletter mit List-Unsubscribe/List-ID oder sichtbarer Abmeldemöglichkeit **Scoring-Info** ausführen. Der Spam-Wert darf nicht mehr im einstelligen Bereich bleiben und muss mindestens die lokale Untergrenze erreichen. Anschließend mehrere Newsletter desselben Absenders in der Bulk-Auswertung prüfen; eine höhere Absenderhäufigkeit muss die lokale Vorprüfung erhöhen. Eine häufige, aber ausdrücklich als erwünscht korrigierte Systemmail desselben Absenders erneut bewerten; die gespeicherte Absenderkorrektur muss Vorrang behalten.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.7.0** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.7.1** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 ## Technische Struktur
 

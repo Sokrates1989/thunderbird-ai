@@ -368,19 +368,41 @@ test('explicit global AI sorts flatten scored messages across account boundaries
 test('dashboard grouping mode is normalized and persisted independently', async () => {
     const { context, preferences, storage } = loadViewPreferences({
         dashboardViewMode: 'combined',
+        dashboardDisplayOptionsExpanded: false,
         dashboardRiskMinimum: 63
     });
 
     const loaded = await preferences.load();
     assert.equal(loaded.viewMode, 'combined');
+    assert.equal(loaded.displayOptionsExpanded, false);
     assert.equal(loaded.riskMinimum, 63);
     loaded.viewMode = 'account';
+    loaded.displayOptionsExpanded = true;
     loaded.riskMinimum = 71;
     await preferences.save(loaded);
 
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_VIEW_MODE], 'account');
+    assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_DISPLAY_OPTIONS_EXPANDED], true);
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_RISK_MINIMUM], 71);
     assert.equal(context.GlobalMailViewService.normalizeViewMode('invalid'), 'account');
+});
+
+test('dashboard view panel defaults open and persists only explicit toggle changes', async () => {
+    const { preferences } = loadViewPreferences();
+    assert.equal((await preferences.load()).displayOptionsExpanded, true);
+
+    const DashboardManager = loadDashboardManager({});
+    const manager = Object.create(DashboardManager.prototype);
+    manager.elements = { displayOptions: { open: false } };
+    manager.displayOptionsExpanded = true;
+    let saveCount = 0;
+    manager.savePreferences = async () => { saveCount += 1; };
+
+    await manager.handleDisplayOptionsToggle();
+    await manager.handleDisplayOptionsToggle();
+
+    assert.equal(manager.displayOptionsExpanded, false);
+    assert.equal(saveCount, 1);
 });
 
 test('dashboard AI scores persist without mail content and direct actions open shared workspaces', async () => {
@@ -869,6 +891,12 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(dashboard, /class="dashboard-bulk-action-groups"/u);
     assert.match(dashboard, /class="dashboard-action-icon" aria-hidden="true"/u);
     assert.match(dashboard, /id="dashboardShowPreview"/u);
+    assert.match(dashboard, /<details id="dashboardDisplayOptions"[^>]*open>/u);
+    assert.match(dashboard, /class="dashboard-display-options-summary"/u);
+    assert.match(dashboard, /data-i18n="dashboardLayoutGroup"/u);
+    assert.match(dashboard, /data-i18n="dashboardFilterGroup"/u);
+    assert.match(dashboard, /data-i18n="dashboardPreviewGroup"/u);
+    assert.match(dashboard, /data-i18n="dashboardAIFilterGroup"/u);
     assert.match(dashboard, /id="dashboardPreviewLines"/u);
     assert.match(dashboard, /id="dashboardSortOrder"/u);
     assert.match(dashboard, /id="dashboardViewMode"/u);
@@ -902,6 +930,8 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.doesNotMatch(dashboard, /openai\.js|OpenAIService/u);
     assert.match(dashboardStyles, /overflow-y:\s*auto/u);
     assert.match(dashboardStyles, /--dashboard-preview-lines/u);
+    assert.match(dashboardStyles, /\.dashboard-option-groups\s*\{[^}]*grid-template-columns:\s*repeat\(2,/su);
+    assert.match(dashboardStyles, /\.dashboard-display-options-summary:focus-visible/u);
     assert.match(dashboardStyles, /@keyframes dashboard-spin/u);
     assert.match(
         dashboardStyles,

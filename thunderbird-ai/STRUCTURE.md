@@ -37,7 +37,7 @@ thunderbird-ai/
 - `GlobalDashboardManager.js` coordinates refreshes, selection, and mailbox actions.
 - `GlobalMailService.js` owns Thunderbird header pagination, previews, deletion, native account-aware archiving, and fault-isolated read-state updates through the corresponding message permissions.
 - `GlobalMailViewService.js` applies sender/date/AI filters, per-account limits, the combined newest-50 candidate scope, and explicit cross-account score sorting before previews are loaded.
-- `DashboardViewPreferences.js` owns persisted view controls, including the account-separated/combined layout switch.
+- `DashboardViewPreferences.js` owns persisted view controls, including the account-separated/combined layout switch and the collapsed/expanded state of the organized view-options panel.
 - `DashboardSenderFilterComponent.js`, `DashboardMessageComponent.js`, and `DashboardFeedbackComponent.js` render their focused UI areas without injecting mailbox HTML.
 - `ScoreFeedbackEditor.js` and `score-feedback-editor.css` provide the shared importance, spam, and risk correction fields, score-specific reason categories, and separate free-text explanations used by the dashboard, single-message scoring, and Settings archive.
 - `DashboardAIService.js` opens the existing single-message workspaces, plans protected first-time versus explicit re-score bulk operations, and persists bounded importance/spam/risk score metadata keyed by RFC Message-ID instead of Thunderbird's restart-volatile numeric ID. Legacy two-score metadata remains attached with a null risk score until explicit rescoring or correction.

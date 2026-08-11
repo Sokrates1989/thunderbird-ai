@@ -20,91 +20,119 @@
             <button type="button" id="dashboardRefresh" data-i18n="dashboardRefresh"></button>
             <button type="button" id="dashboardSettings" data-i18n="dashboardSettings"></button>
         </div>
-        <section class="dashboard-display-options" aria-labelledby="dashboardDisplayOptionsHeading">
-            <h2 id="dashboardDisplayOptionsHeading" data-i18n="dashboardDisplayOptions"></h2>
-            <div class="dashboard-query-controls">
-                <label class="dashboard-view-mode">
-                    <span data-i18n="dashboardViewMode"></span>
-                    <select id="dashboardViewMode">
-                        <option value="account" data-i18n="dashboardViewByAccount"></option>
-                        <option value="combined" data-i18n="dashboardViewCombined"></option>
-                    </select>
-                </label>
-                <label>
-                    <span data-i18n="dashboardSortOrder"></span>
-                    <select id="dashboardSortOrder">
-                        <option value="date-desc" data-i18n="dashboardSortNewest"></option>
-                        <option value="date-asc" data-i18n="dashboardSortOldest"></option>
-                        <option value="sender-asc" data-i18n="dashboardSortSenderAscending"></option>
-                        <option value="sender-desc" data-i18n="dashboardSortSenderDescending"></option>
-                        <option value="importance-desc" data-i18n="dashboardSortImportanceDescending"></option>
-                        <option value="importance-asc" data-i18n="dashboardSortImportanceAscending"></option>
-                        <option value="spam-desc" data-i18n="dashboardSortSpamDescending"></option>
-                        <option value="spam-asc" data-i18n="dashboardSortSpamAscending"></option>
-                        <option value="risk-desc" data-i18n="dashboardSortRiskDescending"></option>
-                        <option value="risk-asc" data-i18n="dashboardSortRiskAscending"></option>
-                        <option value="importance-global-desc" data-i18n="dashboardSortImportanceGlobalDescending"></option>
-                        <option value="importance-global-asc" data-i18n="dashboardSortImportanceGlobalAscending"></option>
-                        <option value="spam-global-desc" data-i18n="dashboardSortSpamGlobalDescending"></option>
-                        <option value="spam-global-asc" data-i18n="dashboardSortSpamGlobalAscending"></option>
-                        <option value="risk-global-desc" data-i18n="dashboardSortRiskGlobalDescending"></option>
-                        <option value="risk-global-asc" data-i18n="dashboardSortRiskGlobalAscending"></option>
-                    </select>
-                </label>
-                <label>
-                    <span id="dashboardMessageLimitLabel" data-i18n="dashboardMessageLimit"></span>
-                    <input type="number" id="dashboardMessageLimit" min="1" max="50" step="1" inputmode="numeric">
-                </label>
-                <label>
-                    <span data-i18n="dashboardDateFrom"></span>
-                    <input type="date" id="dashboardDateFrom">
-                </label>
-                <label>
-                    <span data-i18n="dashboardDateTo"></span>
-                    <input type="date" id="dashboardDateTo">
-                </label>
-                <details id="dashboardSenderFilter" class="dashboard-sender-filter">
-                    <summary id="dashboardSenderSummary" data-i18n="dashboardSenderFilter"></summary>
-                    <div id="dashboardSenderOptions" class="dashboard-sender-options"></div>
-                </details>
-                <label>
-                    <span data-i18n="dashboardAIStatusFilter"></span>
-                    <select id="dashboardAIStatusFilter">
-                        <option value="all" data-i18n="dashboardAIStatusAll"></option>
-                        <option value="analyzed" data-i18n="dashboardAIStatusAnalyzed"></option>
-                        <option value="unanalyzed" data-i18n="dashboardAIStatusUnanalyzed"></option>
-                        <option value="probably-spam" data-i18n="dashboardAIStatusProbablySpam"></option>
-                        <option value="probably-not-spam" data-i18n="dashboardAIStatusProbablyNotSpam"></option>
-                        <option value="probably-risky" data-i18n="dashboardAIStatusProbablyRisky"></option>
-                        <option value="probably-low-risk" data-i18n="dashboardAIStatusProbablyLowRisk"></option>
-                    </select>
-                </label>
-                <label>
-                    <span data-i18n="dashboardImportanceMinimum"></span>
-                    <input type="number" id="dashboardImportanceMinimum" min="0" max="100" step="1" inputmode="numeric">
-                </label>
-                <label>
-                    <span data-i18n="dashboardSpamMinimum"></span>
-                    <input type="number" id="dashboardSpamMinimum" min="0" max="100" step="1" inputmode="numeric">
-                </label>
-                <label>
-                    <span data-i18n="dashboardRiskMinimum"></span>
-                    <input type="number" id="dashboardRiskMinimum" min="0" max="100" step="1" inputmode="numeric">
-                </label>
+        <details id="dashboardDisplayOptions" class="dashboard-display-options" open>
+            <summary id="dashboardDisplayOptionsHeading" class="dashboard-display-options-summary">
+                <span data-i18n="dashboardDisplayOptions"></span>
+            </summary>
+            <div class="dashboard-display-options-content">
+                <div class="dashboard-option-groups">
+                    <fieldset class="dashboard-option-group dashboard-option-group-layout">
+                        <legend data-i18n="dashboardLayoutGroup"></legend>
+                        <div class="dashboard-query-controls">
+                            <label class="dashboard-view-mode">
+                                <span data-i18n="dashboardViewMode"></span>
+                                <select id="dashboardViewMode">
+                                    <option value="account" data-i18n="dashboardViewByAccount"></option>
+                                    <option value="combined" data-i18n="dashboardViewCombined"></option>
+                                </select>
+                            </label>
+                            <label>
+                                <span data-i18n="dashboardSortOrder"></span>
+                                <select id="dashboardSortOrder">
+                                    <option value="date-desc" data-i18n="dashboardSortNewest"></option>
+                                    <option value="date-asc" data-i18n="dashboardSortOldest"></option>
+                                    <option value="sender-asc" data-i18n="dashboardSortSenderAscending"></option>
+                                    <option value="sender-desc" data-i18n="dashboardSortSenderDescending"></option>
+                                    <option value="importance-desc" data-i18n="dashboardSortImportanceDescending"></option>
+                                    <option value="importance-asc" data-i18n="dashboardSortImportanceAscending"></option>
+                                    <option value="spam-desc" data-i18n="dashboardSortSpamDescending"></option>
+                                    <option value="spam-asc" data-i18n="dashboardSortSpamAscending"></option>
+                                    <option value="risk-desc" data-i18n="dashboardSortRiskDescending"></option>
+                                    <option value="risk-asc" data-i18n="dashboardSortRiskAscending"></option>
+                                    <option value="importance-global-desc" data-i18n="dashboardSortImportanceGlobalDescending"></option>
+                                    <option value="importance-global-asc" data-i18n="dashboardSortImportanceGlobalAscending"></option>
+                                    <option value="spam-global-desc" data-i18n="dashboardSortSpamGlobalDescending"></option>
+                                    <option value="spam-global-asc" data-i18n="dashboardSortSpamGlobalAscending"></option>
+                                    <option value="risk-global-desc" data-i18n="dashboardSortRiskGlobalDescending"></option>
+                                    <option value="risk-global-asc" data-i18n="dashboardSortRiskGlobalAscending"></option>
+                                </select>
+                            </label>
+                            <label>
+                                <span id="dashboardMessageLimitLabel" data-i18n="dashboardMessageLimit"></span>
+                                <input type="number" id="dashboardMessageLimit" min="1" max="50" step="1" inputmode="numeric">
+                            </label>
+                        </div>
+                        <p id="dashboardLimitHint" class="dashboard-option-hint" data-i18n="dashboardLimitHint"></p>
+                    </fieldset>
+
+                    <fieldset class="dashboard-option-group dashboard-option-group-filter">
+                        <legend data-i18n="dashboardFilterGroup"></legend>
+                        <div class="dashboard-query-controls">
+                            <label>
+                                <span data-i18n="dashboardDateFrom"></span>
+                                <input type="date" id="dashboardDateFrom">
+                            </label>
+                            <label>
+                                <span data-i18n="dashboardDateTo"></span>
+                                <input type="date" id="dashboardDateTo">
+                            </label>
+                            <details id="dashboardSenderFilter" class="dashboard-sender-filter">
+                                <summary id="dashboardSenderSummary" data-i18n="dashboardSenderFilter"></summary>
+                                <div id="dashboardSenderOptions" class="dashboard-sender-options"></div>
+                            </details>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="dashboard-option-group dashboard-option-group-preview">
+                        <legend data-i18n="dashboardPreviewGroup"></legend>
+                        <div class="dashboard-display-controls">
+                            <label>
+                                <input type="checkbox" id="dashboardShowPreview">
+                                <span data-i18n="dashboardShowPreview"></span>
+                            </label>
+                            <label for="dashboardPreviewLines" data-i18n="dashboardPreviewLines"></label>
+                            <input type="number" id="dashboardPreviewLines" min="1" max="20" step="1" inputmode="numeric">
+                        </div>
+                        <p class="dashboard-option-hint" data-i18n="dashboardPreviewPrivacy"></p>
+                    </fieldset>
+
+                    <fieldset class="dashboard-option-group dashboard-option-group-ai">
+                        <legend data-i18n="dashboardAIFilterGroup"></legend>
+                        <div class="dashboard-query-controls">
+                            <label class="dashboard-ai-status-filter">
+                                <span data-i18n="dashboardAIStatusFilter"></span>
+                                <select id="dashboardAIStatusFilter">
+                                    <option value="all" data-i18n="dashboardAIStatusAll"></option>
+                                    <option value="analyzed" data-i18n="dashboardAIStatusAnalyzed"></option>
+                                    <option value="unanalyzed" data-i18n="dashboardAIStatusUnanalyzed"></option>
+                                    <option value="probably-spam" data-i18n="dashboardAIStatusProbablySpam"></option>
+                                    <option value="probably-not-spam" data-i18n="dashboardAIStatusProbablyNotSpam"></option>
+                                    <option value="probably-risky" data-i18n="dashboardAIStatusProbablyRisky"></option>
+                                    <option value="probably-low-risk" data-i18n="dashboardAIStatusProbablyLowRisk"></option>
+                                </select>
+                            </label>
+                            <label>
+                                <span data-i18n="dashboardImportanceMinimum"></span>
+                                <input type="number" id="dashboardImportanceMinimum" min="0" max="100" step="1" inputmode="numeric">
+                            </label>
+                            <label>
+                                <span data-i18n="dashboardSpamMinimum"></span>
+                                <input type="number" id="dashboardSpamMinimum" min="0" max="100" step="1" inputmode="numeric">
+                            </label>
+                            <label>
+                                <span data-i18n="dashboardRiskMinimum"></span>
+                                <input type="number" id="dashboardRiskMinimum" min="0" max="100" step="1" inputmode="numeric">
+                            </label>
+                        </div>
+                        <p class="dashboard-option-hint" data-i18n="dashboardAIThresholdHint"></p>
+                        <details class="dashboard-option-explanation">
+                            <summary data-i18n="dashboardAIPrivacySummary"></summary>
+                            <p data-i18n="dashboardAIPrivacy"></p>
+                        </details>
+                    </fieldset>
+                </div>
             </div>
-            <p id="dashboardLimitHint" data-i18n="dashboardLimitHint"></p>
-            <div class="dashboard-display-controls">
-                <label>
-                    <input type="checkbox" id="dashboardShowPreview">
-                    <span data-i18n="dashboardShowPreview"></span>
-                </label>
-                <label for="dashboardPreviewLines" data-i18n="dashboardPreviewLines"></label>
-                <input type="number" id="dashboardPreviewLines" min="1" max="20" step="1" inputmode="numeric">
-            </div>
-            <p data-i18n="dashboardPreviewPrivacy"></p>
-            <p data-i18n="dashboardAIPrivacy"></p>
-            <p data-i18n="dashboardAIThresholdHint"></p>
-        </section>
+        </details>
         <p id="dashboardStatus" class="dashboard-status" role="status" aria-live="polite"></p>
         <div id="dashboardLoadingIndicator" class="dashboard-loading" role="status" aria-live="polite" hidden>
             <span class="dashboard-spinner" aria-hidden="true"></span>
