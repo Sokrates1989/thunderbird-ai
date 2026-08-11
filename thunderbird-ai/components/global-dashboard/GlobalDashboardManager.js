@@ -21,6 +21,7 @@ const GlobalDashboardManager = class {
             aiStatusFilter: document.getElementById('dashboardAIStatusFilter'),
             importanceMinimum: document.getElementById('dashboardImportanceMinimum'),
             spamMinimum: document.getElementById('dashboardSpamMinimum'),
+            riskMinimum: document.getElementById('dashboardRiskMinimum'),
             senderFilterDetails: document.getElementById('dashboardSenderFilter'),
             senderSummary: document.getElementById('dashboardSenderSummary'),
             senderOptions: document.getElementById('dashboardSenderOptions'),
@@ -49,6 +50,7 @@ const GlobalDashboardManager = class {
         this.aiStatusFilter = 'all';
         this.importanceMinimum = 0;
         this.spamMinimum = 0;
+        this.riskMinimum = 0;
         this.aiResults = {};
         this.busy = false;
         this.dateFormatter = new Intl.DateTimeFormat(I18n.getLanguage(), {
@@ -111,7 +113,8 @@ const GlobalDashboardManager = class {
             this.elements.dateTo,
             this.elements.aiStatusFilter,
             this.elements.importanceMinimum,
-            this.elements.spamMinimum
+            this.elements.spamMinimum,
+            this.elements.riskMinimum
         ]) {
             element.addEventListener('change', () => {
                 this.handleViewControlChange(element)
@@ -177,6 +180,7 @@ const GlobalDashboardManager = class {
         this.elements.aiStatusFilter.value = this.aiStatusFilter;
         this.elements.importanceMinimum.value = String(this.importanceMinimum);
         this.elements.spamMinimum.value = String(this.spamMinimum);
+        this.elements.riskMinimum.value = String(this.riskMinimum);
         this.elements.previewLines.disabled = !this.previewEnabled;
     }
 
@@ -238,6 +242,9 @@ const GlobalDashboardManager = class {
         );
         this.spamMinimum = GlobalMailViewService.normalizePercentage(
             this.elements.spamMinimum.value
+        );
+        this.riskMinimum = GlobalMailViewService.normalizePercentage(
+            this.elements.riskMinimum.value
         );
         this.applyPreferenceControls();
         await this.savePreferences();
@@ -301,6 +308,7 @@ const GlobalDashboardManager = class {
             aiStatusFilter: this.aiStatusFilter,
             importanceMinimum: this.importanceMinimum,
             spamMinimum: this.spamMinimum,
+            riskMinimum: this.riskMinimum,
             language: I18n.getLanguage()
         });
         if (this.previewEnabled) {
@@ -701,6 +709,7 @@ const GlobalDashboardManager = class {
         this.elements.aiStatusFilter.disabled = busy;
         this.elements.importanceMinimum.disabled = busy;
         this.elements.spamMinimum.disabled = busy;
+        this.elements.riskMinimum.disabled = busy;
         this.senderFilterComponent.setBusy(busy);
         this.elements.loadingIndicator.hidden = !busy;
         if (message) {

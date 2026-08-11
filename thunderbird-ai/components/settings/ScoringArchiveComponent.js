@@ -85,7 +85,14 @@ const ScoringArchiveComponent = class {
             showRange: false,
             rootClass: 'score-archive-reasons'
         });
-        editor.append(importance.root, spam.root);
+        const risk = ScoreFeedbackEditor.create({
+            name: 'risk',
+            score: record.correctedScores.riskScore,
+            reasons: record.reasons?.risk,
+            showRange: false,
+            rootClass: 'score-archive-reasons'
+        });
+        editor.append(importance.root, spam.root, risk.root);
 
         const actions = document.createElement('div');
         actions.className = 'score-archive-actions';
@@ -103,6 +110,7 @@ const ScoringArchiveComponent = class {
             record,
             importance,
             spam,
+            risk,
             save,
             status
         ));
@@ -112,12 +120,15 @@ const ScoringArchiveComponent = class {
         return details;
     }
 
-    async saveRecord(record, importance, spam, button, status) {
+    async saveRecord(record, importance, spam, risk, button, status) {
         const correctedScores = {
             importanceScore: ScoreFeedbackEditor.normalizeScore(importance.number.value),
-            spamScore: ScoreFeedbackEditor.normalizeScore(spam.number.value)
+            spamScore: ScoreFeedbackEditor.normalizeScore(spam.number.value),
+            riskScore: ScoreFeedbackEditor.normalizeScore(risk.number.value)
         };
-        if (correctedScores.importanceScore === null || correctedScores.spamScore === null) {
+        if (correctedScores.importanceScore === null
+            || correctedScores.spamScore === null
+            || correctedScores.riskScore === null) {
             status.textContent = I18n.t('dashboardFeedbackInvalid');
             return;
         }
@@ -131,7 +142,8 @@ const ScoringArchiveComponent = class {
                     correctedScores,
                     reasons: {
                         importance: ScoreFeedbackEditor.readReasons(importance),
-                        spam: ScoreFeedbackEditor.readReasons(spam)
+                        spam: ScoreFeedbackEditor.readReasons(spam),
+                        risk: ScoreFeedbackEditor.readReasons(risk)
                     }
                 }
             );

@@ -144,7 +144,7 @@ class ThunderbirdAI {
         return this.successResult(task, result, messageId);
     }
 
-    /** Load selected messages once and return configured-model importance and spam scores. */
+    /** Load selected messages once and return configured-model importance, spam, and risk scores. */
     async analyzeDashboardMessages(messageIds) {
         const uniqueIds = [...new Set(messageIds)]
             .filter(messageId => messageId !== undefined && messageId !== null);
@@ -187,6 +187,7 @@ class ThunderbirdAI {
                 messageId,
                 importanceScore: result.importanceScore,
                 spamScore: result.spamScore,
+                riskScore: result.riskScore,
                 model: result.model,
                 archivedFeedback
             }
@@ -210,6 +211,7 @@ class ThunderbirdAI {
                     data: {
                         importanceScore: feedback.correctedScores.importanceScore,
                         spamScore: feedback.correctedScores.spamScore,
+                        riskScore: feedback.correctedScores.riskScore,
                         correctedAt: feedback.updatedAt,
                         reasons: feedback.reasons
                     }

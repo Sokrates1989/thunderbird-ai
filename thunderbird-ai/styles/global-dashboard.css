@@ -540,6 +540,24 @@ body {
     color: #9b1c12;
 }
 
+.dashboard-ai-score.risk {
+    border-color: #a9c9ad;
+    background: #eef8ef;
+    color: #215c2a;
+}
+
+.dashboard-ai-score.risk.elevated {
+    border-color: #e0a19b;
+    background: #fff0ef;
+    color: #981b10;
+}
+
+.dashboard-ai-score.risk.unknown {
+    border-color: #c4c9cd;
+    background: #f3f4f5;
+    color: #5d666d;
+}
+
 .dashboard-message-preview {
     max-height: calc(var(--dashboard-preview-lines, 3) * 1.35em);
     margin-top: 7px;
@@ -668,6 +686,21 @@ body {
     .dashboard-ai-score.spam.likely {
         background: #4a2523;
         color: #ffb4ad;
+    }
+
+    .dashboard-ai-score.risk {
+        background: #213b28;
+        color: #b9e6c0;
+    }
+
+    .dashboard-ai-score.risk.elevated {
+        background: #4a2523;
+        color: #ffb4ad;
+    }
+
+    .dashboard-ai-score.risk.unknown {
+        background: #3a3d40;
+        color: #d4d8dc;
     }
 
     .dashboard-ai-score.corrected {

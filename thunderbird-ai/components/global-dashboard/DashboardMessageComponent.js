@@ -50,7 +50,7 @@ const DashboardMessageComponent = class {
         return checkbox;
     }
 
-    /** Render both percentage classifications with human-readable categories. */
+    /** Render importance, spam, and risk classifications with legacy-score handling. */
     analysisScores(analysis) {
         const scores = document.createElement('div');
         scores.className = 'dashboard-ai-scores';
@@ -62,7 +62,7 @@ const DashboardMessageComponent = class {
         const spamClassification = analysis.spamScore >= 50
             ? 'dashboardProbablySpam'
             : 'dashboardProbablyNotSpam';
-        scores.append(
+        const scoreElements = [
             this.textElement('span', 'dashboard-ai-score importance', I18n.t('dashboardImportanceScore', {
                 score: analysis.importanceScore,
                 level: I18n.t(importanceLevel)
@@ -71,7 +71,29 @@ const DashboardMessageComponent = class {
                 score: analysis.spamScore,
                 classification: I18n.t(spamClassification)
             }))
-        );
+        ];
+        if (Number.isFinite(analysis.riskScore)) {
+            const riskLevel = analysis.riskScore >= 67
+                ? 'dashboardRiskHigh'
+                : analysis.riskScore >= 34
+                    ? 'dashboardRiskMedium'
+                    : 'dashboardRiskLow';
+            scoreElements.push(this.textElement(
+                'span',
+                `dashboard-ai-score risk${analysis.riskScore >= 50 ? ' elevated' : ''}`,
+                I18n.t('dashboardRiskScore', {
+                    score: analysis.riskScore,
+                    level: I18n.t(riskLevel)
+                })
+            ));
+        } else {
+            scoreElements.push(this.textElement(
+                'span',
+                'dashboard-ai-score risk unknown',
+                I18n.t('dashboardRiskNotScored')
+            ));
+        }
+        scores.append(...scoreElements);
         if (analysis.corrected) {
             scores.appendChild(this.textElement(
                 'span',

@@ -41,10 +41,14 @@
                         <option value="importance-asc" data-i18n="dashboardSortImportanceAscending"></option>
                         <option value="spam-desc" data-i18n="dashboardSortSpamDescending"></option>
                         <option value="spam-asc" data-i18n="dashboardSortSpamAscending"></option>
+                        <option value="risk-desc" data-i18n="dashboardSortRiskDescending"></option>
+                        <option value="risk-asc" data-i18n="dashboardSortRiskAscending"></option>
                         <option value="importance-global-desc" data-i18n="dashboardSortImportanceGlobalDescending"></option>
                         <option value="importance-global-asc" data-i18n="dashboardSortImportanceGlobalAscending"></option>
                         <option value="spam-global-desc" data-i18n="dashboardSortSpamGlobalDescending"></option>
                         <option value="spam-global-asc" data-i18n="dashboardSortSpamGlobalAscending"></option>
+                        <option value="risk-global-desc" data-i18n="dashboardSortRiskGlobalDescending"></option>
+                        <option value="risk-global-asc" data-i18n="dashboardSortRiskGlobalAscending"></option>
                     </select>
                 </label>
                 <label>
@@ -71,6 +75,8 @@
                         <option value="unanalyzed" data-i18n="dashboardAIStatusUnanalyzed"></option>
                         <option value="probably-spam" data-i18n="dashboardAIStatusProbablySpam"></option>
                         <option value="probably-not-spam" data-i18n="dashboardAIStatusProbablyNotSpam"></option>
+                        <option value="probably-risky" data-i18n="dashboardAIStatusProbablyRisky"></option>
+                        <option value="probably-low-risk" data-i18n="dashboardAIStatusProbablyLowRisk"></option>
                     </select>
                 </label>
                 <label>
@@ -80,6 +86,10 @@
                 <label>
                     <span data-i18n="dashboardSpamMinimum"></span>
                     <input type="number" id="dashboardSpamMinimum" min="0" max="100" step="1" inputmode="numeric">
+                </label>
+                <label>
+                    <span data-i18n="dashboardRiskMinimum"></span>
+                    <input type="number" id="dashboardRiskMinimum" min="0" max="100" step="1" inputmode="numeric">
                 </label>
             </div>
             <p id="dashboardLimitHint" data-i18n="dashboardLimitHint"></p>

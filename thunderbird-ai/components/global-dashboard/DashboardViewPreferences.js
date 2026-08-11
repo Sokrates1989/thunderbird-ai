@@ -14,7 +14,8 @@ const DashboardViewPreferences = {
             keys.DASHBOARD_SENDER_FILTER,
             keys.DASHBOARD_AI_STATUS_FILTER,
             keys.DASHBOARD_IMPORTANCE_MINIMUM,
-            keys.DASHBOARD_SPAM_MINIMUM
+            keys.DASHBOARD_SPAM_MINIMUM,
+            keys.DASHBOARD_RISK_MINIMUM
         ]);
         const senderFilter = stored[keys.DASHBOARD_SENDER_FILTER];
         return {
@@ -32,7 +33,12 @@ const DashboardViewPreferences = {
             importanceMinimum: GlobalMailViewService.normalizePercentage(
                 stored[keys.DASHBOARD_IMPORTANCE_MINIMUM]
             ),
-            spamMinimum: GlobalMailViewService.normalizePercentage(stored[keys.DASHBOARD_SPAM_MINIMUM])
+            spamMinimum: GlobalMailViewService.normalizePercentage(
+                stored[keys.DASHBOARD_SPAM_MINIMUM]
+            ),
+            riskMinimum: GlobalMailViewService.normalizePercentage(
+                stored[keys.DASHBOARD_RISK_MINIMUM]
+            )
         };
     },
 
@@ -50,6 +56,7 @@ const DashboardViewPreferences = {
             [keys.DASHBOARD_AI_STATUS_FILTER]: state.aiStatusFilter,
             [keys.DASHBOARD_IMPORTANCE_MINIMUM]: state.importanceMinimum,
             [keys.DASHBOARD_SPAM_MINIMUM]: state.spamMinimum,
+            [keys.DASHBOARD_RISK_MINIMUM]: state.riskMinimum,
             [keys.DASHBOARD_SENDER_FILTER]: state.selectedSenderKeys === null
                 ? null
                 : [...state.selectedSenderKeys]

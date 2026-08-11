@@ -110,6 +110,7 @@ function loadDashboardAIService() {
                         return { success: true, data: {
                             importanceScore: message.correctedScores.importanceScore,
                             spamScore: message.correctedScores.spamScore,
+                            riskScore: message.correctedScores.riskScore,
                             correctedAt: '2026-08-10T12:00:00.000Z',
                             reasons: message.reasons
                         } };
@@ -296,17 +297,19 @@ test('sender and inclusive date filters run before participant sorting and limit
     assert.deepEqual(Array.from(ascending[0].messages, item => item.id), [2, 3]);
 });
 
-test('AI scores support importance and spam sorting plus analyzed-state filters', () => {
+test('AI scores support importance, spam, and risk sorting plus analyzed-state filters', () => {
     const service = loadViewService();
     const accounts = [{ messages: [
-        { ...message(1, 1), aiAnalysis: { importanceScore: 25, spamScore: 92 } },
-        { ...message(2, 2), aiAnalysis: { importanceScore: 88, spamScore: 12 } },
+        { ...message(1, 1), aiAnalysis: { importanceScore: 25, spamScore: 92, riskScore: 75 } },
+        { ...message(2, 2), aiAnalysis: { importanceScore: 88, spamScore: 12, riskScore: 10 } },
         { ...message(3, 3) }
     ] }];
 
     const important = service.apply(accounts, { sortOrder: 'importance-desc', limit: 10 });
     const leastImportant = service.apply(accounts, { sortOrder: 'importance-asc', limit: 10 });
     const leastSpam = service.apply(accounts, { sortOrder: 'spam-asc', limit: 10 });
+    const highestRisk = service.apply(accounts, { sortOrder: 'risk-desc', limit: 10 });
+    const lowestRisk = service.apply(accounts, { sortOrder: 'risk-asc', limit: 10 });
     const spam = service.apply(accounts, {
         sortOrder: 'spam-desc',
         aiStatusFilter: 'probably-spam',
@@ -314,12 +317,18 @@ test('AI scores support importance and spam sorting plus analyzed-state filters'
         limit: 10
     });
     const unanalyzed = service.apply(accounts, { aiStatusFilter: 'unanalyzed', limit: 10 });
+    const risky = service.apply(accounts, { aiStatusFilter: 'probably-risky', limit: 10 });
+    const lowRisk = service.apply(accounts, { aiStatusFilter: 'probably-low-risk', limit: 10 });
 
     assert.deepEqual(Array.from(important[0].messages, item => item.id), [2, 1, 3]);
     assert.deepEqual(Array.from(leastImportant[0].messages, item => item.id), [1, 2, 3]);
     assert.deepEqual(Array.from(leastSpam[0].messages, item => item.id), [2, 1, 3]);
+    assert.deepEqual(Array.from(highestRisk[0].messages, item => item.id), [1, 2, 3]);
+    assert.deepEqual(Array.from(lowestRisk[0].messages, item => item.id), [2, 1, 3]);
     assert.deepEqual(Array.from(spam[0].messages, item => item.id), [1]);
     assert.deepEqual(Array.from(unanalyzed[0].messages, item => item.id), [3]);
+    assert.deepEqual(Array.from(risky[0].messages, item => item.id), [1]);
+    assert.deepEqual(Array.from(lowRisk[0].messages, item => item.id), [2]);
 });
 
 test('explicit global AI sorts flatten scored messages across account boundaries', () => {
@@ -329,15 +338,15 @@ test('explicit global AI sorts flatten scored messages across account boundaries
             accountId: 'personal',
             accountName: 'Personal',
             messages: [
-                { ...message(1, 1), aiAnalysis: { importanceScore: 20, spamScore: 90 } },
-                { ...message(2, 2), aiAnalysis: { importanceScore: 95, spamScore: 5 } }
+                { ...message(1, 1), aiAnalysis: { importanceScore: 20, spamScore: 90, riskScore: 85 } },
+                { ...message(2, 2), aiAnalysis: { importanceScore: 95, spamScore: 5, riskScore: 4 } }
             ]
         },
         {
             accountId: 'work',
             accountName: 'Work',
             messages: [
-                { ...message(3, 3), aiAnalysis: { importanceScore: 70, spamScore: 40 } }
+                { ...message(3, 3), aiAnalysis: { importanceScore: 70, spamScore: 40, riskScore: 35 } }
             ]
         }
     ];
@@ -358,15 +367,19 @@ test('explicit global AI sorts flatten scored messages across account boundaries
 
 test('dashboard grouping mode is normalized and persisted independently', async () => {
     const { context, preferences, storage } = loadViewPreferences({
-        dashboardViewMode: 'combined'
+        dashboardViewMode: 'combined',
+        dashboardRiskMinimum: 63
     });
 
     const loaded = await preferences.load();
     assert.equal(loaded.viewMode, 'combined');
+    assert.equal(loaded.riskMinimum, 63);
     loaded.viewMode = 'account';
+    loaded.riskMinimum = 71;
     await preferences.save(loaded);
 
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_VIEW_MODE], 'account');
+    assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_RISK_MINIMUM], 71);
     assert.equal(context.GlobalMailViewService.normalizeViewMode('invalid'), 'account');
 });
 
@@ -381,7 +394,8 @@ test('dashboard AI scores persist without mail content and direct actions open s
     const scores = service.addStorageKeys(accounts, [{
         messageId: 42,
         importanceScore: 81,
-        spamScore: 9
+        spamScore: 9,
+        riskScore: 14
     }]);
     const saved = await service.saveResults({}, scores, 'gpt-5.6-luna');
     const restartedAccounts = [{ accountId: 'personal', messages: [{
@@ -393,9 +407,11 @@ test('dashboard AI scores persist without mail content and direct actions open s
     await service.analyze([42]);
     restartedAccounts[0].messages[0].correctedImportanceScore = 94;
     restartedAccounts[0].messages[0].correctedSpamScore = 2;
+    restartedAccounts[0].messages[0].correctedRiskScore = 3;
     const reasons = {
         importance: { categories: ['sender'], text: 'Known supplier' },
-        spam: { categories: ['content'], text: 'Expected invoice' }
+        spam: { categories: ['content'], text: 'Expected invoice' },
+        risk: { categories: ['previousExperience'], text: 'Verified supplier' }
     };
     const correction = await service.submitFeedback(
         restartedAccounts[0].messages[0],
@@ -417,17 +433,20 @@ test('dashboard AI scores persist without mail content and direct actions open s
         {
             importanceScore: persisted.importanceScore,
             spamScore: persisted.spamScore,
+            riskScore: persisted.riskScore,
             model: persisted.model,
             corrected: persisted.corrected
         },
-        { importanceScore: 94, spamScore: 2, model: 'gpt-5.6-luna', corrected: true }
+        { importanceScore: 94, spamScore: 2, riskScore: 3, model: 'gpt-5.6-luna', corrected: true }
     );
     assert.doesNotMatch(JSON.stringify(storageState), /Private body/u);
     assert.equal(restartedAccounts[0].messages[0].aiAnalysis.importanceScore, 81);
+    assert.equal(restartedAccounts[0].messages[0].aiAnalysis.riskScore, 14);
     assert.equal(sentMessages[0].action, context.CONFIG.ACTIONS.DASHBOARD_BULK_TRIAGE);
     assert.equal(sentMessages[1].action, context.CONFIG.ACTIONS.DASHBOARD_SAVE_FEEDBACK);
     assert.deepEqual(sentMessages[1].reasons, reasons);
     assert.equal(Object.values(corrected)[0].importanceScore, 94);
+    assert.equal(Object.values(corrected)[0].riskScore, 3);
     assert.equal(Object.values(corrected)[0].corrected, true);
     assert.deepEqual(
         JSON.parse(JSON.stringify(Object.values(corrected)[0].reasons)),
@@ -442,7 +461,7 @@ test('ordinary bulk scoring skips persisted results and protects them from repla
     const analyzed = {
         id: 1,
         headerMessageId: 'scored@example.test',
-        aiAnalysis: { importanceScore: 91, spamScore: 4, corrected: true }
+        aiAnalysis: { importanceScore: 91, spamScore: 4, riskScore: null, corrected: true }
     };
     const unscored = { id: 2, headerMessageId: 'new@example.test', aiAnalysis: null };
     const accounts = [{ accountId: 'personal', messages: [analyzed, unscored] }];
@@ -470,6 +489,7 @@ test('ordinary bulk scoring skips persisted results and protects them from repla
         [storageKey]: {
             importanceScore: 91,
             spamScore: 4,
+            riskScore: null,
             analyzedAt: '2026-08-10T10:00:00.000Z',
             model: 'gpt-5.6-luna',
             corrected: true,
@@ -480,7 +500,8 @@ test('ordinary bulk scoring skips persisted results and protects them from repla
         storageKey,
         messageId: 1,
         importanceScore: 10,
-        spamScore: 80
+        spamScore: 80,
+        riskScore: 65
     }];
     const protectedResults = await service.saveResults(
         existing,
@@ -496,8 +517,10 @@ test('ordinary bulk scoring skips persisted results and protects them from repla
     );
 
     assert.equal(protectedResults[storageKey].importanceScore, 91);
+    assert.equal(protectedResults[storageKey].riskScore, null);
     assert.equal(protectedResults[storageKey].corrected, true);
     assert.equal(replacedResults[storageKey].importanceScore, 10);
+    assert.equal(replacedResults[storageKey].riskScore, 65);
     assert.equal(replacedResults[storageKey].corrected, false);
 });
 
@@ -856,10 +879,12 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(dashboard, /id="dashboardAIStatusFilter"/u);
     assert.match(dashboard, /id="dashboardImportanceMinimum"/u);
     assert.match(dashboard, /id="dashboardSpamMinimum"/u);
+    assert.match(dashboard, /id="dashboardRiskMinimum"/u);
     assert.match(dashboard, /id="dashboardAnalyzeSelected"/u);
     assert.match(dashboard, /id="dashboardRescoreSelected"/u);
     assert.match(dashboard, /value="importance-global-desc"/u);
     assert.match(dashboard, /value="spam-global-desc"/u);
+    assert.match(dashboard, /value="risk-global-desc"/u);
     assert.match(dashboard, /id="dashboardLoadingIndicator"/u);
     assert.match(dashboard, /message\.js/u);
     assert.match(dashboard, /GlobalMailService\.js/u);
@@ -895,9 +920,10 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(settingsPage, /ScoreFeedbackEditor\.js/u);
     assert.match(feedbackEditor, /SCORE_FEEDBACK_CATEGORIES/u);
     assert.match(feedbackEditor, /readReasons\(editor\)/u);
-    assert.equal((dashboardFeedback.match(/ScoreFeedbackEditor\.create/gu) || []).length, 2);
-    assert.equal((singleResults.match(/ScoreFeedbackEditor\.create/gu) || []).length, 2);
-    assert.equal((scoringArchive.match(/ScoreFeedbackEditor\.create/gu) || []).length, 2);
+    assert.equal((dashboardFeedback.match(/ScoreFeedbackEditor\.create/gu) || []).length, 3);
+    assert.equal((singleResults.match(/ScoreFeedbackEditor\.create/gu) || []).length, 3);
+    assert.equal((scoringArchive.match(/ScoreFeedbackEditor\.create/gu) || []).length, 3);
     assert.match(dashboardFeedback, /importance:\s*ScoreFeedbackEditor\.readReasons/u);
     assert.match(dashboardFeedback, /spam:\s*ScoreFeedbackEditor\.readReasons/u);
+    assert.match(dashboardFeedback, /risk:\s*ScoreFeedbackEditor\.readReasons/u);
 });

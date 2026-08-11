@@ -166,7 +166,7 @@ const OpenAIService = {
         };
     },
 
-    /** Request one strict score pair per message with the configured bulk model. */
+    /** Request one strict importance, spam, and risk score set per message. */
     async analyzeBulkTriageBatch(messages, feedbackExamples = []) {
         const messageInput = messages.map((message, index) => [
             `<bulk-email index="${index}">`,
@@ -184,7 +184,7 @@ const OpenAIService = {
         return scores;
     },
 
-    /** Score one email with Terra by default and reuse the bulk score parser and feedback format. */
+    /** Score one email with Terra by default and reuse the shared three-score contract. */
     async analyzeSingleScore(message, feedbackExamples = []) {
         const messageInput = [
             '<bulk-email index="0">',
@@ -244,15 +244,19 @@ const OpenAIService = {
             const row = byIndex.get(index);
             const importanceScore = this.normalizeScore(row?.importanceScore);
             const spamScore = this.normalizeScore(row?.spamScore);
-            if (!row || importanceScore === null || spamScore === null) {
+            const riskScore = this.normalizeScore(row?.riskScore);
+            if (!row || importanceScore === null || spamScore === null || riskScore === null) {
                 throw new Error(I18n.t('bulkTriageInvalidResponse'));
             }
-            return { messageId: message.id, importanceScore, spamScore };
+            return { messageId: message.id, importanceScore, spamScore, riskScore };
         });
     },
 
     /** Accept finite percentage values only and round them to stable integer scores. */
     normalizeScore(value) {
+        if (value === null || value === undefined || value === '') {
+            return null;
+        }
         const score = Number(value);
         return Number.isFinite(score) && score >= 0 && score <= 100 ? Math.round(score) : null;
     },

@@ -36,11 +36,18 @@ const DashboardFeedbackComponent = class {
                 score: message.aiAnalysis.spamScore,
                 reasons: message.aiAnalysis.reasons?.spam,
                 rootClass: 'dashboard-feedback-editor'
+            }),
+            risk: ScoreFeedbackEditor.create({
+                name: 'risk',
+                score: message.aiAnalysis.riskScore,
+                reasons: message.aiAnalysis.reasons?.risk,
+                rootClass: 'dashboard-feedback-editor'
             })
         };
         this.editorsContainer.replaceChildren(
             this.editors.importance.root,
-            this.editors.spam.root
+            this.editors.spam.root,
+            this.editors.risk.root
         );
         this.status.textContent = '';
         this.setBusy(false);
@@ -52,19 +59,22 @@ const DashboardFeedbackComponent = class {
             this.editors.importance.number.value
         );
         const spamScore = ScoreFeedbackEditor.normalizeScore(this.editors.spam.number.value);
-        if (importanceScore === null || spamScore === null) {
+        const riskScore = ScoreFeedbackEditor.normalizeScore(this.editors.risk.number.value);
+        if (importanceScore === null || spamScore === null || riskScore === null) {
             throw new Error(I18n.t('dashboardFeedbackInvalid'));
         }
         const reasons = {
             importance: ScoreFeedbackEditor.readReasons(this.editors.importance),
-            spam: ScoreFeedbackEditor.readReasons(this.editors.spam)
+            spam: ScoreFeedbackEditor.readReasons(this.editors.spam),
+            risk: ScoreFeedbackEditor.readReasons(this.editors.risk)
         };
-        if (!this.hasChanges(importanceScore, spamScore, reasons)) {
+        if (!this.hasChanges(importanceScore, spamScore, riskScore, reasons)) {
             throw new Error(I18n.t('dashboardFeedbackNoChange'));
         }
         this.setBusy(true);
         this.message.correctedImportanceScore = importanceScore;
         this.message.correctedSpamScore = spamScore;
+        this.message.correctedRiskScore = riskScore;
         await this.onSave(this.message, reasons);
         this.dialog.close();
     }
@@ -84,14 +94,17 @@ const DashboardFeedbackComponent = class {
         this.submit.textContent = I18n.t(busy ? 'dashboardFeedbackSaving' : 'dashboardFeedbackSave');
     }
 
-    hasChanges(importanceScore, spamScore, reasons) {
+    hasChanges(importanceScore, spamScore, riskScore, reasons) {
         const analysis = this.message.aiAnalysis;
-        if (importanceScore !== analysis.importanceScore || spamScore !== analysis.spamScore) {
+        if (importanceScore !== analysis.importanceScore
+            || spamScore !== analysis.spamScore
+            || riskScore !== analysis.riskScore) {
             return true;
         }
         return JSON.stringify(reasons) !== JSON.stringify({
             importance: analysis.reasons?.importance || { categories: [], text: '' },
-            spam: analysis.reasons?.spam || { categories: [], text: '' }
+            spam: analysis.reasons?.spam || { categories: [], text: '' },
+            risk: analysis.reasons?.risk || { categories: [], text: '' }
         });
     }
 };

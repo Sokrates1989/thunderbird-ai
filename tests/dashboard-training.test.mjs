@@ -44,8 +44,8 @@ test('corrected email is archived separately, bounded, and survives Thunderbird 
     const message = email();
 
     await service.archiveFeedback(message, {
-        originalScores: { importanceScore: 20, spamScore: 80 },
-        correctedScores: { importanceScore: 95, spamScore: 3 },
+        originalScores: { importanceScore: 20, spamScore: 80, riskScore: 45 },
+        correctedScores: { importanceScore: 95, spamScore: 3, riskScore: 8 },
         reason: 'Trusted supplier',
         sourceModel: 'gpt-5.6-luna'
     });
@@ -64,13 +64,13 @@ test('corrected email is archived separately, bounded, and survives Thunderbird 
 test('repeated corrections preserve the first AI baseline and rank relevant examples first', async () => {
     const { service } = loadTrainingService();
     await service.archiveFeedback(email(), {
-        originalScores: { importanceScore: 20, spamScore: 80 },
-        correctedScores: { importanceScore: 95, spamScore: 3 },
+        originalScores: { importanceScore: 20, spamScore: 80, riskScore: 40 },
+        correctedScores: { importanceScore: 95, spamScore: 3, riskScore: 5 },
         reason: 'Known supplier'
     });
     await service.archiveFeedback(email(), {
-        originalScores: { importanceScore: 95, spamScore: 3 },
-        correctedScores: { importanceScore: 88, spamScore: 6 },
+        originalScores: { importanceScore: 95, spamScore: 3, riskScore: 5 },
+        correctedScores: { importanceScore: 88, spamScore: 6, riskScore: 7 },
         reason: 'Still legitimate, but less urgent'
     });
     await service.archiveFeedback(email({
@@ -78,8 +78,8 @@ test('repeated corrections preserve the first AI baseline and rank relevant exam
         subject: 'Weekly deals',
         author: 'Shop <shop@example.test>'
     }), {
-        originalScores: { importanceScore: 40, spamScore: 30 },
-        correctedScores: { importanceScore: 5, spamScore: 70 }
+        originalScores: { importanceScore: 40, spamScore: 30, riskScore: 15 },
+        correctedScores: { importanceScore: 5, spamScore: 70, riskScore: 20 }
     });
 
     const archive = await service.loadArchive();
@@ -103,8 +103,8 @@ test('feedback archive and operator reasons stay within their configured bounds'
     storage[key] = Array.from({ length: 250 }, (_value, index) => ({
         storageKey: `old-${index}`,
         message: service.messageSnapshot(email({ headerMessageId: `old-${index}` })),
-        originalScores: { importanceScore: 50, spamScore: 50 },
-        correctedScores: { importanceScore: 51, spamScore: 49 },
+        originalScores: { importanceScore: 50, spamScore: 50, riskScore: 50 },
+        correctedScores: { importanceScore: 51, spamScore: 49, riskScore: 48 },
         reason: '',
         sourceModel: 'gpt-5.6-luna',
         createdAt: oldTimestamp,
@@ -112,8 +112,8 @@ test('feedback archive and operator reasons stay within their configured bounds'
     }));
 
     await service.archiveFeedback(email({ headerMessageId: 'new@example.test' }), {
-        originalScores: { importanceScore: 20, spamScore: 80 },
-        correctedScores: { importanceScore: 90, spamScore: 5 },
+        originalScores: { importanceScore: 20, spamScore: 80, riskScore: 40 },
+        correctedScores: { importanceScore: 90, spamScore: 5, riskScore: 4 },
         reason: 'r'.repeat(1200)
     });
 
@@ -126,11 +126,12 @@ test('separate score reasons survive exact-message reuse, manual rescoring, and 
     const { service } = loadTrainingService();
     const message = email();
     const archived = await service.archiveFeedback(message, {
-        originalScores: { importanceScore: 44, spamScore: 30 },
-        correctedScores: { importanceScore: 92, spamScore: 4 },
+        originalScores: { importanceScore: 44, spamScore: 30, riskScore: 51 },
+        correctedScores: { importanceScore: 92, spamScore: 4, riskScore: 9 },
         reasons: {
             importance: { categories: ['sender', 'requestedAction'], text: 'Invoice needs approval' },
-            spam: { categories: ['addressStyle'], text: 'Known company domain' }
+            spam: { categories: ['addressStyle'], text: 'Known company domain' },
+            risk: { categories: ['phishingSignals'], text: 'No credential request' }
         },
         sourceModel: 'gpt-5.6-terra'
     });
@@ -138,21 +139,24 @@ test('separate score reasons survive exact-message reuse, manual rescoring, and 
     const exact = await service.findForMessage(message);
     assert.deepEqual(Array.from(exact.reasons.importance.categories), ['sender', 'requestedAction']);
     assert.equal(exact.reasons.spam.text, 'Known company domain');
+    assert.equal(exact.reasons.risk.text, 'No credential request');
 
     const updated = await service.updateArchivedFeedback(archived.storageKey, {
-        correctedScores: { importanceScore: 80, spamScore: 7 },
+        correctedScores: { importanceScore: 80, spamScore: 7, riskScore: 3 },
         reasons: {
             importance: { categories: ['content'], text: 'Useful, but not urgent' },
-            spam: { categories: ['previousExperience'], text: 'Repeated legitimate invoices' }
+            spam: { categories: ['previousExperience'], text: 'Repeated legitimate invoices' },
+            risk: { categories: ['previousExperience'], text: 'Previously verified supplier' }
         }
     });
     assert.deepEqual(
         {
             importanceScore: updated.correctedScores.importanceScore,
             spamScore: updated.correctedScores.spamScore,
+            riskScore: updated.correctedScores.riskScore,
             importanceText: updated.reasons.importance.text
         },
-        { importanceScore: 80, spamScore: 7, importanceText: 'Useful, but not urgent' }
+        { importanceScore: 80, spamScore: 7, riskScore: 3, importanceText: 'Useful, but not urgent' }
     );
 
     assert.equal(await service.removeArchivedFeedback(archived.storageKey), true);
@@ -171,9 +175,21 @@ test('legacy common reasons migrate into both score-specific explanation fields'
         reason: 'Trusted sender',
         createdAt: timestamp,
         updatedAt: timestamp
+    }, {
+        storageKey: 'invalid-risk',
+        message: service.messageSnapshot(email({ headerMessageId: 'invalid-risk@example.test' })),
+        originalScores: { importanceScore: 20, spamScore: 80, riskScore: 'unsafe' },
+        correctedScores: { importanceScore: 90, spamScore: 5, riskScore: 10 },
+        createdAt: timestamp,
+        updatedAt: timestamp
     }];
 
-    const [record] = await service.loadArchive();
+    const archive = await service.loadArchive();
+    assert.equal(archive.length, 1);
+    const [record] = archive;
     assert.equal(record.reasons.importance.text, 'Trusted sender');
     assert.equal(record.reasons.spam.text, 'Trusted sender');
+    assert.equal(record.originalScores.riskScore, null);
+    assert.equal(record.correctedScores.riskScore, null);
+    assert.equal(record.reasons.risk.text, '');
 });

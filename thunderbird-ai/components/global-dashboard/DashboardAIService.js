@@ -117,11 +117,13 @@ const DashboardAIService = {
             messageId: message.id,
             originalScores: {
                 importanceScore: analysis.importanceScore,
-                spamScore: analysis.spamScore
+                spamScore: analysis.spamScore,
+                riskScore: analysis.riskScore
             },
             correctedScores: {
                 importanceScore: message.correctedImportanceScore,
-                spamScore: message.correctedSpamScore
+                spamScore: message.correctedSpamScore,
+                riskScore: message.correctedRiskScore
             },
             reasons,
             sourceModel: analysis.model
@@ -151,9 +153,14 @@ const DashboardAIService = {
     async saveCorrection(existingResults, account, message, correction) {
         const storageKey = this.messageKey(account, message);
         const correctedAt = String(correction?.correctedAt || '');
+        const riskScore = this.normalizeScore(correction?.riskScore);
+        if (riskScore === null) {
+            throw new Error(I18n.t('dashboardFeedbackInvalid'));
+        }
         const normalized = this.normalizeResult({
             importanceScore: correction?.importanceScore,
             spamScore: correction?.spamScore,
+            riskScore,
             analyzedAt: correctedAt,
             correctedAt,
             corrected: true,
@@ -192,13 +199,21 @@ const DashboardAIService = {
     normalizeResult(result) {
         const importanceScore = this.normalizeScore(result?.importanceScore);
         const spamScore = this.normalizeScore(result?.spamScore);
+        const riskMissing = result?.riskScore === undefined
+            || result?.riskScore === null
+            || result?.riskScore === '';
+        const riskScore = riskMissing ? null : this.normalizeScore(result?.riskScore);
         const analyzedAt = String(result?.analyzedAt || '');
-        if (importanceScore === null || spamScore === null || !/^\d{4}-\d{2}-\d{2}T/u.test(analyzedAt)) {
+        if (importanceScore === null
+            || spamScore === null
+            || (!riskMissing && riskScore === null)
+            || !/^\d{4}-\d{2}-\d{2}T/u.test(analyzedAt)) {
             return null;
         }
         return {
             importanceScore,
             spamScore,
+            riskScore,
             analyzedAt,
             model: typeof result.model === 'string' ? result.model : null,
             corrected: result?.corrected === true,
@@ -218,11 +233,15 @@ const DashboardAIService = {
         });
         return {
             importance: normalizeSection(reasons?.importance),
-            spam: normalizeSection(reasons?.spam)
+            spam: normalizeSection(reasons?.spam),
+            risk: normalizeSection(reasons?.risk)
         };
     },
 
     normalizeScore(value) {
+        if (value === null || value === undefined || value === '') {
+            return null;
+        }
         const score = Number(value);
         return Number.isFinite(score) && score >= 0 && score <= 100 ? Math.round(score) : null;
     }

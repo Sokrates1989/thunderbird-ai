@@ -2,7 +2,7 @@
 
 const CONFIG = {
     ADDON_NAME: 'Thunderbird AI Assistant',
-    ADDON_VERSION: '2.5.0',
+    ADDON_VERSION: '2.6.0',
     ADDON_ID: 'thunderbird-ai@example.com',
 
     OPENAI: {
@@ -76,8 +76,39 @@ const CONFIG = {
             'content',
             'requestedAction',
             'linksAttachments',
-            'previousExperience'
+            'previousExperience',
+            'phishingSignals',
+            'dangerousContent',
+            'potentiallyIllegal',
+            'unwantedContent'
         ],
+        SCORE_FEEDBACK_CATEGORIES_BY_SCORE: {
+            importance: [
+                'sender',
+                'addressStyle',
+                'content',
+                'requestedAction',
+                'linksAttachments',
+                'previousExperience'
+            ],
+            spam: [
+                'sender',
+                'addressStyle',
+                'content',
+                'requestedAction',
+                'linksAttachments',
+                'previousExperience'
+            ],
+            risk: [
+                'sender',
+                'addressStyle',
+                'phishingSignals',
+                'dangerousContent',
+                'potentiallyIllegal',
+                'unwantedContent',
+                'previousExperience'
+            ]
+        },
         MAX_REPLY_DRAFT_CHARACTERS: 20000,
         MAX_REPLY_INSTRUCTION_CHARACTERS: 4000
     },
@@ -117,6 +148,7 @@ const CONFIG = {
         DASHBOARD_AI_STATUS_FILTER: 'dashboardAiStatusFilter',
         DASHBOARD_IMPORTANCE_MINIMUM: 'dashboardImportanceMinimum',
         DASHBOARD_SPAM_MINIMUM: 'dashboardSpamMinimum',
+        DASHBOARD_RISK_MINIMUM: 'dashboardRiskMinimum',
         DASHBOARD_AI_RESULTS: 'dashboardAiResults',
         DASHBOARD_FEEDBACK_ARCHIVE: 'dashboardFeedbackArchive'
     },

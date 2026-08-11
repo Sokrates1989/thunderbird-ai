@@ -21,7 +21,7 @@ const ResultsComponent = class {
         this.container.style.display = 'block';
     }
 
-    /** Render editable importance/spam scores and separate operator explanations. */
+    /** Render editable importance, spam, and risk scores with separate explanations. */
     showScoring(result) {
         this.currentResult = result;
         this.elements.title.textContent = result.title || I18n.t('singleScoreTitle');
@@ -31,6 +31,7 @@ const ResultsComponent = class {
         summary.textContent = I18n.t('singleScoreAiResult', {
             importance: result.importanceScore,
             spam: result.spamScore,
+            risk: result.riskScore,
             model: I18n.modelLabel(result.model)
         });
         this.elements.content.appendChild(summary);
@@ -42,9 +43,10 @@ const ResultsComponent = class {
             notice.textContent = I18n.t('singleScoreArchiveLoaded');
             this.elements.content.appendChild(notice);
         }
-        const initialScores = archived?.correctedScores || {
-            importanceScore: result.importanceScore,
-            spamScore: result.spamScore
+        const initialScores = {
+            importanceScore: archived?.correctedScores?.importanceScore ?? result.importanceScore,
+            spamScore: archived?.correctedScores?.spamScore ?? result.spamScore,
+            riskScore: archived?.correctedScores?.riskScore ?? result.riskScore
         };
         this.scoreEditors = {
             importance: ScoreFeedbackEditor.create({
@@ -56,11 +58,17 @@ const ResultsComponent = class {
                 name: 'spam',
                 score: initialScores.spamScore,
                 reasons: archived?.reasons?.spam
+            }),
+            risk: ScoreFeedbackEditor.create({
+                name: 'risk',
+                score: initialScores.riskScore,
+                reasons: archived?.reasons?.risk
             })
         };
         this.elements.content.append(
             this.scoreEditors.importance.root,
-            this.scoreEditors.spam.root
+            this.scoreEditors.spam.root,
+            this.scoreEditors.risk.root
         );
         const privacy = document.createElement('p');
         privacy.className = 'score-privacy';
@@ -81,7 +89,8 @@ const ResultsComponent = class {
             this.scoreEditors.importance.number.value
         );
         const spamScore = ScoreFeedbackEditor.normalizeScore(this.scoreEditors.spam.number.value);
-        if (importanceScore === null || spamScore === null) {
+        const riskScore = ScoreFeedbackEditor.normalizeScore(this.scoreEditors.risk.number.value);
+        if (importanceScore === null || spamScore === null || riskScore === null) {
             this.manager.showError(I18n.t('dashboardFeedbackInvalid'));
             return;
         }
@@ -94,12 +103,14 @@ const ResultsComponent = class {
                     messageId: this.currentResult.messageId,
                     originalScores: {
                         importanceScore: this.currentResult.importanceScore,
-                        spamScore: this.currentResult.spamScore
+                        spamScore: this.currentResult.spamScore,
+                        riskScore: this.currentResult.riskScore
                     },
-                    correctedScores: { importanceScore, spamScore },
+                    correctedScores: { importanceScore, spamScore, riskScore },
                     reasons: {
                         importance: ScoreFeedbackEditor.readReasons(this.scoreEditors.importance),
-                        spam: ScoreFeedbackEditor.readReasons(this.scoreEditors.spam)
+                        spam: ScoreFeedbackEditor.readReasons(this.scoreEditors.spam),
+                        risk: ScoreFeedbackEditor.readReasons(this.scoreEditors.risk)
                     },
                     sourceModel: this.currentResult.model
                 }

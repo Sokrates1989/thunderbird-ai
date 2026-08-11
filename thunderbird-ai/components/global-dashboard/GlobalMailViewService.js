@@ -15,12 +15,24 @@ const GlobalMailViewService = {
         'importance-asc',
         'spam-desc',
         'spam-asc',
+        'risk-desc',
+        'risk-asc',
         'importance-global-desc',
         'importance-global-asc',
         'spam-global-desc',
-        'spam-global-asc'
+        'spam-global-asc',
+        'risk-global-desc',
+        'risk-global-asc'
     ]),
-    AI_STATUS_FILTERS: new Set(['all', 'analyzed', 'unanalyzed', 'probably-spam', 'probably-not-spam']),
+    AI_STATUS_FILTERS: new Set([
+        'all',
+        'analyzed',
+        'unanalyzed',
+        'probably-spam',
+        'probably-not-spam',
+        'probably-risky',
+        'probably-low-risk'
+    ]),
     UNKNOWN_SENDER_KEY: '__unknown_sender__',
 
     /** Clamp a persisted or user-entered per-account limit to the supported range. */
@@ -109,6 +121,7 @@ const GlobalMailViewService = {
         const aiStatusFilter = this.normalizeAIStatusFilter(options.aiStatusFilter);
         const importanceMinimum = this.normalizePercentage(options.importanceMinimum);
         const spamMinimum = this.normalizePercentage(options.spamMinimum);
+        const riskMinimum = this.normalizePercentage(options.riskMinimum);
         const collator = new Intl.Collator(options.language || I18n.getLanguage(), {
             numeric: true,
             sensitivity: 'base'
@@ -122,7 +135,8 @@ const GlobalMailViewService = {
                     message,
                     aiStatusFilter,
                     importanceMinimum,
-                    spamMinimum
+                    spamMinimum,
+                    riskMinimum
                 ));
             return {
                 ...account,
@@ -208,13 +222,16 @@ const GlobalMailViewService = {
     },
 
     /** Apply analysis state and score thresholds after local mailbox filters. */
-    matchesAI(message, statusFilter, importanceMinimum, spamMinimum) {
+    matchesAI(message, statusFilter, importanceMinimum, spamMinimum, riskMinimum) {
         const analysis = message.aiAnalysis;
         if (statusFilter === 'unanalyzed') {
             return !analysis;
         }
         if (!analysis) {
-            return statusFilter === 'all' && importanceMinimum === 0 && spamMinimum === 0;
+            return statusFilter === 'all'
+                && importanceMinimum === 0
+                && spamMinimum === 0
+                && riskMinimum === 0;
         }
         if (statusFilter === 'probably-spam' && analysis.spamScore < 50) {
             return false;
@@ -222,7 +239,20 @@ const GlobalMailViewService = {
         if (statusFilter === 'probably-not-spam' && analysis.spamScore >= 50) {
             return false;
         }
-        return analysis.importanceScore >= importanceMinimum && analysis.spamScore >= spamMinimum;
+        if (statusFilter === 'probably-risky'
+            && (!Number.isFinite(analysis.riskScore) || analysis.riskScore < 50)) {
+            return false;
+        }
+        if (statusFilter === 'probably-low-risk'
+            && (!Number.isFinite(analysis.riskScore) || analysis.riskScore >= 50)) {
+            return false;
+        }
+        const riskMatches = Number.isFinite(analysis.riskScore)
+            ? analysis.riskScore >= riskMinimum
+            : riskMinimum === 0;
+        return analysis.importanceScore >= importanceMinimum
+            && analysis.spamScore >= spamMinimum
+            && riskMatches;
     },
 
     /** Compare headers using the requested primary order and deterministic tie breakers. */
@@ -234,8 +264,14 @@ const GlobalMailViewService = {
             }
         }
 
-        if (sortOrder.startsWith('importance-') || sortOrder.startsWith('spam-')) {
-            const scoreName = sortOrder.startsWith('importance-') ? 'importanceScore' : 'spamScore';
+        if (sortOrder.startsWith('importance-')
+            || sortOrder.startsWith('spam-')
+            || sortOrder.startsWith('risk-')) {
+            const scoreName = sortOrder.startsWith('importance-')
+                ? 'importanceScore'
+                : sortOrder.startsWith('spam-')
+                    ? 'spamScore'
+                    : 'riskScore';
             const direction = sortOrder.endsWith('-asc') ? 1 : -1;
             const scoreResult = this.compareAIScores(left, right, scoreName, direction);
             if (scoreResult !== 0) {

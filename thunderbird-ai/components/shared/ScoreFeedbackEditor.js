@@ -1,17 +1,21 @@
 /** Builds and reads the shared, score-specific operator feedback editor. */
 const ScoreFeedbackEditor = {
     create(options) {
-        const name = options.name === 'spam' ? 'spam' : 'importance';
-        const labelKey = name === 'importance'
-            ? 'dashboardFeedbackImportance'
-            : 'dashboardFeedbackSpam';
+        const name = ['importance', 'spam', 'risk'].includes(options.name)
+            ? options.name
+            : 'importance';
+        const labelKeys = {
+            importance: 'dashboardFeedbackImportance',
+            spam: 'dashboardFeedbackSpam',
+            risk: 'dashboardFeedbackRisk'
+        };
         const root = document.createElement('fieldset');
         root.className = ['score-feedback-editor', options.rootClass]
             .filter(Boolean)
             .join(' ');
 
         const legend = document.createElement('legend');
-        legend.textContent = I18n.t(labelKey);
+        legend.textContent = I18n.t(labelKeys[name]);
         root.appendChild(legend);
 
         const valueRow = document.createElement('label');
@@ -39,13 +43,18 @@ const ScoreFeedbackEditor = {
 
         const prompt = document.createElement('p');
         prompt.className = 'score-feedback-reason-prompt';
-        prompt.textContent = I18n.t(name === 'importance'
-            ? 'singleScoreImportanceReason'
-            : 'singleScoreSpamReason');
+        const reasonKeys = {
+            importance: 'singleScoreImportanceReason',
+            spam: 'singleScoreSpamReason',
+            risk: 'singleScoreRiskReason'
+        };
+        prompt.textContent = I18n.t(reasonKeys[name]);
         root.appendChild(prompt);
 
         const categories = new Map();
-        for (const category of CONFIG.OPENAI.SCORE_FEEDBACK_CATEGORIES) {
+        const scoreCategories = CONFIG.OPENAI.SCORE_FEEDBACK_CATEGORIES_BY_SCORE?.[name]
+            || CONFIG.OPENAI.SCORE_FEEDBACK_CATEGORIES;
+        for (const category of scoreCategories) {
             const label = document.createElement('label');
             label.className = 'score-feedback-reason-option';
             const checkbox = document.createElement('input');
@@ -89,10 +98,10 @@ const ScoreFeedbackEditor = {
     },
 
     setScore(editor, value) {
-        const score = this.normalizeScore(value) ?? 0;
-        editor.number.value = String(score);
+        const score = this.normalizeScore(value);
+        editor.number.value = score === null ? '' : String(score);
         if (editor.range) {
-            editor.range.value = String(score);
+            editor.range.value = String(score ?? 0);
         }
     },
 
@@ -108,6 +117,9 @@ const ScoreFeedbackEditor = {
     },
 
     normalizeScore(value) {
+        if (value === null || value === undefined || value === '') {
+            return null;
+        }
         const score = Number(value);
         return Number.isFinite(score) && score >= 0 && score <= 100 ? Math.round(score) : null;
     }

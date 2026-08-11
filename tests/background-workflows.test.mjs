@@ -45,8 +45,11 @@ async function loadBackground(options = {}) {
         relevantExamples: async () => [],
         findForMessage: async () => ({
             storageKey: 'known',
-            correctedScores: { importanceScore: 91, spamScore: 4 },
-            reasons: { importance: { categories: ['sender'], text: 'Known sender' } }
+            correctedScores: { importanceScore: 91, spamScore: 4, riskScore: 6 },
+            reasons: {
+                importance: { categories: ['sender'], text: 'Known sender' },
+                risk: { categories: ['previousExperience'], text: 'Verified sender' }
+            }
         }),
         loadArchive: async () => [{ storageKey: 'known' }],
         updateArchivedFeedback: async (storageKey, feedback) => ({ storageKey, ...feedback }),
@@ -76,7 +79,8 @@ async function loadBackground(options = {}) {
                 scores: messages.map((message, index) => ({
                     messageId: message.id,
                     importanceScore: 80 - index,
-                    spamScore: 10 + index
+                    spamScore: 10 + index,
+                    riskScore: 5 + index
                 })),
                 failedCount: 0,
                 apiCalls: 1,
@@ -86,6 +90,7 @@ async function loadBackground(options = {}) {
         analyzeSingleScore: async () => ({
             importanceScore: 77,
             spamScore: 8,
+            riskScore: 12,
             usedApi: true,
             model: 'gpt-5.6-terra'
         }),
@@ -172,10 +177,11 @@ test('dashboard bulk triage uses the shared background message loader and score 
     assert.deepEqual(Array.from(response.data.results, result => ({
         messageId: result.messageId,
         importanceScore: result.importanceScore,
-        spamScore: result.spamScore
+        spamScore: result.spamScore,
+        riskScore: result.riskScore
     })), [
-        { messageId: 7, importanceScore: 80, spamScore: 10 },
-        { messageId: 8, importanceScore: 79, spamScore: 11 }
+        { messageId: 7, importanceScore: 80, spamScore: 10, riskScore: 5 },
+        { messageId: 8, importanceScore: 79, spamScore: 11, riskScore: 6 }
     ]);
     assert.deepEqual(serviceCalls, ['bulk:2']);
     assert.deepEqual(stats, ['email:2', 'api']);
@@ -187,11 +193,12 @@ test('dashboard score feedback is routed to the independent background archive',
     const response = await ai.handleMessage({
         action: config.ACTIONS.DASHBOARD_SAVE_FEEDBACK,
         messageId: 7,
-        originalScores: { importanceScore: 20, spamScore: 80 },
-        correctedScores: { importanceScore: 90, spamScore: 5 },
+        originalScores: { importanceScore: 20, spamScore: 80, riskScore: 40 },
+        correctedScores: { importanceScore: 90, spamScore: 5, riskScore: 4 },
         reasons: {
             importance: { categories: ['sender'], text: 'Trusted sender' },
-            spam: { categories: ['content'], text: 'Expected content' }
+            spam: { categories: ['content'], text: 'Expected content' },
+            risk: { categories: ['previousExperience'], text: 'Previously verified' }
         },
         sourceModel: 'gpt-5.6-luna'
     });
@@ -201,16 +208,19 @@ test('dashboard score feedback is routed to the independent background archive',
         {
             importanceScore: response.data.importanceScore,
             spamScore: response.data.spamScore,
+            riskScore: response.data.riskScore,
             correctedAt: response.data.correctedAt,
             reasons: response.data.reasons
         },
         {
             importanceScore: 90,
             spamScore: 5,
+            riskScore: 4,
             correctedAt: '2026-08-10T12:00:00.000Z',
             reasons: {
                 importance: { categories: ['sender'], text: 'Trusted sender' },
-                spam: { categories: ['content'], text: 'Expected content' }
+                spam: { categories: ['content'], text: 'Expected content' },
+                risk: { categories: ['previousExperience'], text: 'Previously verified' }
             }
         }
     );
@@ -238,8 +248,8 @@ test('dashboard score feedback retries a transient local read before reporting f
     const response = await ai.handleMessage({
         action: config.ACTIONS.DASHBOARD_SAVE_FEEDBACK,
         messageId: 7,
-        originalScores: { importanceScore: 20, spamScore: 80 },
-        correctedScores: { importanceScore: 90, spamScore: 5 },
+        originalScores: { importanceScore: 20, spamScore: 80, riskScore: 40 },
+        correctedScores: { importanceScore: 90, spamScore: 5, riskScore: 4 },
         reason: 'Trusted sender',
         sourceModel: 'gpt-5.6-luna'
     });
@@ -256,8 +266,11 @@ test('single scoring reuses archived feedback and archive management stays backg
     const updated = await ai.handleMessage({
         action: config.ACTIONS.UPDATE_SCORE_ARCHIVE,
         storageKey: 'known',
-        correctedScores: { importanceScore: 70, spamScore: 11 },
-        reasons: { importance: { categories: ['content'], text: 'Changed' } }
+        correctedScores: { importanceScore: 70, spamScore: 11, riskScore: 15 },
+        reasons: {
+            importance: { categories: ['content'], text: 'Changed' },
+            risk: { categories: ['dangerousContent'], text: 'Suspicious link' }
+        }
     });
     const removed = await ai.handleMessage({
         action: config.ACTIONS.REMOVE_SCORE_ARCHIVE,
@@ -269,6 +282,7 @@ test('single scoring reuses archived feedback and archive management stays backg
     assert.deepEqual(stats, ['email', 'api']);
     assert.equal(archive.data[0].storageKey, 'known');
     assert.equal(updated.data.correctedScores.importanceScore, 70);
+    assert.equal(updated.data.correctedScores.riskScore, 15);
     assert.equal(removed.success, true);
 });
 

@@ -132,8 +132,8 @@ const DashboardTrainingService = {
     },
 
     normalizeRecord(record) {
-        const originalScores = this.normalizeScores(record?.originalScores);
-        const correctedScores = this.normalizeScores(record?.correctedScores);
+        const originalScores = this.normalizeScores(record?.originalScores, true);
+        const correctedScores = this.normalizeScores(record?.correctedScores, true);
         const updatedAt = this.normalizeDate(record?.updatedAt);
         const createdAt = this.normalizeDate(record?.createdAt);
         if (!record?.storageKey || !originalScores || !correctedScores || !updatedAt || !createdAt) {
@@ -153,15 +153,25 @@ const DashboardTrainingService = {
         };
     },
 
-    normalizeScores(scores) {
+    /** Preserve legacy two-score references while requiring risk on every new correction. */
+    normalizeScores(scores, allowMissingRisk = false) {
         const importanceScore = this.normalizeScore(scores?.importanceScore);
         const spamScore = this.normalizeScore(scores?.spamScore);
-        return importanceScore === null || spamScore === null
+        const riskMissing = scores?.riskScore === undefined
+            || scores?.riskScore === null
+            || scores?.riskScore === '';
+        const riskScore = riskMissing ? null : this.normalizeScore(scores?.riskScore);
+        return importanceScore === null
+            || spamScore === null
+            || (riskScore === null && (!allowMissingRisk || !riskMissing))
             ? null
-            : { importanceScore, spamScore };
+            : { importanceScore, spamScore, riskScore };
     },
 
     normalizeScore(value) {
+        if (value === null || value === undefined || value === '') {
+            return null;
+        }
         const score = Number(value);
         return Number.isFinite(score) && score >= 0 && score <= 100 ? Math.round(score) : null;
     },
@@ -169,7 +179,8 @@ const DashboardTrainingService = {
     normalizeReasons(reasons, legacyReason = '') {
         return {
             importance: this.normalizeReasonSection(reasons?.importance, legacyReason),
-            spam: this.normalizeReasonSection(reasons?.spam, legacyReason)
+            spam: this.normalizeReasonSection(reasons?.spam, legacyReason),
+            risk: this.normalizeReasonSection(reasons?.risk)
         };
     },
 
@@ -184,7 +195,7 @@ const DashboardTrainingService = {
     },
 
     reasonSummary(reasons) {
-        return [reasons?.importance?.text, reasons?.spam?.text]
+        return [reasons?.importance?.text, reasons?.spam?.text, reasons?.risk?.text]
             .map(value => String(value || '').trim())
             .filter(Boolean)
             .filter((value, index, values) => values.indexOf(value) === index)
