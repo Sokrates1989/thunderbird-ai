@@ -44,6 +44,7 @@ thunderbird-ai/
 - `dashboard-training.js` owns the separate bounded archive of explicit operator corrections. It stores a clipped message snapshot, separate importance/spam reasons, and selects at most five relevant examples; Thunderbird deletion never accesses its storage key.
 - Bulk and single-email score bodies cross to `background.js`, which retrieves normalized messages through `MessageService`, selects relevant corrections through `DashboardTrainingService`, and calls the shared OpenAI score formatting and parser. Bulk defaults to Luna, single scoring defaults to Terra, and both honor their independent saved model preference.
 - `ScoringArchiveComponent.js` exposes the local reference archive in Settings for manual rescoring, reason editing, and removal without touching Thunderbird messages.
+- `ArchiveSettingsGuideComponent.js` performs a read-only scan of Thunderbird archive-folder markers and capabilities, then presents the protected native configuration path and official help without guessing folders by localized names.
 - `retry.js` owns bounded backoff mechanics. Domain services still decide whether an error is safe to retry: OpenAI classifies transient HTTP/network failures, while UI runtime messages retry only when Thunderbird confirms that no background listener received the request. Score-feedback writes are idempotent upserts under the stable message identity.
 
 ## 🏗️ Architecture Overview

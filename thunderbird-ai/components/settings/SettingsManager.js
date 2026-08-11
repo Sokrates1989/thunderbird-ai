@@ -66,6 +66,7 @@ const SettingsManager = class {
         this.components.apiConfig = new ApiConfigComponent(this);
         this.components.apiTest = new ApiTestComponent(this);
         this.components.statistics = new StatisticsComponent(this);
+        this.components.archiveSettings = new ArchiveSettingsGuideComponent(this);
         this.components.savedResults = new SavedResultsComponent(this);
         this.components.scoreArchive = new ScoringArchiveComponent(this);
         this.components.actions = new ActionsComponent(this);

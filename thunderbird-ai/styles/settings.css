@@ -302,6 +302,119 @@ body {
     color: #007acc;
 }
 
+/* Thunderbird archive setup */
+.archive-settings-introduction {
+    margin-top: 0;
+    line-height: 1.45;
+}
+
+.archive-settings-path {
+    display: grid;
+    gap: 5px;
+    padding: 12px;
+    border: 1px solid #b9d6ea;
+    border-radius: 6px;
+    background: #eef8ff;
+    line-height: 1.4;
+}
+
+.archive-settings-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.archive-settings-feedback {
+    display: none;
+    margin-top: 10px;
+    padding: 9px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+}
+
+.archive-settings-feedback.success,
+.archive-settings-feedback.error {
+    display: block;
+}
+
+.archive-settings-feedback.success {
+    border: 1px solid #a7d7b0;
+    background: #edf8ef;
+    color: #155724;
+}
+
+.archive-settings-feedback.error,
+.archive-settings-placeholder.error {
+    color: #721c24;
+}
+
+.archive-settings-feedback.error {
+    border: 1px solid #e5b7bc;
+    background: #fbeff0;
+}
+
+.archive-settings-results {
+    margin-top: 14px;
+}
+
+.archive-settings-placeholder,
+.archive-settings-summary,
+.archive-settings-manual-check {
+    margin: 0;
+    color: #59636c;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.archive-account-list {
+    display: grid;
+    gap: 8px;
+    max-height: 300px;
+    margin: 10px 0;
+    overflow-y: auto;
+}
+
+.archive-account-status {
+    padding: 10px;
+    border: 1px solid #d5d9dd;
+    border-left: 4px solid #6c757d;
+    border-radius: 6px;
+    background: white;
+}
+
+.archive-account-status.found {
+    border-left-color: #2e7d32;
+}
+
+.archive-account-status.missing {
+    border-left-color: #b7791f;
+}
+
+.archive-account-status h3,
+.archive-account-status p {
+    margin: 0;
+}
+
+.archive-account-status h3 {
+    margin-bottom: 6px;
+    overflow-wrap: anywhere;
+    font-size: 13px;
+}
+
+.archive-folder-details + .archive-folder-details {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #e1e4e7;
+}
+
+.archive-folder-details p {
+    color: #4f5962;
+    font-size: 12px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
 /* Actions */
 .actions {
     display: flex;
@@ -485,6 +598,10 @@ body {
     }
     
     .actions {
+        flex-direction: column;
+    }
+
+    .archive-settings-actions {
         flex-direction: column;
     }
     

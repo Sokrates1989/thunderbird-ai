@@ -46,3 +46,108 @@ test('usage statistics disclose and format the token-based USD estimate', () => 
         '$0.001234'
     );
 });
+
+test('archive settings quick check trusts Thunderbird folder metadata instead of names', async () => {
+    const calls = [];
+    const context = createContext({
+        browser: {
+            accounts: {
+                list: async includeSubFolders => {
+                    calls.push(['accounts.list', includeSubFolders]);
+                    return [
+                        {
+                            name: 'Mail account',
+                            type: 'imap',
+                            rootFolder: {
+                                name: 'Mail account',
+                                subFolders: [
+                                    {
+                                        id: 'archive-folder',
+                                        name: 'Archiv',
+                                        path: '/Archiv',
+                                        specialUse: ['archives'],
+                                        subFolders: [
+                                            { name: '2026' },
+                                            { name: 'Projects' },
+                                            { name: '2024' }
+                                        ]
+                                    },
+                                    {
+                                        id: 'name-only-folder',
+                                        name: 'Archiv',
+                                        path: '/Other/Archiv',
+                                        specialUse: [],
+                                        subFolders: []
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            name: 'Feeds',
+                            type: 'rss',
+                            rootFolder: { subFolders: [] }
+                        }
+                    ];
+                }
+            },
+            folders: {
+                getFolderCapabilities: async folderId => {
+                    calls.push(['folders.getFolderCapabilities', folderId]);
+                    return { canAddSubfolders: true };
+                }
+            }
+        }
+    });
+    loadScript(context, 'thunderbird-ai/components/settings/ArchiveSettingsGuideComponent.js');
+    const component = Object.create(context.ArchiveSettingsGuideComponent.prototype);
+
+    const report = JSON.parse(JSON.stringify(await component.inspectAccounts()));
+
+    assert.deepEqual(report, [{
+        name: 'Mail account',
+        archiveFolders: [{
+            name: 'Archiv',
+            path: '/Archiv',
+            yearFolders: ['2024', '2026'],
+            canAddSubfolders: true
+        }]
+    }]);
+    assert.deepEqual(calls, [
+        ['accounts.list', true],
+        ['folders.getFolderCapabilities', 'archive-folder']
+    ]);
+});
+
+test('archive settings section exposes safe guidance and official help without a privileged deep link', async () => {
+    const opened = [];
+    const settingsPage = source('thunderbird-ai/pages/settings.html');
+    const settingsManager = source('thunderbird-ai/components/settings/SettingsManager.js');
+    const componentSource = source(
+        'thunderbird-ai/components/settings/ArchiveSettingsGuideComponent.js'
+    );
+    const context = createContext({
+        browser: {
+            windows: {
+                openDefaultBrowser: async url => opened.push(url)
+            }
+        }
+    });
+    loadScript(context, 'thunderbird-ai/components/settings/ArchiveSettingsGuideComponent.js');
+    const component = Object.create(context.ArchiveSettingsGuideComponent.prototype);
+    const feedback = [];
+    component.elements = { help: { disabled: false } };
+    component.setFeedback = (message, type) => feedback.push([message, type]);
+    context.I18n = { t: key => key };
+
+    await component.openHelp();
+
+    assert.match(settingsPage, /id="archive-settings-section"/u);
+    assert.match(settingsPage, /ArchiveSettingsGuideComponent\.js/u);
+    assert.match(settingsManager, /new ArchiveSettingsGuideComponent\(this\)/u);
+    assert.match(componentSource, /browser\.accounts\.list\(true\)/u);
+    assert.match(componentSource, /specialUse.*includes\('archives'\)/u);
+    assert.doesNotMatch(componentSource, /about:accountsettings/u);
+    assert.deepEqual(opened, ['https://support.mozilla.org/kb/archived-messages']);
+    assert.deepEqual(feedback, [['archiveSettingsHelpOpened', 'success']]);
+    assert.equal(component.elements.help.disabled, false);
+});

@@ -39,6 +39,8 @@ Temporäre Netzwerkfehler, Zeitüberschreitungen, Anfragelimits und vorübergehe
 
 **Archivieren** und **Ausgewählte archivieren** verwenden Thunderbirds native Archivfunktion. Dadurch gelten für jede Nachricht die Archiveinstellungen ihres Kontos und ihrer Identität; das Add-on errät keine lokalisierten Ordnernamen und verschiebt Nachrichten unterschiedlicher Konten nicht versehentlich in dasselbe Archiv. Damit das Ziel `Archiv/<Sendejahr>` entsteht, muss unter **Konten-Einstellungen → Kopien & Ordner → Nachrichtenarchiv → Archivoptionen** für die jeweilige Identität **Jährliche archivierte Ordner** ausgewählt sein. Konten wie Gmail können serverseitig ein anderes Archivmodell vorgeben.
 
+Unter **Einstellungen → Thunderbird-Archivierung** zeigt **Archivordner prüfen** für jedes unterstützte Konto ausschließlich die Ordner an, die Thunderbird selbst als Archiv kennzeichnet, außerdem vorhandene direkte Jahresordner und die gemeldete Fähigkeit, Unterordner anzulegen. Die Prüfung verändert keine E-Mails, Ordner oder Kontoeinstellungen. Thunderbird stellt MailExtensions keinen Deep-Link zu den geschützten Konten-Einstellungen und keinen Lesezugriff auf die Auswahl **Jährliche archivierte Ordner** bereit. Der Abschnitt nennt deshalb den exakten manuellen Menüpfad und öffnet über **Thunderbird-Hilfe öffnen** die offizielle Anleitung im Standardbrowser.
+
 ## Datenschutz
 
 Bei AI-Aktionen werden Betreff, Absender, Nachrichtentext und Namen erkannter Anhänge direkt von Thunderbird an die OpenAI API gesendet. Beim Verbessern eines Antwortentwurfs werden außerdem der aktuelle Entwurf und die letzten Änderungswünsche übertragen. Die normale Dashboard-Bulk-Auswertung überträgt ausschließlich explizit ausgewählte Nachrichten ohne vorhandenen Dashboard-Score; bereits bewertete Nachrichten werden ohne API-Aufruf übersprungen. Nur **Auswahl neu bewerten** sendet sie nach einer Bestätigung erneut. Nicht korrigierte AI-Scores speichern lokal ausschließlich eine stabile Nachrichtenidentität aus Konto und RFC Message-ID, Prozentwerte, Modell und Analysezeitpunkt. Bei einer Dashboard-Korrektur kommen die getrennten Kategorien und Freitexte für Wichtigkeit und Spam hinzu, damit sie beim erneuten Öffnen vorausgewählt werden können. Fehlt die RFC Message-ID, werden Konto, Datum, Absender, Betreff und Größe als Ersatzidentität verwendet. Höchstens 1.000 dieser Score-Datensätze bleiben erhalten.
@@ -51,7 +53,7 @@ Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speic
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-2.4.0-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-2.5.0-win-x64.exe` herunterladen und starten.
 2. Im Setup **Deutsch** oder **English** wählen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung und zu den Berechtigungen zum Ändern, Verschieben und Löschen von Nachrichten bestätigen.
@@ -81,7 +83,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-2.4.0-win-x64.exe`
+- `artifacts\Thunderbird-AI-Setup-2.5.0-win-x64.exe`
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
@@ -123,8 +125,9 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 34. Eine Scoring-Korrektur nur einmal speichern. Ein kurzzeitiger Thunderbird- oder lokaler Speicherfehler muss intern erneut versucht werden; die Referenz darf höchstens einmal unter ihrer stabilen Nachrichtenidentität im Archiv erscheinen.
 35. Im Dashboard müssen AI- und E-Mail-Aktionen sowohl im Bulk-Bereich als auch pro Nachricht in zwei klar beschrifteten Spalten mit Icons erscheinen. Eine einzelne Nachricht über **Als gelesen markieren** bearbeiten; sie muss ohne Rückfrage aus der ungelesenen Ansicht verschwinden. Danach mehrere Nachrichten auswählen und **Ausgewählte als gelesen markieren** verwenden. Erfolgreich geänderte Nachrichten müssen verschwinden, während mögliche Einzelfehler gemeldet werden, ohne die übrigen Änderungen zurückzunehmen.
 36. In Thunderbird unter **Konten-Einstellungen → Kopien & Ordner → Nachrichtenarchiv** für die Testkonten jährliche Archivordner konfigurieren. Eine Nachricht aus einem früheren Jahr direkt über **Archivieren** verschieben und prüfen, dass Thunderbird sie im kontobezogenen Ordner `Archiv/<Sendejahr>` ablegt. Danach Nachrichten unterschiedlicher Jahre und Konten auswählen und **Ausgewählte archivieren** verwenden; jede Nachricht muss gemäß ihrer Konto- und Identitätseinstellungen im passenden Jahresarchiv landen und aus dem ungelesenen Dashboard verschwinden.
+37. Unter **Einstellungen → Thunderbird-Archivierung** auf **Archivordner prüfen** klicken. Ein von Thunderbird als Archiv gekennzeichneter Testordner muss mit Pfad, vorhandenen direkten Jahresordnern und Unterordner-Fähigkeit erscheinen. Ein lediglich gleich benannter, aber nicht als Archiv gekennzeichneter Ordner darf nicht fälschlich erkannt werden. Über **Thunderbird-Hilfe öffnen** muss die offizielle Anleitung im Standardbrowser erscheinen. Anschließend die nicht per Add-on auslesbare Auswahl **Jährliche archivierte Ordner** einmal manuell über den angezeigten Menüpfad kontrollieren.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.4.0** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.5.0** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 ## Technische Struktur
 
