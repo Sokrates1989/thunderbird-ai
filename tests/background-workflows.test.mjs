@@ -41,6 +41,19 @@ async function loadBackground(options = {}) {
             date: '2026-08-09'
         }]
     };
+    context.SpamPrecheckService = {
+        enrichMessages: options.enrichMessages || (async messages => messages.map(message => ({
+            ...message,
+            spamPrecheck: {
+                senderHistoryAvailable: true,
+                totalFromSender: 12,
+                recent30DaysFromSender: 3,
+                recent90DaysFromSender: 7,
+                newsletterSignals: [],
+                suggestedSpamMinimum: 3
+            }
+        })))
+    };
     context.DashboardTrainingService = {
         relevantExamples: async () => [],
         findForMessage: async () => ({
@@ -185,6 +198,27 @@ test('dashboard bulk triage uses the shared background message loader and score 
     ]);
     assert.deepEqual(serviceCalls, ['bulk:2']);
     assert.deepEqual(stats, ['email:2', 'api']);
+});
+
+test('bulk and single scoring enrich messages with the shared local spam precheck', async () => {
+    const enrichedIds = [];
+    const { ai, config } = await loadBackground({
+        enrichMessages: async messages => messages.map(message => {
+            enrichedIds.push(message.id);
+            return {
+                ...message,
+                spamPrecheck: { suggestedSpamMinimum: 42 }
+            };
+        })
+    });
+
+    await ai.handleMessage({
+        action: config.ACTIONS.DASHBOARD_BULK_TRIAGE,
+        messageIds: [7, 8]
+    });
+    await ai.handleMessage({ action: config.ACTIONS.SCORE_MESSAGE, messageId: 9 });
+
+    assert.deepEqual(enrichedIds, [7, 8, 9]);
 });
 
 test('dashboard score feedback is routed to the independent background archive', async () => {

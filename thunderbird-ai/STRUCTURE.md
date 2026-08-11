@@ -42,6 +42,7 @@ thunderbird-ai/
 - `ScoreFeedbackEditor.js` and `score-feedback-editor.css` provide the shared importance, spam, and risk correction fields, score-specific reason categories, and separate free-text explanations used by the dashboard, single-message scoring, and Settings archive.
 - `DashboardAIService.js` opens the existing single-message workspaces, plans protected first-time versus explicit re-score bulk operations, and persists bounded importance/spam/risk score metadata keyed by RFC Message-ID instead of Thunderbird's restart-volatile numeric ID. Legacy two-score metadata remains attached with a null risk score until explicit rescoring or correction.
 - `dashboard-training.js` owns the separate bounded archive of explicit operator corrections. It stores a clipped message snapshot, separate importance/spam/risk reasons, and selects at most five relevant examples; Thunderbird deletion never accesses its storage key. Legacy records remain loadable with an empty risk field.
+- `spam-precheck.js` owns the local sender-history calibration used before single and bulk scoring. It scans exact sender addresses across Thunderbird in bounded pages, caches aggregate counts briefly, combines them with safe newsletter signal names, and never retains other messages or raw MIME-header values.
 - Bulk and single-email score bodies cross to `background.js`, which retrieves normalized messages through `MessageService`, selects relevant corrections through `DashboardTrainingService`, and calls the shared OpenAI score formatting and parser. Bulk defaults to Luna, single scoring defaults to Terra, and both honor their independent saved model preference.
 - `ScoringArchiveComponent.js` exposes the local reference archive in Settings for manual rescoring, reason editing, and removal without touching Thunderbird messages.
 - `ArchiveSettingsGuideComponent.js` performs a read-only scan of Thunderbird archive-folder markers and capabilities, then presents the protected native configuration path and official help without guessing folders by localized names.
@@ -69,6 +70,7 @@ thunderbird-ai/
 - **`retry.js`**: Shared bounded retry and Thunderbird runtime-delivery backoff (global `RetryService`)
 - **`openai.js`**: OpenAI API integration and AI services (global `OpenAIService`)
 - **`message.js`**: Email message operations and data extraction (global `MessageService`)
+- **`spam-precheck.js`**: Bounded sender-frequency and newsletter-signal aggregation for scoring (global `SpamPrecheckService`)
 - **`ui.js`**: Common UI utilities and helper functions (global `UIUtils`)
 
 #### **Components (`components/`)**

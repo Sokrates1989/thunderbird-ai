@@ -53,6 +53,29 @@ test('converts an HTML-only message without requiring a DOM', () => {
     assert.equal(content, 'Grüße\naus Köln & Bonn');
 });
 
+test('extracts newsletter indicators without retaining raw MIME header values', () => {
+    const service = loadMessageService({ i18n: { getUILanguage: () => 'de-DE' } });
+    const signals = service.extractSpamSignals({
+        headers: {
+            'List-Unsubscribe': ['<https://example.test/unsubscribe?secret=1>'],
+            'List-ID': ['private-campaign-id'],
+            Precedence: ['bulk']
+        }
+    }, {
+        author: 'Newsletter <no-reply@example.test>'
+    }, 'Newsletter abbestellen: https://click.example.test/path?utm_campaign=summer');
+
+    assert.deepEqual(Array.from(signals).sort(), [
+        'automated-sender-address',
+        'bulk-precedence-header',
+        'campaign-tracking-link',
+        'list-id-header',
+        'list-unsubscribe-header',
+        'unsubscribe-language'
+    ]);
+    assert.doesNotMatch(JSON.stringify(signals), /secret|private-campaign-id/u);
+});
+
 test('ranks similar messages locally by subject overlap and sender', async () => {
     const pages = [{
         id: null,

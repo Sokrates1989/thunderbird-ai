@@ -1,7 +1,7 @@
 ; Builds a per-user Windows setup around the verified Thunderbird AI XPI.
 
 #ifndef AppVersion
-  #define AppVersion "2.6.0"
+  #define AppVersion "2.7.0"
 #endif
 
 #define AppName "Thunderbird AI Assistant"

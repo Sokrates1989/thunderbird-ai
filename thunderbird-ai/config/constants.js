@@ -2,7 +2,7 @@
 
 const CONFIG = {
     ADDON_NAME: 'Thunderbird AI Assistant',
-    ADDON_VERSION: '2.6.0',
+    ADDON_VERSION: '2.7.0',
     ADDON_ID: 'thunderbird-ai@example.com',
 
     OPENAI: {
@@ -111,6 +111,15 @@ const CONFIG = {
         },
         MAX_REPLY_DRAFT_CHARACTERS: 20000,
         MAX_REPLY_INSTRUCTION_CHARACTERS: 4000
+    },
+
+    SPAM_PRECHECK: {
+        HISTORY_LIMIT: 1000,
+        HISTORY_PAGE_SIZE: 100,
+        CACHE_TTL_MS: 600000,
+        CACHE_LIMIT: 200,
+        CONCURRENCY: 4,
+        RECENT_DAYS: [30, 90]
     },
 
     STORAGE_KEYS: {

@@ -314,6 +314,60 @@ test('configured task models override bulk and single-score defaults independent
     assert.match(requests[1].input, /Verified sender/u);
 });
 
+test('spam scoring sends local aggregate evidence and enforces its conservative floor', async () => {
+    const responseText = JSON.stringify([
+        { index: 0, importanceScore: 10, spamScore: 7, riskScore: 3 }
+    ]);
+    const { service, requests } = loadOpenAIService({ responseText });
+    const message = {
+        id: 17,
+        subject: 'Weekly offers',
+        author: 'News <newsletter@example.test>',
+        content: 'Unsubscribe here',
+        attachments: [],
+        spamPrecheck: {
+            senderHistoryAvailable: true,
+            totalFromSender: 184,
+            totalFromSenderIsMinimum: false,
+            recent30DaysFromSender: 18,
+            recent90DaysFromSender: 52,
+            previouslyMarkedJunkFromSender: 0,
+            newsletterSignals: ['list-unsubscribe-header', 'list-id-header'],
+            suggestedSpamMinimum: 55
+        }
+    };
+
+    const result = await service.analyzeSingleScore(message);
+
+    assert.equal(result.spamScore, 55);
+    assert.match(requests[0].input, /<local-spam-precheck>/u);
+    assert.match(requests[0].input, /"totalFromSender":184/u);
+    assert.match(requests[0].instructions, /0–10.*50–69.*90–100/u);
+});
+
+test('an exact-sender operator correction takes precedence over the local spam floor', async () => {
+    const responseText = JSON.stringify([
+        { index: 0, importanceScore: 75, spamScore: 9, riskScore: 2 }
+    ]);
+    const { service } = loadOpenAIService({ responseText });
+    const message = {
+        id: 17,
+        subject: 'Expected report',
+        author: 'Reports <reports@example.test>',
+        content: 'Your requested report',
+        attachments: [],
+        spamPrecheck: { suggestedSpamMinimum: 48 }
+    };
+    const feedback = [{
+        message: { author: 'Reports <reports@example.test>' },
+        correctedScores: { spamScore: 5 }
+    }];
+
+    const result = await service.analyzeSingleScore(message, feedback);
+
+    assert.equal(result.spamScore, 9);
+});
+
 test('bulk triage rejects missing or out-of-range score rows', () => {
     const { service } = loadOpenAIService();
 

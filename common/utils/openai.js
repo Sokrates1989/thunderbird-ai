@@ -179,6 +179,7 @@ const OpenAIService = {
             input: [feedbackInput, messageInput].filter(Boolean).join('\n\n')
         });
         const scores = this.parseBulkTriageScores(response.content, messages);
+        this.applySpamPrecheckMinimum(scores, messages, feedbackExamples);
         scores.model = response.model;
         scores.apiCalls = 1 + response.retryCount;
         return scores;
@@ -196,7 +197,9 @@ const OpenAIService = {
             instructions: this.baseInstructions(I18n.t('singleScorePrompt')),
             input: [feedbackInput, messageInput].filter(Boolean).join('\n\n')
         });
-        const [score] = this.parseBulkTriageScores(response.content, [message]);
+        const scores = this.parseBulkTriageScores(response.content, [message]);
+        this.applySpamPrecheckMinimum(scores, [message], feedbackExamples);
+        const [score] = scores;
         return {
             ...score,
             model: response.model,
@@ -261,6 +264,37 @@ const OpenAIService = {
         return Number.isFinite(score) && score >= 0 && score <= 100 ? Math.round(score) : null;
     },
 
+    /** Keep strong local evidence from being erased by an under-calibrated model response. */
+    applySpamPrecheckMinimum(scores, messages, feedbackExamples = []) {
+        scores.forEach((score, index) => {
+            const message = messages[index];
+            const suggestedMinimum = this.normalizeScore(message?.spamPrecheck?.suggestedSpamMinimum);
+            if (suggestedMinimum === null || this.hasExactSenderSpamFeedback(message, feedbackExamples)) {
+                return;
+            }
+            score.spamScore = Math.max(score.spamScore, suggestedMinimum);
+        });
+    },
+
+    /** Explicit operator corrections for the exact sender take precedence over heuristics. */
+    hasExactSenderSpamFeedback(message, feedbackExamples) {
+        const sender = this.normalizeSender(message?.author);
+        if (!sender) {
+            return false;
+        }
+        return feedbackExamples.some(example => (
+            this.normalizeScore(example?.correctedScores?.spamScore) !== null
+            && this.normalizeSender(example?.message?.author) === sender
+        ));
+    },
+
+    normalizeSender(author) {
+        const value = String(author || '').trim().toLowerCase();
+        const bracketed = value.match(/<([^<>\s]+@[^<>\s]+)>/u);
+        const plain = value.match(/([^\s<>,;]+@[^\s<>,;]+)/u);
+        return String(bracketed?.[1] || plain?.[1] || value);
+    },
+
     async processChat(query, message, history = []) {
         const trimmedQuery = String(query || '').trim();
         if (!trimmedQuery) {
@@ -318,17 +352,25 @@ const OpenAIService = {
         const clipped = content.length > maximum
             ? `${content.slice(0, maximum)}\n\n${I18n.t('contentTruncated', { maximum })}`
             : content;
+        const spamPrecheck = message?.spamPrecheck
+            ? [
+                '<local-spam-precheck>',
+                JSON.stringify(message.spamPrecheck),
+                '</local-spam-precheck>'
+            ].join('\n')
+            : '';
         return [
             '<email>',
             `${I18n.t('emailContextSubject')}: ${message.subject || ''}`,
             `${I18n.t('emailContextFrom')}: ${message.author || ''}`,
             `${I18n.t('emailContextDate')}: ${message.formattedDate || message.date || ''}`,
             `${I18n.t('emailContextAttachments')}: ${(message.attachments || []).map(item => item.name).join(', ') || I18n.t('noAttachments')}`,
+            spamPrecheck,
             '<body>',
             clipped,
             '</body>',
             '</email>'
-        ].join('\n');
+        ].filter(Boolean).join('\n');
     },
 
     generateFallbackSummary(message) {

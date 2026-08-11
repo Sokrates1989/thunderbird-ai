@@ -109,7 +109,10 @@ class ThunderbirdAI {
     }
 
     async runEmailAction(task, messageId, options = {}) {
-        const message = await MessageService.getFullMessage(messageId);
+        let message = await MessageService.getFullMessage(messageId);
+        if (task === 'spam') {
+            [message] = await SpamPrecheckService.enrichMessages([message]);
+        }
         let result;
         switch (task) {
             case 'summarize':
@@ -151,9 +154,10 @@ class ThunderbirdAI {
         if (!uniqueIds.length) {
             return { success: true, data: { results: [], failedCount: 0, model: null } };
         }
-        const messages = await Promise.all(
+        const loadedMessages = await Promise.all(
             uniqueIds.map(messageId => MessageService.getFullMessage(messageId))
         );
+        const messages = await SpamPrecheckService.enrichMessages(loadedMessages);
         const feedbackExamples = await DashboardTrainingService.relevantExamples(messages);
         const analysis = await OpenAIService.analyzeBulkTriage(messages, feedbackExamples);
         await StorageManager.updateStatistics('email', analysis.scores.length);
@@ -172,7 +176,8 @@ class ThunderbirdAI {
 
     /** Score one message and return any exact archived operator correction beside it. */
     async scoreSingleMessage(messageId) {
-        const message = await MessageService.getFullMessage(messageId);
+        const loadedMessage = await MessageService.getFullMessage(messageId);
+        const [message] = await SpamPrecheckService.enrichMessages([loadedMessage]);
         const [archivedFeedback, feedbackExamples] = await Promise.all([
             DashboardTrainingService.findForMessage(message),
             DashboardTrainingService.relevantExamples([message])

@@ -29,6 +29,7 @@ const MessageService = {
             const content = this.extractBody(mimeMessage);
             const attachments = this.extractAttachments(mimeMessage);
             const date = header.date ? new Date(header.date) : null;
+            const spamSignals = this.extractSpamSignals(mimeMessage, header, content);
 
             return {
                 id: header.id,
@@ -44,6 +45,7 @@ const MessageService = {
                     ? date.toLocaleString(I18n.getLanguage())
                     : I18n.t('unknownValue'),
                 content,
+                spamSignals,
                 wordCount: content ? content.split(/\s+/u).filter(Boolean).length : 0,
                 attachments,
                 hasAttachments: Boolean(header.hasAttachments || attachments.length),
@@ -161,6 +163,57 @@ const MessageService = {
             .replace(/ *\n */gu, '\n')
             .replace(/\n{3,}/gu, '\n\n')
             .trim();
+    },
+
+    /** Extract bounded structural newsletter indicators without retaining header values. */
+    extractSpamSignals(mimeMessage, header, content) {
+        const normalizedHeaders = Object.fromEntries(
+            Object.entries(mimeMessage?.headers || {}).map(([name, value]) => [
+                String(name).toLowerCase(),
+                Array.isArray(value) ? value.join(' ') : String(value || '')
+            ])
+        );
+        const signals = new Set();
+        if (normalizedHeaders['list-unsubscribe']) {
+            signals.add('list-unsubscribe-header');
+        }
+        if (normalizedHeaders['list-id']) {
+            signals.add('list-id-header');
+        }
+        if (/\b(?:bulk|list|junk)\b/iu.test(normalizedHeaders.precedence || '')) {
+            signals.add('bulk-precedence-header');
+        }
+        if (normalizedHeaders['list-post']) {
+            signals.add('list-post-header');
+        }
+        const autoSubmitted = normalizedHeaders['auto-submitted'] || '';
+        if (autoSubmitted && !/^\s*no\s*$/iu.test(autoSubmitted)) {
+            signals.add('auto-submitted-header');
+        }
+
+        const senderAddress = this.extractEmailAddress(header?.author);
+        const localPart = senderAddress.split('@')[0] || '';
+        if (/(?:^|[._+-])(?:no-?reply|newsletter|marketing|updates?|invitations?)(?:$|[._+-])/iu.test(localPart)) {
+            signals.add('automated-sender-address');
+        }
+        const text = String(content || '').slice(0, 50000);
+        if (/\b(?:unsubscribe|opt[ -]?out|abmelden|abbestellen|newsletter abbestellen|afmelden)\b/iu.test(text)) {
+            signals.add('unsubscribe-language');
+        }
+        if (/\b(?:utm_(?:source|medium|campaign)|list-manage\.com|mailchi\.mp|sendgrid\.net|click\.[^\s/]+|tracking\.)/iu.test(text)) {
+            signals.add('campaign-tracking-link');
+        }
+        return [...signals];
+    },
+
+    /** Normalize the address portion Thunderbird accepts for an exact author query. */
+    extractEmailAddress(author) {
+        const value = String(author || '').trim();
+        const bracketed = value.match(/<([^<>\s]+@[^<>\s]+)>/u);
+        const plain = value.match(/([^\s<>,;]+@[^\s<>,;]+)/u);
+        return String(bracketed?.[1] || plain?.[1] || '')
+            .replace(/[)>\].,;:]+$/u, '')
+            .toLowerCase();
     },
 
     /** Find related messages locally, without sending mailbox contents to OpenAI. */
