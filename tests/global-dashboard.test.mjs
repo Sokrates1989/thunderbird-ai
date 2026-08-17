@@ -60,6 +60,7 @@ function loadService({
             }
         }
     });
+    loadScript(context, 'thunderbird-ai/components/shared/MailboxActionService.js');
     loadScript(context, 'thunderbird-ai/components/global-dashboard/GlobalMailService.js');
     return { aborted, service: context.GlobalMailService, storageState };
 }
@@ -167,6 +168,10 @@ function loadDashboardManager(
         GlobalMailService: globalMailService,
         DashboardViewPreferences: { saveSelection: async () => {} },
         DashboardLaunchService: { openExpanded: async () => {} },
+        RuntimeDiagnosticService: {
+            run: async (_context, _action, operation) => operation(),
+            record: async () => {}
+        },
         browser: {
             runtime: { getURL: value => `moz-extension://test/${value}` },
             tabs: { create: async () => {} }

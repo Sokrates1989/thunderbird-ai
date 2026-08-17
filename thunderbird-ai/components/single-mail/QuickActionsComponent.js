@@ -9,7 +9,7 @@ const QuickActionsComponent = class {
             { id: 'summarizeBtn', icon: '📄', text: I18n.t('quickSummarize'), shortcut: shortcut('S'), action: 'SUMMARIZE', className: 'ai-action', description: I18n.t('quickSummarizeDescription') },
             { id: 'replyBtn', icon: '✍️', text: I18n.t('quickReply'), shortcut: shortcut('R'), action: 'SUGGEST_REPLY', className: 'ai-action', description: I18n.t('quickReplyDescription') },
             { id: 'chatBtn', icon: '💬', text: I18n.t('quickChat'), action: 'OPEN_CHAT', className: 'ai-action', description: I18n.t('quickChatDescription') },
-            { id: 'scoreBtn', icon: '📊', text: I18n.t('quickScoring'), action: 'SCORE', className: 'score-action', description: I18n.t('quickScoringDescription') }
+            { id: 'scoreBtn', icon: '🎚️', text: I18n.t('dashboardCorrectScores'), action: 'SCORE', className: 'score-action', description: I18n.t('quickScoringDescription') }
         ];
         this.keydownHandler = event => this.handleShortcut(event);
     }

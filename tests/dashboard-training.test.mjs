@@ -26,6 +26,7 @@ function loadTrainingService() {
     loadScript(context, 'thunderbird-ai/config/constants.js');
     loadScript(context, 'common/utils/message.js');
     loadScript(context, 'common/utils/dashboard-training.js');
+    loadScript(context, 'thunderbird-ai/components/shared/MailboxActionService.js');
     loadScript(context, 'thunderbird-ai/components/global-dashboard/GlobalMailService.js');
     return { context, deleted, service: context.DashboardTrainingService, storage };
 }

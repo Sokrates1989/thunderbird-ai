@@ -7,6 +7,7 @@ const SingleMailManager = class {
         this.isInitialized = false;
         this.elements = {
             quickActionsGrid: document.getElementById('quickActionsGrid'),
+            mailActionsGrid: document.getElementById('mailActionsGrid'),
             emailInfo: document.getElementById('emailInfo'),
             advancedActionsGrid: document.getElementById('advancedActionsGrid'),
             resultsArea: document.getElementById('resultsArea'),
@@ -20,6 +21,7 @@ const SingleMailManager = class {
     initializeComponents() {
         this.components.header = new HeaderComponent(this);
         this.components.quickActions = new QuickActionsComponent(this);
+        this.components.mailActions = new MailActionsComponent(this);
         this.components.emailDetails = new EmailDetailsComponent(this);
         this.components.advancedActions = new AdvancedActionsComponent(this);
         this.components.results = new ResultsComponent(this);
@@ -90,6 +92,7 @@ const SingleMailManager = class {
             from: this.emailData.author || this.emailData.from,
             status: this.emailData.flagged ? 'flagged' : (this.emailData.read ? 'read' : 'unread')
         });
+        this.components.mailActions.updateMessage?.(this.emailData);
         this.updateStatus(I18n.t('emailLoaded', { subject: this.emailData.subject }));
     }
 
@@ -103,6 +106,7 @@ const SingleMailManager = class {
             status: I18n.t('openEmailPrompt')
         });
         this.components.quickActions.setButtonsEnabled(false);
+        this.components.mailActions.setButtonsEnabled(false);
         this.components.advancedActions.setButtonsEnabled(false);
         this.updateStatus(I18n.t('messageNotFound'), 'warning');
     }

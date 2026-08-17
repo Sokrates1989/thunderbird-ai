@@ -49,7 +49,10 @@ function loadReplyUi({
     beginReply = async () => ({ id: 7 }),
     getAttachmentFile = async (_messageId, partName) => ({ name: partName }),
     getComposeDetails = async () => ({ isPlainText: true, plainTextBody: '> Original' }),
+    getDefaultIdentity = async () => null,
+    getMessage = async () => null,
     listAttachments = async () => [],
+    listIdentities = async () => [],
     setComposeDetails = async () => {},
     stored = {},
     writeText = async () => {}
@@ -61,7 +64,8 @@ function loadReplyUi({
         browser: {
             i18n: { getUILanguage: () => 'de-DE' },
             compose: { addAttachment, beginReply, getComposeDetails, setComposeDetails },
-            messages: { getAttachmentFile, listAttachments },
+            identities: { getDefault: getDefaultIdentity, list: listIdentities },
+            messages: { get: getMessage, getAttachmentFile, listAttachments },
             storage: {
                 local: {
                     get: async keys => Object.fromEntries(
@@ -86,11 +90,12 @@ function loadReplyUi({
     loadScript(context, 'thunderbird-ai/config/constants.js');
     loadScript(context, 'common/utils/storage.js');
     loadScript(context, 'thunderbird-ai/components/single-mail/QuickActionsComponent.js');
+    loadScript(context, 'thunderbird-ai/components/single-mail/MailActionsComponent.js');
     loadScript(context, 'thunderbird-ai/components/single-mail/ReplyPreparationService.js');
     loadScript(context, 'thunderbird-ai/components/single-mail/ReplyComposerComponent.js');
     const manager = {
         emailId: 42,
-        elements: { quickActionsGrid: {} },
+        elements: { quickActionsGrid: {}, mailActionsGrid: {} },
         log: (message, level) => logs.push({ message, level }),
         showError() {},
         updateStatus: (message, level) => statusUpdates.push({ message, level })
@@ -141,7 +146,7 @@ test('explicit language selection changes text and every static page key resolve
         path.join(repositoryRoot, 'thunderbird-ai/install-defaults.json'),
         'utf8'
     ));
-    assert.deepEqual(defaults, { language: 'auto', version: '2.10.1' });
+    assert.deepEqual(defaults, { language: 'auto', version: '2.11.0' });
 });
 
 test('reply composer keeps final actions outside its scrolling content', () => {
@@ -227,6 +232,33 @@ test('single-mail quick actions replace categorization, importance, and API test
     ]);
     await component.executeAction('SCORE');
     assert.equal(scoringOpened, 1);
+});
+
+test('single-mail ordinary actions mirror dashboard capabilities and color semantics', () => {
+    const { context, manager } = loadReplyUi();
+    const component = new context.MailActionsComponent(manager);
+    const page = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/pages/single-mail-ui.html'),
+        'utf8'
+    );
+    const styles = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/styles/single-mail-ui.css'),
+        'utf8'
+    );
+
+    assert.deepEqual(Array.from(component.actions, action => action.action), [
+        'MARK_READ',
+        'EXPORT_PDF',
+        'ARCHIVE',
+        'TRASH'
+    ]);
+    assert.match(page, /class="single-mail-action-group ai"/u);
+    assert.match(page, /class="single-mail-action-group mail"/u);
+    assert.match(page, /MailboxActionService\.js/u);
+    assert.match(page, /PdfArchiverIntegrationService\.js/u);
+    assert.match(styles, /\.button\.mail-action\.mark-read\s*\{[^}]*#2e7d32/su);
+    assert.match(styles, /\.button\.mail-action\.archive,[\s\S]*#526d82/su);
+    assert.match(styles, /\.button\.mail-action\.danger\s*\{[^}]*#b42318/su);
 });
 
 test('single-mail footer opens or focuses the shared dashboard instead of duplicating AI Chat', async () => {
@@ -456,4 +488,54 @@ test('sender-only reply can omit the quote and reattach every source attachment'
     assert.equal(attachmentAdds[1][0], 23);
     assert.equal(attachmentAdds[1][1].file.name, '1.3.bin');
     assert.equal(attachmentAdds[1][1].name, 'photo.jpg');
+});
+
+test('native reply selects the exact recipient identity before the account default', async () => {
+    const composeCalls = [];
+    const { context, manager } = loadReplyUi({
+        beginReply: async (...args) => {
+            composeCalls.push(args);
+            return { id: 41 };
+        },
+        getMessage: async () => ({
+            folder: { accountId: 'account-work' },
+            recipients: ['Other <other@example.com>', 'Patrick <it@patrickmichiels.de>'],
+            ccList: []
+        }),
+        listIdentities: async () => [
+            { id: 'identity-personal', accountId: 'account-personal', email: 'it@patrickmichiels.de' },
+            { id: 'identity-work', accountId: 'account-work', email: 'it@patrickmichiels.de' }
+        ],
+        getDefaultIdentity: async () => ({ id: 'identity-wrong-default' })
+    });
+    const component = new context.ReplyComposerComponent(manager);
+    component.elements = replyComponentElements('Antwort mit sicherer Identität');
+
+    await component.prepare();
+
+    assert.equal(composeCalls[0][2].identityId, 'identity-work');
+});
+
+test('native reply falls back to the source account default identity when recipients do not match', async () => {
+    const composeCalls = [];
+    const { context, manager } = loadReplyUi({
+        beginReply: async (...args) => {
+            composeCalls.push(args);
+            return { id: 42 };
+        },
+        getMessage: async () => ({
+            folder: { accountId: 'account-work' },
+            recipients: ['alias-not-configured@example.com']
+        }),
+        listIdentities: async () => [
+            { id: 'identity-personal', accountId: 'account-personal', email: 'me@example.com' }
+        ],
+        getDefaultIdentity: async accountId => ({ id: `default-${accountId}` })
+    });
+    const component = new context.ReplyComposerComponent(manager);
+    component.elements = replyComponentElements('Antwort');
+
+    await component.prepare();
+
+    assert.equal(composeCalls[0][2].identityId, 'default-account-work');
 });

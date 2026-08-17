@@ -65,6 +65,7 @@ async function loadBackground(options = {}) {
     loadScript(context, 'thunderbird-ai/config/locale-de.js');
     loadScript(context, 'thunderbird-ai/config/locale-en.js');
     loadScript(context, 'thunderbird-ai/config/constants.js');
+    loadScript(context, 'thunderbird-ai/components/shared/RuntimeDiagnosticService.js');
     loadScript(context, 'thunderbird-ai/components/shared/DashboardLaunchService.js');
     context.MessageService = {
         getFullMessage: options.getFullMessage || (async id => ({
@@ -546,6 +547,10 @@ test('packaged UI sources contain no unfinished actions or retired models', () =
     assert.match(source, /messages\.getFull/u);
     assert.ok(manifest.permissions.includes('clipboardWrite'));
     assert.equal(manifest.compose_action, undefined);
+    assert.ok(
+        manifest.background.scripts.indexOf('RuntimeDiagnosticService.js')
+            < manifest.background.scripts.indexOf('background.js')
+    );
     assert.ok(
         manifest.background.scripts.indexOf('retry.js')
             < manifest.background.scripts.indexOf('openai.js')

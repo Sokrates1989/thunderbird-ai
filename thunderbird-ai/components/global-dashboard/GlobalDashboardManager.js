@@ -314,7 +314,11 @@ const GlobalDashboardManager = class {
         if (this.refreshPromise) {
             return this.refreshPromise;
         }
-        this.refreshPromise = this.performRefresh();
+        this.refreshPromise = RuntimeDiagnosticService.run(
+            'dashboard',
+            'refresh-mailbox',
+            () => this.performRefresh()
+        );
         try {
             return await this.refreshPromise;
         } finally {
@@ -548,7 +552,11 @@ const GlobalDashboardManager = class {
             : 'dashboardAnalysisInProgress';
         this.setBusy(true, I18n.t(progressKey, { count: plan.messageIds.length }));
         try {
-            const data = await DashboardAIService.analyzePlan(plan);
+            const data = await RuntimeDiagnosticService.run(
+                'dashboard',
+                includeAnalyzed ? 'rescore-selection' : 'score-selection',
+                () => DashboardAIService.analyzePlan(plan)
+            );
             this.aiResults = await DashboardAIService.saveResults(
                 this.aiResults,
                 DashboardAIService.addStorageKeys(this.sourceAccounts, data.results),
@@ -625,7 +633,11 @@ const GlobalDashboardManager = class {
     async performMarkAsRead(messageIds, successKey) {
         this.setBusy(true, I18n.t('dashboardMarkReadInProgress'));
         try {
-            const result = await GlobalMailService.markAsRead(messageIds);
+            const result = await RuntimeDiagnosticService.run(
+                'dashboard',
+                'mark-read',
+                () => GlobalMailService.markAsRead(messageIds)
+            );
             this.selectedMessageIds.clear();
             await this.persistSelection();
             await this.refresh();
@@ -665,7 +677,11 @@ const GlobalDashboardManager = class {
     async performArchive(messageIds, successKey) {
         this.setBusy(true, I18n.t('dashboardArchiveInProgress'));
         try {
-            await GlobalMailService.archiveMessages(messageIds);
+            await RuntimeDiagnosticService.run(
+                'dashboard',
+                'archive',
+                () => GlobalMailService.archiveMessages(messageIds)
+            );
             this.selectedMessageIds.clear();
             await this.persistSelection();
             await this.refresh();
@@ -717,7 +733,11 @@ const GlobalDashboardManager = class {
     async performTrash(messageIds, successMessage) {
         this.setBusy(true, I18n.t('dashboardTrashInProgress'));
         try {
-            let diagnostics = await GlobalMailService.moveToTrash(messageIds);
+            let diagnostics = await RuntimeDiagnosticService.run(
+                'dashboard',
+                'delete',
+                () => GlobalMailService.moveToTrash(messageIds)
+            );
             const remainingMessageIds = await this.refreshUntilTrashApplied(messageIds);
             if (remainingMessageIds.length) {
                 diagnostics = {
@@ -887,6 +907,9 @@ const GlobalDashboardManager = class {
     /** Translate unexpected asynchronous failures at the dashboard boundary. */
     showUnexpectedError(error) {
         console.error('Global dashboard action failed:', error);
+        void RuntimeDiagnosticService.record('dashboard', 'ui-action', 'failed', {
+            code: error?.code || error?.name
+        });
         this.setStatus(I18n.t('dashboardLoadFailed'), 'error');
         this.setBusy(false);
     }

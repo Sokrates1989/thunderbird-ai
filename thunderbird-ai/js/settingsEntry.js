@@ -21,16 +21,16 @@
  */
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Initializing Thunderbird AI Settings...');
+    RuntimeDiagnosticService.installGlobalHandlers('settings');
     
     try {
-        await I18n.initialize();
-        I18n.localizeDocument();
-        // Create the main settings manager
-        const settingsManager = new SettingsManager();
-        console.log('Settings manager initialized successfully');
-        
-        // Make it available globally for debugging
-        window.settingsManager = settingsManager;
+        await RuntimeDiagnosticService.run('settings', 'initialize', async () => {
+            await I18n.initialize();
+            I18n.localizeDocument();
+            const settingsManager = new SettingsManager();
+            console.log('Settings manager initialized successfully');
+            window.settingsManager = settingsManager;
+        });
         
     } catch (error) {
         console.error('Failed to initialize settings manager:', error);

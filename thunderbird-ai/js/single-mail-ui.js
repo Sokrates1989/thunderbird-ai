@@ -21,31 +21,27 @@
  */
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Initializing Thunderbird AI Single Mail UI...');
+    RuntimeDiagnosticService.installGlobalHandlers('single-mail');
     
     try {
-        await I18n.initialize();
-        I18n.localizeDocument();
-        // Get email data from URL parameters or current context
-        const urlParams = new URLSearchParams(window.location.search);
-        const emailId = urlParams.get('emailId');
-        const emailData = urlParams.get('emailData') ? JSON.parse(decodeURIComponent(urlParams.get('emailData'))) : null;
-        
-        // Create the main single mail manager
-        const singleMailManager = new SingleMailManager({
-            emailId: emailId,
-            emailData: emailData
-        });
-        
-        // Initialize the manager
-        singleMailManager.initialize().then(() => {
+        await RuntimeDiagnosticService.run('single-mail', 'initialize', async () => {
+            await I18n.initialize();
+            I18n.localizeDocument();
+            // Get email data from URL parameters or current context
+            const urlParams = new URLSearchParams(window.location.search);
+            const emailId = urlParams.get('emailId');
+            const emailData = urlParams.get('emailData') ? JSON.parse(decodeURIComponent(urlParams.get('emailData'))) : null;
+
+            // Create the main single mail manager
+            const singleMailManager = new SingleMailManager({
+                emailId: emailId,
+                emailData: emailData
+            });
+
+            await singleMailManager.initialize();
             console.log('Single mail manager initialized successfully');
-        }).catch(error => {
-            console.error('Failed to initialize single mail manager:', error);
+            window.singleMailManager = singleMailManager;
         });
-        
-        // Make it available globally for debugging
-        window.singleMailManager = singleMailManager;
-        
     } catch (error) {
         console.error('Failed to initialize single mail manager:', error);
     }

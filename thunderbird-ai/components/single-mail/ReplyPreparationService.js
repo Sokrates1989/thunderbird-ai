@@ -7,17 +7,81 @@ const ReplyPreparationService = {
     /** Open one native reply and apply the selected recipients, body, and attachments. */
     async prepare(messageId, draft, preferences, logError) {
         const replyType = preferences.replyToAll ? 'replyToAll' : 'replyToSender';
-        const composeTab = preferences.includeOriginal
-            ? await browser.compose.beginReply(messageId, replyType)
-            : await browser.compose.beginReply(messageId, replyType, {
-                plainTextBody: draft
-            });
+        const identityId = await this.findReplyIdentityId(messageId, logError);
+        const composeDetails = {};
+        if (identityId) {
+            composeDetails.identityId = identityId;
+        }
+        if (!preferences.includeOriginal) {
+            composeDetails.plainTextBody = draft;
+        }
+        const composeTab = Object.keys(composeDetails).length
+            ? await browser.compose.beginReply(messageId, replyType, composeDetails)
+            : await browser.compose.beginReply(messageId, replyType);
         if (preferences.includeOriginal) {
             await this.prependDraftToNativeReply(composeTab.id, draft);
         }
         return preferences.includeAttachments
             ? this.addOriginalAttachments(composeTab.id, messageId, logError)
             : { added: 0, failed: 0 };
+    },
+
+    /**
+     * Prefer the identity whose address was an original recipient. If no exact
+     * recipient match exists, fall back to the default identity of the owning account.
+     */
+    async findReplyIdentityId(messageId, logError = () => {}) {
+        if (!browser.identities?.list || !browser.messages?.get) {
+            return null;
+        }
+        try {
+            const [message, identities] = await Promise.all([
+                browser.messages.get(messageId),
+                browser.identities.list()
+            ]);
+            const recipientAddresses = this.recipientAddresses(message);
+            const accountId = message?.folder?.accountId || null;
+            const exactMatches = identities.filter(identity => (
+                recipientAddresses.has(this.normalizeAddress(identity.email))
+            ));
+            const accountMatch = exactMatches.find(identity => identity.accountId === accountId);
+            if (accountMatch?.id) {
+                return accountMatch.id;
+            }
+            if (exactMatches[0]?.id) {
+                return exactMatches[0].id;
+            }
+            if (accountId && browser.identities.getDefault) {
+                const defaultIdentity = await browser.identities.getDefault(accountId);
+                if (defaultIdentity?.id) {
+                    return defaultIdentity.id;
+                }
+            }
+            return identities.find(identity => identity.accountId === accountId)?.id || null;
+        } catch (error) {
+            logError(`Could not determine the recipient identity for the reply: ${error.message}`);
+            return null;
+        }
+    },
+
+    recipientAddresses(message) {
+        const addresses = new Set();
+        for (const value of [
+            ...(message?.recipients || []),
+            ...(message?.ccList || []),
+            ...(message?.bccList || [])
+        ]) {
+            const bracketed = String(value).match(/<([^<>]+)>/u)?.[1];
+            const normalized = this.normalizeAddress(bracketed || value);
+            if (normalized) {
+                addresses.add(normalized);
+            }
+        }
+        return addresses;
+    },
+
+    normalizeAddress(value) {
+        return String(value || '').trim().toLocaleLowerCase('en-US');
     },
 
     /** Prepend safely formatted AI text while retaining Thunderbird's native body. */

@@ -43,6 +43,7 @@ test('settings expose the persisted overlay or Thunderbird-tab launch preference
 
     assert.match(settingsPage, /id="dashboard-launch-section"/u);
     assert.match(settingsPage, /DashboardLaunchService\.js/u);
+    assert.match(settingsPage, /RuntimeDiagnosticService\.js/u);
     assert.match(settingsPage, /DashboardLaunchSettingsComponent\.js/u);
     assert.match(settingsManager, /new DashboardLaunchSettingsComponent\(this\)/u);
     assert.match(settingsManager, /dashboardLaunch\.getCurrentValues\(\)/u);
@@ -50,6 +51,8 @@ test('settings expose the persisted overlay or Thunderbird-tab launch preference
     assert.match(launchSettings, /value="tab"/u);
     assert.match(launchSettings, /id="dashboardLaunchDiagnosticDetails"/u);
     assert.match(launchSettings, /DashboardLaunchService\.loadDiagnostic\(\)/u);
+    assert.match(launchSettings, /RuntimeDiagnosticService\.load\(\)/u);
+    assert.match(launchSettings, /formatSupportDiagnostics/u);
     assert.match(launchSettings, /navigator\.clipboard\.writeText/u);
     assert.match(settingsStyles, /\.dashboard-launch-diagnostics\s*\{/u);
 });

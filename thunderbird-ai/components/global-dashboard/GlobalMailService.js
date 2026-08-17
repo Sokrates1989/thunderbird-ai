@@ -53,22 +53,9 @@ const GlobalMailService = {
         return accounts;
     },
 
-    /** Delegate deletion to the persistent background context and validate its response. */
+    /** Delegate deletion to the shared mailbox action boundary. */
     async moveToTrash(messageIds) {
-        const uniqueIds = [...new Set(messageIds)].filter(id => id !== undefined && id !== null);
-        if (!uniqueIds.length) {
-            return null;
-        }
-        const response = await RetryService.sendRuntimeMessage({
-            action: CONFIG.ACTIONS.DASHBOARD_TRASH_MESSAGES,
-            messageIds: uniqueIds
-        });
-        if (!response?.success) {
-            const error = new Error(response?.error || I18n.t('dashboardTrashFailed'));
-            error.diagnostics = response?.data || null;
-            throw error;
-        }
-        return response.data;
+        return MailboxActionService.moveToTrash(messageIds);
     },
 
     async loadDeleteDiagnostic() {
@@ -95,24 +82,12 @@ const GlobalMailService = {
 
     /** Archive every unique message through its Thunderbird account and identity settings. */
     async archiveMessages(messageIds) {
-        const uniqueIds = [...new Set(messageIds)].filter(id => id !== undefined && id !== null);
-        if (!uniqueIds.length) {
-            return;
-        }
-        await browser.messages.archive(uniqueIds);
+        return MailboxActionService.archive(messageIds);
     },
 
     /** Mark every unique message as read while isolating individual update failures. */
     async markAsRead(messageIds) {
-        const uniqueIds = [...new Set(messageIds)].filter(id => id !== undefined && id !== null);
-        const results = await Promise.allSettled(
-            uniqueIds.map(messageId => browser.messages.update(messageId, { read: true }))
-        );
-        return results.reduce((summary, result, index) => {
-            const target = result.status === 'fulfilled' ? summary.updatedIds : summary.failedIds;
-            target.push(uniqueIds[index]);
-            return summary;
-        }, { updatedIds: [], failedIds: [] });
+        return MailboxActionService.markAsRead(messageIds);
     },
 
     /** Find the special-use Inbox without relying on localized folder names. */

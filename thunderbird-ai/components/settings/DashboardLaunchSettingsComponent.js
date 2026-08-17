@@ -4,7 +4,7 @@ const DashboardLaunchSettingsComponent = class {
         this.settingsManager = settingsManager;
         this.container = document.getElementById('dashboard-launch-section');
         this.elements = {};
-        this.currentDiagnostic = null;
+        this.currentDiagnostics = null;
         this.initialize();
     }
 
@@ -61,11 +61,19 @@ const DashboardLaunchSettingsComponent = class {
     async refreshDiagnostic() {
         this.elements.diagnosticRefresh.disabled = true;
         try {
-            this.currentDiagnostic = await DashboardLaunchService.loadDiagnostic();
-            this.elements.diagnosticDetails.textContent = this.formatDiagnostic(
-                this.currentDiagnostic
+            const browserInfoPromise = browser.runtime.getBrowserInfo
+                ? browser.runtime.getBrowserInfo().catch(() => null)
+                : Promise.resolve(null);
+            const [launch, runtime, browserInfo] = await Promise.all([
+                DashboardLaunchService.loadDiagnostic(),
+                RuntimeDiagnosticService.load(),
+                browserInfoPromise
+            ]);
+            this.currentDiagnostics = { launch, runtime, browserInfo };
+            this.elements.diagnosticDetails.textContent = this.formatSupportDiagnostics(
+                this.currentDiagnostics
             );
-            this.elements.diagnosticCopy.disabled = !this.currentDiagnostic;
+            this.elements.diagnosticCopy.disabled = !launch && !runtime.length;
         } finally {
             this.elements.diagnosticRefresh.disabled = false;
         }
@@ -73,11 +81,53 @@ const DashboardLaunchSettingsComponent = class {
 
     /** Copy the same localized diagnostic text that is visible in settings. */
     async copyDiagnostic() {
-        if (!this.currentDiagnostic) {
+        if (!this.currentDiagnostics) {
             return;
         }
-        await navigator.clipboard.writeText(this.formatDiagnostic(this.currentDiagnostic));
+        await navigator.clipboard.writeText(this.formatSupportDiagnostics(this.currentDiagnostics));
         this.settingsManager.showStatus(I18n.t('dashboardLaunchDiagnosticsCopied'), 'success');
+    }
+
+    /** Combine environment, launch, and recent activity without mailbox or API contents. */
+    formatSupportDiagnostics(diagnostics) {
+        const runtime = diagnostics?.runtime || [];
+        const environment = I18n.t('supportDiagnosticsEnvironment', {
+            addonVersion: CONFIG.ADDON_VERSION,
+            thunderbirdVersion: diagnostics?.browserInfo?.version
+                || I18n.t('dashboardLaunchDiagnosticNone')
+        });
+        const launch = [
+            I18n.t('supportDiagnosticsLaunchHeading'),
+            this.formatDiagnostic(diagnostics?.launch)
+        ].join('\n');
+        const activity = runtime.length
+            ? runtime.map(event => this.formatRuntimeEvent(event)).join('\n')
+            : I18n.t('supportDiagnosticsRuntimeEmpty');
+        return [
+            environment,
+            launch,
+            `${I18n.t('supportDiagnosticsRuntimeHeading')}\n${activity}`
+        ].join('\n\n');
+    }
+
+    formatRuntimeEvent(event) {
+        const stateKey = {
+            started: 'supportDiagnosticStateStarted',
+            completed: 'supportDiagnosticStateCompleted',
+            'reported-failure': 'supportDiagnosticStateReportedFailure',
+            failed: 'supportDiagnosticStateFailed',
+            'uncaught-error': 'supportDiagnosticStateUncaughtError',
+            'unhandled-rejection': 'supportDiagnosticStateUnhandledRejection'
+        }[event?.state] || 'dashboardLaunchDiagnosticStateUnknown';
+        return I18n.t('supportDiagnosticsRuntimeEntry', {
+            timestamp: this.formatTimestamp(event?.timestamp),
+            session: event?.session || I18n.t('dashboardLaunchDiagnosticNone'),
+            context: event?.context || I18n.t('dashboardLaunchDiagnosticNone'),
+            action: event?.action || I18n.t('dashboardLaunchDiagnosticNone'),
+            state: I18n.t(stateKey),
+            code: event?.code || I18n.t('dashboardLaunchDiagnosticNone'),
+            location: event?.location || I18n.t('dashboardLaunchDiagnosticNone')
+        });
     }
 
     /** Convert the bounded stored fields into the current UI language. */

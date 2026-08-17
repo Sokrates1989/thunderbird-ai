@@ -17,11 +17,18 @@
             <div class="addon-version" id="addonVersion"></div>
         </div>
 
-        <!-- Quick Actions Section -->
+        <!-- AI and ordinary Thunderbird actions for the current message -->
         <div class="section" id="quickActionsSection">
             <h2 data-i18n="quickActionsHeading"></h2>
-            <div class="button-grid" id="quickActionsGrid">
-                <!-- Quick action buttons will be dynamically loaded -->
+            <div class="single-mail-action-groups">
+                <section class="single-mail-action-group ai" aria-labelledby="singleMailAiActionsHeading">
+                    <h3 id="singleMailAiActionsHeading" data-i18n="dashboardAIActionsGroup"></h3>
+                    <div class="button-grid" id="quickActionsGrid"></div>
+                </section>
+                <section class="single-mail-action-group mail" aria-labelledby="singleMailMailActionsHeading">
+                    <h3 id="singleMailMailActionsHeading" data-i18n="dashboardMailActionsGroup"></h3>
+                    <div class="button-grid" id="mailActionsGrid"></div>
+                </section>
             </div>
         </div>
 
@@ -84,13 +91,17 @@
     <script src="locale-de.js"></script>
     <script src="locale-en.js"></script>
     <script src="constants.js"></script>
+    <script src="RuntimeDiagnosticService.js"></script>
     <script src="retry.js"></script>
     <script src="storage.js"></script>
     <script src="DashboardLaunchService.js"></script>
+    <script src="MailboxActionService.js"></script>
+    <script src="PdfArchiverIntegrationService.js"></script>
     
     <!-- Load UI components (flattened paths) -->
     <script src="HeaderComponent.js"></script>
     <script src="QuickActionsComponent.js"></script>
+    <script src="MailActionsComponent.js"></script>
     <script src="EmailDetailsComponent.js"></script>
     <script src="AdvancedActionsComponent.js"></script>
     <script src="ScoreFeedbackEditor.js"></script>
