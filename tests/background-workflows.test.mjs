@@ -12,13 +12,34 @@ function eventTarget() {
 async function loadBackground(options = {}) {
     const stats = [];
     const serviceCalls = [];
+    const deleteCalls = [];
+    const storageState = {};
     const context = createContext({
         browser: {
             i18n: { getUILanguage: () => 'de-DE' },
-            runtime: { onMessage: eventTarget(), getURL: value => value },
+            runtime: {
+                onMessage: eventTarget(),
+                getURL: value => value,
+                getBrowserInfo: options.getBrowserInfo || (async () => ({ version: '140.0' }))
+            },
             menus: { onClicked: eventTarget(), removeAll: async () => {}, create: async () => {} },
             messageDisplay: { onMessagesDisplayed: eventTarget() },
+            messages: {
+                delete: async (...parameters) => {
+                    deleteCalls.push(parameters);
+                    return options.deleteMessages?.(...parameters);
+                }
+            },
             notifications: { create: async () => {} },
+            storage: { local: {
+                get: async keys => {
+                    const requested = Array.isArray(keys) ? keys : [keys];
+                    return Object.fromEntries(requested
+                        .filter(key => Object.hasOwn(storageState, key))
+                        .map(key => [key, storageState[key]]));
+                },
+                set: async values => Object.assign(storageState, values)
+            } },
             tabs: { create: async () => {} }
         }
     });
@@ -118,10 +139,98 @@ async function loadBackground(options = {}) {
     };
     loadScript(context, 'common/utils/retry.js');
     context.RetryService.wait = async () => {};
+    loadScript(context, 'common/utils/dashboard-mailbox.js');
     loadScript(context, 'common/background.js');
     await context.thunderbirdAIInitialization;
-    return { ai: context.thunderbirdAI, config: context.CONFIG, serviceCalls, stats };
+    return {
+        ai: context.thunderbirdAI,
+        config: context.CONFIG,
+        deleteCalls,
+        mailboxService: context.DashboardMailboxService,
+        serviceCalls,
+        stats,
+        storageState
+    };
 }
+
+test('dashboard deletion runs in the background with modern user-action options', async () => {
+    const { ai, config, deleteCalls, storageState } = await loadBackground();
+
+    const response = await ai.handleMessage({
+        action: config.ACTIONS.DASHBOARD_TRASH_MESSAGES,
+        messageIds: [7, 8, 7]
+    });
+
+    assert.equal(response.success, true);
+    assert.deepEqual(
+        deleteCalls.map(([ids, options]) => [Array.from(ids), { ...options }]),
+        [[[7, 8], { deletePermanently: false, isUserAction: true }]]
+    );
+    assert.equal(response.data.code, 'DELETE_API_COMPLETED');
+    assert.equal(
+        storageState[config.STORAGE_KEYS.DASHBOARD_DELETE_DIAGNOSTIC].state,
+        'completed'
+    );
+});
+
+test('dashboard deletion retains the Thunderbird 128 compatibility signature', async () => {
+    const { ai, config, deleteCalls } = await loadBackground({
+        getBrowserInfo: async () => ({ version: '128.14.0esr' })
+    });
+
+    const response = await ai.handleMessage({
+        action: config.ACTIONS.DASHBOARD_TRASH_MESSAGES,
+        messageIds: [7]
+    });
+
+    assert.equal(response.success, true);
+    assert.deepEqual(
+        deleteCalls.map(([ids, options]) => [Array.from(ids), options]),
+        [[[7], false]]
+    );
+});
+
+test('background deletion persists a content-free failure diagnostic', async () => {
+    const { ai, config, storageState } = await loadBackground({
+        deleteMessages: async () => { throw new Error('Provider rejected deletion'); }
+    });
+
+    const response = await ai.handleMessage({
+        action: config.ACTIONS.DASHBOARD_TRASH_MESSAGES,
+        messageIds: [7]
+    });
+
+    assert.equal(response.success, false);
+    assert.equal(response.data.code, 'DELETE_API_FAILED');
+    assert.equal(response.data.technicalError, 'Provider rejected deletion');
+    assert.deepEqual(Array.from(response.data.messageIds), [7]);
+    assert.equal(
+        storageState[config.STORAGE_KEYS.DASHBOARD_DELETE_DIAGNOSTIC].state,
+        'failed'
+    );
+});
+
+test('background deletion reports and persists an explicit timeout', async () => {
+    const { ai, config, mailboxService, storageState } = await loadBackground();
+    mailboxService.runDeleteWithTimeout = async () => {
+        const error = new Error('Timed out in test');
+        error.code = 'DELETE_API_TIMEOUT';
+        throw error;
+    };
+
+    const response = await ai.handleMessage({
+        action: config.ACTIONS.DASHBOARD_TRASH_MESSAGES,
+        messageIds: [7]
+    });
+
+    assert.equal(response.success, false);
+    assert.equal(response.data.code, 'DELETE_API_TIMEOUT');
+    assert.equal(response.data.state, 'timed-out');
+    assert.equal(
+        storageState[config.STORAGE_KEYS.DASHBOARD_DELETE_DIAGNOSTIC].state,
+        'timed-out'
+    );
+});
 
 test('every visible email AI action returns the shared result contract', async () => {
     const { ai, config, serviceCalls } = await loadBackground();

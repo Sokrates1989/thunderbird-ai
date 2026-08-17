@@ -91,6 +91,11 @@ const GlobalDashboardManager = class {
         this.feedbackComponent = new DashboardFeedbackComponent({
             onSave: (message, reasons) => this.saveScoreFeedback(message, reasons)
         });
+        this.deleteComponent = new DashboardDeleteComponent({
+            formatDate: value => this.formatDate(value),
+            remainingMessageIds: messageIds => this.visibleMessageIds(messageIds),
+            setStatus: (message, type) => this.setStatus(message, type)
+        });
     }
 
     /** Bind dashboard controls, restore local preferences, and load mail headers. */
@@ -142,10 +147,10 @@ const GlobalDashboardManager = class {
         this.elements.rescoreSelected.addEventListener('click', () => {
             this.rescoreSelected().catch(error => this.showUnexpectedError(error));
         });
-
         await this.loadPreferences();
         this.applyPreferenceControls();
         await this.refresh();
+        await this.deleteComponent.initialize();
     }
 
     /** Restore persisted view state while normalizing every untrusted storage value. */
@@ -632,7 +637,7 @@ const GlobalDashboardManager = class {
     /** Confirm and delete only the directly targeted message. */
     async trashOne(message) {
         const subject = message.subject || I18n.t('dashboardNoSubject');
-        if (!window.confirm(I18n.t('dashboardTrashOneConfirm', { subject }))) {
+        if (!await this.deleteComponent.confirm(I18n.t('dashboardTrashOneConfirm', { subject }))) {
             return;
         }
         await this.performTrash([message.id], I18n.t('dashboardTrashOneSuccess'));
@@ -642,7 +647,9 @@ const GlobalDashboardManager = class {
     async trashSelected() {
         const messageIds = [...this.selectedMessageIds];
         if (!messageIds.length
-            || !window.confirm(I18n.t('dashboardTrashSelectedConfirm', { count: messageIds.length }))) {
+            || !await this.deleteComponent.confirm(I18n.t('dashboardTrashSelectedConfirm', {
+                count: messageIds.length
+            }))) {
             return;
         }
         await this.performTrash(messageIds, I18n.t('dashboardTrashSelectedSuccess', {
@@ -654,9 +661,18 @@ const GlobalDashboardManager = class {
     async performTrash(messageIds, successMessage) {
         this.setBusy(true, I18n.t('dashboardTrashInProgress'));
         try {
-            const diagnostics = await GlobalMailService.moveToTrash(messageIds);
+            let diagnostics = await GlobalMailService.moveToTrash(messageIds);
+            this.deleteComponent.render(diagnostics);
             const remainingMessageIds = await this.refreshUntilTrashApplied(messageIds);
             if (remainingMessageIds.length) {
+                diagnostics = {
+                    ...diagnostics,
+                    code: GlobalMailService.DELETE_DIAGNOSTIC_CODE,
+                    state: 'unconfirmed',
+                    timestamp: new Date().toISOString(),
+                    messageIds: remainingMessageIds
+                };
+                await this.deleteComponent.persist(diagnostics);
                 console.error('Thunderbird acknowledged a dashboard delete request without removing every message.', {
                     diagnosticCode: GlobalMailService.DELETE_DIAGNOSTIC_CODE,
                     requestedMessageCount: messageIds.length,
@@ -670,11 +686,22 @@ const GlobalDashboardManager = class {
                 }), 'error');
                 return;
             }
+            diagnostics = {
+                ...diagnostics,
+                code: 'DELETE_VERIFIED',
+                state: 'verified',
+                timestamp: new Date().toISOString(),
+                messageIds: []
+            };
+            await this.deleteComponent.persist(diagnostics);
             this.selectedMessageIds.clear();
             this.setStatus(successMessage, 'success');
         } catch (error) {
             console.error('Could not move dashboard messages to trash:', error);
-            this.setStatus(I18n.t('dashboardTrashFailed'), 'error');
+            if (error?.diagnostics) {
+                this.deleteComponent.render(error.diagnostics);
+            }
+            this.setStatus(error?.message || I18n.t('dashboardTrashFailed'), 'error');
         } finally {
             this.setBusy(false);
         }
@@ -704,7 +731,8 @@ const GlobalDashboardManager = class {
     /** Return requested message IDs that remain in the refreshed unread dashboard. */
     visibleMessageIds(messageIds) {
         const requestedIds = new Set(messageIds.map(messageId => String(messageId)));
-        return this.allMessages()
+        const accounts = this.sourceAccounts?.length ? this.sourceAccounts : this.accounts;
+        return accounts.flatMap(account => account.messages || [])
             .filter(message => requestedIds.has(String(message.id)))
             .map(message => message.id);
     }

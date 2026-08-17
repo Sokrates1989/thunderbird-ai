@@ -7,13 +7,18 @@ function loadTrainingService() {
     const storage = {};
     const deleted = [];
     const context = createContext({
+        RetryService: {
+            sendRuntimeMessage: async request => {
+                deleted.push(request);
+                return { success: true, data: { state: 'completed' } };
+            }
+        },
         browser: {
             i18n: { getUILanguage: () => 'en-US' },
             storage: { local: {
                 get: async key => ({ [key]: storage[key] }),
                 set: async values => Object.assign(storage, values)
-            } },
-            messages: { delete: async (...parameters) => deleted.push(parameters) }
+            } }
         }
     });
     loadScript(context, 'thunderbird-ai/config/locale-de.js');
@@ -56,8 +61,8 @@ test('corrected email is archived separately, bounded, and survives Thunderbird 
     assert.equal(archive[0].message.content.length, 6000);
     assert.equal(archive[0].message.attachments[0].name, 'invoice.pdf');
     assert.equal(archive[0].reason, 'Trusted supplier');
-    assert.deepEqual(Array.from(deleted[0][0]), [42]);
-    assert.equal(deleted[0][1], false);
+    assert.equal(deleted[0].action, context.CONFIG.ACTIONS.DASHBOARD_TRASH_MESSAGES);
+    assert.deepEqual(Array.from(deleted[0].messageIds), [42]);
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_FEEDBACK_ARCHIVE].length, 1);
 });
 

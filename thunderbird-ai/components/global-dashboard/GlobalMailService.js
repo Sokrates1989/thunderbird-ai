@@ -5,7 +5,6 @@
  */
 const GlobalMailService = {
     QUERY_PAGE_SIZE: 100,
-    STRUCTURED_DELETE_OPTIONS_MIN_VERSION: 137,
     DELETE_DIAGNOSTIC_CODE: 'DELETE_NOT_APPLIED',
 
     /** Return all unread Inbox headers per supported account for correct global ranking. */
@@ -42,48 +41,44 @@ const GlobalMailService = {
         return accounts;
     },
 
-    /** Delete messages according to account settings and preserve user-action semantics. */
+    /** Delegate deletion to the persistent background context and validate its response. */
     async moveToTrash(messageIds) {
         const uniqueIds = [...new Set(messageIds)].filter(id => id !== undefined && id !== null);
         if (!uniqueIds.length) {
             return null;
         }
-        const browserVersion = await this.getBrowserVersion();
-        const supportsStructuredOptions = this.supportsStructuredDeleteOptions(browserVersion);
-        const requestOptions = supportsStructuredOptions
-            ? { deletePermanently: false, isUserAction: true }
-            : false;
-        const diagnostics = {
-            browserVersion: browserVersion || 'unknown',
-            messageCount: uniqueIds.length,
-            requestMode: supportsStructuredOptions ? 'structured-user-action' : 'legacy-boolean'
-        };
-
-        console.log('Submitting dashboard delete request to Thunderbird.', diagnostics);
-        await browser.messages.delete(uniqueIds, requestOptions);
-        console.log('Thunderbird completed dashboard delete request.', diagnostics);
-        return diagnostics;
+        const response = await RetryService.sendRuntimeMessage({
+            action: CONFIG.ACTIONS.DASHBOARD_TRASH_MESSAGES,
+            messageIds: uniqueIds
+        });
+        if (!response?.success) {
+            const error = new Error(response?.error || I18n.t('dashboardTrashFailed'));
+            error.diagnostics = response?.data || null;
+            throw error;
+        }
+        return response.data;
     },
 
-    /** Read Thunderbird's version without preventing deletion when runtime metadata is unavailable. */
-    async getBrowserVersion() {
-        if (typeof browser.runtime?.getBrowserInfo !== 'function') {
-            return '';
-        }
+    async loadDeleteDiagnostic() {
         try {
-            const browserInfo = await browser.runtime.getBrowserInfo();
-            return String(browserInfo?.version || '');
+            const stored = await browser.storage.local.get(
+                CONFIG.STORAGE_KEYS.DASHBOARD_DELETE_DIAGNOSTIC
+            );
+            return stored[CONFIG.STORAGE_KEYS.DASHBOARD_DELETE_DIAGNOSTIC] || null;
         } catch (error) {
-            console.warn('Could not determine Thunderbird version for dashboard deletion:', error);
-            return '';
+            console.warn('Could not load dashboard delete diagnostic:', error);
+            return null;
         }
     },
 
-    /** Use the user-action option only where Thunderbird's API schema accepts it. */
-    supportsStructuredDeleteOptions(version) {
-        const majorVersion = Number.parseInt(String(version || '').split('.')[0], 10);
-        return Number.isInteger(majorVersion)
-            && majorVersion >= this.STRUCTURED_DELETE_OPTIONS_MIN_VERSION;
+    async saveDeleteDiagnostic(diagnostics) {
+        try {
+            await browser.storage.local.set({
+                [CONFIG.STORAGE_KEYS.DASHBOARD_DELETE_DIAGNOSTIC]: diagnostics
+            });
+        } catch (error) {
+            console.warn('Could not persist dashboard delete diagnostic:', error);
+        }
     },
 
     /** Archive every unique message through its Thunderbird account and identity settings. */

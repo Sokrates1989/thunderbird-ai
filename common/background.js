@@ -61,6 +61,8 @@ class ThunderbirdAI {
                     return this.analyzeDashboardMessages(request.messageIds || []);
                 case CONFIG.ACTIONS.DASHBOARD_SAVE_FEEDBACK:
                     return this.saveDashboardScoreFeedback(request);
+                case CONFIG.ACTIONS.DASHBOARD_TRASH_MESSAGES:
+                    return DashboardMailboxService.deleteMessages(request.messageIds || []);
                 case CONFIG.ACTIONS.GET_SCORE_ARCHIVE:
                     return { success: true, data: await DashboardTrainingService.loadArchive() };
                 case CONFIG.ACTIONS.UPDATE_SCORE_ARCHIVE:

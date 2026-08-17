@@ -392,6 +392,57 @@ body {
     color: #8a5700;
 }
 
+.dashboard-diagnostics {
+    margin: 0;
+    padding: 8px 10px;
+    border: 1px solid #a9b7c5;
+    border-radius: 6px;
+    background: #f8fafc;
+}
+
+.dashboard-diagnostics summary {
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.dashboard-diagnostics pre {
+    margin: 8px 0;
+    padding: 8px;
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    border-radius: 4px;
+    background: #eef2f6;
+    font: 12px/1.45 ui-monospace, monospace;
+}
+
+.dashboard-confirmation-dialog {
+    width: min(520px, calc(100% - 32px));
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.dashboard-confirmation-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.dashboard-confirmation-dialog form {
+    padding: 18px;
+}
+
+.dashboard-confirmation-dialog h2 {
+    margin: 0 0 12px;
+}
+
+.dashboard-confirmation-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+}
+
 .dashboard-loading {
     display: flex;
     gap: 8px;

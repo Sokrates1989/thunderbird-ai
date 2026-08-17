@@ -60,7 +60,7 @@ Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speic
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-2.7.2-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-2.7.3-win-x64.exe` herunterladen und starten.
 2. Im Setup **Deutsch** oder **English** wählen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung und zu den Berechtigungen zum Ändern, Verschieben und Löschen von Nachrichten bestätigen.
@@ -90,7 +90,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-2.7.2-win-x64.exe`
+- `artifacts\Thunderbird-AI-Setup-2.7.3-win-x64.exe`
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
@@ -111,8 +111,8 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 13. Die korrigierte Testnachricht löschen. Das separate Lernarchiv darf dadurch nicht verändert werden; eine spätere Bulk-Analyse mit einer ähnlichen Nachricht muss weiterhin erfolgreich laufen.
 14. An einer Nachricht **Zusammenfassen** anklicken. Ein eigener Tab muss die vorhandene Einzelmail-Oberfläche öffnen und dort automatisch die Zusammenfassung erstellen.
 15. An einer Nachricht **Antwort vorschlagen** anklicken. Der vorhandene interaktive Antworteditor muss in einem eigenen Tab erscheinen.
-16. Bei einer entbehrlichen Testnachricht die direkte Schaltfläche **Löschen** anklicken und den Dialog zunächst abbrechen. Danach bestätigen; nur diese Nachricht darf aus der Übersicht verschwinden. Ab Thunderbird 137 muss der Vorgang als rückgängig machbare Benutzeraktion an Thunderbird übergeben werden.
-17. Mehrere entbehrliche Testnachrichten auswählen, **Ausgewählte löschen** anklicken und bestätigen. Nur die ausgewählten Nachrichten dürfen verschwinden. Thunderbird verwendet dabei die Lösch- und Papierkorb-Einstellungen des jeweiligen Kontos. Eine Erfolgsmeldung darf erst erscheinen, nachdem bis zu drei kurz verzögerte Aktualisierungen der ungelesenen Übersicht die Nachrichten nicht mehr enthalten. Falls stattdessen `DELETE_NOT_APPLIED` erscheint: **Add-ons und Themes → Zahnrad → Add-ons debuggen → Thunderbird AI Assistant → Untersuchen** öffnen, in der Konsole **Persist Logs** aktivieren und den Vorgang wiederholen. Die Einträge `Submitting dashboard delete request` und die anschließende Abschluss- oder Fehlermeldung enthalten Version, Aufrufmodus und Anzahlen, aber keine E-Mail-Inhalte.
+16. Bei einer entbehrlichen Testnachricht die direkte Schaltfläche **Löschen** anklicken und den eingebetteten Dialog zunächst abbrechen. Danach bestätigen; das Dashboard-Popup muss geöffnet bleiben und nur diese Nachricht darf aus der Übersicht verschwinden. Ab Thunderbird 137 muss der Hintergrundprozess den Vorgang als rückgängig machbare Benutzeraktion an Thunderbird übergeben.
+17. Mehrere entbehrliche Testnachrichten auswählen, **Ausgewählte löschen** anklicken und bestätigen. Nur die ausgewählten Nachrichten dürfen verschwinden. Thunderbird verwendet dabei die Lösch- und Papierkorb-Einstellungen des jeweiligen Kontos. Eine Erfolgsmeldung darf erst erscheinen, nachdem bis zu drei kurz verzögerte Aktualisierungen der ungelesenen Übersicht die Nachrichten nicht mehr enthalten. Der aufklappbare Bereich **Löschdiagnose** muss den letzten Vorgang dauerhaft und kopierbar anzeigen. Für zusätzliche Hintergrundprotokolle: **Add-ons und Themes → Zahnrad → Add-ons debuggen → Thunderbird AI Assistant → Untersuchen** öffnen und im Drei-Punkte-Menü **Log nicht leeren** aktivieren. Die Einträge `Submitting dashboard delete request` und die anschließende Abschluss- oder Fehlermeldung enthalten Version, Aufrufmodus und Anzahlen, aber keine E-Mail-Inhalte oder internen Nachrichtenkennungen.
 18. Eine E-Mail öffnen und den nachrichtenbezogenen **AI Assistant**-Button anklicken. Statt des Dashboards muss die bisherige Einzelmail-Oberfläche erscheinen.
 19. Eine reine Text-E-Mail und eine HTML-E-Mail öffnen und jeweils **Zusammenfassen** ausführen.
 20. **Antwort vorschlagen** ausführen; ein eigener Thunderbird-Tab muss den ersten, direkt bearbeitbaren Entwurf anzeigen. Bei langem Inhalt muss nur der mittlere Arbeitsbereich scrollen, während **Antwort kopieren** und **In Thunderbird vorbereiten** dauerhaft sichtbar bleiben.
@@ -135,7 +135,7 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 37. Unter **Einstellungen → Thunderbird-Archivierung** auf **Archivordner prüfen** klicken. Ein von Thunderbird als Archiv gekennzeichneter Testordner muss mit Pfad, vorhandenen direkten Jahresordnern und Unterordner-Fähigkeit erscheinen. Ein lediglich gleich benannter, aber nicht als Archiv gekennzeichneter Ordner darf nicht fälschlich erkannt werden. Über **Thunderbird-Hilfe öffnen** muss die offizielle Anleitung im Standardbrowser erscheinen. Anschließend die nicht per Add-on auslesbare Auswahl **Jährliche archivierte Ordner** einmal manuell über den angezeigten Menüpfad kontrollieren.
 38. Für einen klaren Newsletter mit List-Unsubscribe/List-ID oder sichtbarer Abmeldemöglichkeit **Scoring-Info** ausführen. Der Spam-Wert darf nicht mehr im einstelligen Bereich bleiben und muss mindestens die lokale Untergrenze erreichen. Anschließend mehrere Newsletter desselben Absenders in der Bulk-Auswertung prüfen; eine höhere Absenderhäufigkeit muss die lokale Vorprüfung erhöhen. Eine häufige, aber ausdrücklich als erwünscht korrigierte Systemmail desselben Absenders erneut bewerten; die gespeicherte Absenderkorrektur muss Vorrang behalten.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.7.2** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.7.3** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 ## Technische Struktur
 

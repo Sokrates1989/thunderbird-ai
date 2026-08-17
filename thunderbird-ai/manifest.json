@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extensionName__",
-  "version": "2.7.2",
+  "version": "2.7.3",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
   "author": "Sokrates1989",
@@ -28,7 +28,7 @@
     "48": "icon.svg"
   },
   "background": {
-    "scripts": ["locale-de.js", "locale-en.js", "constants.js", "retry.js", "storage.js", "message.js", "spam-precheck.js", "dashboard-training.js", "openai.js", "ui.js", "background.js"]
+    "scripts": ["locale-de.js", "locale-en.js", "constants.js", "retry.js", "storage.js", "message.js", "spam-precheck.js", "dashboard-training.js", "dashboard-mailbox.js", "openai.js", "ui.js", "background.js"]
   },
   "message_display_action": {
     "default_title": "__MSG_actionTitle__",

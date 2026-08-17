@@ -2,7 +2,7 @@
 
 const CONFIG = {
     ADDON_NAME: 'Thunderbird AI Assistant',
-    ADDON_VERSION: '2.7.2',
+    ADDON_VERSION: '2.7.3',
     ADDON_ID: 'thunderbird-ai@example.com',
 
     OPENAI: {
@@ -160,7 +160,8 @@ const CONFIG = {
         DASHBOARD_SPAM_MINIMUM: 'dashboardSpamMinimum',
         DASHBOARD_RISK_MINIMUM: 'dashboardRiskMinimum',
         DASHBOARD_AI_RESULTS: 'dashboardAiResults',
-        DASHBOARD_FEEDBACK_ARCHIVE: 'dashboardFeedbackArchive'
+        DASHBOARD_FEEDBACK_ARCHIVE: 'dashboardFeedbackArchive',
+        DASHBOARD_DELETE_DIAGNOSTIC: 'dashboardDeleteDiagnostic'
     },
 
     UI: {
@@ -190,6 +191,7 @@ const CONFIG = {
         SCORE_MESSAGE: 'scoreMessage',
         DASHBOARD_BULK_TRIAGE: 'analyzeDashboardMessages',
         DASHBOARD_SAVE_FEEDBACK: 'saveDashboardScoreFeedback',
+        DASHBOARD_TRASH_MESSAGES: 'trashDashboardMessages',
         GET_SCORE_ARCHIVE: 'getScoreArchive',
         UPDATE_SCORE_ARCHIVE: 'updateScoreArchive',
         REMOVE_SCORE_ARCHIVE: 'removeScoreArchive'

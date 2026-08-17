@@ -134,6 +134,11 @@
             </div>
         </details>
         <p id="dashboardStatus" class="dashboard-status" role="status" aria-live="polite"></p>
+        <details id="dashboardDiagnostics" class="dashboard-diagnostics" hidden>
+            <summary data-i18n="dashboardDiagnosticsTitle"></summary>
+            <pre id="dashboardDiagnosticDetails"></pre>
+            <button type="button" id="dashboardCopyDiagnostics" data-i18n="dashboardCopyDiagnostics"></button>
+        </details>
         <div id="dashboardLoadingIndicator" class="dashboard-loading" role="status" aria-live="polite" hidden>
             <span class="dashboard-spinner" aria-hidden="true"></span>
             <span id="dashboardLoadingText"></span>
@@ -177,6 +182,16 @@
         </div>
         <div id="dashboardAccounts" class="dashboard-accounts"></div>
     </main>
+    <dialog id="dashboardConfirmationDialog" class="dashboard-confirmation-dialog">
+        <form method="dialog">
+            <h2 data-i18n="dashboardConfirmationTitle"></h2>
+            <p id="dashboardConfirmationMessage"></p>
+            <div class="dashboard-confirmation-actions">
+                <button type="submit" value="cancel" data-i18n="dashboardConfirmationCancel"></button>
+                <button type="submit" value="confirm" class="dashboard-danger-action" data-i18n="dashboardConfirmationDelete"></button>
+            </div>
+        </form>
+    </dialog>
     <dialog id="dashboardFeedbackDialog" class="dashboard-feedback-dialog">
         <form id="dashboardFeedbackForm" method="dialog">
             <h2 data-i18n="dashboardFeedbackTitle"></h2>
@@ -201,6 +216,7 @@
     <script src="DashboardSenderFilterComponent.js"></script>
     <script src="DashboardAIService.js"></script>
     <script src="DashboardMessageComponent.js"></script>
+    <script src="DashboardDeleteComponent.js"></script>
     <script src="ScoreFeedbackEditor.js"></script>
     <script src="DashboardFeedbackComponent.js"></script>
     <script src="GlobalDashboardManager.js"></script>
