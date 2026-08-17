@@ -1,7 +1,8 @@
-/** Coordinates dashboard launch mode, discovery counters, and durable tab creation. */
+/** Coordinates launch mode, discovery counters, and single-instance durable dashboard tabs. */
 const DashboardLaunchService = {
     MODES: Object.freeze({ OVERLAY: 'overlay', TAB: 'tab' }),
     PROMPTS: Object.freeze({ ADOPT_TAB: 'adopt-tab', DISCOVER_TAB: 'discover-tab' }),
+    openInProgress: null,
 
     normalizeMode(value) {
         return value === this.MODES.TAB ? this.MODES.TAB : this.MODES.OVERLAY;
@@ -22,8 +23,59 @@ const DashboardLaunchService = {
     },
 
     async openExpanded(source = 'manual') {
-        const url = `${browser.runtime.getURL('global-dashboard.html')}?view=expanded&source=${encodeURIComponent(source)}`;
+        if (this.openInProgress) {
+            return this.openInProgress;
+        }
+        this.openInProgress = this.openOrFocusExpanded(source);
+        try {
+            return await this.openInProgress;
+        } finally {
+            this.openInProgress = null;
+        }
+    },
+
+    /** Focus the existing dashboard when possible and create one durable tab otherwise. */
+    async openOrFocusExpanded(source) {
+        const dashboardUrl = browser.runtime.getURL('global-dashboard.html');
+        const url = `${dashboardUrl}?view=expanded&source=${encodeURIComponent(source)}`;
+        const existing = await this.findExpandedTab(dashboardUrl);
+        if (existing?.id !== undefined) {
+            try {
+                const focusedTab = await browser.tabs.update(existing.id, { active: true });
+                await this.focusWindow(existing.windowId);
+                return focusedTab;
+            } catch (error) {
+                console.warn('Could not focus the existing dashboard tab; opening a new one.', error);
+            }
+        }
         return browser.tabs.create({ url });
+    },
+
+    /** Find a content tab owned by the current extension without matching unrelated pages. */
+    async findExpandedTab(dashboardUrl) {
+        if (typeof browser.tabs.query !== 'function') {
+            return null;
+        }
+        try {
+            const tabs = await browser.tabs.query({});
+            return tabs.find(tab => tab.url === dashboardUrl
+                || tab.url?.startsWith(`${dashboardUrl}?`)) || null;
+        } catch (error) {
+            console.warn('Could not inspect existing dashboard tabs.', error);
+            return null;
+        }
+    },
+
+    /** Bring the containing Thunderbird window forward after activating its dashboard tab. */
+    async focusWindow(windowId) {
+        if (windowId === undefined || typeof browser.windows?.update !== 'function') {
+            return;
+        }
+        try {
+            await browser.windows.update(windowId, { focused: true });
+        } catch (error) {
+            console.warn('Dashboard tab was activated, but its Thunderbird window could not be focused.', error);
+        }
     },
 
     /** Count only actual overlay opens and explicit uses of the expand control. */

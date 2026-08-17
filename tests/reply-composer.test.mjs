@@ -141,7 +141,7 @@ test('explicit language selection changes text and every static page key resolve
         path.join(repositoryRoot, 'thunderbird-ai/install-defaults.json'),
         'utf8'
     ));
-    assert.deepEqual(defaults, { language: 'auto', version: '2.9.1' });
+    assert.deepEqual(defaults, { language: 'auto', version: '2.10.0' });
 });
 
 test('reply composer keeps final actions outside its scrolling content', () => {
@@ -227,6 +227,55 @@ test('single-mail quick actions replace categorization, importance, and API test
     ]);
     await component.executeAction('SCORE');
     assert.equal(scoringOpened, 1);
+});
+
+test('single-mail footer opens or focuses the shared dashboard instead of duplicating AI Chat', async () => {
+    const launches = [];
+    let closeCount = 0;
+    const context = createContext({
+        DashboardLaunchService: {
+            openExpanded: async source => launches.push(source)
+        },
+        I18n: { t: key => key },
+        browser: {
+            runtime: { openOptionsPage: async () => {}, getURL: value => value },
+            tabs: { create: async () => {} }
+        },
+        close: () => { closeCount += 1; }
+    });
+    loadScript(context, 'thunderbird-ai/components/single-mail/FooterActionsComponent.js');
+    const manager = {
+        elements: { footerActions: {} },
+        showError() {}
+    };
+    const component = new context.FooterActionsComponent(manager);
+
+    assert.deepEqual(Array.from(component.actions, action => action.action), [
+        'OPEN_DASHBOARD',
+        'OPEN_SETTINGS',
+        'OPEN_HELP'
+    ]);
+    await component.executeAction('OPEN_DASHBOARD');
+
+    assert.deepEqual(launches, ['single-mail']);
+    assert.equal(closeCount, 1);
+});
+
+test('single-mail popup uses dashboard visual hierarchy without loading unused AI runtimes', () => {
+    const page = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/pages/single-mail-ui.html'),
+        'utf8'
+    );
+    const styles = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/styles/single-mail-ui.css'),
+        'utf8'
+    );
+
+    assert.match(page, /DashboardLaunchService\.js/u);
+    assert.doesNotMatch(page, /<script src="(?:openai|message|ui)\.js"><\/script>/u);
+    assert.match(styles, /\.button\.score-action\s*\{[^}]*background:\s*#5b3fb2/su);
+    assert.match(styles, /\.footer-btn\.dashboard\s*\{[^}]*background:\s*#087cc1/su);
+    assert.match(styles, /\.info-value\s*\{[^}]*overflow-wrap:\s*anywhere/su);
 });
 
 test('reply workspace loads an initial proposal and refines the edited draft', async () => {

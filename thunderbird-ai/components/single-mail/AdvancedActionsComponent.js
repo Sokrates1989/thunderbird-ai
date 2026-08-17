@@ -16,6 +16,7 @@ const AdvancedActionsComponent = class {
     }
 
     initialize() {
+        this.toggleButton?.setAttribute('aria-expanded', 'false');
         this.container.replaceChildren();
         const languageControl = document.createElement('label');
         languageControl.className = 'translation-language';
@@ -37,6 +38,7 @@ const AdvancedActionsComponent = class {
 
         for (const definition of this.actions) {
             const button = document.createElement('button');
+            button.type = 'button';
             button.id = definition.id;
             button.className = 'button';
             button.dataset.action = definition.action;
@@ -51,6 +53,7 @@ const AdvancedActionsComponent = class {
     toggleAdvanced() {
         this.isExpanded = !this.isExpanded;
         this.contentArea.style.display = this.isExpanded ? 'block' : 'none';
+        this.toggleButton.setAttribute('aria-expanded', String(this.isExpanded));
         this.toggleButton.querySelector('span:last-child').textContent = this.isExpanded ? '▲' : '▼';
     }
 

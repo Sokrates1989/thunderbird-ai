@@ -1,10 +1,11 @@
 /**
- * Reads every paginated unread Inbox header for the global dashboard and performs
- * explicitly requested local mailbox actions. Message bodies are loaded only
- * when the dashboard preview preference is enabled; no AI service is involved.
+ * Reads every paginated unread Inbox header with bounded account concurrency and
+ * performs explicitly requested local mailbox actions. Message bodies are loaded
+ * only when dashboard previews are enabled; no AI service is involved.
  */
 const GlobalMailService = {
     QUERY_PAGE_SIZE: 100,
+    ACCOUNT_QUERY_CONCURRENCY: 3,
     DELETE_DIAGNOSTIC_CODE: 'DELETE_NOT_APPLIED',
 
     /** Return all unread Inbox headers per supported account for correct global ranking. */
@@ -13,7 +14,18 @@ const GlobalMailService = {
         const mailAccounts = accounts
             .map(account => ({ account, inbox: this.findInbox(account.rootFolder) }))
             .filter(item => item.inbox && !['nntp', 'rss'].includes(item.account.type));
-        return Promise.all(mailAccounts.map(item => this.listAccount(item)));
+        const results = new Array(mailAccounts.length);
+        let nextIndex = 0;
+        const worker = async () => {
+            while (nextIndex < mailAccounts.length) {
+                const index = nextIndex;
+                nextIndex += 1;
+                results[index] = await this.listAccount(mailAccounts[index]);
+            }
+        };
+        const workerCount = Math.min(this.ACCOUNT_QUERY_CONCURRENCY, mailAccounts.length);
+        await Promise.all(Array.from({ length: workerCount }, () => worker()));
+        return results;
     },
 
     /** Add locally extracted body previews without failing the full dashboard. */

@@ -6,10 +6,10 @@ const QuickActionsComponent = class {
         this.buttons = {};
         const shortcut = key => `${I18n.t('shortcutControl')}+Alt+${key}`;
         this.actions = [
-            { id: 'summarizeBtn', icon: '📄', text: I18n.t('quickSummarize'), shortcut: shortcut('S'), action: 'SUMMARIZE', className: 'primary', description: I18n.t('quickSummarizeDescription') },
-            { id: 'replyBtn', icon: '✍️', text: I18n.t('quickReply'), shortcut: shortcut('R'), action: 'SUGGEST_REPLY', description: I18n.t('quickReplyDescription') },
-            { id: 'chatBtn', icon: '💬', text: I18n.t('quickChat'), action: 'OPEN_CHAT', description: I18n.t('quickChatDescription') },
-            { id: 'scoreBtn', icon: '📊', text: I18n.t('quickScoring'), action: 'SCORE', className: 'test', description: I18n.t('quickScoringDescription') }
+            { id: 'summarizeBtn', icon: '📄', text: I18n.t('quickSummarize'), shortcut: shortcut('S'), action: 'SUMMARIZE', className: 'ai-action', description: I18n.t('quickSummarizeDescription') },
+            { id: 'replyBtn', icon: '✍️', text: I18n.t('quickReply'), shortcut: shortcut('R'), action: 'SUGGEST_REPLY', className: 'ai-action', description: I18n.t('quickReplyDescription') },
+            { id: 'chatBtn', icon: '💬', text: I18n.t('quickChat'), action: 'OPEN_CHAT', className: 'ai-action', description: I18n.t('quickChatDescription') },
+            { id: 'scoreBtn', icon: '📊', text: I18n.t('quickScoring'), action: 'SCORE', className: 'score-action', description: I18n.t('quickScoringDescription') }
         ];
         this.keydownHandler = event => this.handleShortcut(event);
     }
@@ -18,6 +18,7 @@ const QuickActionsComponent = class {
         this.container.replaceChildren();
         for (const definition of this.actions) {
             const button = document.createElement('button');
+            button.type = 'button';
             button.id = definition.id;
             button.className = `button ${definition.className || ''}`;
             button.title = definition.description;

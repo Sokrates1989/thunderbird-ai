@@ -1,11 +1,11 @@
-/** Settings, chat, and help navigation in the popup footer. */
+/** Dashboard, settings, and help navigation in the popup footer. */
 const FooterActionsComponent = class {
     constructor(manager) {
         this.manager = manager;
         this.container = manager.elements.footerActions;
         this.actions = [
+            { icon: '↗', textKey: 'footerDashboard', action: 'OPEN_DASHBOARD', className: 'dashboard' },
             { icon: '⚙️', textKey: 'footerSettings', action: 'OPEN_SETTINGS' },
-            { icon: '💬', textKey: 'footerChat', action: 'OPEN_CHAT' },
             { icon: '❓', textKey: 'footerHelp', action: 'OPEN_HELP' }
         ];
     }
@@ -14,7 +14,8 @@ const FooterActionsComponent = class {
         this.container.replaceChildren();
         for (const definition of this.actions) {
             const button = document.createElement('button');
-            button.className = 'footer-btn';
+            button.type = 'button';
+            button.className = `footer-btn ${definition.className || ''}`;
             button.innerHTML = `<span class="icon">${definition.icon}</span><span class="text">${I18n.t(definition.textKey)}</span>`;
             button.addEventListener('click', () => this.executeAction(definition.action));
             this.container.appendChild(button);
@@ -23,11 +24,12 @@ const FooterActionsComponent = class {
 
     async executeAction(action) {
         try {
-            if (action === 'OPEN_SETTINGS') {
+            if (action === 'OPEN_DASHBOARD') {
+                await DashboardLaunchService.openExpanded('single-mail');
+                window.close();
+            } else if (action === 'OPEN_SETTINGS') {
                 await browser.runtime.openOptionsPage();
                 window.close();
-            } else if (action === 'OPEN_CHAT') {
-                this.manager.openChat();
             } else if (action === 'OPEN_HELP') {
                 await browser.tabs.create({ url: browser.runtime.getURL('help.html') });
                 window.close();

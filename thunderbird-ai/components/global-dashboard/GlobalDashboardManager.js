@@ -56,6 +56,7 @@ const GlobalDashboardManager = class {
         this.riskMinimum = 0;
         this.aiResults = {};
         this.busy = false;
+        this.refreshPromise = null;
         this.dateFormatter = new Intl.DateTimeFormat(I18n.getLanguage(), {
             dateStyle: 'short',
             timeStyle: 'short'
@@ -310,6 +311,19 @@ const GlobalDashboardManager = class {
 
     /** Reload every unread header page, then apply the persisted local view. */
     async refresh() {
+        if (this.refreshPromise) {
+            return this.refreshPromise;
+        }
+        this.refreshPromise = this.performRefresh();
+        try {
+            return await this.refreshPromise;
+        } finally {
+            this.refreshPromise = null;
+        }
+    }
+
+    /** Execute one mailbox refresh while concurrent callers share its result. */
+    async performRefresh() {
         this.setBusy(true, I18n.t('dashboardLoading'));
         try {
             const [sourceAccounts, aiResults] = await Promise.all([

@@ -423,30 +423,6 @@ body {
     color: #8a5700;
 }
 
-.dashboard-diagnostics {
-    margin: 0;
-    padding: 8px 10px;
-    border: 1px solid #a9b7c5;
-    border-radius: 6px;
-    background: #f8fafc;
-}
-
-.dashboard-diagnostics summary {
-    cursor: pointer;
-    font-weight: 700;
-}
-
-.dashboard-diagnostics pre {
-    margin: 8px 0;
-    padding: 8px;
-    overflow: auto;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-    border-radius: 4px;
-    background: #eef2f6;
-    font: 12px/1.45 ui-monospace, monospace;
-}
-
 .dashboard-confirmation-dialog {
     width: min(600px, calc(100vw - 48px));
     max-width: none;

@@ -182,9 +182,6 @@ function loadDashboardManager(
 
 function loadDeleteComponent(services = {}) {
     const elements = {
-        dashboardDiagnostics: { hidden: true, open: false },
-        dashboardDiagnosticDetails: { textContent: '' },
-        dashboardCopyDiagnostics: { addEventListener() {} },
         dashboardConfirmationDialog: {
             returnValue: '',
             showModalCalled: false,
@@ -206,7 +203,6 @@ function loadDeleteComponent(services = {}) {
     };
     const context = createContext({
         document: { getElementById: id => elements[id] },
-        navigator: { clipboard: { writeText: async () => {} } },
         GlobalMailService: services,
         I18n: { t: (key, replacements = {}) => `${key}:${JSON.stringify(replacements)}` }
     });
@@ -216,6 +212,30 @@ function loadDeleteComponent(services = {}) {
     );
     return { Component: context.DashboardDeleteComponent, elements };
 }
+
+test('concurrent dashboard refresh requests share one mailbox scan', async () => {
+    const DashboardManager = loadDashboardManager({});
+    const manager = Object.create(DashboardManager.prototype);
+    let refreshCount = 0;
+    let finishRefresh;
+    manager.refreshPromise = null;
+    manager.performRefresh = () => {
+        refreshCount += 1;
+        return new Promise(resolve => {
+            finishRefresh = resolve;
+        });
+    };
+
+    const first = manager.refresh();
+    const second = manager.refresh();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(refreshCount, 1);
+    finishRefresh('loaded');
+
+    assert.equal(await first, 'loaded');
+    assert.equal(await second, 'loaded');
+    assert.equal(manager.refreshPromise, null);
+});
 
 test('global dashboard reads every unread-header page for each Inbox', async () => {
     const firstInbox = inbox('inbox-a', 'Posteingang');
@@ -257,6 +277,35 @@ test('global dashboard reads every unread-header page for each Inbox', async () 
     ]);
     assert.deepEqual(continued, ['list-a']);
     assert.deepEqual(aborted, []);
+});
+
+test('mailbox scans bound concurrent account queries without changing account order', async () => {
+    const accounts = Array.from({ length: 7 }, (_value, index) => account(
+        `account-${index}`,
+        `Account ${index}`,
+        'imap',
+        { id: `root-${index}`, subFolders: [inbox(`inbox-${index}`)] }
+    ));
+    let activeQueries = 0;
+    let maximumActiveQueries = 0;
+    const { service } = loadService({
+        accounts,
+        query: async ({ folderId }) => {
+            activeQueries += 1;
+            maximumActiveQueries = Math.max(maximumActiveQueries, activeQueries);
+            await new Promise(resolve => setImmediate(resolve));
+            activeQueries -= 1;
+            return { id: null, messages: [{ id: folderId }] };
+        }
+    });
+
+    const results = await service.listUnreadByAccount();
+
+    assert.equal(maximumActiveQueries, service.ACCOUNT_QUERY_CONCURRENCY);
+    assert.deepEqual(
+        Array.from(results, result => result.accountId),
+        accounts.map(item => item.id)
+    );
 });
 
 test('newest-first default sorts later pages before applying the display limit', () => {
@@ -1223,7 +1272,8 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(dashboard, /PdfArchiverIntegrationComponent\.js/u);
     assert.match(dashboard, /class="dashboard-confirmation-cancel"[\s\S]*?>[\s\S]*?✕/u);
     assert.match(dashboard, /class="dashboard-confirmation-delete"[\s\S]*?>[\s\S]*?🗑️/u);
-    assert.match(dashboard, /id="dashboardDiagnostics"/u);
+    assert.doesNotMatch(dashboard, /id="dashboardDiagnostics"/u);
+    assert.doesNotMatch(dashboardStyles, /\.dashboard-diagnostics/u);
     assert.match(dashboard, /id="dashboardFeedbackEditors"/u);
     assert.doesNotMatch(dashboard, /id="dashboardFeedbackReason"/u);
     assert.match(dashboard, /GlobalDashboardManager\.js/u);
