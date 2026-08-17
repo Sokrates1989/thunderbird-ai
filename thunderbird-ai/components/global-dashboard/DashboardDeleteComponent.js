@@ -1,4 +1,4 @@
-/** Own destructive confirmation and the persisted delete-result dialog. */
+/** Own destructive confirmation and the shared mailbox-operation result dialog. */
 const DashboardDeleteComponent = class {
     constructor({ formatDate, remainingMessageIds, setStatus }) {
         this.formatDate = formatDate;
@@ -13,6 +13,7 @@ const DashboardDeleteComponent = class {
             resultSymbol: document.getElementById('dashboardResultSymbol'),
             resultTitle: document.getElementById('dashboardResultTitle'),
             resultMessage: document.getElementById('dashboardResultMessage'),
+            resultDiagnostic: document.getElementById('dashboardResultDiagnosticSection'),
             resultDetails: document.getElementById('dashboardResultDiagnostic')
         };
     }
@@ -100,21 +101,33 @@ const DashboardDeleteComponent = class {
         }
     }
 
-    /** Present the operator outcome and technical diagnostic in one prominent modal. */
-    showResult(message, type, diagnostics) {
+    /** Present an archive success without leaking a prior delete diagnostic. */
+    showArchiveSuccess(message) {
+        this.showResult(message, 'success', null, {
+            titleKey: 'dashboardArchiveResultSuccessTitle',
+            symbol: '📦',
+            showDiagnostic: false
+        });
+    }
+
+    /** Present an operation outcome and its optional technical diagnostic in one modal. */
+    showResult(message, type, diagnostics, options = {}) {
         const resultType = type === 'success' ? 'success' : 'error';
-        this.activeResultDiagnostic = diagnostics || this.lastDiagnostic;
+        const showDiagnostic = options.showDiagnostic !== false;
+        this.activeResultDiagnostic = diagnostics || (showDiagnostic ? this.lastDiagnostic : null);
         this.elements.resultDialog.dataset.type = resultType;
-        this.elements.resultSymbol.textContent = resultType === 'success' ? '✓' : '!';
-        this.elements.resultTitle.textContent = I18n.t(
+        this.elements.resultSymbol.textContent = options.symbol
+            || (resultType === 'success' ? '✓' : '!');
+        this.elements.resultTitle.textContent = I18n.t(options.titleKey || (
             resultType === 'success'
                 ? 'dashboardResultSuccessTitle'
                 : 'dashboardResultErrorTitle'
-        );
+        ));
         this.elements.resultMessage.textContent = message;
-        this.elements.resultDetails.textContent = this.activeResultDiagnostic
+        this.elements.resultDiagnostic.hidden = !showDiagnostic;
+        this.elements.resultDetails.textContent = showDiagnostic && this.activeResultDiagnostic
             ? this.format(this.activeResultDiagnostic)
-            : I18n.t('dashboardDiagnosticUnknown');
+            : '';
         if (!this.elements.resultDialog.open) {
             this.elements.resultDialog.showModal();
         }

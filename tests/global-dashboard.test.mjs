@@ -213,6 +213,7 @@ function loadDeleteComponent(services = {}) {
         dashboardResultSymbol: { textContent: '' },
         dashboardResultTitle: { textContent: '' },
         dashboardResultMessage: { textContent: '' },
+        dashboardResultDiagnosticSection: { hidden: false },
         dashboardResultDiagnostic: { textContent: '' }
     };
     const context = createContext({
@@ -1088,7 +1089,29 @@ test('reopening the dashboard reconciles a completed background deletion', async
     assert.equal(saved.at(-1).resultAcknowledged, true);
 });
 
-test('selected archive refreshes the unread view and reports the archived count', async () => {
+test('archive success uses the prominent result dialog without a delete diagnostic', async () => {
+    const { Component, elements } = loadDeleteComponent({});
+    const component = new Component({
+        formatDate: value => value,
+        remainingMessageIds: () => [],
+        setStatus() {}
+    });
+
+    component.showArchiveSuccess('Archived messages: 2.');
+
+    assert.equal(elements.dashboardResultDialog.showModalCalled, true);
+    assert.equal(elements.dashboardResultDialog.dataset.type, 'success');
+    assert.equal(elements.dashboardResultSymbol.textContent, '📦');
+    assert.equal(
+        elements.dashboardResultTitle.textContent,
+        'dashboardArchiveResultSuccessTitle:{}'
+    );
+    assert.equal(elements.dashboardResultMessage.textContent, 'Archived messages: 2.');
+    assert.equal(elements.dashboardResultDiagnosticSection.hidden, true);
+    assert.equal(elements.dashboardResultDiagnostic.textContent, '');
+});
+
+test('selected archive refreshes the unread view and reports success in a modal', async () => {
     const calls = [];
     const DashboardManager = loadDashboardManager({
         archiveMessages: async messageIds => calls.push([...messageIds])
@@ -1096,11 +1119,15 @@ test('selected archive refreshes the unread view and reports the archived count'
     const manager = Object.create(DashboardManager.prototype);
     const busyStates = [];
     const statuses = [];
+    const archiveResults = [];
     let refreshCount = 0;
     manager.selectedMessageIds = new Set([7, 8]);
     manager.setBusy = busy => busyStates.push(busy);
     manager.refresh = async () => { refreshCount += 1; };
     manager.setStatus = (messageText, type) => statuses.push([messageText, type]);
+    manager.deleteComponent = {
+        showArchiveSuccess: messageText => archiveResults.push(messageText)
+    };
 
     await manager.archiveSelected();
 
@@ -1108,10 +1135,8 @@ test('selected archive refreshes the unread view and reports the archived count'
     assert.equal(refreshCount, 1);
     assert.equal(manager.selectedMessageIds.size, 0);
     assert.deepEqual(busyStates, [true, false]);
-    assert.deepEqual(statuses, [[
-        'dashboardArchiveSelectedSuccess:{"count":2}',
-        'success'
-    ]]);
+    assert.deepEqual(statuses, [['', 'info']]);
+    assert.deepEqual(archiveResults, ['dashboardArchiveSelectedSuccess:{"count":2}']);
 });
 
 test('failed archive keeps the selection and reports the Thunderbird archive setup error', async () => {
@@ -1280,6 +1305,7 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.match(dashboard, /id="dashboardFeedbackDialog"/u);
     assert.match(dashboard, /id="dashboardConfirmationDialog"/u);
     assert.match(dashboard, /id="dashboardResultDialog"/u);
+    assert.match(dashboard, /id="dashboardResultDiagnosticSection"/u);
     assert.match(dashboard, /id="dashboardResultDiagnostic"/u);
     assert.match(dashboard, /id="dashboardExpandView"/u);
     assert.match(dashboard, /id="dashboardLaunchPromptDialog"/u);

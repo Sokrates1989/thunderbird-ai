@@ -450,6 +450,7 @@ globalThis.LOCALE_MESSAGES.de = Object.freeze({
     dashboardArchiveInProgress: 'Nachrichten werden archiviert…',
     dashboardArchiveOneSuccess: 'Die E-Mail wurde gemäß den Thunderbird-Archiveinstellungen archiviert.',
     dashboardArchiveSelectedSuccess: 'Archivierte Nachrichten: {count}.',
+    dashboardArchiveResultSuccessTitle: 'Archivierung abgeschlossen',
     dashboardArchiveFailed: 'Die Nachrichten konnten nicht archiviert werden. Prüfen Sie unter Konten-Einstellungen → Kopien & Ordner, ob ein jährliches Nachrichtenarchiv eingerichtet ist.',
     dashboardTrashSelected: 'Ausgewählte löschen',
     dashboardTrashOne: 'Löschen',

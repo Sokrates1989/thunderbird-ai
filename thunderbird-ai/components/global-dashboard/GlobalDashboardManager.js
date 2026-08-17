@@ -689,7 +689,10 @@ const GlobalDashboardManager = class {
             this.selectedMessageIds.clear();
             await this.persistSelection();
             await this.refresh();
-            this.setStatus(I18n.t(successKey, { count: messageIds.length }), 'success');
+            this.setStatus('', 'info');
+            this.deleteComponent.showArchiveSuccess(I18n.t(successKey, {
+                count: messageIds.length
+            }));
         } catch (error) {
             console.error('Could not archive dashboard messages:', error);
             this.setStatus(I18n.t('dashboardArchiveFailed'), 'error');
