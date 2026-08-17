@@ -1,6 +1,6 @@
 {
   "name": "thunderbird-ai-assistant",
-  "version": "2.7.4",
+  "version": "2.7.5",
   "private": true,
   "scripts": {
     "test": "node --test tests"

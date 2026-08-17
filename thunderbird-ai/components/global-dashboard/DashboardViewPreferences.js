@@ -3,20 +3,23 @@ const DashboardViewPreferences = {
     /** Restore every dashboard preference from untrusted extension storage. */
     async load() {
         const keys = CONFIG.STORAGE_KEYS;
-        const stored = await browser.storage.local.get([
-            keys.DASHBOARD_DISPLAY_OPTIONS_EXPANDED,
-            keys.DASHBOARD_SHOW_PREVIEW,
-            keys.DASHBOARD_PREVIEW_LINES,
-            keys.DASHBOARD_SORT_ORDER,
-            keys.DASHBOARD_VIEW_MODE,
-            keys.DASHBOARD_MESSAGE_LIMIT,
-            keys.DASHBOARD_DATE_FROM,
-            keys.DASHBOARD_DATE_TO,
-            keys.DASHBOARD_SENDER_FILTER,
-            keys.DASHBOARD_AI_STATUS_FILTER,
-            keys.DASHBOARD_IMPORTANCE_MINIMUM,
-            keys.DASHBOARD_SPAM_MINIMUM,
-            keys.DASHBOARD_RISK_MINIMUM
+        const [stored, sessionStored] = await Promise.all([
+            browser.storage.local.get([
+                keys.DASHBOARD_DISPLAY_OPTIONS_EXPANDED,
+                keys.DASHBOARD_SHOW_PREVIEW,
+                keys.DASHBOARD_PREVIEW_LINES,
+                keys.DASHBOARD_SORT_ORDER,
+                keys.DASHBOARD_VIEW_MODE,
+                keys.DASHBOARD_MESSAGE_LIMIT,
+                keys.DASHBOARD_DATE_FROM,
+                keys.DASHBOARD_DATE_TO,
+                keys.DASHBOARD_SENDER_FILTER,
+                keys.DASHBOARD_AI_STATUS_FILTER,
+                keys.DASHBOARD_IMPORTANCE_MINIMUM,
+                keys.DASHBOARD_SPAM_MINIMUM,
+                keys.DASHBOARD_RISK_MINIMUM
+            ]),
+            browser.storage.session.get(keys.DASHBOARD_SELECTED_MESSAGES)
         ]);
         const senderFilter = stored[keys.DASHBOARD_SENDER_FILTER];
         return {
@@ -40,6 +43,9 @@ const DashboardViewPreferences = {
             ),
             riskMinimum: GlobalMailViewService.normalizePercentage(
                 stored[keys.DASHBOARD_RISK_MINIMUM]
+            ),
+            selectedMessageIds: this.normalizeSelectedMessageIds(
+                sessionStored[keys.DASHBOARD_SELECTED_MESSAGES]
             )
         };
     },
@@ -64,6 +70,20 @@ const DashboardViewPreferences = {
                 ? null
                 : [...state.selectedSenderKeys]
         });
+        await this.saveSelection(state.selectedMessageIds);
+    },
+
+    /** Persist transient selection so popup closure cannot discard operator work. */
+    async saveSelection(selectedMessageIds) {
+        await browser.storage.session.set({
+            [CONFIG.STORAGE_KEYS.DASHBOARD_SELECTED_MESSAGES]: [...selectedMessageIds]
+        });
+    },
+
+    normalizeSelectedMessageIds(value) {
+        return new Set(Array.isArray(value)
+            ? value.filter(messageId => ['number', 'string'].includes(typeof messageId))
+            : []);
     },
 
     normalizePreviewLines(value) {

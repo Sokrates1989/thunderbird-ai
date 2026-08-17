@@ -80,15 +80,22 @@ function loadViewService() {
 
 function loadViewPreferences(initial = {}) {
     const storage = { ...initial };
+    const sessionStorage = { ...initial };
     const context = createContext({
         browser: {
             i18n: { getUILanguage: () => 'en-US' },
-            storage: { local: {
-                get: async keys => Object.fromEntries(
-                    keys.filter(key => Object.hasOwn(storage, key)).map(key => [key, storage[key]])
-                ),
-                set: async values => Object.assign(storage, values)
-            } }
+            storage: {
+                local: {
+                    get: async keys => Object.fromEntries(
+                        keys.filter(key => Object.hasOwn(storage, key)).map(key => [key, storage[key]])
+                    ),
+                    set: async values => Object.assign(storage, values)
+                },
+                session: {
+                    get: async key => ({ [key]: sessionStorage[key] }),
+                    set: async values => Object.assign(sessionStorage, values)
+                }
+            }
         }
     });
     loadScript(context, 'thunderbird-ai/config/locale-de.js');
@@ -96,7 +103,7 @@ function loadViewPreferences(initial = {}) {
     loadScript(context, 'thunderbird-ai/config/constants.js');
     loadScript(context, 'thunderbird-ai/components/global-dashboard/GlobalMailViewService.js');
     loadScript(context, 'thunderbird-ai/components/global-dashboard/DashboardViewPreferences.js');
-    return { context, preferences: context.DashboardViewPreferences, storage };
+    return { context, preferences: context.DashboardViewPreferences, storage, sessionStorage };
 }
 
 function loadSenderFilterComponent() {
@@ -147,16 +154,26 @@ function loadDashboardAIService() {
     return { context, openedTabs, sentMessages, service: context.DashboardAIService, storageState };
 }
 
-function loadDashboardManager(services, logger = { error() {}, log() {}, warn() {} }) {
+function loadDashboardManager(
+    services,
+    logger = { error() {}, log() {}, warn() {} },
+    overrides = {}
+) {
     const globalMailService = typeof services === 'function'
         ? { markAsRead: services }
         : services;
     const context = createContext({
         console: logger,
         GlobalMailService: globalMailService,
+        DashboardViewPreferences: { saveSelection: async () => {} },
+        browser: {
+            runtime: { getURL: value => `moz-extension://test/${value}` },
+            tabs: { create: async () => {} }
+        },
         I18n: {
             t: (key, replacements = {}) => `${key}:${JSON.stringify(replacements)}`
-        }
+        },
+        ...overrides
     });
     loadScript(context, 'thunderbird-ai/components/global-dashboard/GlobalDashboardManager.js');
     return context.GlobalDashboardManager;
@@ -173,7 +190,18 @@ function loadDeleteComponent(services = {}) {
             showModal() { this.showModalCalled = true; },
             addEventListener(_event, listener) { this.closeListener = listener; }
         },
-        dashboardConfirmationMessage: { textContent: '' }
+        dashboardConfirmationMessage: { textContent: '' },
+        dashboardResultDialog: {
+            dataset: {},
+            open: false,
+            showModalCalled: false,
+            showModal() { this.showModalCalled = true; },
+            addEventListener(_event, listener) { this.closeListener = listener; }
+        },
+        dashboardResultSymbol: { textContent: '' },
+        dashboardResultTitle: { textContent: '' },
+        dashboardResultMessage: { textContent: '' },
+        dashboardResultDiagnostic: { textContent: '' }
     };
     const context = createContext({
         document: { getElementById: id => elements[id] },
@@ -421,6 +449,43 @@ test('dashboard grouping mode is normalized and persisted independently', async 
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_DISPLAY_OPTIONS_EXPANDED], true);
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_RISK_MINIMUM], 71);
     assert.equal(context.GlobalMailViewService.normalizeViewMode('invalid'), 'account');
+});
+
+test('dashboard selection survives popup closure and is stored without message content', async () => {
+    const { context, preferences, sessionStorage } = loadViewPreferences({
+        dashboardSelectedMessages: [7, '8', null, { id: 9 }]
+    });
+
+    const loaded = await preferences.load();
+    assert.deepEqual(Array.from(loaded.selectedMessageIds), [7, '8']);
+    await preferences.saveSelection(new Set([11, 12]));
+
+    assert.deepEqual(
+        Array.from(sessionStorage[context.CONFIG.STORAGE_KEYS.DASHBOARD_SELECTED_MESSAGES]),
+        [11, 12]
+    );
+});
+
+test('expanded dashboard opens in a stable Thunderbird tab after persisting selection', async () => {
+    const saved = [];
+    const opened = [];
+    const DashboardManager = loadDashboardManager({}, undefined, {
+        DashboardViewPreferences: {
+            saveSelection: async selection => saved.push([...selection])
+        },
+        browser: {
+            runtime: { getURL: value => `moz-extension://test/${value}` },
+            tabs: { create: async details => opened.push(details) }
+        }
+    });
+    const manager = Object.create(DashboardManager.prototype);
+    manager.selectedMessageIds = new Set([7, 8]);
+
+    await manager.openExpandedView();
+
+    assert.deepEqual(saved, [[7, 8]]);
+    assert.equal(opened.length, 1);
+    assert.equal(opened[0].url, 'moz-extension://test/global-dashboard.html?view=expanded');
 });
 
 test('dashboard view panel defaults open and persists only explicit toggle changes', async () => {
@@ -847,7 +912,12 @@ test('confirmed deletion reports success only after the refreshed dashboard no l
     manager.setBusy = busy => busyStates.push(busy);
     manager.refresh = async () => { manager.accounts = [{ messages: [] }]; };
     manager.setStatus = (messageText, type) => statuses.push([messageText, type]);
-    manager.deleteComponent = { render() {}, persist: async () => {} };
+    const results = [];
+    manager.deleteComponent = {
+        render() {},
+        persist: async () => {},
+        showResult: (...parameters) => results.push(parameters)
+    };
 
     await manager.performTrash([7], 'delete-success');
 
@@ -855,6 +925,9 @@ test('confirmed deletion reports success only after the refreshed dashboard no l
     assert.equal(manager.selectedMessageIds.size, 0);
     assert.deepEqual(busyStates, [true, false]);
     assert.deepEqual(statuses, [['delete-success', 'success']]);
+    assert.equal(results.length, 1);
+    assert.equal(results[0][0], 'delete-success');
+    assert.equal(results[0][1], 'success');
 });
 
 test('delete no-op keeps the selection and exposes a safe diagnostic code', async () => {
@@ -880,7 +953,12 @@ test('delete no-op keeps the selection and exposes a safe diagnostic code', asyn
     manager.refresh = async () => { refreshCount += 1; };
     manager.waitForTrashVerification = async () => {};
     manager.setStatus = (messageText, type) => statuses.push([messageText, type]);
-    manager.deleteComponent = { render() {}, persist: async () => {} };
+    const results = [];
+    manager.deleteComponent = {
+        render() {},
+        persist: async () => {},
+        showResult: (...parameters) => results.push(parameters)
+    };
 
     await manager.performTrash([7], 'delete-success');
 
@@ -893,6 +971,8 @@ test('delete no-op keeps the selection and exposes a safe diagnostic code', asyn
     assert.equal(refreshCount, 3);
     assert.equal(errors[0][1].diagnosticCode, 'DELETE_NOT_APPLIED');
     assert.deepEqual(Array.from(errors[0][1].remainingMessageIds), [7]);
+    assert.equal(results.length, 1);
+    assert.equal(results[0][1], 'error');
 });
 
 test('delete confirmation remains inside the dashboard popup', async () => {
@@ -915,7 +995,7 @@ test('delete confirmation remains inside the dashboard popup', async () => {
 
 test('reopening the dashboard reconciles a completed background deletion', async () => {
     const saved = [];
-    const { Component } = loadDeleteComponent({
+    const { Component, elements } = loadDeleteComponent({
         DELETE_DIAGNOSTIC_CODE: 'DELETE_NOT_APPLIED',
         loadDeleteDiagnostic: async () => ({
             code: 'DELETE_API_COMPLETED',
@@ -932,7 +1012,7 @@ test('reopening the dashboard reconciles a completed background deletion', async
         setStatus: (messageText, type) => statuses.push([messageText, type])
     });
 
-    await component.restoreDiagnostic();
+    await component.initialize();
 
     assert.equal(saved[0].state, 'verified');
     assert.equal(saved[0].code, 'DELETE_VERIFIED');
@@ -940,6 +1020,16 @@ test('reopening the dashboard reconciles a completed background deletion', async
         'dashboardTrashRestoredSuccess:{"count":1}',
         'success'
     ]]);
+    assert.equal(elements.dashboardResultDialog.showModalCalled, true);
+    assert.equal(elements.dashboardResultDialog.dataset.type, 'success');
+    assert.equal(
+        elements.dashboardResultMessage.textContent,
+        'dashboardTrashRestoredSuccess:{"count":1}'
+    );
+
+    elements.dashboardResultDialog.closeListener();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(saved.at(-1).resultAcknowledged, true);
 });
 
 test('selected archive refreshes the unread view and reports the archived count', async () => {
@@ -1022,6 +1112,10 @@ test('manifest routes global and message toolbar actions to separate popup pages
     );
     const dashboardStyles = fs.readFileSync(
         path.join(repositoryRoot, 'thunderbird-ai/styles/global-dashboard.css'),
+        'utf8'
+    );
+    const dashboardEntry = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/js/global-dashboard.js'),
         'utf8'
     );
     const messageComponent = fs.readFileSync(
@@ -1111,6 +1205,9 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(dashboard, /DashboardFeedbackComponent\.js/u);
     assert.match(dashboard, /id="dashboardFeedbackDialog"/u);
     assert.match(dashboard, /id="dashboardConfirmationDialog"/u);
+    assert.match(dashboard, /id="dashboardResultDialog"/u);
+    assert.match(dashboard, /id="dashboardResultDiagnostic"/u);
+    assert.match(dashboard, /id="dashboardExpandView"/u);
     assert.match(dashboard, /class="dashboard-confirmation-cancel"[\s\S]*?>[\s\S]*?✕/u);
     assert.match(dashboard, /class="dashboard-confirmation-delete"[\s\S]*?>[\s\S]*?🗑️/u);
     assert.match(dashboard, /id="dashboardDiagnostics"/u);
@@ -1135,6 +1232,9 @@ test('manifest routes global and message toolbar actions to separate popup pages
         dashboardStyles,
         /\.dashboard-confirmation-cancel\s*\{[^}]*min-width:\s*112px[^}]*background:\s*#69737d/su
     );
+    assert.match(dashboardStyles, /\.dashboard-result-dialog\s*\{[^}]*box-shadow:/su);
+    assert.match(dashboardStyles, /\.dashboard-expanded-view \.dashboard-accounts\s*\{[^}]*max-height:\s*none/su);
+    assert.match(dashboardEntry, /URLSearchParams\(window\.location\.search\)/u);
     assert.match(
         dashboardStyles,
         /\.dashboard-message-actions\s*\{[^}]*grid-template-columns:\s*repeat\(2,/su

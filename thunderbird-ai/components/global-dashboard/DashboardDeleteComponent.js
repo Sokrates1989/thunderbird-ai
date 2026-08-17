@@ -5,12 +5,18 @@ const DashboardDeleteComponent = class {
         this.remainingMessageIds = remainingMessageIds;
         this.setStatus = setStatus;
         this.lastDiagnostic = null;
+        this.activeResultDiagnostic = null;
         this.elements = {
             diagnostics: document.getElementById('dashboardDiagnostics'),
             details: document.getElementById('dashboardDiagnosticDetails'),
             copy: document.getElementById('dashboardCopyDiagnostics'),
             confirmationDialog: document.getElementById('dashboardConfirmationDialog'),
-            confirmationMessage: document.getElementById('dashboardConfirmationMessage')
+            confirmationMessage: document.getElementById('dashboardConfirmationMessage'),
+            resultDialog: document.getElementById('dashboardResultDialog'),
+            resultSymbol: document.getElementById('dashboardResultSymbol'),
+            resultTitle: document.getElementById('dashboardResultTitle'),
+            resultMessage: document.getElementById('dashboardResultMessage'),
+            resultDetails: document.getElementById('dashboardResultDiagnostic')
         };
     }
 
@@ -19,6 +25,11 @@ const DashboardDeleteComponent = class {
             this.copyDiagnostic().catch(error => {
                 console.error('Could not copy dashboard delete diagnostic:', error);
                 this.setStatus(I18n.t('dashboardDiagnosticCopyFailed'), 'error');
+            });
+        });
+        this.elements.resultDialog.addEventListener('close', () => {
+            this.acknowledgeResult().catch(error => {
+                console.warn('Could not acknowledge the dashboard delete result:', error);
             });
         });
         try {
@@ -69,24 +80,64 @@ const DashboardDeleteComponent = class {
     }
 
     restoreStatus(diagnostics) {
+        let message = '';
+        let type = 'error';
         if (diagnostics?.state === 'failed' || diagnostics?.state === 'timed-out') {
-            this.setStatus(I18n.t(
+            message = I18n.t(
                 diagnostics.state === 'timed-out'
                     ? 'dashboardTrashTimedOut'
                     : 'dashboardTrashFailed'
-            ), 'error');
+            );
         } else if (diagnostics?.state === 'unconfirmed') {
-            this.setStatus(I18n.t('dashboardTrashUnconfirmed', {
+            message = I18n.t('dashboardTrashUnconfirmed', {
                 count: diagnostics.messageIds?.length || diagnostics.messageCount || 0,
                 code: diagnostics.code
-            }), 'error');
+            });
         } else if (diagnostics?.state === 'verified') {
-            this.setStatus(I18n.t('dashboardTrashRestoredSuccess', {
+            message = I18n.t('dashboardTrashRestoredSuccess', {
                 count: diagnostics.messageCount || 0
-            }), 'success');
+            });
+            type = 'success';
         } else if (diagnostics?.state === 'started') {
             this.setStatus(I18n.t('dashboardTrashInProgress'), 'warning');
+            return;
         }
+        if (message) {
+            this.setStatus(message, type);
+            if (diagnostics.resultAcknowledged !== true) {
+                this.showResult(message, type, diagnostics);
+            }
+        }
+    }
+
+    /** Present the operator outcome and technical diagnostic in one prominent modal. */
+    showResult(message, type, diagnostics) {
+        const resultType = type === 'success' ? 'success' : 'error';
+        this.activeResultDiagnostic = diagnostics || this.lastDiagnostic;
+        this.elements.resultDialog.dataset.type = resultType;
+        this.elements.resultSymbol.textContent = resultType === 'success' ? '✓' : '!';
+        this.elements.resultTitle.textContent = I18n.t(
+            resultType === 'success'
+                ? 'dashboardResultSuccessTitle'
+                : 'dashboardResultErrorTitle'
+        );
+        this.elements.resultMessage.textContent = message;
+        this.elements.resultDetails.textContent = this.activeResultDiagnostic
+            ? this.format(this.activeResultDiagnostic)
+            : I18n.t('dashboardDiagnosticUnknown');
+        if (!this.elements.resultDialog.open) {
+            this.elements.resultDialog.showModal();
+        }
+    }
+
+    /** Do not show the same persisted outcome again after the operator closes it. */
+    async acknowledgeResult() {
+        const diagnostics = this.activeResultDiagnostic;
+        this.activeResultDiagnostic = null;
+        if (!diagnostics || diagnostics.resultAcknowledged === true) {
+            return;
+        }
+        await this.persist({ ...diagnostics, resultAcknowledged: true });
     }
 
     async persist(diagnostics) {

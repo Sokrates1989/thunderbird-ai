@@ -9,6 +9,7 @@ const GlobalDashboardManager = class {
             status: document.getElementById('dashboardStatus'),
             refresh: document.getElementById('dashboardRefresh'),
             settings: document.getElementById('dashboardSettings'),
+            expandView: document.getElementById('dashboardExpandView'),
             displayOptions: document.getElementById('dashboardDisplayOptions'),
             showPreview: document.getElementById('dashboardShowPreview'),
             previewLines: document.getElementById('dashboardPreviewLines'),
@@ -106,6 +107,9 @@ const GlobalDashboardManager = class {
         this.elements.settings.addEventListener('click', () => {
             browser.runtime.openOptionsPage().catch(error => this.showUnexpectedError(error));
         });
+        this.elements.expandView.addEventListener('click', () => {
+            this.openExpandedView().catch(error => this.showUnexpectedError(error));
+        });
         this.elements.displayOptions.addEventListener('toggle', () => {
             this.handleDisplayOptionsToggle().catch(error => this.showUnexpectedError(error));
         });
@@ -166,6 +170,23 @@ const GlobalDashboardManager = class {
             console.error('Could not save dashboard display preferences:', error);
             this.setStatus(I18n.t('dashboardPreferencesSaveFailed'), 'error');
         }
+    }
+
+    /** Preserve checkbox state independently from slower view preference changes. */
+    async persistSelection() {
+        try {
+            await DashboardViewPreferences.saveSelection(this.selectedMessageIds);
+        } catch (error) {
+            console.warn('Could not save dashboard message selection:', error);
+        }
+    }
+
+    /** Open the same dashboard in a durable Thunderbird tab. */
+    async openExpandedView() {
+        await this.persistSelection();
+        await browser.tabs.create({
+            url: browser.runtime.getURL('global-dashboard.html?view=expanded')
+        });
     }
 
     /** Synchronize static form controls with the normalized in-memory view state. */
@@ -289,14 +310,15 @@ const GlobalDashboardManager = class {
             this.sourceAccounts = DashboardAIService.attachResults(sourceAccounts, aiResults);
             this.availableSenders = GlobalMailViewService.availableSenders(this.sourceAccounts);
             this.renderSenderOptions();
-            this.selectedMessageIds.clear();
             await this.rebuildCurrentView();
+            await this.persistSelection();
         } catch (error) {
             console.error('Could not load the global mail dashboard:', error);
             this.sourceAccounts = [];
             this.accounts = [];
             this.availableSenders = [];
             this.selectedMessageIds.clear();
+            await this.persistSelection();
             this.elements.accounts.replaceChildren();
             this.renderSenderOptions();
             this.setStatus(I18n.t('dashboardLoadFailed'), 'error');
@@ -429,6 +451,7 @@ const GlobalDashboardManager = class {
             this.selectedMessageIds.delete(messageId);
         }
         this.updateSelectionControls();
+        this.persistSelection();
     }
 
     /** Delegate the checkbox dropdown while retaining preference ownership here. */
@@ -456,6 +479,7 @@ const GlobalDashboardManager = class {
             this.selectedMessageIds.clear();
         }
         this.render(this.accounts);
+        this.persistSelection();
     }
 
     /** Analyze only selected messages without persisted scores. */
@@ -579,6 +603,7 @@ const GlobalDashboardManager = class {
         try {
             const result = await GlobalMailService.markAsRead(messageIds);
             this.selectedMessageIds.clear();
+            await this.persistSelection();
             await this.refresh();
             if (result.failedIds.length && result.updatedIds.length) {
                 this.setStatus(I18n.t('dashboardMarkReadPartial', {
@@ -618,6 +643,7 @@ const GlobalDashboardManager = class {
         try {
             await GlobalMailService.archiveMessages(messageIds);
             this.selectedMessageIds.clear();
+            await this.persistSelection();
             await this.refresh();
             this.setStatus(I18n.t(successKey, { count: messageIds.length }), 'success');
         } catch (error) {
@@ -670,7 +696,8 @@ const GlobalDashboardManager = class {
                     code: GlobalMailService.DELETE_DIAGNOSTIC_CODE,
                     state: 'unconfirmed',
                     timestamp: new Date().toISOString(),
-                    messageIds: remainingMessageIds
+                    messageIds: remainingMessageIds,
+                    resultAcknowledged: false
                 };
                 await this.deleteComponent.persist(diagnostics);
                 console.error('Thunderbird acknowledged a dashboard delete request without removing every message.', {
@@ -680,10 +707,12 @@ const GlobalDashboardManager = class {
                     remainingMessageIds,
                     ...diagnostics
                 });
-                this.setStatus(I18n.t('dashboardTrashUnconfirmed', {
+                const message = I18n.t('dashboardTrashUnconfirmed', {
                     count: remainingMessageIds.length,
                     code: GlobalMailService.DELETE_DIAGNOSTIC_CODE
-                }), 'error');
+                });
+                this.setStatus(message, 'error');
+                this.deleteComponent.showResult(message, 'error', diagnostics);
                 return;
             }
             diagnostics = {
@@ -691,17 +720,35 @@ const GlobalDashboardManager = class {
                 code: 'DELETE_VERIFIED',
                 state: 'verified',
                 timestamp: new Date().toISOString(),
-                messageIds: []
+                messageIds: [],
+                resultAcknowledged: false
             };
             await this.deleteComponent.persist(diagnostics);
             this.selectedMessageIds.clear();
+            await this.persistSelection();
             this.setStatus(successMessage, 'success');
+            this.deleteComponent.showResult(successMessage, 'success', diagnostics);
         } catch (error) {
             console.error('Could not move dashboard messages to trash:', error);
-            if (error?.diagnostics) {
-                this.deleteComponent.render(error.diagnostics);
+            const diagnostics = {
+                code: 'DELETE_REQUEST_FAILED',
+                state: 'failed',
+                timestamp: new Date().toISOString(),
+                messageCount: messageIds.length,
+                messageIds,
+                technicalError: error?.message || String(error),
+                ...(error?.diagnostics || {}),
+                resultAcknowledged: false
+            };
+            const message = error?.message || I18n.t('dashboardTrashFailed');
+            try {
+                await this.deleteComponent.persist(diagnostics);
+            } catch (persistenceError) {
+                console.warn('Could not persist the dashboard delete failure:', persistenceError);
+                this.deleteComponent.render(diagnostics);
             }
-            this.setStatus(error?.message || I18n.t('dashboardTrashFailed'), 'error');
+            this.setStatus(message, 'error');
+            this.deleteComponent.showResult(message, 'error', diagnostics);
         } finally {
             this.setBusy(false);
         }

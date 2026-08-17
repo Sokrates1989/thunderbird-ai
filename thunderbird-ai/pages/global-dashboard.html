@@ -15,6 +15,11 @@
                 <h1 data-i18n="dashboardTitle"></h1>
                 <p data-i18n="dashboardIntroduction"></p>
             </div>
+            <button type="button" id="dashboardExpandView" class="dashboard-expand-view"
+                    data-i18n-title="dashboardExpandView"
+                    data-i18n-aria-label="dashboardExpandView">
+                <span aria-hidden="true">⛶</span>
+            </button>
         </header>
         <div class="dashboard-actions">
             <button type="button" id="dashboardRefresh" data-i18n="dashboardRefresh"></button>
@@ -197,6 +202,25 @@
                 <button type="submit" value="confirm" class="dashboard-confirmation-delete">
                     <span class="dashboard-confirmation-button-icon" aria-hidden="true">🗑️</span>
                     <span data-i18n="dashboardConfirmationDelete"></span>
+                </button>
+            </div>
+        </form>
+    </dialog>
+    <dialog id="dashboardResultDialog" class="dashboard-result-dialog">
+        <form method="dialog">
+            <div class="dashboard-result-heading">
+                <span id="dashboardResultSymbol" class="dashboard-result-symbol" aria-hidden="true"></span>
+                <h2 id="dashboardResultTitle"></h2>
+            </div>
+            <p id="dashboardResultMessage" class="dashboard-result-message"></p>
+            <details class="dashboard-result-diagnostic" open>
+                <summary data-i18n="dashboardResultDiagnosticTitle"></summary>
+                <pre id="dashboardResultDiagnostic"></pre>
+            </details>
+            <div class="dashboard-result-actions">
+                <button type="submit" class="dashboard-result-close">
+                    <span aria-hidden="true">✕</span>
+                    <span data-i18n="dashboardResultClose"></span>
                 </button>
             </div>
         </form>
