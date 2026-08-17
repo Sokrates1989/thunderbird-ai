@@ -2,7 +2,7 @@
 
 const CONFIG = {
     ADDON_NAME: 'Thunderbird AI Assistant',
-    ADDON_VERSION: '2.7.5',
+    ADDON_VERSION: '2.8.0',
     ADDON_ID: 'thunderbird-ai@example.com',
 
     OPENAI: {
@@ -162,14 +162,21 @@ const CONFIG = {
         DASHBOARD_SELECTED_MESSAGES: 'dashboardSelectedMessages',
         DASHBOARD_AI_RESULTS: 'dashboardAiResults',
         DASHBOARD_FEEDBACK_ARCHIVE: 'dashboardFeedbackArchive',
-        DASHBOARD_DELETE_DIAGNOSTIC: 'dashboardDeleteDiagnostic'
+        DASHBOARD_DELETE_DIAGNOSTIC: 'dashboardDeleteDiagnostic',
+        DASHBOARD_OPEN_MODE: 'dashboardOpenMode',
+        DASHBOARD_EXPAND_USE_COUNT: 'dashboardExpandUseCount',
+        DASHBOARD_EXPAND_PROMPT_SUPPRESSED: 'dashboardExpandPromptSuppressed',
+        DASHBOARD_OVERLAY_OPEN_COUNT: 'dashboardOverlayOpenCount',
+        DASHBOARD_OVERLAY_PROMPT_SUPPRESSED: 'dashboardOverlayPromptSuppressed'
     },
 
     UI: {
         POPUP_WIDTH: 450,
         POPUP_HEIGHT: 600,
         TOAST_DURATION: 3000,
-        LOADING_TIMEOUT: 60000
+        LOADING_TIMEOUT: 60000,
+        DASHBOARD_EXPAND_PROMPT_THRESHOLD: 3,
+        DASHBOARD_OVERLAY_PROMPT_THRESHOLD: 5
     },
 
     ACTIONS: {
@@ -195,7 +202,8 @@ const CONFIG = {
         DASHBOARD_TRASH_MESSAGES: 'trashDashboardMessages',
         GET_SCORE_ARCHIVE: 'getScoreArchive',
         UPDATE_SCORE_ARCHIVE: 'updateScoreArchive',
-        REMOVE_SCORE_ARCHIVE: 'removeScoreArchive'
+        REMOVE_SCORE_ARCHIVE: 'removeScoreArchive',
+        SET_DASHBOARD_OPEN_MODE: 'setDashboardOpenMode'
     },
 
     SHORTCUTS: {

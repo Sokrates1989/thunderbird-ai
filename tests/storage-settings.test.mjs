@@ -34,6 +34,7 @@ test('new installations receive requested task-specific model defaults', async (
     assert.equal(settings.summarizeModel, 'gpt-5.6-sol');
     assert.equal(settings.replyModel, 'gpt-5.6-sol');
     assert.equal(settings.chatModel, 'gpt-5.6-sol');
+    assert.equal(settings.dashboardOpenMode, 'overlay');
 });
 
 test('legacy general model is a migration fallback and saved task choices become independent', async () => {
@@ -45,6 +46,7 @@ test('legacy general model is a migration fallback and saved task choices become
     await service.saveSettings({
         openaiApiKey: 'sk-example',
         uiLanguage: 'en',
+        dashboardOpenMode: 'tab',
         ...Object.fromEntries(context.CONFIG.OPENAI.MODEL_SETTINGS.map(definition => [
             definition.property,
             definition.defaultModel
@@ -54,6 +56,7 @@ test('legacy general model is a migration fallback and saved task choices become
     assert.equal(values.bulkModel, 'gpt-5.6-luna');
     assert.equal(values.singleScoreModel, 'gpt-5.6-terra');
     assert.equal(values.summarizeModel, 'gpt-5.6-sol');
+    assert.equal(values.dashboardOpenMode, 'tab');
 });
 
 test('concurrent token reports accumulate by model and produce a dated price estimate', async () => {

@@ -63,6 +63,7 @@ const SettingsManager = class {
     createComponents() {
         // Create all components
         this.components.language = new LanguageComponent(this);
+        this.components.dashboardLaunch = new DashboardLaunchSettingsComponent(this);
         this.components.apiConfig = new ApiConfigComponent(this);
         this.components.apiTest = new ApiTestComponent(this);
         this.components.statistics = new StatisticsComponent(this);
@@ -147,10 +148,12 @@ const SettingsManager = class {
     collectAllSettings() {
         const apiConfigValues = this.components.apiConfig.getCurrentValues();
         const languageValues = this.components.language.getCurrentValues();
+        const dashboardLaunchValues = this.components.dashboardLaunch.getCurrentValues();
         
         return {
             ...apiConfigValues,
-            ...languageValues
+            ...languageValues,
+            ...dashboardLaunchValues
         };
     }
 
@@ -183,6 +186,7 @@ const SettingsManager = class {
         const defaultSettings = {
             openaiApiKey: '',
             uiLanguage: I18n.getLanguage(),
+            dashboardOpenMode: DashboardLaunchService.MODES.OVERLAY,
             ...Object.fromEntries(
                 CONFIG.OPENAI.MODEL_SETTINGS.map(definition => [
                     definition.property,

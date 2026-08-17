@@ -46,6 +46,10 @@ const StorageManager = {
         return supported.has(model) ? model : fallback;
     },
 
+    normalizeDashboardOpenMode(mode) {
+        return mode === 'tab' ? 'tab' : 'overlay';
+    },
+
     /** Return settings while transparently retiring legacy GPT-3.5/GPT-4 values. */
     async getSettings() {
         const keys = Object.values(CONFIG.STORAGE_KEYS);
@@ -84,6 +88,9 @@ const StorageManager = {
             apiUsageByModel,
             estimatedApiCostUsd: this.estimateApiCostUsd(apiUsageByModel),
             lastUsed: result[CONFIG.STORAGE_KEYS.LAST_USED] || null,
+            dashboardOpenMode: this.normalizeDashboardOpenMode(
+                result[CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE]
+            ),
             uiLanguage: I18n.isSupportedLanguage(result[CONFIG.STORAGE_KEYS.UI_LANGUAGE])
                 ? result[CONFIG.STORAGE_KEYS.UI_LANGUAGE]
                 : I18n.getLanguage()
@@ -95,7 +102,10 @@ const StorageManager = {
             [CONFIG.STORAGE_KEYS.OPENAI_API_KEY]: String(settings.openaiApiKey || '').trim(),
             [CONFIG.STORAGE_KEYS.UI_LANGUAGE]: I18n.isSupportedLanguage(settings.uiLanguage)
                 ? settings.uiLanguage
-                : I18n.getLanguage()
+                : I18n.getLanguage(),
+            [CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE]: this.normalizeDashboardOpenMode(
+                settings.dashboardOpenMode
+            )
         };
         for (const definition of CONFIG.OPENAI.MODEL_SETTINGS) {
             values[definition.storageKey] = this.normalizeModel(

@@ -22,6 +22,7 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 - direkte Dashboard-Aktionen für die bestehende Zusammenfassung und den bestehenden interaktiven Antworteditor
 - klar getrennte, zweispaltige AI- und E-Mail-Aktionen mit Icons, direktes oder gebündeltes Markieren als gelesen sowie native Thunderbird-Archivierung in die kontobezogenen Jahresarchive
 - vollständig deutsch- oder englischsprachige Oberfläche mit expliziter Sprachauswahl
+- wählbarer Start des globalen Dashboards als kompaktes Overlay oder dauerhafter Thunderbird-Tab sowie zurückhaltende, abschaltbare Hinweise zum jeweils anderen Modus
 - Windows-Ein-Klick-Installer mit kontrolliertem Thunderbird-Neustart
 
 ## OpenAI-Modelle
@@ -60,7 +61,7 @@ Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speic
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-2.7.5-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-2.8.0-win-x64.exe` herunterladen und starten.
 2. Im Setup **Deutsch** oder **English** wählen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung und zu den Berechtigungen zum Ändern, Verschieben und Löschen von Nachrichten bestätigen.
@@ -90,7 +91,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-2.7.5-win-x64.exe`
+- `artifacts\Thunderbird-AI-Setup-2.8.0-win-x64.exe`
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
@@ -134,8 +135,9 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 36. In Thunderbird unter **Konten-Einstellungen → Kopien & Ordner → Nachrichtenarchiv** für die Testkonten jährliche Archivordner konfigurieren. Eine Nachricht aus einem früheren Jahr direkt über **Archivieren** verschieben und prüfen, dass Thunderbird sie im kontobezogenen Ordner `Archiv/<Sendejahr>` ablegt. Danach Nachrichten unterschiedlicher Jahre und Konten auswählen und **Ausgewählte archivieren** verwenden; jede Nachricht muss gemäß ihrer Konto- und Identitätseinstellungen im passenden Jahresarchiv landen und aus dem ungelesenen Dashboard verschwinden.
 37. Unter **Einstellungen → Thunderbird-Archivierung** auf **Archivordner prüfen** klicken. Ein von Thunderbird als Archiv gekennzeichneter Testordner muss mit Pfad, vorhandenen direkten Jahresordnern und Unterordner-Fähigkeit erscheinen. Ein lediglich gleich benannter, aber nicht als Archiv gekennzeichneter Ordner darf nicht fälschlich erkannt werden. Über **Thunderbird-Hilfe öffnen** muss die offizielle Anleitung im Standardbrowser erscheinen. Anschließend die nicht per Add-on auslesbare Auswahl **Jährliche archivierte Ordner** einmal manuell über den angezeigten Menüpfad kontrollieren.
 38. Für einen klaren Newsletter mit List-Unsubscribe/List-ID oder sichtbarer Abmeldemöglichkeit **Scoring-Info** ausführen. Der Spam-Wert darf nicht mehr im einstelligen Bereich bleiben und muss mindestens die lokale Untergrenze erreichen. Anschließend mehrere Newsletter desselben Absenders in der Bulk-Auswertung prüfen; eine höhere Absenderhäufigkeit muss die lokale Vorprüfung erhöhen. Eine häufige, aber ausdrücklich als erwünscht korrigierte Systemmail desselben Absenders erneut bewerten; die gespeicherte Absenderkorrektur muss Vorrang behalten.
+39. Unter **Einstellungen → AI Assistant öffnen** zunächst **Als kompaktes Overlay öffnen** speichern und fünfmal das globale Toolbar-Symbol verwenden. Beim fünften tatsächlichen Öffnen muss ein lokalisierter Hinweis mit **Später**, **Jetzt ausprobieren** und **Diesen Hinweis nicht mehr anzeigen** erscheinen. **Später** muss einen neuen Fünfer-Zyklus beginnen; **Jetzt ausprobieren** muss den dauerhaften Tab öffnen, ohne den Standard zu ändern. Anschließend dreimal das Vollbildsymbol im Overlay verwenden. Beim dritten Mal muss der geöffnete Tab anbieten, künftig immer direkt im Tab zu starten. **Immer im Tab öffnen** auswählen und prüfen, dass weitere Toolbar-Klicks ohne vorgeschaltetes Overlay direkt einen neuen Thunderbird-Tab öffnen. Danach in den Einstellungen wieder den Overlay-Modus speichern. Bei aktivierter Option **Diesen Hinweis nicht mehr anzeigen** darf der jeweilige Hinweis auch nach weiteren Öffnungen nicht zurückkehren.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.7.5** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.8.0** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 ## Technische Struktur
 

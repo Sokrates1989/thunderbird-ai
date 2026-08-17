@@ -33,6 +33,22 @@ test('settings no longer load or expose retired automatic email analysis', () =>
     assert.doesNotMatch(constants, /AUTO_PROCESS|AUTOMATIC_RESULTS|GET_AUTOMATIC_RESULT/u);
 });
 
+test('settings expose the persisted overlay or Thunderbird-tab launch preference', () => {
+    const settingsPage = source('thunderbird-ai/pages/settings.html');
+    const settingsManager = source('thunderbird-ai/components/settings/SettingsManager.js');
+    const launchSettings = source(
+        'thunderbird-ai/components/settings/DashboardLaunchSettingsComponent.js'
+    );
+
+    assert.match(settingsPage, /id="dashboard-launch-section"/u);
+    assert.match(settingsPage, /DashboardLaunchService\.js/u);
+    assert.match(settingsPage, /DashboardLaunchSettingsComponent\.js/u);
+    assert.match(settingsManager, /new DashboardLaunchSettingsComponent\(this\)/u);
+    assert.match(settingsManager, /dashboardLaunch\.getCurrentValues\(\)/u);
+    assert.match(launchSettings, /value="overlay"/u);
+    assert.match(launchSettings, /value="tab"/u);
+});
+
 test('usage statistics disclose and format the token-based USD estimate', () => {
     const statistics = source('thunderbird-ai/components/settings/StatisticsComponent.js');
     assert.match(statistics, /id="estimatedApiCost"/u);

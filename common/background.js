@@ -3,11 +3,23 @@ class ThunderbirdAI {
     constructor() {
         this.setupEventListeners();
         this.initializeMenus();
+        this.toolbarInitialization = this.initializeToolbar().catch(error => {
+            console.error('Could not initialize dashboard toolbar behavior:', error);
+        });
     }
 
     setupEventListeners() {
         browser.runtime.onMessage.addListener((request, sender) => this.handleMessage(request, sender));
         browser.menus.onClicked.addListener((info, tab) => this.handleMenuClick(info, tab));
+        browser.action.onClicked.addListener(() => {
+            DashboardLaunchService.openExpanded('saved-preference').catch(error => {
+                console.error('Could not open dashboard tab from toolbar:', error);
+            });
+        });
+    }
+
+    async initializeToolbar() {
+        await DashboardLaunchService.applyToolbarMode(await DashboardLaunchService.getMode());
     }
 
     async initializeMenus() {
@@ -85,6 +97,8 @@ class ThunderbirdAI {
                     return StorageManager.getSettings();
                 case CONFIG.ACTIONS.SAVE_SETTINGS:
                     return this.saveSettings(request);
+                case CONFIG.ACTIONS.SET_DASHBOARD_OPEN_MODE:
+                    return this.setDashboardOpenMode(request.mode);
                 default:
                     return { success: false, error: I18n.t('unknownError') };
             }
@@ -103,11 +117,26 @@ class ThunderbirdAI {
 
     async saveSettings(settings) {
         const success = await StorageManager.saveSettings(settings);
+        if (success) {
+            await DashboardLaunchService.applyToolbarMode(settings.dashboardOpenMode);
+        }
         if (success && I18n.isSupportedLanguage(settings.uiLanguage)) {
             await I18n.setLanguage(settings.uiLanguage);
             await this.initializeMenus();
         }
         return { success };
+    }
+
+    async setDashboardOpenMode(mode) {
+        const normalizedMode = DashboardLaunchService.normalizeMode(mode);
+        const success = await StorageManager.set(
+            CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE,
+            normalizedMode
+        );
+        if (success) {
+            await DashboardLaunchService.applyToolbarMode(normalizedMode);
+        }
+        return { success, data: { mode: normalizedMode } };
     }
 
     async runEmailAction(task, messageId, options = {}) {

@@ -225,6 +225,25 @@
             </div>
         </form>
     </dialog>
+    <dialog id="dashboardLaunchPromptDialog" class="dashboard-launch-prompt-dialog">
+        <form method="dialog">
+            <div class="dashboard-launch-prompt-heading">
+                <span id="dashboardLaunchPromptSymbol" class="dashboard-launch-prompt-symbol" aria-hidden="true"></span>
+                <h2 id="dashboardLaunchPromptTitle"></h2>
+            </div>
+            <p id="dashboardLaunchPromptMessage" class="dashboard-launch-prompt-message"></p>
+            <label class="dashboard-launch-prompt-dismiss">
+                <input type="checkbox" id="dashboardLaunchPromptDoNotShow">
+                <span data-i18n="dashboardLaunchDoNotShowAgain"></span>
+            </label>
+            <div class="dashboard-launch-prompt-actions">
+                <button type="submit" value="later" id="dashboardLaunchPromptLater"
+                        class="dashboard-launch-prompt-later"></button>
+                <button type="submit" value="primary" id="dashboardLaunchPromptPrimary"
+                        class="dashboard-launch-prompt-primary"></button>
+            </div>
+        </form>
+    </dialog>
     <dialog id="dashboardFeedbackDialog" class="dashboard-feedback-dialog">
         <form id="dashboardFeedbackForm" method="dialog">
             <h2 data-i18n="dashboardFeedbackTitle"></h2>
@@ -246,10 +265,12 @@
     <script src="GlobalMailService.js"></script>
     <script src="GlobalMailViewService.js"></script>
     <script src="DashboardViewPreferences.js"></script>
+    <script src="DashboardLaunchService.js"></script>
     <script src="DashboardSenderFilterComponent.js"></script>
     <script src="DashboardAIService.js"></script>
     <script src="DashboardMessageComponent.js"></script>
     <script src="DashboardDeleteComponent.js"></script>
+    <script src="DashboardLaunchPromptComponent.js"></script>
     <script src="ScoreFeedbackEditor.js"></script>
     <script src="DashboardFeedbackComponent.js"></script>
     <script src="GlobalDashboardManager.js"></script>

@@ -97,6 +97,9 @@ const GlobalDashboardManager = class {
             remainingMessageIds: messageIds => this.visibleMessageIds(messageIds),
             setStatus: (message, type) => this.setStatus(message, type)
         });
+        this.launchPromptComponent = new DashboardLaunchPromptComponent({
+            setStatus: (message, type) => this.setStatus(message, type)
+        });
     }
 
     /** Bind dashboard controls, restore local preferences, and load mail headers. */
@@ -155,6 +158,7 @@ const GlobalDashboardManager = class {
         this.applyPreferenceControls();
         await this.refresh();
         await this.deleteComponent.initialize();
+        await this.launchPromptComponent.initialize();
     }
 
     /** Restore persisted view state while normalizing every untrusted storage value. */
@@ -184,9 +188,7 @@ const GlobalDashboardManager = class {
     /** Open the same dashboard in a durable Thunderbird tab. */
     async openExpandedView() {
         await this.persistSelection();
-        await browser.tabs.create({
-            url: browser.runtime.getURL('global-dashboard.html?view=expanded')
-        });
+        await DashboardLaunchService.openExpanded('manual');
     }
 
     /** Synchronize static form controls with the normalized in-memory view state. */

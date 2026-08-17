@@ -13,7 +13,10 @@ async function loadBackground(options = {}) {
     const stats = [];
     const serviceCalls = [];
     const deleteCalls = [];
-    const storageState = {};
+    const storageState = { ...(options.initialStorage || {}) };
+    const popupAssignments = [];
+    const openedTabs = [];
+    let actionClickListener = null;
     const context = createContext({
         browser: {
             i18n: { getUILanguage: () => 'de-DE' },
@@ -23,6 +26,10 @@ async function loadBackground(options = {}) {
                 getBrowserInfo: options.getBrowserInfo || (async () => ({ version: '140.0' }))
             },
             menus: { onClicked: eventTarget(), removeAll: async () => {}, create: async () => {} },
+            action: {
+                onClicked: { addListener: listener => { actionClickListener = listener; } },
+                setPopup: async details => popupAssignments.push({ ...details })
+            },
             messageDisplay: { onMessagesDisplayed: eventTarget() },
             messages: {
                 delete: async (...parameters) => {
@@ -40,12 +47,13 @@ async function loadBackground(options = {}) {
                 },
                 set: async values => Object.assign(storageState, values)
             } },
-            tabs: { create: async () => {} }
+            tabs: { create: async details => openedTabs.push({ ...details }) }
         }
     });
     loadScript(context, 'thunderbird-ai/config/locale-de.js');
     loadScript(context, 'thunderbird-ai/config/locale-en.js');
     loadScript(context, 'thunderbird-ai/config/constants.js');
+    loadScript(context, 'thunderbird-ai/components/shared/DashboardLaunchService.js');
     context.MessageService = {
         getFullMessage: options.getFullMessage || (async id => ({
             id,
@@ -135,23 +143,67 @@ async function loadBackground(options = {}) {
     context.StorageManager = {
         updateStatistics: async (type, amount = 1) => stats.push(amount === 1 ? type : `${type}:${amount}`),
         getSettings: async () => ({}),
-        saveSettings: async () => true
+        saveSettings: async settings => {
+            storageState[context.CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE]
+                = context.DashboardLaunchService.normalizeMode(settings.dashboardOpenMode);
+            return true;
+        },
+        set: async (key, value) => {
+            storageState[key] = value;
+            return true;
+        }
     };
     loadScript(context, 'common/utils/retry.js');
     context.RetryService.wait = async () => {};
     loadScript(context, 'common/utils/dashboard-mailbox.js');
     loadScript(context, 'common/background.js');
     await context.thunderbirdAIInitialization;
+    await context.thunderbirdAI?.toolbarInitialization;
     return {
+        actionClick: async () => actionClickListener?.(),
         ai: context.thunderbirdAI,
         config: context.CONFIG,
         deleteCalls,
         mailboxService: context.DashboardMailboxService,
+        openedTabs,
+        popupAssignments,
         serviceCalls,
         stats,
         storageState
     };
 }
+
+test('saved tab mode disables the popup and routes the toolbar click to a content tab', async () => {
+    const initialStorage = { dashboardOpenMode: 'tab' };
+    const { actionClick, openedTabs, popupAssignments } = await loadBackground({ initialStorage });
+
+    assert.deepEqual(popupAssignments, [{ popup: '' }]);
+    await actionClick();
+
+    assert.equal(openedTabs.length, 1);
+    assert.equal(
+        openedTabs[0].url,
+        'global-dashboard.html?view=expanded&source=saved-preference'
+    );
+});
+
+test('launch preference runtime update immediately restores the toolbar popup', async () => {
+    const { ai, config, popupAssignments, storageState } = await loadBackground({
+        initialStorage: { dashboardOpenMode: 'tab' }
+    });
+
+    const response = await ai.handleMessage({
+        action: config.ACTIONS.SET_DASHBOARD_OPEN_MODE,
+        mode: 'overlay'
+    });
+
+    assert.equal(response.success, true);
+    assert.equal(storageState.dashboardOpenMode, 'overlay');
+    assert.deepEqual(popupAssignments, [
+        { popup: '' },
+        { popup: 'global-dashboard.html' }
+    ]);
+});
 
 test('dashboard deletion runs in the background with modern user-action options', async () => {
     const { ai, config, deleteCalls, storageState } = await loadBackground();

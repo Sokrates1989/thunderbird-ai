@@ -166,6 +166,7 @@ function loadDashboardManager(
         console: logger,
         GlobalMailService: globalMailService,
         DashboardViewPreferences: { saveSelection: async () => {} },
+        DashboardLaunchService: { openExpanded: async () => {} },
         browser: {
             runtime: { getURL: value => `moz-extension://test/${value}` },
             tabs: { create: async () => {} }
@@ -473,9 +474,8 @@ test('expanded dashboard opens in a stable Thunderbird tab after persisting sele
         DashboardViewPreferences: {
             saveSelection: async selection => saved.push([...selection])
         },
-        browser: {
-            runtime: { getURL: value => `moz-extension://test/${value}` },
-            tabs: { create: async details => opened.push(details) }
+        DashboardLaunchService: {
+            openExpanded: async source => opened.push(source)
         }
     });
     const manager = Object.create(DashboardManager.prototype);
@@ -484,8 +484,7 @@ test('expanded dashboard opens in a stable Thunderbird tab after persisting sele
     await manager.openExpandedView();
 
     assert.deepEqual(saved, [[7, 8]]);
-    assert.equal(opened.length, 1);
-    assert.equal(opened[0].url, 'moz-extension://test/global-dashboard.html?view=expanded');
+    assert.deepEqual(opened, ['manual']);
 });
 
 test('dashboard view panel defaults open and persists only explicit toggle changes', async () => {
@@ -1162,6 +1161,8 @@ test('manifest routes global and message toolbar actions to separate popup pages
         < manifest.background.scripts.indexOf('openai.js'));
     assert.ok(manifest.background.scripts.indexOf('dashboard-mailbox.js')
         < manifest.background.scripts.indexOf('background.js'));
+    assert.ok(manifest.background.scripts.indexOf('DashboardLaunchService.js')
+        < manifest.background.scripts.indexOf('storage.js'));
     assert.ok(dashboard.indexOf('DashboardDeleteComponent.js')
         < dashboard.indexOf('GlobalDashboardManager.js'));
     assert.match(dashboard, /id="dashboardSelectAll"/u);
@@ -1208,6 +1209,10 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(dashboard, /id="dashboardResultDialog"/u);
     assert.match(dashboard, /id="dashboardResultDiagnostic"/u);
     assert.match(dashboard, /id="dashboardExpandView"/u);
+    assert.match(dashboard, /id="dashboardLaunchPromptDialog"/u);
+    assert.match(dashboard, /id="dashboardLaunchPromptDoNotShow"/u);
+    assert.match(dashboard, /DashboardLaunchService\.js/u);
+    assert.match(dashboard, /DashboardLaunchPromptComponent\.js/u);
     assert.match(dashboard, /class="dashboard-confirmation-cancel"[\s\S]*?>[\s\S]*?✕/u);
     assert.match(dashboard, /class="dashboard-confirmation-delete"[\s\S]*?>[\s\S]*?🗑️/u);
     assert.match(dashboard, /id="dashboardDiagnostics"/u);
@@ -1233,6 +1238,7 @@ test('manifest routes global and message toolbar actions to separate popup pages
         /\.dashboard-confirmation-cancel\s*\{[^}]*min-width:\s*112px[^}]*background:\s*#69737d/su
     );
     assert.match(dashboardStyles, /\.dashboard-result-dialog\s*\{[^}]*box-shadow:/su);
+    assert.match(dashboardStyles, /\.dashboard-launch-prompt-dialog\s*\{[^}]*box-shadow:/su);
     assert.match(dashboardStyles, /\.dashboard-expanded-view \.dashboard-accounts\s*\{[^}]*max-height:\s*none/su);
     assert.match(dashboardEntry, /URLSearchParams\(window\.location\.search\)/u);
     assert.match(
