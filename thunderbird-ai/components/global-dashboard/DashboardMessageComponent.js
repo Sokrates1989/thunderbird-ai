@@ -7,6 +7,7 @@ const DashboardMessageComponent = class {
         this.onReply = options.onReply;
         this.onCorrectScores = options.onCorrectScores;
         this.onMarkRead = options.onMarkRead;
+        this.onExportPdf = options.onExportPdf;
         this.onArchive = options.onArchive;
         this.onTrash = options.onTrash;
     }
@@ -162,6 +163,14 @@ const DashboardMessageComponent = class {
                 busy,
                 () => this.onMarkRead(message),
                 { icon: '✓', className: 'mark-read' }
+            ),
+            this.actionButton(
+                'dashboardExportPdfOne',
+                'dashboardExportPdfMessage',
+                subject,
+                busy,
+                () => this.onExportPdf(message),
+                { icon: '📄', className: 'export-pdf' }
             ),
             this.actionButton(
                 'dashboardArchiveOne',

@@ -1141,6 +1141,10 @@ test('manifest routes global and message toolbar actions to separate popup pages
         path.join(repositoryRoot, 'thunderbird-ai/components/global-dashboard/DashboardFeedbackComponent.js'),
         'utf8'
     );
+    const pdfIntegration = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/components/shared/PdfArchiverIntegrationService.js'),
+        'utf8'
+    );
     const singleResults = fs.readFileSync(
         path.join(repositoryRoot, 'thunderbird-ai/components/single-mail/ResultsComponent.js'),
         'utf8'
@@ -1213,6 +1217,10 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(dashboard, /id="dashboardLaunchPromptDoNotShow"/u);
     assert.match(dashboard, /DashboardLaunchService\.js/u);
     assert.match(dashboard, /DashboardLaunchPromptComponent\.js/u);
+    assert.match(dashboard, /id="dashboardPdfArchiverDialog"/u);
+    assert.match(dashboard, /id="dashboardPdfArchiverInstall"/u);
+    assert.match(dashboard, /PdfArchiverIntegrationService\.js/u);
+    assert.match(dashboard, /PdfArchiverIntegrationComponent\.js/u);
     assert.match(dashboard, /class="dashboard-confirmation-cancel"[\s\S]*?>[\s\S]*?✕/u);
     assert.match(dashboard, /class="dashboard-confirmation-delete"[\s\S]*?>[\s\S]*?🗑️/u);
     assert.match(dashboard, /id="dashboardDiagnostics"/u);
@@ -1239,6 +1247,7 @@ test('manifest routes global and message toolbar actions to separate popup pages
     );
     assert.match(dashboardStyles, /\.dashboard-result-dialog\s*\{[^}]*box-shadow:/su);
     assert.match(dashboardStyles, /\.dashboard-launch-prompt-dialog\s*\{[^}]*box-shadow:/su);
+    assert.match(dashboardStyles, /\.dashboard-pdf-archiver-dialog\s*\{[^}]*box-shadow:/su);
     assert.match(dashboardStyles, /\.dashboard-expanded-view \.dashboard-accounts\s*\{[^}]*max-height:\s*none/su);
     assert.match(dashboardEntry, /URLSearchParams\(window\.location\.search\)/u);
     assert.match(
@@ -1251,8 +1260,11 @@ test('manifest routes global and message toolbar actions to separate popup pages
     );
     assert.match(messageComponent, /dashboardMarkReadOne/u);
     assert.match(messageComponent, /dashboardArchiveOne/u);
+    assert.match(messageComponent, /dashboardExportPdfOne/u);
     assert.match(messageComponent, /dashboard-message-action-group/u);
     assert.match(messageComponent, /dashboard-action-icon/u);
+    assert.match(pdfIntegration, /thunderbird-pdf-archiver@sokrates1989\.de/u);
+    assert.match(pdfIntegration, /thunderbird-pdf-archiver:open-review/u);
     assert.match(singleMailManager, /parameters\.get\('summarize'\) === '1'[\s\S]*executeAIAction\('SUMMARIZE_EMAIL'\)/u);
     assert.match(singleMailPage, /ScoreFeedbackEditor\.js/u);
     assert.match(settingsPage, /ScoreFeedbackEditor\.js/u);

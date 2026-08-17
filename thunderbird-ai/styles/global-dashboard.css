@@ -809,6 +809,100 @@ body {
     outline-offset: 3px;
 }
 
+.dashboard-pdf-archiver-dialog {
+    width: min(620px, calc(100vw - 48px));
+    max-width: none;
+    padding: 0;
+    overflow: hidden;
+    border: 2px solid #c52e3b;
+    border-top-width: 8px;
+    border-radius: 12px;
+    background: #fff;
+    color: #202124;
+    box-shadow: 0 18px 55px rgba(0, 0, 0, 0.48);
+}
+
+.dashboard-pdf-archiver-dialog::backdrop {
+    background: rgba(16, 24, 40, 0.68);
+    backdrop-filter: blur(1.5px);
+}
+
+.dashboard-pdf-archiver-dialog form {
+    display: grid;
+    gap: 20px;
+    padding: 26px 28px 24px;
+}
+
+.dashboard-pdf-archiver-heading {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+}
+
+.dashboard-pdf-archiver-symbol {
+    display: grid;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    place-items: center;
+    border-radius: 10px;
+    background: #c52e3b;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.dashboard-pdf-archiver-dialog h2 {
+    margin: 0;
+    color: #9e1f2b;
+    font-size: 24px;
+    line-height: 1.2;
+}
+
+.dashboard-pdf-archiver-message {
+    margin: 0;
+    padding: 15px 17px;
+    border-left: 5px solid #c52e3b;
+    border-radius: 6px;
+    background: #fff4f5;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.dashboard-pdf-archiver-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.dashboard-pdf-archiver-actions button {
+    display: inline-flex;
+    gap: 7px;
+    min-width: 120px;
+    align-items: center;
+    justify-content: center;
+    padding: 11px 16px;
+    border: 0;
+    border-radius: 7px;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.dashboard-pdf-archiver-later {
+    background: #69737d;
+}
+
+.dashboard-pdf-archiver-install {
+    background: #c52e3b;
+    box-shadow: 0 4px 12px rgba(197, 46, 59, 0.3);
+}
+
+.dashboard-pdf-archiver-actions button:focus-visible {
+    outline: 3px solid #4c9ed9;
+    outline-offset: 3px;
+}
+
 .dashboard-loading {
     display: flex;
     gap: 8px;
@@ -928,6 +1022,10 @@ body {
 .dashboard-bulk-actions .dashboard-archive,
 .dashboard-message-action.archive {
     background: #526d82;
+}
+
+.dashboard-message-action.export-pdf {
+    background: #c52e3b;
 }
 
 .dashboard-bulk-actions .dashboard-danger-action,
@@ -1107,6 +1205,18 @@ body.dashboard-expanded-view {
 }
 
 @media (max-width: 640px) {
+    .dashboard-pdf-archiver-dialog form {
+        padding: 22px 20px 20px;
+    }
+
+    .dashboard-pdf-archiver-actions {
+        flex-direction: column-reverse;
+    }
+
+    .dashboard-pdf-archiver-actions button {
+        width: 100%;
+    }
+
     .dashboard-launch-prompt-dialog form {
         padding: 22px 20px 20px;
     }

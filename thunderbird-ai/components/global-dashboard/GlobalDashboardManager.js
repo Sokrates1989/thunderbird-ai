@@ -82,6 +82,10 @@ const GlobalDashboardManager = class {
             onMarkRead: message => {
                 this.markOneAsRead(message).catch(error => this.showUnexpectedError(error));
             },
+            onExportPdf: message => {
+                this.pdfArchiverComponent.openFor(message)
+                    .catch(error => this.showPdfArchiverError(error));
+            },
             onArchive: message => {
                 this.archiveOne(message).catch(error => this.showUnexpectedError(error));
             },
@@ -91,6 +95,9 @@ const GlobalDashboardManager = class {
         });
         this.feedbackComponent = new DashboardFeedbackComponent({
             onSave: (message, reasons) => this.saveScoreFeedback(message, reasons)
+        });
+        this.pdfArchiverComponent = new PdfArchiverIntegrationComponent({
+            setStatus: (message, type) => this.setStatus(message, type)
         });
         this.deleteComponent = new DashboardDeleteComponent({
             formatDate: value => this.formatDate(value),
@@ -158,6 +165,7 @@ const GlobalDashboardManager = class {
         this.applyPreferenceControls();
         await this.refresh();
         await this.deleteComponent.initialize();
+        this.pdfArchiverComponent.initialize();
         await this.launchPromptComponent.initialize();
     }
 
@@ -660,6 +668,12 @@ const GlobalDashboardManager = class {
     showWorkspaceError(error) {
         console.error('Could not open the single-message AI workspace:', error);
         this.setStatus(I18n.t('dashboardWorkspaceOpenFailed'), 'error');
+    }
+
+    /** Report unexpected companion failures without treating them as mailbox load errors. */
+    showPdfArchiverError(error) {
+        console.error('Could not hand the message to Thunderbird PDF Archiver:', error);
+        this.setStatus(I18n.t('dashboardPdfArchiverOpenFailed'), 'error');
     }
 
     /** Confirm and delete only the directly targeted message. */

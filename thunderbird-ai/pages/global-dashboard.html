@@ -244,6 +244,24 @@
             </div>
         </form>
     </dialog>
+    <dialog id="dashboardPdfArchiverDialog" class="dashboard-pdf-archiver-dialog">
+        <form method="dialog">
+            <div class="dashboard-pdf-archiver-heading">
+                <span class="dashboard-pdf-archiver-symbol" aria-hidden="true">PDF</span>
+                <h2 data-i18n="dashboardPdfArchiverTitle"></h2>
+            </div>
+            <p id="dashboardPdfArchiverMessage" class="dashboard-pdf-archiver-message"></p>
+            <div class="dashboard-pdf-archiver-actions">
+                <button type="submit" value="cancel" class="dashboard-pdf-archiver-later"
+                        data-i18n="dashboardPdfArchiverLater"></button>
+                <button type="button" id="dashboardPdfArchiverInstall"
+                        class="dashboard-pdf-archiver-install">
+                    <span aria-hidden="true">↗</span>
+                    <span data-i18n="dashboardPdfArchiverInstall"></span>
+                </button>
+            </div>
+        </form>
+    </dialog>
     <dialog id="dashboardFeedbackDialog" class="dashboard-feedback-dialog">
         <form id="dashboardFeedbackForm" method="dialog">
             <h2 data-i18n="dashboardFeedbackTitle"></h2>
@@ -266,11 +284,13 @@
     <script src="GlobalMailViewService.js"></script>
     <script src="DashboardViewPreferences.js"></script>
     <script src="DashboardLaunchService.js"></script>
+    <script src="PdfArchiverIntegrationService.js"></script>
     <script src="DashboardSenderFilterComponent.js"></script>
     <script src="DashboardAIService.js"></script>
     <script src="DashboardMessageComponent.js"></script>
     <script src="DashboardDeleteComponent.js"></script>
     <script src="DashboardLaunchPromptComponent.js"></script>
+    <script src="PdfArchiverIntegrationComponent.js"></script>
     <script src="ScoreFeedbackEditor.js"></script>
     <script src="DashboardFeedbackComponent.js"></script>
     <script src="GlobalDashboardManager.js"></script>
