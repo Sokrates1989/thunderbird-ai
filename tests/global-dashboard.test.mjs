@@ -1111,6 +1111,8 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(dashboard, /DashboardFeedbackComponent\.js/u);
     assert.match(dashboard, /id="dashboardFeedbackDialog"/u);
     assert.match(dashboard, /id="dashboardConfirmationDialog"/u);
+    assert.match(dashboard, /class="dashboard-confirmation-cancel"[\s\S]*?>[\s\S]*?✕/u);
+    assert.match(dashboard, /class="dashboard-confirmation-delete"[\s\S]*?>[\s\S]*?🗑️/u);
     assert.match(dashboard, /id="dashboardDiagnostics"/u);
     assert.match(dashboard, /id="dashboardFeedbackEditors"/u);
     assert.doesNotMatch(dashboard, /id="dashboardFeedbackReason"/u);
@@ -1121,6 +1123,18 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(dashboardStyles, /\.dashboard-option-groups\s*\{[^}]*grid-template-columns:\s*repeat\(2,/su);
     assert.match(dashboardStyles, /\.dashboard-display-options-summary:focus-visible/u);
     assert.match(dashboardStyles, /@keyframes dashboard-spin/u);
+    assert.match(
+        dashboardStyles,
+        /\.dashboard-confirmation-dialog\s*\{[^}]*border-top-width:\s*8px[^}]*box-shadow:/su
+    );
+    assert.match(
+        dashboardStyles,
+        /\.dashboard-confirmation-delete\s*\{[^}]*min-width:\s*178px[^}]*background:\s*#b42318/su
+    );
+    assert.match(
+        dashboardStyles,
+        /\.dashboard-confirmation-cancel\s*\{[^}]*min-width:\s*112px[^}]*background:\s*#69737d/su
+    );
     assert.match(
         dashboardStyles,
         /\.dashboard-message-actions\s*\{[^}]*grid-template-columns:\s*repeat\(2,/su

@@ -417,30 +417,116 @@ body {
 }
 
 .dashboard-confirmation-dialog {
-    width: min(520px, calc(100% - 32px));
+    width: min(600px, calc(100vw - 48px));
+    max-width: none;
     padding: 0;
-    border: 0;
-    border-radius: 8px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+    border: 2px solid #b42318;
+    border-top-width: 8px;
+    border-radius: 12px;
+    background: #fff;
+    color: #202124;
+    box-shadow: 0 18px 55px rgba(0, 0, 0, 0.48);
 }
 
 .dashboard-confirmation-dialog::backdrop {
-    background: rgba(0, 0, 0, 0.45);
+    background: rgba(16, 24, 40, 0.68);
+    backdrop-filter: blur(1.5px);
 }
 
 .dashboard-confirmation-dialog form {
-    padding: 18px;
+    display: grid;
+    gap: 22px;
+    padding: 26px 28px 24px;
+}
+
+.dashboard-confirmation-heading {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+}
+
+.dashboard-confirmation-symbol {
+    display: grid;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    place-items: center;
+    border-radius: 50%;
+    background: #fde8e7;
+    font-size: 25px;
 }
 
 .dashboard-confirmation-dialog h2 {
-    margin: 0 0 12px;
+    margin: 0;
+    color: #8f1710;
+    font-size: 25px;
+    line-height: 1.15;
+}
+
+.dashboard-confirmation-message {
+    margin: 0;
+    padding: 15px 17px;
+    border-left: 5px solid #d92d20;
+    border-radius: 6px;
+    background: #fff5f4;
+    font-size: 17px;
+    line-height: 1.5;
 }
 
 .dashboard-confirmation-actions {
     display: flex;
+    align-items: center;
     justify-content: flex-end;
-    gap: 10px;
-    margin-top: 18px;
+    gap: 14px;
+}
+
+.dashboard-confirmation-actions button {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: background-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
+
+.dashboard-confirmation-cancel {
+    min-width: 112px;
+    padding: 9px 13px;
+    background: #69737d;
+    color: #fff;
+    font-size: 13px;
+}
+
+.dashboard-confirmation-delete {
+    min-width: 178px;
+    padding: 13px 20px;
+    background: #b42318;
+    color: #fff;
+    font-size: 16px;
+    box-shadow: 0 4px 12px rgba(180, 35, 24, 0.3);
+}
+
+.dashboard-confirmation-cancel:hover {
+    background: #515b65;
+}
+
+.dashboard-confirmation-delete:hover {
+    background: #8f1710;
+    transform: translateY(-1px);
+}
+
+.dashboard-confirmation-actions button:focus-visible {
+    outline: 3px solid #4c9ed9;
+    outline-offset: 3px;
+}
+
+.dashboard-confirmation-button-icon {
+    font-size: 1.1em;
+    line-height: 1;
 }
 
 .dashboard-loading {

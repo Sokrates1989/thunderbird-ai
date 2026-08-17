@@ -184,11 +184,20 @@
     </main>
     <dialog id="dashboardConfirmationDialog" class="dashboard-confirmation-dialog">
         <form method="dialog">
-            <h2 data-i18n="dashboardConfirmationTitle"></h2>
-            <p id="dashboardConfirmationMessage"></p>
+            <div class="dashboard-confirmation-heading">
+                <span class="dashboard-confirmation-symbol" aria-hidden="true">🗑️</span>
+                <h2 data-i18n="dashboardConfirmationTitle"></h2>
+            </div>
+            <p id="dashboardConfirmationMessage" class="dashboard-confirmation-message"></p>
             <div class="dashboard-confirmation-actions">
-                <button type="submit" value="cancel" data-i18n="dashboardConfirmationCancel"></button>
-                <button type="submit" value="confirm" class="dashboard-danger-action" data-i18n="dashboardConfirmationDelete"></button>
+                <button type="submit" value="cancel" class="dashboard-confirmation-cancel">
+                    <span class="dashboard-confirmation-button-icon" aria-hidden="true">✕</span>
+                    <span data-i18n="dashboardConfirmationCancel"></span>
+                </button>
+                <button type="submit" value="confirm" class="dashboard-confirmation-delete">
+                    <span class="dashboard-confirmation-button-icon" aria-hidden="true">🗑️</span>
+                    <span data-i18n="dashboardConfirmationDelete"></span>
+                </button>
             </div>
         </form>
     </dialog>
