@@ -29,13 +29,15 @@ function loadService({
     getMessageContent = async () => '',
     deleteMessages = async () => {},
     archiveMessages = async () => {},
-    updateMessage = async () => {}
+    updateMessage = async () => {},
+    getBrowserInfo = async () => ({ version: '140.0' })
 }) {
     const aborted = [];
     const context = createContext({
         console: { error() {}, log() {}, warn() {} },
         MessageService: { getMessageContent },
         browser: {
+            runtime: { getBrowserInfo },
             accounts: { list: async includeFolders => {
                 assert.equal(includeFolders, true);
                 return accounts;
@@ -137,12 +139,12 @@ function loadDashboardAIService() {
     return { context, openedTabs, sentMessages, service: context.DashboardAIService, storageState };
 }
 
-function loadDashboardManager(services) {
+function loadDashboardManager(services, logger = { error() {}, log() {}, warn() {} }) {
     const globalMailService = typeof services === 'function'
         ? { markAsRead: services }
         : services;
     const context = createContext({
-        console: { error() {}, log() {}, warn() {} },
+        console: logger,
         GlobalMailService: globalMailService,
         I18n: {
             t: (key, replacements = {}) => `${key}:${JSON.stringify(replacements)}`
@@ -690,15 +692,36 @@ test('dashboard previews are loaded locally and one MIME failure stays isolated'
     assert.equal(accounts[0].messages[2].preview, 'Body 3');
 });
 
-test('dashboard deletion uses the Thunderbird 128 non-permanent signature', async () => {
+test('dashboard deletion uses modern user-action options when Thunderbird supports them', async () => {
     const calls = [];
     const { service } = loadService({
         deleteMessages: async (...parameters) => calls.push(parameters)
     });
 
-    await service.moveToTrash([7, 8, 7, null, undefined]);
+    const diagnostics = await service.moveToTrash([7, 8, 7, null, undefined]);
 
-    assert.deepEqual(calls.map(([ids, permanent]) => [Array.from(ids), permanent]), [[[7, 8], false]]);
+    assert.deepEqual(
+        calls.map(([ids, options]) => [Array.from(ids), { ...options }]),
+        [[[7, 8], { deletePermanently: false, isUserAction: true }]]
+    );
+    assert.deepEqual({ ...diagnostics }, {
+        browserVersion: '140.0',
+        messageCount: 2,
+        requestMode: 'structured-user-action'
+    });
+});
+
+test('dashboard deletion retains the Thunderbird 128 boolean compatibility signature', async () => {
+    const calls = [];
+    const { service } = loadService({
+        deleteMessages: async (...parameters) => calls.push(parameters),
+        getBrowserInfo: async () => ({ version: '128.14.0esr' })
+    });
+
+    const diagnostics = await service.moveToTrash([7]);
+
+    assert.deepEqual(calls.map(([ids, permanent]) => [Array.from(ids), permanent]), [[[7], false]]);
+    assert.equal(diagnostics.requestMode, 'legacy-boolean');
 });
 
 test('dashboard archiving delegates unique messages to the native Thunderbird archive action', async () => {
@@ -758,6 +781,68 @@ test('selected mark-as-read refreshes the unread view and reports partial succes
         'dashboardMarkReadPartial:{"updated":1,"failed":1}',
         'warning'
     ]]);
+});
+
+test('confirmed deletion reports success only after the refreshed dashboard no longer contains it', async () => {
+    const calls = [];
+    const DashboardManager = loadDashboardManager({
+        DELETE_DIAGNOSTIC_CODE: 'DELETE_NOT_APPLIED',
+        moveToTrash: async messageIds => {
+            calls.push([...messageIds]);
+            return { browserVersion: '140.0', requestMode: 'structured-user-action' };
+        }
+    });
+    const manager = Object.create(DashboardManager.prototype);
+    const busyStates = [];
+    const statuses = [];
+    manager.accounts = [{ messages: [{ id: 7 }] }];
+    manager.selectedMessageIds = new Set([7]);
+    manager.setBusy = busy => busyStates.push(busy);
+    manager.refresh = async () => { manager.accounts = [{ messages: [] }]; };
+    manager.setStatus = (messageText, type) => statuses.push([messageText, type]);
+
+    await manager.performTrash([7], 'delete-success');
+
+    assert.deepEqual(calls, [[7]]);
+    assert.equal(manager.selectedMessageIds.size, 0);
+    assert.deepEqual(busyStates, [true, false]);
+    assert.deepEqual(statuses, [['delete-success', 'success']]);
+});
+
+test('delete no-op keeps the selection and exposes a safe diagnostic code', async () => {
+    const errors = [];
+    const DashboardManager = loadDashboardManager({
+        DELETE_DIAGNOSTIC_CODE: 'DELETE_NOT_APPLIED',
+        moveToTrash: async () => ({
+            browserVersion: '140.0',
+            requestMode: 'structured-user-action'
+        })
+    }, {
+        error: (...parameters) => errors.push(parameters),
+        log() {},
+        warn() {}
+    });
+    const manager = Object.create(DashboardManager.prototype);
+    const statuses = [];
+    manager.accounts = [{ messages: [{ id: 7 }] }];
+    manager.selectedMessageIds = new Set([7]);
+    manager.setBusy = () => {};
+    let refreshCount = 0;
+    manager.refresh = async () => { refreshCount += 1; };
+    manager.waitForTrashVerification = async () => {};
+    manager.setStatus = (messageText, type) => statuses.push([messageText, type]);
+
+    await manager.performTrash([7], 'delete-success');
+
+    assert.deepEqual([...manager.selectedMessageIds], [7]);
+    assert.deepEqual(statuses, [[
+        'dashboardTrashUnconfirmed:{"count":1,"code":"DELETE_NOT_APPLIED"}',
+        'error'
+    ]]);
+    assert.equal(errors.length, 1);
+    assert.equal(refreshCount, 3);
+    assert.equal(errors[0][1].diagnosticCode, 'DELETE_NOT_APPLIED');
+    assert.deepEqual(Array.from(errors[0][1].remainingMessageIds), [7]);
 });
 
 test('selected archive refreshes the unread view and reports the archived count', async () => {

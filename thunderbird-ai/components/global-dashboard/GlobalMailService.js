@@ -5,6 +5,8 @@
  */
 const GlobalMailService = {
     QUERY_PAGE_SIZE: 100,
+    STRUCTURED_DELETE_OPTIONS_MIN_VERSION: 137,
+    DELETE_DIAGNOSTIC_CODE: 'DELETE_NOT_APPLIED',
 
     /** Return all unread Inbox headers per supported account for correct global ranking. */
     async listUnreadByAccount() {
@@ -40,14 +42,48 @@ const GlobalMailService = {
         return accounts;
     },
 
-    /** Move messages according to Thunderbird's account trash settings. */
+    /** Delete messages according to account settings and preserve user-action semantics. */
     async moveToTrash(messageIds) {
         const uniqueIds = [...new Set(messageIds)].filter(id => id !== undefined && id !== null);
         if (!uniqueIds.length) {
-            return;
+            return null;
         }
-        // The boolean signature is retained for Thunderbird 128 compatibility.
-        await browser.messages.delete(uniqueIds, false);
+        const browserVersion = await this.getBrowserVersion();
+        const supportsStructuredOptions = this.supportsStructuredDeleteOptions(browserVersion);
+        const requestOptions = supportsStructuredOptions
+            ? { deletePermanently: false, isUserAction: true }
+            : false;
+        const diagnostics = {
+            browserVersion: browserVersion || 'unknown',
+            messageCount: uniqueIds.length,
+            requestMode: supportsStructuredOptions ? 'structured-user-action' : 'legacy-boolean'
+        };
+
+        console.log('Submitting dashboard delete request to Thunderbird.', diagnostics);
+        await browser.messages.delete(uniqueIds, requestOptions);
+        console.log('Thunderbird completed dashboard delete request.', diagnostics);
+        return diagnostics;
+    },
+
+    /** Read Thunderbird's version without preventing deletion when runtime metadata is unavailable. */
+    async getBrowserVersion() {
+        if (typeof browser.runtime?.getBrowserInfo !== 'function') {
+            return '';
+        }
+        try {
+            const browserInfo = await browser.runtime.getBrowserInfo();
+            return String(browserInfo?.version || '');
+        } catch (error) {
+            console.warn('Could not determine Thunderbird version for dashboard deletion:', error);
+            return '';
+        }
+    },
+
+    /** Use the user-action option only where Thunderbird's API schema accepts it. */
+    supportsStructuredDeleteOptions(version) {
+        const majorVersion = Number.parseInt(String(version || '').split('.')[0], 10);
+        return Number.isInteger(majorVersion)
+            && majorVersion >= this.STRUCTURED_DELETE_OPTIONS_MIN_VERSION;
     },
 
     /** Archive every unique message through its Thunderbird account and identity settings. */

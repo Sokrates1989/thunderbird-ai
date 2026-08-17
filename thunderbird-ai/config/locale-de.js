@@ -411,6 +411,7 @@ globalThis.LOCALE_MESSAGES.de = Object.freeze({
     dashboardTrashOneSuccess: 'Die E-Mail wurde gemäß den Kontoeinstellungen gelöscht.',
     dashboardTrashSelectedSuccess: '{count} Nachrichten wurden gemäß den Kontoeinstellungen gelöscht.',
     dashboardTrashFailed: 'Die Nachrichten konnten nicht gelöscht werden.',
+    dashboardTrashUnconfirmed: 'Thunderbird hat den Löschauftrag abgeschlossen, aber weiterhin sichtbare Nachrichten erkannt: {count}. Diagnosecode: {code}. Technische Details stehen in der Erweiterungskonsole.',
     modelRoutingTitle: 'Bevorzugtes Modell je AI-Funktion',
     modelRoutingHelp: '„Automatisch“ verwendet den aufgabenspezifischen Standard der anfänglichen Auswahl. Eine vorhandene allgemeine Modellwahl wird bei der Migration einmalig verwendet, solange noch keine funktionsspezifische Auswahl besteht.',
     modelTaskBulk: 'Bulk-Scoring (Standard: Luna)',

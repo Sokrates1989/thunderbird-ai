@@ -35,7 +35,7 @@ thunderbird-ai/
 ### Current dashboard boundaries
 
 - `GlobalDashboardManager.js` coordinates refreshes, selection, and mailbox actions.
-- `GlobalMailService.js` owns Thunderbird header pagination, previews, deletion, native account-aware archiving, and fault-isolated read-state updates through the corresponding message permissions.
+- `GlobalMailService.js` owns Thunderbird header pagination, previews, version-compatible user-action deletion, native account-aware archiving, and fault-isolated read-state updates through the corresponding message permissions. The dashboard verifies deletion against briefly retried unread snapshots and emits content-free console diagnostics instead of reporting an unconfirmed success.
 - `GlobalMailViewService.js` applies sender/date/AI filters, per-account limits, the combined newest-50 candidate scope, and explicit cross-account score sorting before previews are loaded.
 - `DashboardViewPreferences.js` owns persisted view controls, including the account-separated/combined layout switch and the collapsed/expanded state of the organized view-options panel.
 - `DashboardSenderFilterComponent.js`, `DashboardMessageComponent.js`, and `DashboardFeedbackComponent.js` render their focused UI areas without injecting mailbox HTML.

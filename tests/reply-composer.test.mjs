@@ -141,7 +141,7 @@ test('explicit language selection changes text and every static page key resolve
         path.join(repositoryRoot, 'thunderbird-ai/install-defaults.json'),
         'utf8'
     ));
-    assert.deepEqual(defaults, { language: 'auto', version: '2.7.1' });
+    assert.deepEqual(defaults, { language: 'auto', version: '2.7.2' });
 });
 
 test('reply composer keeps final actions outside its scrolling content', () => {

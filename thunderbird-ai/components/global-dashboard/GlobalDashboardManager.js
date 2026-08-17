@@ -654,9 +654,23 @@ const GlobalDashboardManager = class {
     async performTrash(messageIds, successMessage) {
         this.setBusy(true, I18n.t('dashboardTrashInProgress'));
         try {
-            await GlobalMailService.moveToTrash(messageIds);
+            const diagnostics = await GlobalMailService.moveToTrash(messageIds);
+            const remainingMessageIds = await this.refreshUntilTrashApplied(messageIds);
+            if (remainingMessageIds.length) {
+                console.error('Thunderbird acknowledged a dashboard delete request without removing every message.', {
+                    diagnosticCode: GlobalMailService.DELETE_DIAGNOSTIC_CODE,
+                    requestedMessageCount: messageIds.length,
+                    remainingMessageCount: remainingMessageIds.length,
+                    remainingMessageIds,
+                    ...diagnostics
+                });
+                this.setStatus(I18n.t('dashboardTrashUnconfirmed', {
+                    count: remainingMessageIds.length,
+                    code: GlobalMailService.DELETE_DIAGNOSTIC_CODE
+                }), 'error');
+                return;
+            }
             this.selectedMessageIds.clear();
-            await this.refresh();
             this.setStatus(successMessage, 'success');
         } catch (error) {
             console.error('Could not move dashboard messages to trash:', error);
@@ -664,6 +678,35 @@ const GlobalDashboardManager = class {
         } finally {
             this.setBusy(false);
         }
+    }
+
+    /** Retry the unread snapshot briefly because remote mail stores may settle asynchronously. */
+    async refreshUntilTrashApplied(messageIds, attempts = 3) {
+        let remainingMessageIds = [...messageIds];
+        for (let attempt = 0; attempt < attempts; attempt += 1) {
+            if (attempt > 0) {
+                await this.waitForTrashVerification();
+            }
+            await this.refresh();
+            remainingMessageIds = this.visibleMessageIds(messageIds);
+            if (!remainingMessageIds.length) {
+                break;
+            }
+        }
+        return remainingMessageIds;
+    }
+
+    /** Give Thunderbird and an IMAP server a short interval to publish the completed move. */
+    async waitForTrashVerification(delayMs = 250) {
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+
+    /** Return requested message IDs that remain in the refreshed unread dashboard. */
+    visibleMessageIds(messageIds) {
+        const requestedIds = new Set(messageIds.map(messageId => String(messageId)));
+        return this.allMessages()
+            .filter(message => requestedIds.has(String(message.id)))
+            .map(message => message.id);
     }
 
     allMessages() {

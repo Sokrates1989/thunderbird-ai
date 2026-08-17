@@ -411,6 +411,7 @@ globalThis.LOCALE_MESSAGES.en = Object.freeze({
     dashboardTrashOneSuccess: 'The email was deleted according to the account settings.',
     dashboardTrashSelectedSuccess: '{count} messages were deleted according to the account settings.',
     dashboardTrashFailed: 'The messages could not be deleted.',
+    dashboardTrashUnconfirmed: 'Thunderbird completed the delete request, but messages remain visible: {count}. Diagnostic code: {code}. Technical details are available in the extension console.',
     modelRoutingTitle: 'Preferred model by AI feature',
     modelRoutingHelp: 'Automatic uses the task default shown by the initial selection. Existing general-model preferences are used once during migration when no task-specific preference exists.',
     modelTaskBulk: 'Bulk scoring (default: Luna)',
