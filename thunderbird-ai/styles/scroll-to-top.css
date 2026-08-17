@@ -1,0 +1,56 @@
+.scroll-to-top {
+    position: fixed;
+    z-index: 900;
+    right: max(18px, env(safe-area-inset-right));
+    bottom: max(18px, env(safe-area-inset-bottom));
+    display: grid;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    place-items: center;
+    border: 1px solid #8ca0b1;
+    border-radius: 50%;
+    background: #fff;
+    color: #24465f;
+    box-shadow: 0 5px 16px rgb(20 45 70 / 28%);
+    cursor: pointer;
+    font-size: 24px;
+    line-height: 1;
+}
+
+.scroll-to-top[hidden] {
+    display: none;
+}
+
+.scroll-to-top:hover {
+    border-color: #087cc1;
+    background: #eef7fc;
+    color: #075985;
+    transform: translateY(-1px);
+}
+
+.scroll-to-top:focus-visible {
+    outline: 3px solid #4c9ed9;
+    outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scroll-to-top {
+        transition: none;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .scroll-to-top {
+        border-color: #62666b;
+        background: #303134;
+        color: #d7e9f5;
+        box-shadow: 0 5px 16px rgb(0 0 0 / 45%);
+    }
+
+    .scroll-to-top:hover {
+        border-color: #5ab7ef;
+        background: #17394c;
+        color: #a9dcf8;
+    }
+}

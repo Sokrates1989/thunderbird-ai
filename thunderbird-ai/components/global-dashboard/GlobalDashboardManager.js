@@ -27,15 +27,8 @@ const GlobalDashboardManager = class {
             senderFilterDetails: document.getElementById('dashboardSenderFilter'),
             senderSummary: document.getElementById('dashboardSenderSummary'),
             senderOptions: document.getElementById('dashboardSenderOptions'),
-            selectAll: document.getElementById('dashboardSelectAll'),
-            selectedCount: document.getElementById('dashboardSelectedCount'),
-            analyzeSelected: document.getElementById('dashboardAnalyzeSelected'),
-            rescoreSelected: document.getElementById('dashboardRescoreSelected'),
-            markReadSelected: document.getElementById('dashboardMarkReadSelected'),
-            archiveSelected: document.getElementById('dashboardArchiveSelected'),
             loadingIndicator: document.getElementById('dashboardLoadingIndicator'),
-            loadingText: document.getElementById('dashboardLoadingText'),
-            trashSelected: document.getElementById('dashboardTrashSelected')
+            loadingText: document.getElementById('dashboardLoadingText')
         };
         this.sourceAccounts = [];
         this.accounts = [];
@@ -67,6 +60,25 @@ const GlobalDashboardManager = class {
             options: this.elements.senderOptions,
             onSelectionChanged: selection => this.handleSenderSelectionChange(selection),
             onError: error => this.showUnexpectedError(error)
+        });
+        this.bulkActionsComponent = new DashboardBulkActionsComponent({
+            hosts: document.querySelectorAll('[data-dashboard-bulk-actions-host]'),
+            onToggleAll: selected => this.toggleAllVisible(selected),
+            onAnalyze: () => {
+                this.analyzeSelected().catch(error => this.showUnexpectedError(error));
+            },
+            onRescore: () => {
+                this.rescoreSelected().catch(error => this.showUnexpectedError(error));
+            },
+            onMarkRead: () => {
+                this.markSelectedAsRead().catch(error => this.showUnexpectedError(error));
+            },
+            onArchive: () => {
+                this.archiveSelected().catch(error => this.showUnexpectedError(error));
+            },
+            onTrash: () => {
+                this.trashSelected().catch(error => this.showUnexpectedError(error));
+            }
         });
         this.messageComponent = new DashboardMessageComponent({
             formatDate: value => this.formatDate(value),
@@ -116,6 +128,7 @@ const GlobalDashboardManager = class {
 
     /** Bind dashboard controls, restore local preferences, and load mail headers. */
     async initialize() {
+        this.bulkActionsComponent.initialize();
         this.elements.refresh.addEventListener('click', () => {
             this.refresh().catch(error => this.showUnexpectedError(error));
         });
@@ -150,22 +163,6 @@ const GlobalDashboardManager = class {
                     .catch(error => this.showUnexpectedError(error));
             });
         }
-        this.elements.selectAll.addEventListener('change', () => this.toggleAllVisible());
-        this.elements.trashSelected.addEventListener('click', () => {
-            this.trashSelected().catch(error => this.showUnexpectedError(error));
-        });
-        this.elements.markReadSelected.addEventListener('click', () => {
-            this.markSelectedAsRead().catch(error => this.showUnexpectedError(error));
-        });
-        this.elements.archiveSelected.addEventListener('click', () => {
-            this.archiveSelected().catch(error => this.showUnexpectedError(error));
-        });
-        this.elements.analyzeSelected.addEventListener('click', () => {
-            this.analyzeSelected().catch(error => this.showUnexpectedError(error));
-        });
-        this.elements.rescoreSelected.addEventListener('click', () => {
-            this.rescoreSelected().catch(error => this.showUnexpectedError(error));
-        });
         await this.loadPreferences();
         this.applyPreferenceControls();
         await this.refresh();
@@ -501,9 +498,9 @@ const GlobalDashboardManager = class {
     }
 
     /** Select or clear exactly the messages in the current filtered slice. */
-    toggleAllVisible() {
+    toggleAllVisible(selected) {
         const messageIds = this.allMessages().map(message => message.id);
-        if (this.elements.selectAll.checked) {
+        if (selected) {
             for (const messageId of messageIds) {
                 this.selectedMessageIds.add(messageId);
             }
@@ -851,15 +848,7 @@ const GlobalDashboardManager = class {
         }
         const total = visibleIds.size;
         const selected = this.selectedMessageIds.size;
-        this.elements.selectAll.checked = total > 0 && selected === total;
-        this.elements.selectAll.indeterminate = selected > 0 && selected < total;
-        this.elements.selectAll.disabled = this.busy || total === 0;
-        this.elements.trashSelected.disabled = this.busy || selected === 0;
-        this.elements.markReadSelected.disabled = this.busy || selected === 0;
-        this.elements.archiveSelected.disabled = this.busy || selected === 0;
-        this.elements.analyzeSelected.disabled = this.busy || selected === 0;
-        this.elements.rescoreSelected.disabled = this.busy || selected === 0;
-        this.elements.selectedCount.textContent = I18n.t('dashboardSelectedCount', { count: selected });
+        this.bulkActionsComponent.update({ busy: this.busy, total, selected });
         for (const element of this.elements.accounts.querySelectorAll(
             '.dashboard-message-select, .dashboard-message-action'
         )) {

@@ -99,6 +99,8 @@ test('single-mail UI exposes a localized fullscreen control backed by the shared
 
     assert.match(page, /id="singleMailExpandView"/u);
     assert.match(page, /data-i18n-title="singleMailExpandView"/u);
+    assert.match(page, /id="scrollToTopButton"/u);
+    assert.match(page, /ScrollToTopComponent\.js/u);
     assert.match(page, /SingleMailWorkspaceService\.js/u);
     assert.match(manager, /SingleMailWorkspaceService\.openExpanded/u);
 });

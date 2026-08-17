@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="appTitle"></title>
     <link rel="stylesheet" href="score-feedback-editor.css">
+    <link rel="stylesheet" href="scroll-to-top.css">
     <link rel="stylesheet" href="single-mail-ui.css">
     <link rel="stylesheet" href="reply-composer.css">
 </head>
@@ -75,6 +76,11 @@
         
     </div>
 
+    <button type="button" id="scrollToTopButton" class="scroll-to-top" hidden
+            data-i18n-title="scrollToTop" data-i18n-aria-label="scrollToTop">
+        <span aria-hidden="true">↑</span>
+    </button>
+
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner">
@@ -104,6 +110,7 @@
     <script src="DashboardLaunchService.js"></script>
     <script src="MailboxActionService.js"></script>
     <script src="PdfArchiverIntegrationService.js"></script>
+    <script src="ScrollToTopComponent.js"></script>
     
     <!-- Load UI components (flattened paths) -->
     <script src="HeaderComponent.js"></script>

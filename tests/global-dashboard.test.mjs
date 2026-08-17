@@ -1210,6 +1210,13 @@ test('manifest routes both toolbar actions through the wake-safe background serv
         path.join(repositoryRoot, 'thunderbird-ai/components/global-dashboard/DashboardMessageComponent.js'),
         'utf8'
     );
+    const bulkActionsComponent = fs.readFileSync(
+        path.join(
+            repositoryRoot,
+            'thunderbird-ai/components/global-dashboard/DashboardBulkActionsComponent.js'
+        ),
+        'utf8'
+    );
     const singleMailManager = fs.readFileSync(
         path.join(repositoryRoot, 'thunderbird-ai/components/single-mail/SingleMailManager.js'),
         'utf8'
@@ -1262,12 +1269,9 @@ test('manifest routes both toolbar actions through the wake-safe background serv
         < manifest.background.scripts.indexOf('background.js'));
     assert.ok(dashboard.indexOf('DashboardDeleteComponent.js')
         < dashboard.indexOf('GlobalDashboardManager.js'));
-    assert.match(dashboard, /id="dashboardSelectAll"/u);
-    assert.match(dashboard, /id="dashboardTrashSelected"/u);
-    assert.match(dashboard, /id="dashboardMarkReadSelected"/u);
-    assert.match(dashboard, /id="dashboardArchiveSelected"/u);
-    assert.match(dashboard, /class="dashboard-bulk-action-groups"/u);
-    assert.match(dashboard, /class="dashboard-action-icon" aria-hidden="true"/u);
+    assert.equal((dashboard.match(/data-dashboard-bulk-actions-host=/gu) || []).length, 2);
+    assert.match(bulkActionsComponent, /dashboard-bulk-action-groups/u);
+    assert.match(bulkActionsComponent, /className = 'dashboard-action-icon'/u);
     assert.match(dashboard, /id="dashboardShowPreview"/u);
     assert.match(dashboard, /<details id="dashboardDisplayOptions"[^>]*open>/u);
     assert.match(dashboard, /class="dashboard-display-options-summary"/u);
@@ -1286,8 +1290,9 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.match(dashboard, /id="dashboardImportanceMinimum"/u);
     assert.match(dashboard, /id="dashboardSpamMinimum"/u);
     assert.match(dashboard, /id="dashboardRiskMinimum"/u);
-    assert.match(dashboard, /id="dashboardAnalyzeSelected"/u);
-    assert.match(dashboard, /id="dashboardRescoreSelected"/u);
+    assert.match(dashboard, /DashboardBulkActionsComponent\.js/u);
+    assert.ok(dashboard.indexOf('DashboardBulkActionsComponent.js')
+        < dashboard.indexOf('GlobalDashboardManager.js'));
     assert.match(dashboard, /value="importance-global-desc"/u);
     assert.match(dashboard, /value="spam-global-desc"/u);
     assert.match(dashboard, /value="risk-global-desc"/u);
@@ -1361,6 +1366,7 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.match(messageComponent, /dashboardChatOne/u);
     assert.match(messageComponent, /dashboard-message-action-group/u);
     assert.match(messageComponent, /dashboard-action-icon/u);
+    assert.match(bulkActionsComponent, /this\.hosts\.map\(host => this\.renderInto\(host\)\)/u);
     assert.match(
         messageComponent,
         /createElement\('label'\)[\s\S]*dashboard-message-selection-area[\s\S]*selectionArea\.append\(checkbox, content\)[\s\S]*item\.append\(selectionArea,/u

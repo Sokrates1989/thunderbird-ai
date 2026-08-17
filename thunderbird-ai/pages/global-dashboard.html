@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="dashboardPageTitle"></title>
     <link rel="stylesheet" href="score-feedback-editor.css">
+    <link rel="stylesheet" href="scroll-to-top.css">
     <link rel="stylesheet" href="global-dashboard.css">
 </head>
 <body>
@@ -143,45 +144,14 @@
             <span class="dashboard-spinner" aria-hidden="true"></span>
             <span id="dashboardLoadingText"></span>
         </div>
-        <div class="dashboard-bulk-actions">
-            <div class="dashboard-bulk-selection">
-                <label>
-                    <input type="checkbox" id="dashboardSelectAll">
-                    <span data-i18n="dashboardSelectAll"></span>
-                </label>
-                <span id="dashboardSelectedCount" class="dashboard-selected-count"></span>
-            </div>
-            <div class="dashboard-bulk-action-groups">
-                <div class="dashboard-bulk-action-group ai" role="group" aria-labelledby="dashboardBulkAIHeading">
-                    <span id="dashboardBulkAIHeading" class="dashboard-action-group-title" data-i18n="dashboardAIActionsGroup"></span>
-                    <button type="button" id="dashboardAnalyzeSelected" class="dashboard-bulk-action dashboard-analyze-selected">
-                        <span class="dashboard-action-icon" aria-hidden="true">✨</span>
-                        <span data-i18n="dashboardAnalyzeSelected"></span>
-                    </button>
-                    <button type="button" id="dashboardRescoreSelected" class="dashboard-bulk-action dashboard-rescore-selected">
-                        <span class="dashboard-action-icon" aria-hidden="true">↻</span>
-                        <span data-i18n="dashboardRescoreSelected"></span>
-                    </button>
-                </div>
-                <div class="dashboard-bulk-action-group mail" role="group" aria-labelledby="dashboardBulkMailHeading">
-                    <span id="dashboardBulkMailHeading" class="dashboard-action-group-title" data-i18n="dashboardMailActionsGroup"></span>
-                    <button type="button" id="dashboardMarkReadSelected" class="dashboard-bulk-action dashboard-mark-read">
-                        <span class="dashboard-action-icon" aria-hidden="true">✓</span>
-                        <span data-i18n="dashboardMarkReadSelected"></span>
-                    </button>
-                    <button type="button" id="dashboardArchiveSelected" class="dashboard-bulk-action dashboard-archive">
-                        <span class="dashboard-action-icon" aria-hidden="true">📦</span>
-                        <span data-i18n="dashboardArchiveSelected"></span>
-                    </button>
-                    <button type="button" id="dashboardTrashSelected" class="dashboard-bulk-action dashboard-danger-action">
-                        <span class="dashboard-action-icon" aria-hidden="true">🗑️</span>
-                        <span data-i18n="dashboardTrashSelected"></span>
-                    </button>
-                </div>
-            </div>
-        </div>
+        <div class="dashboard-bulk-actions-host" data-dashboard-bulk-actions-host="top"></div>
         <div id="dashboardAccounts" class="dashboard-accounts"></div>
+        <div class="dashboard-bulk-actions-host" data-dashboard-bulk-actions-host="bottom"></div>
     </main>
+    <button type="button" id="scrollToTopButton" class="scroll-to-top" hidden
+            data-i18n-title="scrollToTop" data-i18n-aria-label="scrollToTop">
+        <span aria-hidden="true">↑</span>
+    </button>
     <dialog id="dashboardConfirmationDialog" class="dashboard-confirmation-dialog">
         <form method="dialog">
             <div class="dashboard-confirmation-heading">
@@ -287,10 +257,12 @@
     <script src="DashboardSenderFilterComponent.js"></script>
     <script src="DashboardAIService.js"></script>
     <script src="DashboardMessageComponent.js"></script>
+    <script src="DashboardBulkActionsComponent.js"></script>
     <script src="DashboardDeleteComponent.js"></script>
     <script src="DashboardLaunchPromptComponent.js"></script>
     <script src="PdfArchiverIntegrationComponent.js"></script>
     <script src="ScoreFeedbackEditor.js"></script>
+    <script src="ScrollToTopComponent.js"></script>
     <script src="DashboardFeedbackComponent.js"></script>
     <script src="GlobalDashboardManager.js"></script>
     <script src="global-dashboard.js"></script>

@@ -44,8 +44,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             await singleMailManager.initialize();
+            const scrollToTopComponent = new ScrollToTopComponent({
+                button: document.getElementById('scrollToTopButton'),
+                scrollTargets: [window]
+            });
+            scrollToTopComponent.initialize();
             console.log('Single mail manager initialized successfully');
             window.singleMailManager = singleMailManager;
+            window.singleMailScrollToTopComponent = scrollToTopComponent;
         });
     } catch (error) {
         console.error('Failed to initialize single mail manager:', error);

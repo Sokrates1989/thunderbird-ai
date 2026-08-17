@@ -496,6 +496,7 @@ globalThis.LOCALE_MESSAGES.en = Object.freeze({
     dashboardDiagnosticStateUnknown: 'Unknown',
     dashboardDiagnosticUnknown: 'unknown',
     dashboardDiagnosticNone: 'none',
+    scrollToTop: 'Scroll back to top',
     modelRoutingTitle: 'Preferred model by AI feature',
     modelRoutingHelp: 'Automatic uses the task default shown by the initial selection. Existing general-model preferences are used once during migration when no task-specific preference exists.',
     modelTaskBulk: 'Bulk scoring (default: Luna)',
