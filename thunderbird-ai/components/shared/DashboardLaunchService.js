@@ -50,7 +50,12 @@ const DashboardLaunchService = {
             timestamp: new Date(startedAt).toISOString()
         });
         try {
-            return await this.openOrFocusExpanded(normalizedSource, startedAt);
+            const cleanupWarning = await this.cleanupDashboardTabsAfterInstall();
+            return await this.openOrFocusExpanded(
+                normalizedSource,
+                startedAt,
+                cleanupWarning
+            );
         } catch (error) {
             const launchError = this.normalizeLaunchError(error, error?.stage || 'launch');
             await this.persistDiagnostic({
@@ -66,17 +71,80 @@ const DashboardLaunchService = {
         }
     },
 
+    /** Defer tab cleanup until the session is restored and a dashboard is actually requested. */
+    async markDashboardTabCleanupPending(details = {}) {
+        if (!['install', 'update'].includes(details.reason)) {
+            return;
+        }
+        await browser.storage.local.set({
+            [CONFIG.STORAGE_KEYS.DASHBOARD_TAB_CLEANUP_PENDING]: true
+        });
+    },
+
+    /** Close only prior dashboard content tabs and keep cleanup pending after a provider failure. */
+    async cleanupDashboardTabsAfterInstall() {
+        const key = CONFIG.STORAGE_KEYS.DASHBOARD_TAB_CLEANUP_PENDING;
+        let stored;
+        try {
+            stored = await this.withTimeout(
+                () => browser.storage.local.get(key),
+                'load-dashboard-tab-cleanup',
+                CONFIG.UI.DASHBOARD_DIAGNOSTIC_TIMEOUT_MS
+            );
+        } catch (error) {
+            const cleanupError = this.normalizeLaunchError(error, 'load-dashboard-tab-cleanup');
+            console.warn('Could not inspect the post-install dashboard cleanup flag.', cleanupError);
+            return cleanupError;
+        }
+        if (stored?.[key] !== true) {
+            return null;
+        }
+
+        const dashboardUrl = browser.runtime.getURL('global-dashboard.html');
+        try {
+            const tabs = await this.withTimeout(
+                () => browser.tabs.query({}),
+                'query-dashboard-tabs-for-cleanup'
+            );
+            const tabIds = tabs
+                .filter(tab => this.isDashboardTab(tab, dashboardUrl))
+                .map(tab => tab.id)
+                .filter(tabId => tabId !== undefined);
+            if (tabIds.length) {
+                await this.withTimeout(
+                    () => browser.tabs.remove(tabIds),
+                    'remove-dashboard-tabs-after-install'
+                );
+            }
+            await this.withTimeout(
+                () => browser.storage.local.set({ [key]: false }),
+                'clear-dashboard-tab-cleanup',
+                CONFIG.UI.DASHBOARD_DIAGNOSTIC_TIMEOUT_MS
+            );
+            return null;
+        } catch (error) {
+            const cleanupError = this.normalizeLaunchError(
+                error,
+                error?.stage || 'cleanup-dashboard-tabs-after-install'
+            );
+            console.warn('Could not close prior dashboard tabs after installation.', cleanupError);
+            return cleanupError;
+        }
+    },
+
     /** Focus the existing dashboard when possible and create one durable tab otherwise. */
-    async openOrFocusExpanded(source, startedAt = Date.now()) {
+    async openOrFocusExpanded(source, startedAt = Date.now(), cleanupWarning = null) {
         const dashboardUrl = browser.runtime.getURL('global-dashboard.html');
         const url = `${dashboardUrl}?view=expanded&source=${encodeURIComponent(source)}`;
         let existing = null;
-        let fallbackError = null;
-        try {
-            existing = await this.findExpandedTab(dashboardUrl);
-        } catch (error) {
-            fallbackError = this.normalizeLaunchError(error, 'query-tabs');
-            console.warn('Could not inspect existing dashboard tabs; opening a new one.', fallbackError);
+        let fallbackError = cleanupWarning;
+        if (!cleanupWarning) {
+            try {
+                existing = await this.findExpandedTab(dashboardUrl);
+            } catch (error) {
+                fallbackError = this.normalizeLaunchError(error, 'query-tabs');
+                console.warn('Could not inspect existing dashboard tabs; opening a new one.', fallbackError);
+            }
         }
         if (existing?.id !== undefined) {
             try {
@@ -141,8 +209,11 @@ const DashboardLaunchService = {
             return null;
         }
         const tabs = await this.withTimeout(() => browser.tabs.query({}), 'query-tabs');
-        return tabs.find(tab => tab.url === dashboardUrl
-            || tab.url?.startsWith(`${dashboardUrl}?`)) || null;
+        return tabs.find(tab => this.isDashboardTab(tab, dashboardUrl)) || null;
+    },
+
+    isDashboardTab(tab, dashboardUrl) {
+        return tab?.url === dashboardUrl || tab?.url?.startsWith(`${dashboardUrl}?`);
     },
 
     /** Bring the containing window forward without allowing best-effort focus to block launches. */

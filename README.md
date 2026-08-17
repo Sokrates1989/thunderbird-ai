@@ -26,6 +26,7 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 - klar getrennte, zweispaltige AI- und E-Mail-Aktionen mit Icons, direktes oder gebündeltes Markieren als gelesen sowie native Thunderbird-Archivierung in die kontobezogenen Jahresarchive
 - vollständig deutsch- oder englischsprachige Oberfläche mit expliziter Sprachauswahl
 - wählbarer Start des globalen Dashboards als kompaktes Overlay oder dauerhafter Thunderbird-Tab sowie zurückhaltende, abschaltbare Hinweise zum jeweils anderen Modus
+- automatische Bereinigung alter Dashboard-Tabs beim ersten Öffnen nach Installation oder Update, damit kein von Thunderbird wiederhergestelltes Fallback-Dokument fokussiert wird
 - kopierbare, inhaltsfreie Support-Diagnose mit Dashboard-Start und den letzten Hintergrund-/UI-Aktionsgrenzen; ein Vorgang ohne Abschluss zeigt die wahrscheinliche Blockadestelle
 - Windows-Ein-Klick-Installer mit kontrolliertem Thunderbird-Neustart
 
@@ -65,7 +66,7 @@ Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speic
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-2.11.0-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-2.11.1-win-x64.exe` herunterladen und starten.
 2. Im Setup **Deutsch** oder **English** wählen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung und zu den Berechtigungen zum Ändern, Verschieben und Löschen von Nachrichten bestätigen.
@@ -95,7 +96,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-2.11.0-win-x64.exe`
+- `artifacts\Thunderbird-AI-Setup-2.11.1-win-x64.exe`
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
@@ -141,10 +142,10 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 38. Für einen klaren Newsletter mit List-Unsubscribe/List-ID oder sichtbarer Abmeldemöglichkeit **Werte korrigieren** ausführen. Der Spam-Wert darf nicht mehr im einstelligen Bereich bleiben und muss mindestens die lokale Untergrenze erreichen. Anschließend mehrere Newsletter desselben Absenders in der Bulk-Auswertung prüfen; eine höhere Absenderhäufigkeit muss die lokale Vorprüfung erhöhen. Eine häufige, aber ausdrücklich als erwünscht korrigierte Systemmail desselben Absenders erneut bewerten; die gespeicherte Absenderkorrektur muss Vorrang behalten.
 39. Unter **Einstellungen → AI Assistant öffnen** zunächst **Als kompaktes Overlay öffnen** speichern und fünfmal das globale Toolbar-Symbol verwenden. Beim fünften tatsächlichen Öffnen muss ein lokalisierter Hinweis mit **Später**, **Jetzt ausprobieren** und **Diesen Hinweis nicht mehr anzeigen** erscheinen. **Später** muss einen neuen Fünfer-Zyklus beginnen; **Jetzt ausprobieren** muss den dauerhaften Tab öffnen, ohne den Standard zu ändern. Anschließend dreimal das Vollbildsymbol im Overlay verwenden. Beim dritten Mal muss der geöffnete Tab anbieten, künftig immer direkt im Tab zu starten. **Immer im Tab öffnen** auswählen und prüfen, dass weitere Toolbar-Klicks ohne vorgeschaltetes Overlay direkt einen neuen Thunderbird-Tab öffnen. Danach in den Einstellungen wieder den Overlay-Modus speichern. Bei aktivierter Option **Diesen Hinweis nicht mehr anzeigen** darf der jeweilige Hinweis auch nach weiteren Öffnungen nicht zurückkehren.
 40. An einer Dashboard-Mail **Als PDF exportieren** anklicken. Mit installiertem Thunderbird PDF Archiver 0.5.0 oder neuer muss dessen vorhandener Prüfdialog exakt diese E-Mail und ihre Anhänge laden; der AI Assistant erzeugt selbst keine PDF. Danach PDF Archiver testweise deaktivieren und die Aktion erneut ausführen. Nun muss ein lokalisierter Installationsdialog erscheinen, dessen GitHub-Schaltfläche die offizielle Projektseite in einem Thunderbird-Tab öffnet. Eine inkompatible Protokollversion muss denselben sicheren Aktualisierungspfad mit einem spezifischen Hinweis verwenden.
-41. Das Dashboard als eigenen Tab öffnen und das globale Toolbar-Symbol sowie das Vollbildsymbol erneut und rasch mehrfach verwenden. Der vorhandene Dashboard-Tab und sein Thunderbird-Fenster müssen fokussiert werden; es darf nur ein neuer Tab entstehen, falls der vorhandene Tab währenddessen geschlossen wurde oder Thunderbird die Erkennung nicht unterstützt. Im Einzelmail-Popup müssen die AI-Aktionen dieselbe blaue/violette Hierarchie wie das Dashboard verwenden. **Posteingangsübersicht** muss denselben vorhandenen Dashboard-Tab fokussieren. Die dauerhaft eingeblendete **Löschdiagnose** und ein zusätzliches Löschresultat im Dashboard-Status dürfen nicht erscheinen; technische Details bleiben im Ergebnisdialog einer Löschaktion verfügbar.
+41. Das Dashboard als eigenen Tab öffnen und anschließend das Add-on aktualisieren, ohne diesen Tab vorher manuell zu schließen. Beim ersten Dashboard-Start nach dem Update müssen alle alten AI-Dashboard-Tabs geschlossen und genau ein frischer Tab geöffnet werden; normale Mail-, Kalender-, Einstellungen- und Verfassen-Tabs müssen unverändert bleiben. Danach das globale Toolbar-Symbol sowie das Vollbildsymbol erneut und rasch mehrfach verwenden. Der vorhandene frische Dashboard-Tab und sein Thunderbird-Fenster müssen fokussiert werden; es darf nur ein neuer Tab entstehen, falls der vorhandene Tab währenddessen geschlossen wurde oder Thunderbird die Erkennung nicht unterstützt. Im Einzelmail-Popup müssen die AI-Aktionen dieselbe blaue/violette Hierarchie wie das Dashboard verwenden. **Posteingangsübersicht** muss denselben vorhandenen Dashboard-Tab fokussieren. Die dauerhaft eingeblendete **Löschdiagnose** und ein zusätzliches Löschresultat im Dashboard-Status dürfen nicht erscheinen; technische Details bleiben im Ergebnisdialog einer Löschaktion verfügbar.
 42. Nach mehreren Dashboard-Aktionen den Tab wechseln und das globale Toolbar-Symbol mindestens dreimal erneut verwenden. Ein hängender Thunderbird-Tabaufruf muss nach einem begrenzten Zeitlimit freigegeben werden, sodass der nächste Klick ohne Thunderbird-Neustart erneut versucht. Bei einem endgültigen Fehler muss eine lokalisierte Benachrichtigung mit Diagnosecode erscheinen. Unter **Einstellungen → AI Assistant öffnen → Support-Diagnose** müssen Add-on-/Thunderbird-Version, letzter Dashboard-Start und die letzten Hintergrund-/UI-Aktivitäten ohne E-Mail-Inhalte sichtbar und kopierbar sein. Ein absichtlich provozierter Fehler muss als fehlgeschlagener oder kontrolliert fehlgeschlagener Vorgang erscheinen.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.11.0** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.11.1** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 ## Technische Struktur
 

@@ -18,12 +18,14 @@ async function loadBackground(options = {}) {
     const openedTabs = [];
     const notifications = [];
     let actionClickListener = null;
+    let installedListener = null;
     const context = createContext({
         console: options.console || console,
         browser: {
             i18n: { getUILanguage: () => 'de-DE' },
             runtime: {
                 onMessage: eventTarget(),
+                onInstalled: { addListener: listener => { installedListener = listener; } },
                 getURL: value => value,
                 getBrowserInfo: options.getBrowserInfo || (async () => ({ version: '140.0' }))
             },
@@ -180,6 +182,7 @@ async function loadBackground(options = {}) {
         ai: context.thunderbirdAI,
         config: context.CONFIG,
         deleteCalls,
+        install: details => installedListener?.(details),
         mailboxService: context.DashboardMailboxService,
         notifications,
         openedTabs,
@@ -189,6 +192,17 @@ async function loadBackground(options = {}) {
         storageState
     };
 }
+
+test('install and update events defer stale dashboard cleanup until the next launch', async () => {
+    const { config, install, storageState } = await loadBackground();
+
+    await install({ reason: 'update' });
+
+    assert.equal(
+        storageState[config.STORAGE_KEYS.DASHBOARD_TAB_CLEANUP_PENDING],
+        true
+    );
+});
 
 test('saved tab mode disables the popup and routes the toolbar click to a content tab', async () => {
     const initialStorage = { dashboardOpenMode: 'tab' };

@@ -8,11 +8,15 @@ function loadLaunchService(initial = {}, options = {}) {
     const popups = [];
     const tabs = [];
     const tabUpdates = [];
+    const removedTabs = [];
     const windowUpdates = [];
+    const availableTabs = (options.existingTabs || []).map(tab => ({ ...tab }));
     const context = createContext({
         browser: {
             action: { setPopup: async details => popups.push({ ...details }) },
-            runtime: { getURL: value => `moz-extension://test/${value}` },
+            runtime: {
+                getURL: value => `moz-extension://test/${value}`
+            },
             storage: { local: {
                 get: async keys => {
                     const requested = Array.isArray(keys) ? keys : [keys];
@@ -28,7 +32,17 @@ function loadLaunchService(initial = {}, options = {}) {
                     tabs.push(created);
                     return created;
                 }),
-                query: options.queryTabs || (async () => options.existingTabs || []),
+                query: options.queryTabs || (async () => availableTabs.map(tab => ({ ...tab }))),
+                remove: options.removeTabs || (async tabIds => {
+                    const ids = Array.isArray(tabIds) ? tabIds : [tabIds];
+                    removedTabs.push(...ids);
+                    for (const tabId of ids) {
+                        const index = availableTabs.findIndex(tab => tab.id === tabId);
+                        if (index >= 0) {
+                            availableTabs.splice(index, 1);
+                        }
+                    }
+                }),
                 update: options.updateTab || (async (tabId, details) => {
                     tabUpdates.push([tabId, { ...details }]);
                     return { id: tabId, ...details };
@@ -54,6 +68,7 @@ function loadLaunchService(initial = {}, options = {}) {
         popups,
         tabs,
         tabUpdates,
+        removedTabs,
         windowUpdates
     };
 }
@@ -119,6 +134,70 @@ test('dashboard launch focuses an existing tab and its Thunderbird window', asyn
     assert.equal(tabs.length, 0);
     assert.deepEqual(tabUpdates, [[42, { active: true }]]);
     assert.deepEqual(windowUpdates, [[8, { focused: true }]]);
+});
+
+test('first dashboard launch after an update closes prior dashboards and creates a clean tab', async () => {
+    const existingTabs = [
+        {
+            id: 41,
+            windowId: 8,
+            url: 'moz-extension://test/global-dashboard.html?view=expanded&source=manual'
+        },
+        {
+            id: 42,
+            windowId: 8,
+            url: 'moz-extension://test/global-dashboard.html'
+        },
+        { id: 7, windowId: 8, url: 'https://example.com/' }
+    ];
+    const { context, service, storage, tabs, tabUpdates, removedTabs } =
+        loadLaunchService({}, { existingTabs });
+
+    await service.markDashboardTabCleanupPending({ reason: 'update' });
+    assert.equal(
+        storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_TAB_CLEANUP_PENDING],
+        true
+    );
+
+    const opened = await service.openExpanded('saved-preference');
+
+    assert.equal(opened.id, 99);
+    assert.deepEqual(removedTabs, [41, 42]);
+    assert.equal(tabUpdates.length, 0);
+    assert.equal(tabs.length, 1);
+    assert.equal(
+        storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_TAB_CLEANUP_PENDING],
+        false
+    );
+});
+
+test('failed post-update cleanup creates a fresh tab without focusing a stale dashboard', async () => {
+    const initial = { dashboardTabCleanupPending: true };
+    const existingTabs = [{
+        id: 42,
+        windowId: 8,
+        url: 'moz-extension://test/global-dashboard.html?view=expanded'
+    }];
+    const { context, service, storage, tabs, tabUpdates } = loadLaunchService(initial, {
+        existingTabs,
+        removeTabs: async () => {
+            throw new Error('Provider refused to remove stale dashboard');
+        }
+    });
+
+    const opened = await service.openExpanded('saved-preference');
+
+    assert.equal(opened.id, 99);
+    assert.equal(tabs.length, 1);
+    assert.equal(tabUpdates.length, 0);
+    assert.equal(
+        storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_TAB_CLEANUP_PENDING],
+        true
+    );
+    assert.equal(
+        storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_LAUNCH_DIAGNOSTIC].fallbackCode,
+        'DASHBOARD_LAUNCH_API_FAILED'
+    );
 });
 
 test('stale dashboard detection safely falls back to a new tab', async () => {

@@ -443,6 +443,12 @@ class ThunderbirdAI {
     }
 }
 
+if (browser.runtime?.onInstalled?.addListener) {
+    browser.runtime.onInstalled.addListener(details => (
+        DashboardLaunchService.markDashboardTabCleanupPending(details)
+    ));
+}
+
 RuntimeDiagnosticService.installGlobalHandlers('background');
 globalThis.thunderbirdAIInitialization = RuntimeDiagnosticService.run(
     'background',
