@@ -410,6 +410,10 @@ body {
     font-size: 12px;
 }
 
+.dashboard-status:empty {
+    display: none;
+}
+
 .dashboard-status[data-type="error"],
 .dashboard-account-error {
     color: #b42318;

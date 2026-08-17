@@ -962,7 +962,6 @@ test('confirmed deletion reports success only after the refreshed dashboard no l
     manager.setStatus = (messageText, type) => statuses.push([messageText, type]);
     const results = [];
     manager.deleteComponent = {
-        render() {},
         persist: async () => {},
         showResult: (...parameters) => results.push(parameters)
     };
@@ -972,7 +971,7 @@ test('confirmed deletion reports success only after the refreshed dashboard no l
     assert.deepEqual(calls, [[7]]);
     assert.equal(manager.selectedMessageIds.size, 0);
     assert.deepEqual(busyStates, [true, false]);
-    assert.deepEqual(statuses, [['delete-success', 'success']]);
+    assert.deepEqual(statuses, []);
     assert.equal(results.length, 1);
     assert.equal(results[0][0], 'delete-success');
     assert.equal(results[0][1], 'success');
@@ -1003,7 +1002,6 @@ test('delete no-op keeps the selection and exposes a safe diagnostic code', asyn
     manager.setStatus = (messageText, type) => statuses.push([messageText, type]);
     const results = [];
     manager.deleteComponent = {
-        render() {},
         persist: async () => {},
         showResult: (...parameters) => results.push(parameters)
     };
@@ -1011,10 +1009,7 @@ test('delete no-op keeps the selection and exposes a safe diagnostic code', asyn
     await manager.performTrash([7], 'delete-success');
 
     assert.deepEqual([...manager.selectedMessageIds], [7]);
-    assert.deepEqual(statuses, [[
-        'dashboardTrashUnconfirmed:{"count":1,"code":"DELETE_NOT_APPLIED"}',
-        'error'
-    ]]);
+    assert.deepEqual(statuses, []);
     assert.equal(errors.length, 1);
     assert.equal(refreshCount, 3);
     assert.equal(errors[0][1].diagnosticCode, 'DELETE_NOT_APPLIED');
@@ -1064,10 +1059,7 @@ test('reopening the dashboard reconciles a completed background deletion', async
 
     assert.equal(saved[0].state, 'verified');
     assert.equal(saved[0].code, 'DELETE_VERIFIED');
-    assert.deepEqual(statuses, [[
-        'dashboardTrashRestoredSuccess:{"count":1}',
-        'success'
-    ]]);
+    assert.deepEqual(statuses, []);
     assert.equal(elements.dashboardResultDialog.showModalCalled, true);
     assert.equal(elements.dashboardResultDialog.dataset.type, 'success');
     assert.equal(
@@ -1164,6 +1156,13 @@ test('manifest routes global and message toolbar actions to separate popup pages
     );
     const dashboardEntry = fs.readFileSync(
         path.join(repositoryRoot, 'thunderbird-ai/js/global-dashboard.js'),
+        'utf8'
+    );
+    const dashboardManager = fs.readFileSync(
+        path.join(
+            repositoryRoot,
+            'thunderbird-ai/components/global-dashboard/GlobalDashboardManager.js'
+        ),
         'utf8'
     );
     const messageComponent = fs.readFileSync(
@@ -1274,6 +1273,7 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(dashboard, /class="dashboard-confirmation-delete"[\s\S]*?>[\s\S]*?🗑️/u);
     assert.doesNotMatch(dashboard, /id="dashboardDiagnostics"/u);
     assert.doesNotMatch(dashboardStyles, /\.dashboard-diagnostics/u);
+    assert.doesNotMatch(dashboardManager, /deleteComponent\.render/u);
     assert.match(dashboard, /id="dashboardFeedbackEditors"/u);
     assert.doesNotMatch(dashboard, /id="dashboardFeedbackReason"/u);
     assert.match(dashboard, /GlobalDashboardManager\.js/u);

@@ -28,23 +28,24 @@ function loadLaunchService(initial = {}, options = {}) {
                     tabs.push(created);
                     return created;
                 }),
-                query: async () => options.existingTabs || [],
+                query: options.queryTabs || (async () => options.existingTabs || []),
                 update: options.updateTab || (async (tabId, details) => {
                     tabUpdates.push([tabId, { ...details }]);
                     return { id: tabId, ...details };
                 })
             },
             windows: {
-                update: async (windowId, details) => {
+                update: options.updateWindow || (async (windowId, details) => {
                     windowUpdates.push([windowId, { ...details }]);
                     return { id: windowId, ...details };
-                }
+                })
             }
         }
     });
     loadScript(context, 'thunderbird-ai/config/locale-de.js');
     loadScript(context, 'thunderbird-ai/config/locale-en.js');
     loadScript(context, 'thunderbird-ai/config/constants.js');
+    Object.assign(context.CONFIG.UI, options.ui || {});
     loadScript(context, 'thunderbird-ai/components/shared/DashboardLaunchService.js');
     return {
         context,
@@ -158,4 +159,58 @@ test('concurrent dashboard launches share one create request', async () => {
 
     assert.equal((await first).id, 77);
     assert.equal((await second).id, 77);
+});
+
+test('a stalled tab creation times out, records diagnostics, and releases later clicks', async () => {
+    let createCount = 0;
+    const { context, service, storage } = loadLaunchService({}, {
+        createTab: async details => {
+            createCount += 1;
+            if (createCount === 1) {
+                return new Promise(() => {});
+            }
+            return { id: 88, windowId: 6, ...details };
+        },
+        ui: {
+            DASHBOARD_LAUNCH_API_TIMEOUT_MS: 5,
+            DASHBOARD_DIAGNOSTIC_TIMEOUT_MS: 20
+        }
+    });
+
+    await assert.rejects(
+        service.openExpanded('saved-preference'),
+        error => error.code === 'DASHBOARD_LAUNCH_TIMEOUT' && error.stage === 'create-tab'
+    );
+
+    assert.equal(service.openInProgress, null);
+    assert.equal(
+        storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_LAUNCH_DIAGNOSTIC].state,
+        'timed-out'
+    );
+    assert.equal((await service.openExpanded('saved-preference')).id, 88);
+    assert.equal(createCount, 2);
+});
+
+test('stalled best-effort window focus does not block repeated dashboard activation', async () => {
+    const existingTabs = [{
+        id: 42,
+        windowId: 8,
+        url: 'moz-extension://test/global-dashboard.html?view=expanded'
+    }];
+    const { context, service, storage, tabUpdates } = loadLaunchService({}, {
+        existingTabs,
+        updateWindow: async () => new Promise(() => {}),
+        ui: {
+            DASHBOARD_WINDOW_FOCUS_TIMEOUT_MS: 5,
+            DASHBOARD_DIAGNOSTIC_TIMEOUT_MS: 20
+        }
+    });
+
+    assert.equal((await service.openExpanded('saved-preference')).id, 42);
+    assert.equal((await service.openExpanded('saved-preference')).id, 42);
+
+    assert.equal(tabUpdates.length, 2);
+    const diagnostic = storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_LAUNCH_DIAGNOSTIC];
+    assert.equal(diagnostic.state, 'focused');
+    assert.equal(diagnostic.fallbackCode, 'DASHBOARD_LAUNCH_TIMEOUT');
 });

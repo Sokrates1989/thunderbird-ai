@@ -16,8 +16,10 @@ async function loadBackground(options = {}) {
     const storageState = { ...(options.initialStorage || {}) };
     const popupAssignments = [];
     const openedTabs = [];
+    const notifications = [];
     let actionClickListener = null;
     const context = createContext({
+        console: options.console || console,
         browser: {
             i18n: { getUILanguage: () => 'de-DE' },
             runtime: {
@@ -37,7 +39,12 @@ async function loadBackground(options = {}) {
                     return options.deleteMessages?.(...parameters);
                 }
             },
-            notifications: { create: async () => {} },
+            notifications: {
+                create: async details => {
+                    notifications.push({ ...details });
+                    return 'notification-id';
+                }
+            },
             storage: { local: {
                 get: async keys => {
                     const requested = Array.isArray(keys) ? keys : [keys];
@@ -47,7 +54,12 @@ async function loadBackground(options = {}) {
                 },
                 set: async values => Object.assign(storageState, values)
             } },
-            tabs: { create: async details => openedTabs.push({ ...details }) }
+            tabs: {
+                create: options.createTab || (async details => {
+                    openedTabs.push({ ...details });
+                    return { id: 11, windowId: 3, ...details };
+                })
+            }
         }
     });
     loadScript(context, 'thunderbird-ai/config/locale-de.js');
@@ -160,11 +172,15 @@ async function loadBackground(options = {}) {
     await context.thunderbirdAIInitialization;
     await context.thunderbirdAI?.toolbarInitialization;
     return {
-        actionClick: async () => actionClickListener?.(),
+        actionClick: async () => {
+            actionClickListener?.();
+            await new Promise(resolve => setImmediate(resolve));
+        },
         ai: context.thunderbirdAI,
         config: context.CONFIG,
         deleteCalls,
         mailboxService: context.DashboardMailboxService,
+        notifications,
         openedTabs,
         popupAssignments,
         serviceCalls,
@@ -185,6 +201,25 @@ test('saved tab mode disables the popup and routes the toolbar click to a conten
         openedTabs[0].url,
         'global-dashboard.html?view=expanded&source=saved-preference'
     );
+});
+
+test('toolbar launch failure is persisted and reported without blocking a later event', async () => {
+    const { ai, config, notifications, storageState } = await loadBackground({
+        initialStorage: { dashboardOpenMode: 'tab' },
+        createTab: async () => {
+            throw new Error('Content tab unavailable');
+        },
+        console: { error() {}, log() {}, warn() {} }
+    });
+
+    await ai.openDashboardFromToolbar();
+
+    const diagnostic = storageState[config.STORAGE_KEYS.DASHBOARD_LAUNCH_DIAGNOSTIC];
+    assert.equal(diagnostic.state, 'failed');
+    assert.equal(diagnostic.stage, 'create-tab');
+    assert.equal(diagnostic.code, 'DASHBOARD_LAUNCH_API_FAILED');
+    assert.equal(notifications.length, 1);
+    assert.match(notifications[0].message, /DASHBOARD_LAUNCH_API_FAILED/u);
 });
 
 test('launch preference runtime update immediately restores the toolbar popup', async () => {

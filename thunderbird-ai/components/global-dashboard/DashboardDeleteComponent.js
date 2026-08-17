@@ -94,7 +94,6 @@ const DashboardDeleteComponent = class {
             return;
         }
         if (message) {
-            this.setStatus(message, type);
             if (diagnostics.resultAcknowledged !== true) {
                 this.showResult(message, type, diagnostics);
             }

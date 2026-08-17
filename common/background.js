@@ -12,10 +12,23 @@ class ThunderbirdAI {
         browser.runtime.onMessage.addListener((request, sender) => this.handleMessage(request, sender));
         browser.menus.onClicked.addListener((info, tab) => this.handleMenuClick(info, tab));
         browser.action.onClicked.addListener(() => {
-            DashboardLaunchService.openExpanded('saved-preference').catch(error => {
-                console.error('Could not open dashboard tab from toolbar:', error);
-            });
+            void this.openDashboardFromToolbar();
         });
+    }
+
+    /** Open the durable dashboard and make a bounded failure visible outside developer tools. */
+    async openDashboardFromToolbar() {
+        try {
+            await DashboardLaunchService.openExpanded('saved-preference');
+        } catch (error) {
+            console.error('Could not open dashboard tab from toolbar:', error);
+            await this.showNotification(
+                I18n.t('dashboardLaunchFailedTitle'),
+                I18n.t('dashboardLaunchFailedMessage', {
+                    code: error?.code || 'DASHBOARD_LAUNCH_FAILED'
+                })
+            );
+        }
     }
 
     async initializeToolbar() {

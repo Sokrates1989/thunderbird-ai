@@ -718,7 +718,6 @@ const GlobalDashboardManager = class {
         this.setBusy(true, I18n.t('dashboardTrashInProgress'));
         try {
             let diagnostics = await GlobalMailService.moveToTrash(messageIds);
-            this.deleteComponent.render(diagnostics);
             const remainingMessageIds = await this.refreshUntilTrashApplied(messageIds);
             if (remainingMessageIds.length) {
                 diagnostics = {
@@ -741,7 +740,6 @@ const GlobalDashboardManager = class {
                     count: remainingMessageIds.length,
                     code: GlobalMailService.DELETE_DIAGNOSTIC_CODE
                 });
-                this.setStatus(message, 'error');
                 this.deleteComponent.showResult(message, 'error', diagnostics);
                 return;
             }
@@ -756,7 +754,6 @@ const GlobalDashboardManager = class {
             await this.deleteComponent.persist(diagnostics);
             this.selectedMessageIds.clear();
             await this.persistSelection();
-            this.setStatus(successMessage, 'success');
             this.deleteComponent.showResult(successMessage, 'success', diagnostics);
         } catch (error) {
             console.error('Could not move dashboard messages to trash:', error);
@@ -775,9 +772,8 @@ const GlobalDashboardManager = class {
                 await this.deleteComponent.persist(diagnostics);
             } catch (persistenceError) {
                 console.warn('Could not persist the dashboard delete failure:', persistenceError);
-                this.deleteComponent.render(diagnostics);
             }
-            this.setStatus(message, 'error');
+            this.setStatus('');
             this.deleteComponent.showResult(message, 'error', diagnostics);
         } finally {
             this.setBusy(false);
