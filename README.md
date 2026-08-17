@@ -62,7 +62,7 @@ Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speic
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-2.9.0-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-2.9.1-win-x64.exe` herunterladen und starten.
 2. Im Setup **Deutsch** oder **English** wählen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung und zu den Berechtigungen zum Ändern, Verschieben und Löschen von Nachrichten bestätigen.
@@ -92,7 +92,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-2.9.0-win-x64.exe`
+- `artifacts\Thunderbird-AI-Setup-2.9.1-win-x64.exe`
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
@@ -139,7 +139,7 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 39. Unter **Einstellungen → AI Assistant öffnen** zunächst **Als kompaktes Overlay öffnen** speichern und fünfmal das globale Toolbar-Symbol verwenden. Beim fünften tatsächlichen Öffnen muss ein lokalisierter Hinweis mit **Später**, **Jetzt ausprobieren** und **Diesen Hinweis nicht mehr anzeigen** erscheinen. **Später** muss einen neuen Fünfer-Zyklus beginnen; **Jetzt ausprobieren** muss den dauerhaften Tab öffnen, ohne den Standard zu ändern. Anschließend dreimal das Vollbildsymbol im Overlay verwenden. Beim dritten Mal muss der geöffnete Tab anbieten, künftig immer direkt im Tab zu starten. **Immer im Tab öffnen** auswählen und prüfen, dass weitere Toolbar-Klicks ohne vorgeschaltetes Overlay direkt einen neuen Thunderbird-Tab öffnen. Danach in den Einstellungen wieder den Overlay-Modus speichern. Bei aktivierter Option **Diesen Hinweis nicht mehr anzeigen** darf der jeweilige Hinweis auch nach weiteren Öffnungen nicht zurückkehren.
 40. An einer Dashboard-Mail **Als PDF exportieren** anklicken. Mit installiertem Thunderbird PDF Archiver 0.5.0 oder neuer muss dessen vorhandener Prüfdialog exakt diese E-Mail und ihre Anhänge laden; der AI Assistant erzeugt selbst keine PDF. Danach PDF Archiver testweise deaktivieren und die Aktion erneut ausführen. Nun muss ein lokalisierter Installationsdialog erscheinen, dessen GitHub-Schaltfläche die offizielle Projektseite in einem Thunderbird-Tab öffnet. Eine inkompatible Protokollversion muss denselben sicheren Aktualisierungspfad mit einem spezifischen Hinweis verwenden.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.9.0** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.9.1** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 ## Technische Struktur
 

@@ -1020,12 +1020,9 @@ body {
 }
 
 .dashboard-bulk-actions .dashboard-archive,
-.dashboard-message-action.archive {
-    background: #526d82;
-}
-
+.dashboard-message-action.archive,
 .dashboard-message-action.export-pdf {
-    background: #c52e3b;
+    background: #526d82;
 }
 
 .dashboard-bulk-actions .dashboard-danger-action,

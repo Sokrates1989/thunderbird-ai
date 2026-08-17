@@ -1263,6 +1263,10 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(messageComponent, /dashboardExportPdfOne/u);
     assert.match(messageComponent, /dashboard-message-action-group/u);
     assert.match(messageComponent, /dashboard-action-icon/u);
+    assert.match(
+        dashboardStyles,
+        /\.dashboard-message-action\.archive,\s*\.dashboard-message-action\.export-pdf\s*\{[^}]*background:\s*#526d82/su
+    );
     assert.match(pdfIntegration, /thunderbird-pdf-archiver@sokrates1989\.de/u);
     assert.match(pdfIntegration, /thunderbird-pdf-archiver:open-review/u);
     assert.match(singleMailManager, /parameters\.get\('summarize'\) === '1'[\s\S]*executeAIAction\('SUMMARIZE_EMAIL'\)/u);
