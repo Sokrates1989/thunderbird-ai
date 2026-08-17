@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extensionName__",
-  "version": "2.11.1",
+  "version": "2.12.0",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
   "author": "Sokrates1989",
@@ -28,17 +28,15 @@
     "48": "icon.svg"
   },
   "background": {
-    "scripts": ["locale-de.js", "locale-en.js", "constants.js", "RuntimeDiagnosticService.js", "retry.js", "DashboardLaunchService.js", "storage.js", "message.js", "spam-precheck.js", "dashboard-training.js", "dashboard-mailbox.js", "openai.js", "ui.js", "background.js"]
+    "scripts": ["locale-de.js", "locale-en.js", "constants.js", "RuntimeDiagnosticService.js", "retry.js", "LaunchModeService.js", "SingleMailWorkspaceService.js", "DashboardLaunchService.js", "storage.js", "message.js", "spam-precheck.js", "dashboard-training.js", "dashboard-mailbox.js", "openai.js", "ui.js", "background.js"]
   },
   "message_display_action": {
     "default_title": "__MSG_actionTitle__",
-    "default_icon": "icon.svg",
-    "default_popup": "single-mail-ui.html"
+    "default_icon": "icon.svg"
   },
   "action": {
     "default_title": "__MSG_extensionName__",
-    "default_icon": "icon.svg",
-    "default_popup": "global-dashboard.html"
+    "default_icon": "icon.svg"
   },
 
   "options_ui": {

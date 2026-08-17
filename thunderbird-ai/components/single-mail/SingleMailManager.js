@@ -188,6 +188,18 @@ const SingleMailManager = class {
         this.components.chat.open();
     }
 
+    /** Move the current message and requested AI workspace into a durable Thunderbird tab. */
+    async openExpandedView() {
+        if (this.emailId === undefined || this.emailId === null) {
+            throw new Error(I18n.t('messageNotFound'));
+        }
+        const parameters = new URLSearchParams(window.location.search);
+        const mode = ['reply', 'chat', 'summarize']
+            .find(candidate => parameters.get(candidate) === '1') || null;
+        await SingleMailWorkspaceService.openExpanded(this.emailId, mode, 'manual');
+        window.close();
+    }
+
     /** Open the durable reply workspace in a Thunderbird tab, with an in-page fallback. */
     async openReplyComposer() {
         if (this.emailId === undefined || this.emailId === null) {
@@ -197,9 +209,11 @@ const SingleMailManager = class {
         const parameters = new URLSearchParams(window.location.search);
         if (parameters.get('reply') !== '1') {
             try {
-                await browser.tabs.create({
-                    url: `${browser.runtime.getURL('single-mail-ui.html')}?messageId=${encodeURIComponent(this.emailId)}&reply=1`
-                });
+                await SingleMailWorkspaceService.openExpanded(
+                    this.emailId,
+                    'reply',
+                    'single-mail-action'
+                );
                 return;
             } catch (error) {
                 this.log(`Could not open reply workspace tab: ${error.message}`, 'warning');

@@ -17,11 +17,45 @@ body {
 }
 
 .header {
+    position: relative;
     text-align: center;
     margin-bottom: 16px;
     padding: 14px;
     border-radius: 8px;
     background: #f8fafc;
+}
+
+.single-mail-expand-view {
+    position: absolute;
+    top: 9px;
+    right: 9px;
+    width: 34px;
+    height: 34px;
+    border: 1px solid #aeb8c2;
+    border-radius: 6px;
+    background: white;
+    color: #40596d;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.single-mail-expand-view:hover {
+    border-color: #087cc1;
+    color: #087cc1;
+    background: #eef7fc;
+}
+
+.single-mail-expand-view:focus-visible {
+    outline: 3px solid #4c9ed9;
+    outline-offset: 2px;
+}
+
+body.single-mail-expanded-view {
+    min-width: 0;
+}
+
+.single-mail-expanded-view .container {
+    max-width: 1040px;
 }
 
 .header h1 {

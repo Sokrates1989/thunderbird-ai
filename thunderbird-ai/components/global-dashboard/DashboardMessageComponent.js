@@ -5,6 +5,7 @@ const DashboardMessageComponent = class {
         this.onSelectionChanged = options.onSelectionChanged;
         this.onSummarize = options.onSummarize;
         this.onReply = options.onReply;
+        this.onChat = options.onChat;
         this.onCorrectScores = options.onCorrectScores;
         this.onMarkRead = options.onMarkRead;
         this.onExportPdf = options.onExportPdf;
@@ -142,6 +143,14 @@ const DashboardMessageComponent = class {
                 busy,
                 () => this.onReply(message),
                 { icon: '✍️' }
+            ),
+            this.actionButton(
+                'dashboardChatOne',
+                'dashboardChatMessage',
+                subject,
+                busy,
+                () => this.onChat(message),
+                { icon: '💬' }
             )
         );
         if (message.aiAnalysis) {

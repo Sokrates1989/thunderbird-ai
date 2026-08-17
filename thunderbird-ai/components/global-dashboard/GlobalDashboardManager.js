@@ -79,6 +79,10 @@ const GlobalDashboardManager = class {
                 this.openMessageWorkspace(message, 'reply')
                     .catch(error => this.showWorkspaceError(error));
             },
+            onChat: message => {
+                this.openMessageWorkspace(message, 'chat')
+                    .catch(error => this.showWorkspaceError(error));
+            },
             onCorrectScores: message => this.feedbackComponent.open(message),
             onMarkRead: message => {
                 this.markOneAsRead(message).catch(error => this.showUnexpectedError(error));

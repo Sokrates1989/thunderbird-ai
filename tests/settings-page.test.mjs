@@ -33,7 +33,7 @@ test('settings no longer load or expose retired automatic email analysis', () =>
     assert.doesNotMatch(constants, /AUTO_PROCESS|AUTOMATIC_RESULTS|GET_AUTOMATIC_RESULT/u);
 });
 
-test('settings expose the persisted overlay or Thunderbird-tab launch preference', () => {
+test('settings expose independent persisted launch preferences for both entry points', () => {
     const settingsPage = source('thunderbird-ai/pages/settings.html');
     const settingsManager = source('thunderbird-ai/components/settings/SettingsManager.js');
     const settingsStyles = source('thunderbird-ai/styles/settings.css');
@@ -43,12 +43,16 @@ test('settings expose the persisted overlay or Thunderbird-tab launch preference
 
     assert.match(settingsPage, /id="dashboard-launch-section"/u);
     assert.match(settingsPage, /DashboardLaunchService\.js/u);
+    assert.match(settingsPage, /LaunchModeService\.js/u);
     assert.match(settingsPage, /RuntimeDiagnosticService\.js/u);
     assert.match(settingsPage, /DashboardLaunchSettingsComponent\.js/u);
     assert.match(settingsManager, /new DashboardLaunchSettingsComponent\(this\)/u);
     assert.match(settingsManager, /dashboardLaunch\.getCurrentValues\(\)/u);
     assert.match(launchSettings, /value="overlay"/u);
     assert.match(launchSettings, /value="tab"/u);
+    assert.match(launchSettings, /id="dashboardOpenMode"/u);
+    assert.match(launchSettings, /id="singleMailOpenMode"/u);
+    assert.match(launchSettings, /singleMailOpenMode:\s*LaunchModeService\.normalizeMode/u);
     assert.match(launchSettings, /id="dashboardLaunchDiagnosticDetails"/u);
     assert.match(launchSettings, /DashboardLaunchService\.loadDiagnostic\(\)/u);
     assert.match(launchSettings, /RuntimeDiagnosticService\.load\(\)/u);

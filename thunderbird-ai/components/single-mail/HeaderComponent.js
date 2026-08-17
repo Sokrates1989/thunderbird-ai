@@ -22,7 +22,14 @@ const HeaderComponent = class {
         this.elements = {
             title: document.querySelector('.header h1'),
             subtitle: document.getElementById('emailSubject'),
-            version: document.getElementById('addonVersion')
+            version: document.getElementById('addonVersion'),
+            expandView: document.getElementById('singleMailExpandView')
+        };
+        this.openExpanded = () => {
+            this.manager.openExpandedView().catch(error => {
+                console.error('Could not open the single-mail fullscreen view:', error);
+                this.manager.showError(I18n.t('singleMailLaunchFailedMessage'));
+            });
         };
     }
 
@@ -41,6 +48,9 @@ const HeaderComponent = class {
         this.elements.version.textContent = I18n.t('versionLabel', {
             version: CONFIG.ADDON_VERSION
         });
+        const expanded = new URLSearchParams(window.location.search).get('view') === 'expanded';
+        this.elements.expandView.hidden = expanded;
+        this.elements.expandView.addEventListener('click', this.openExpanded);
     }
 
     /**
@@ -84,7 +94,7 @@ const HeaderComponent = class {
      * this.cleanup();
      */
     cleanup() {
-        // No cleanup needed
+        this.elements.expandView?.removeEventListener('click', this.openExpanded);
     }
 };
 

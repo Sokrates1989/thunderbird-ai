@@ -21,6 +21,7 @@ function loadStorage(initial = {}) {
     loadScript(context, 'thunderbird-ai/config/locale-de.js');
     loadScript(context, 'thunderbird-ai/config/locale-en.js');
     loadScript(context, 'thunderbird-ai/config/constants.js');
+    loadScript(context, 'thunderbird-ai/components/shared/LaunchModeService.js');
     loadScript(context, 'common/utils/storage.js');
     return { context, service: context.StorageManager, values };
 }
@@ -35,6 +36,7 @@ test('new installations receive requested task-specific model defaults', async (
     assert.equal(settings.replyModel, 'gpt-5.6-sol');
     assert.equal(settings.chatModel, 'gpt-5.6-sol');
     assert.equal(settings.dashboardOpenMode, 'overlay');
+    assert.equal(settings.singleMailOpenMode, 'overlay');
 });
 
 test('legacy general model is a migration fallback and saved task choices become independent', async () => {
@@ -47,6 +49,7 @@ test('legacy general model is a migration fallback and saved task choices become
         openaiApiKey: 'sk-example',
         uiLanguage: 'en',
         dashboardOpenMode: 'tab',
+        singleMailOpenMode: 'overlay',
         ...Object.fromEntries(context.CONFIG.OPENAI.MODEL_SETTINGS.map(definition => [
             definition.property,
             definition.defaultModel
@@ -57,6 +60,26 @@ test('legacy general model is a migration fallback and saved task choices become
     assert.equal(values.singleScoreModel, 'gpt-5.6-terra');
     assert.equal(values.summarizeModel, 'gpt-5.6-sol');
     assert.equal(values.dashboardOpenMode, 'tab');
+    assert.equal(values.singleMailOpenMode, 'overlay');
+});
+
+test('saving a partial settings payload preserves both existing launch preferences', async () => {
+    const { context, service, values } = loadStorage({
+        dashboardOpenMode: 'tab',
+        singleMailOpenMode: 'tab'
+    });
+
+    await service.saveSettings({
+        openaiApiKey: 'sk-example',
+        uiLanguage: 'en',
+        ...Object.fromEntries(context.CONFIG.OPENAI.MODEL_SETTINGS.map(definition => [
+            definition.property,
+            definition.defaultModel
+        ]))
+    });
+
+    assert.equal(values.dashboardOpenMode, 'tab');
+    assert.equal(values.singleMailOpenMode, 'tab');
 });
 
 test('concurrent token reports accumulate by model and produce a dated price estimate', async () => {

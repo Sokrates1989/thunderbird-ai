@@ -3,26 +3,21 @@
  * A stalled Thunderbird API call must never keep later toolbar clicks blocked indefinitely.
  */
 const DashboardLaunchService = {
-    MODES: Object.freeze({ OVERLAY: 'overlay', TAB: 'tab' }),
+    MODES: LaunchModeService.MODES,
     PROMPTS: Object.freeze({ ADOPT_TAB: 'adopt-tab', DISCOVER_TAB: 'discover-tab' }),
     openInProgress: null,
 
     normalizeMode(value) {
-        return value === this.MODES.TAB ? this.MODES.TAB : this.MODES.OVERLAY;
+        return LaunchModeService.normalizeMode(value);
     },
 
     async getMode() {
-        const key = CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE;
-        const stored = await browser.storage.local.get(key);
-        return this.normalizeMode(stored[key]);
+        return LaunchModeService.getMode(CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE);
     },
 
-    /** Apply the global toolbar behavior; onClicked is active only without a popup. */
-    async applyToolbarMode(mode) {
-        const popup = this.normalizeMode(mode) === this.MODES.TAB
-            ? ''
-            : 'global-dashboard.html';
-        await browser.action.setPopup({ popup });
+    /** Remove any pre-update popup assignment so every click reaches the launch router. */
+    async prepareToolbarRouter() {
+        await LaunchModeService.clearPopup(browser.action);
     },
 
     /** Share one bounded launch attempt across rapid callers and always release its lock. */

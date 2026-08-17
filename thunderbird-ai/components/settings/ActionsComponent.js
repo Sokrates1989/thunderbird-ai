@@ -165,7 +165,8 @@ const ActionsComponent = class {
                 const defaultSettings = {
                     openaiApiKey: '',
                     uiLanguage: I18n.getLanguage(),
-                    dashboardOpenMode: DashboardLaunchService.MODES.OVERLAY,
+                    dashboardOpenMode: LaunchModeService.MODES.OVERLAY,
+                    singleMailOpenMode: LaunchModeService.MODES.OVERLAY,
                     ...Object.fromEntries(
                         CONFIG.OPENAI.MODEL_SETTINGS.map(definition => [
                             definition.property,

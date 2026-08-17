@@ -25,10 +25,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     try {
         await RuntimeDiagnosticService.run('single-mail', 'initialize', async () => {
+            const parameters = new URLSearchParams(window.location.search);
+            document.body.classList.toggle(
+                'single-mail-expanded-view',
+                parameters.get('view') === 'expanded'
+            );
             await I18n.initialize();
             I18n.localizeDocument();
             // Get email data from URL parameters or current context
-            const urlParams = new URLSearchParams(window.location.search);
+            const urlParams = parameters;
             const emailId = urlParams.get('emailId');
             const emailData = urlParams.get('emailData') ? JSON.parse(decodeURIComponent(urlParams.get('emailData'))) : null;
 

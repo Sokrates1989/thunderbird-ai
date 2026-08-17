@@ -1,4 +1,4 @@
-/** Settings control for choosing the global toolbar dashboard launch mode. */
+/** Settings controls for independent dashboard and single-mail launch modes. */
 const DashboardLaunchSettingsComponent = class {
     constructor(settingsManager) {
         this.settingsManager = settingsManager;
@@ -12,13 +12,23 @@ const DashboardLaunchSettingsComponent = class {
     initialize() {
         this.container.innerHTML = `
             <h2>⛶ ${I18n.t('dashboardLaunchSettingsTitle')}</h2>
-            <div class="setting-group">
-                <label for="dashboardOpenMode">${I18n.t('dashboardLaunchSettingsLabel')}</label>
-                <select id="dashboardOpenMode">
-                    <option value="overlay">${I18n.t('dashboardLaunchModeOverlay')}</option>
-                    <option value="tab">${I18n.t('dashboardLaunchModeTab')}</option>
-                </select>
-                <div class="help-text">${I18n.t('dashboardLaunchSettingsHint')}</div>
+            <div class="launch-mode-settings">
+                <div class="setting-group launch-mode-setting">
+                    <label for="dashboardOpenMode">${I18n.t('dashboardLaunchSettingsLabel')}</label>
+                    <select id="dashboardOpenMode">
+                        <option value="overlay">${I18n.t('dashboardLaunchModeOverlay')}</option>
+                        <option value="tab">${I18n.t('dashboardLaunchModeTab')}</option>
+                    </select>
+                    <div class="help-text">${I18n.t('dashboardLaunchSettingsHint')}</div>
+                </div>
+                <div class="setting-group launch-mode-setting">
+                    <label for="singleMailOpenMode">${I18n.t('singleMailLaunchSettingsLabel')}</label>
+                    <select id="singleMailOpenMode">
+                        <option value="overlay">${I18n.t('dashboardLaunchModeOverlay')}</option>
+                        <option value="tab">${I18n.t('dashboardLaunchModeTab')}</option>
+                    </select>
+                    <div class="help-text">${I18n.t('singleMailLaunchSettingsHint')}</div>
+                </div>
             </div>
             <details class="dashboard-launch-diagnostics">
                 <summary>${I18n.t('dashboardLaunchDiagnosticsTitle')}</summary>
@@ -36,11 +46,15 @@ const DashboardLaunchSettingsComponent = class {
                 </div>
             </details>`;
         this.elements.mode = document.getElementById('dashboardOpenMode');
+        this.elements.singleMailMode = document.getElementById('singleMailOpenMode');
         this.elements.diagnosticDetails = document.getElementById('dashboardLaunchDiagnosticDetails');
         this.elements.diagnosticRefresh = document.getElementById('dashboardLaunchDiagnosticRefresh');
         this.elements.diagnosticCopy = document.getElementById('dashboardLaunchDiagnosticCopy');
         this.elements.mode.addEventListener('change', event => {
             this.settingsManager.notifySettingChanged('dashboardOpenMode', event.target.value);
+        });
+        this.elements.singleMailMode.addEventListener('change', event => {
+            this.settingsManager.notifySettingChanged('singleMailOpenMode', event.target.value);
         });
         this.elements.diagnosticRefresh.addEventListener('click', () => {
             void this.refreshDiagnostic().catch(error => this.showDiagnosticError(error));
@@ -181,11 +195,19 @@ const DashboardLaunchSettingsComponent = class {
     }
 
     getCurrentValues() {
-        return { dashboardOpenMode: DashboardLaunchService.normalizeMode(this.elements.mode.value) };
+        return {
+            dashboardOpenMode: LaunchModeService.normalizeMode(this.elements.mode.value),
+            singleMailOpenMode: LaunchModeService.normalizeMode(
+                this.elements.singleMailMode.value
+            )
+        };
     }
 
     updateDisplay(settings) {
-        this.elements.mode.value = DashboardLaunchService.normalizeMode(settings.dashboardOpenMode);
+        this.elements.mode.value = LaunchModeService.normalizeMode(settings.dashboardOpenMode);
+        this.elements.singleMailMode.value = LaunchModeService.normalizeMode(
+            settings.singleMailOpenMode
+        );
     }
 };
 

@@ -47,7 +47,7 @@ const StorageManager = {
     },
 
     normalizeDashboardOpenMode(mode) {
-        return mode === 'tab' ? 'tab' : 'overlay';
+        return LaunchModeService.normalizeMode(mode);
     },
 
     /** Return settings while transparently retiring legacy GPT-3.5/GPT-4 values. */
@@ -91,6 +91,9 @@ const StorageManager = {
             dashboardOpenMode: this.normalizeDashboardOpenMode(
                 result[CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE]
             ),
+            singleMailOpenMode: this.normalizeDashboardOpenMode(
+                result[CONFIG.STORAGE_KEYS.SINGLE_MAIL_OPEN_MODE]
+            ),
             uiLanguage: I18n.isSupportedLanguage(result[CONFIG.STORAGE_KEYS.UI_LANGUAGE])
                 ? result[CONFIG.STORAGE_KEYS.UI_LANGUAGE]
                 : I18n.getLanguage()
@@ -98,13 +101,27 @@ const StorageManager = {
     },
 
     async saveSettings(settings) {
+        const modeKeys = [
+            CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE,
+            CONFIG.STORAGE_KEYS.SINGLE_MAIL_OPEN_MODE
+        ];
+        const currentModes = await this.getMultiple(modeKeys);
+        const dashboardOpenMode = Object.hasOwn(settings, 'dashboardOpenMode')
+            ? settings.dashboardOpenMode
+            : currentModes[CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE];
+        const singleMailOpenMode = Object.hasOwn(settings, 'singleMailOpenMode')
+            ? settings.singleMailOpenMode
+            : currentModes[CONFIG.STORAGE_KEYS.SINGLE_MAIL_OPEN_MODE];
         const values = {
             [CONFIG.STORAGE_KEYS.OPENAI_API_KEY]: String(settings.openaiApiKey || '').trim(),
             [CONFIG.STORAGE_KEYS.UI_LANGUAGE]: I18n.isSupportedLanguage(settings.uiLanguage)
                 ? settings.uiLanguage
                 : I18n.getLanguage(),
             [CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE]: this.normalizeDashboardOpenMode(
-                settings.dashboardOpenMode
+                dashboardOpenMode
+            ),
+            [CONFIG.STORAGE_KEYS.SINGLE_MAIL_OPEN_MODE]: this.normalizeDashboardOpenMode(
+                singleMailOpenMode
             )
         };
         for (const definition of CONFIG.OPENAI.MODEL_SETTINGS) {

@@ -12,6 +12,11 @@
     <div class="container">
         <!-- Header Section -->
         <div class="header">
+            <button type="button" id="singleMailExpandView" class="single-mail-expand-view"
+                    data-i18n-title="singleMailExpandView"
+                    data-i18n-aria-label="singleMailExpandView">
+                <span aria-hidden="true">⛶</span>
+            </button>
             <h1 data-i18n="appTitle"></h1>
             <div class="subtitle" id="emailSubject"></div>
             <div class="addon-version" id="addonVersion"></div>
@@ -93,7 +98,9 @@
     <script src="constants.js"></script>
     <script src="RuntimeDiagnosticService.js"></script>
     <script src="retry.js"></script>
+    <script src="LaunchModeService.js"></script>
     <script src="storage.js"></script>
+    <script src="SingleMailWorkspaceService.js"></script>
     <script src="DashboardLaunchService.js"></script>
     <script src="MailboxActionService.js"></script>
     <script src="PdfArchiverIntegrationService.js"></script>

@@ -9,15 +9,34 @@ function eventTarget() {
     return { addListener() {} };
 }
 
+test('toolbar listeners are registered before asynchronous background initialization', () => {
+    const source = fs.readFileSync(
+        path.join(repositoryRoot, 'common/background.js'),
+        'utf8'
+    );
+    const instanceIndex = source.indexOf('globalThis.thunderbirdAI = new ThunderbirdAI()');
+    const initializationIndex = source.indexOf(
+        'globalThis.thunderbirdAIInitialization = RuntimeDiagnosticService.run'
+    );
+
+    assert.ok(instanceIndex >= 0);
+    assert.ok(initializationIndex > instanceIndex);
+    assert.match(source, /browser\.action\.onClicked\.addListener/u);
+    assert.match(source, /browser\.messageDisplayAction\.onClicked\.addListener/u);
+});
+
 async function loadBackground(options = {}) {
     const stats = [];
     const serviceCalls = [];
     const deleteCalls = [];
     const storageState = { ...(options.initialStorage || {}) };
     const popupAssignments = [];
+    const messagePopupAssignments = [];
+    const openedPopups = [];
     const openedTabs = [];
     const notifications = [];
     let actionClickListener = null;
+    let messageActionClickListener = null;
     let installedListener = null;
     const context = createContext({
         console: options.console || console,
@@ -32,9 +51,24 @@ async function loadBackground(options = {}) {
             menus: { onClicked: eventTarget(), removeAll: async () => {}, create: async () => {} },
             action: {
                 onClicked: { addListener: listener => { actionClickListener = listener; } },
-                setPopup: async details => popupAssignments.push({ ...details })
+                setPopup: async details => popupAssignments.push({ ...details }),
+                openPopup: async details => {
+                    openedPopups.push(['dashboard', details ? { ...details } : null]);
+                    return true;
+                }
             },
-            messageDisplay: { onMessagesDisplayed: eventTarget() },
+            messageDisplayAction: {
+                onClicked: { addListener: listener => { messageActionClickListener = listener; } },
+                setPopup: async details => messagePopupAssignments.push({ ...details }),
+                openPopup: async details => {
+                    openedPopups.push(['single-mail', details ? { ...details } : null]);
+                    return true;
+                }
+            },
+            messageDisplay: {
+                onMessagesDisplayed: eventTarget(),
+                getDisplayedMessages: options.getDisplayedMessages || (async () => [{ id: 73 }])
+            },
             messages: {
                 delete: async (...parameters) => {
                     deleteCalls.push(parameters);
@@ -57,17 +91,22 @@ async function loadBackground(options = {}) {
                 set: async values => Object.assign(storageState, values)
             } },
             tabs: {
+                query: async () => [],
+                update: async (tabId, details) => ({ id: tabId, ...details }),
                 create: options.createTab || (async details => {
                     openedTabs.push({ ...details });
                     return { id: 11, windowId: 3, ...details };
                 })
-            }
+            },
+            windows: { update: async (windowId, details) => ({ id: windowId, ...details }) }
         }
     });
     loadScript(context, 'thunderbird-ai/config/locale-de.js');
     loadScript(context, 'thunderbird-ai/config/locale-en.js');
     loadScript(context, 'thunderbird-ai/config/constants.js');
     loadScript(context, 'thunderbird-ai/components/shared/RuntimeDiagnosticService.js');
+    loadScript(context, 'thunderbird-ai/components/shared/LaunchModeService.js');
+    loadScript(context, 'thunderbird-ai/components/shared/SingleMailWorkspaceService.js');
     loadScript(context, 'thunderbird-ai/components/shared/DashboardLaunchService.js');
     context.MessageService = {
         getFullMessage: options.getFullMessage || (async id => ({
@@ -161,6 +200,8 @@ async function loadBackground(options = {}) {
         saveSettings: async settings => {
             storageState[context.CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE]
                 = context.DashboardLaunchService.normalizeMode(settings.dashboardOpenMode);
+            storageState[context.CONFIG.STORAGE_KEYS.SINGLE_MAIL_OPEN_MODE]
+                = context.LaunchModeService.normalizeMode(settings.singleMailOpenMode);
             return true;
         },
         set: async (key, value) => {
@@ -173,10 +214,13 @@ async function loadBackground(options = {}) {
     loadScript(context, 'common/utils/dashboard-mailbox.js');
     loadScript(context, 'common/background.js');
     await context.thunderbirdAIInitialization;
-    await context.thunderbirdAI?.toolbarInitialization;
     return {
         actionClick: async () => {
-            actionClickListener?.();
+            actionClickListener?.({ id: 4, windowId: 2 });
+            await new Promise(resolve => setImmediate(resolve));
+        },
+        messageActionClick: async () => {
+            messageActionClickListener?.({ id: 5, windowId: 2 });
             await new Promise(resolve => setImmediate(resolve));
         },
         ai: context.thunderbirdAI,
@@ -185,7 +229,9 @@ async function loadBackground(options = {}) {
         install: details => installedListener?.(details),
         mailboxService: context.DashboardMailboxService,
         notifications,
+        openedPopups,
         openedTabs,
+        messagePopupAssignments,
         popupAssignments,
         serviceCalls,
         stats,
@@ -204,7 +250,7 @@ test('install and update events defer stale dashboard cleanup until the next lau
     );
 });
 
-test('saved tab mode disables the popup and routes the toolbar click to a content tab', async () => {
+test('saved dashboard tab mode routes the toolbar click through the wake-safe background listener', async () => {
     const initialStorage = { dashboardOpenMode: 'tab' };
     const { actionClick, openedTabs, popupAssignments } = await loadBackground({ initialStorage });
 
@@ -237,7 +283,7 @@ test('toolbar launch failure is persisted and reported without blocking a later 
     assert.match(notifications[0].message, /DASHBOARD_LAUNCH_API_FAILED/u);
 });
 
-test('launch preference runtime update immediately restores the toolbar popup', async () => {
+test('launch preference runtime update keeps the wake-safe click router active', async () => {
     const { ai, config, popupAssignments, storageState } = await loadBackground({
         initialStorage: { dashboardOpenMode: 'tab' }
     });
@@ -251,8 +297,37 @@ test('launch preference runtime update immediately restores the toolbar popup', 
     assert.equal(storageState.dashboardOpenMode, 'overlay');
     assert.deepEqual(popupAssignments, [
         { popup: '' },
-        { popup: 'global-dashboard.html' }
+        { popup: '' }
     ]);
+});
+
+test('dashboard overlay is assigned only for one routed click and then cleared', async () => {
+    const { actionClick, openedPopups, popupAssignments } = await loadBackground();
+
+    await actionClick();
+
+    assert.deepEqual(openedPopups, [['dashboard', { windowId: 2 }]]);
+    assert.deepEqual(popupAssignments, [
+        { popup: '' },
+        { popup: 'global-dashboard.html', tabId: 4 },
+        { popup: '', tabId: 4 }
+    ]);
+});
+
+test('single-mail launch mode is independent and opens the displayed message in a tab', async () => {
+    const { messageActionClick, messagePopupAssignments, openedTabs } = await loadBackground({
+        initialStorage: {
+            dashboardOpenMode: 'overlay',
+            singleMailOpenMode: 'tab'
+        }
+    });
+
+    await messageActionClick();
+
+    assert.deepEqual(messagePopupAssignments, [{ popup: '' }]);
+    assert.equal(openedTabs.length, 1);
+    assert.match(openedTabs[0].url, /single-mail-ui\.html\?messageId=73&view=expanded/u);
+    assert.match(openedTabs[0].url, /source=saved-preference/u);
 });
 
 test('dashboard deletion runs in the background with modern user-action options', async () => {

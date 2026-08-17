@@ -142,7 +142,15 @@ function loadDashboardAIService() {
                     set: async values => Object.assign(storageState, values)
                 }
             },
-            tabs: { create: async details => openedTabs.push(details) }
+            tabs: {
+                query: async () => [],
+                update: async (tabId, details) => ({ id: tabId, ...details }),
+                create: async details => {
+                    openedTabs.push(details);
+                    return { id: openedTabs.length, windowId: 1, ...details };
+                }
+            },
+            windows: { update: async (windowId, details) => ({ id: windowId, ...details }) }
         }
     });
     loadScript(context, 'thunderbird-ai/config/locale-de.js');
@@ -151,6 +159,7 @@ function loadDashboardAIService() {
     loadScript(context, 'common/utils/retry.js');
     context.RetryService.wait = async () => {};
     loadScript(context, 'common/utils/message.js');
+    loadScript(context, 'thunderbird-ai/components/shared/SingleMailWorkspaceService.js');
     loadScript(context, 'thunderbird-ai/components/global-dashboard/DashboardAIService.js');
     return { context, openedTabs, sentMessages, service: context.DashboardAIService, storageState };
 }
@@ -601,6 +610,7 @@ test('dashboard AI scores persist without mail content and direct actions open s
     );
     await service.openWorkspace(42, 'summarize');
     await service.openWorkspace(42, 'reply');
+    await service.openWorkspace(42, 'chat');
 
     const [persisted] = Object.values(
         storageState[context.CONFIG.STORAGE_KEYS.DASHBOARD_AI_RESULTS]
@@ -630,6 +640,7 @@ test('dashboard AI scores persist without mail content and direct actions open s
     );
     assert.match(openedTabs[0].url, /single-mail-ui\.html\?messageId=42&summarize=1/u);
     assert.match(openedTabs[1].url, /single-mail-ui\.html\?messageId=42&reply=1/u);
+    assert.match(openedTabs[2].url, /single-mail-ui\.html\?messageId=42&chat=1/u);
 });
 
 test('ordinary bulk scoring skips persisted results and protects them from replacement', async () => {
@@ -1146,7 +1157,7 @@ test('one unread query failure does not hide the remaining accounts', async () =
     assert.equal(results[1].messages[0].id, 30);
 });
 
-test('manifest routes global and message toolbar actions to separate popup pages', () => {
+test('manifest routes both toolbar actions through the wake-safe background service', () => {
     const manifest = JSON.parse(fs.readFileSync(
         path.join(repositoryRoot, 'thunderbird-ai/manifest.json'),
         'utf8'
@@ -1207,8 +1218,8 @@ test('manifest routes global and message toolbar actions to separate popup pages
         'utf8'
     );
 
-    assert.equal(manifest.action.default_popup, 'global-dashboard.html');
-    assert.equal(manifest.message_display_action.default_popup, 'single-mail-ui.html');
+    assert.equal(manifest.action.default_popup, undefined);
+    assert.equal(manifest.message_display_action.default_popup, undefined);
     assert.ok(manifest.permissions.includes('messagesDelete'));
     assert.ok(manifest.permissions.includes('messagesUpdate'));
     assert.ok(manifest.permissions.includes('messagesMove'));
@@ -1220,6 +1231,10 @@ test('manifest routes global and message toolbar actions to separate popup pages
         < manifest.background.scripts.indexOf('background.js'));
     assert.ok(manifest.background.scripts.indexOf('DashboardLaunchService.js')
         < manifest.background.scripts.indexOf('storage.js'));
+    assert.ok(manifest.background.scripts.indexOf('LaunchModeService.js')
+        < manifest.background.scripts.indexOf('DashboardLaunchService.js'));
+    assert.ok(manifest.background.scripts.indexOf('SingleMailWorkspaceService.js')
+        < manifest.background.scripts.indexOf('background.js'));
     assert.ok(dashboard.indexOf('DashboardDeleteComponent.js')
         < dashboard.indexOf('GlobalDashboardManager.js'));
     assert.match(dashboard, /id="dashboardSelectAll"/u);
@@ -1258,6 +1273,7 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(dashboard, /DashboardSenderFilterComponent\.js/u);
     assert.match(dashboard, /DashboardViewPreferences\.js/u);
     assert.match(dashboard, /DashboardAIService\.js/u);
+    assert.match(dashboard, /SingleMailWorkspaceService\.js/u);
     assert.match(dashboard, /DashboardMessageComponent\.js/u);
     assert.match(dashboard, /ScoreFeedbackEditor\.js/u);
     assert.match(dashboard, /DashboardFeedbackComponent\.js/u);
@@ -1316,6 +1332,7 @@ test('manifest routes global and message toolbar actions to separate popup pages
     assert.match(messageComponent, /dashboardMarkReadOne/u);
     assert.match(messageComponent, /dashboardArchiveOne/u);
     assert.match(messageComponent, /dashboardExportPdfOne/u);
+    assert.match(messageComponent, /dashboardChatOne/u);
     assert.match(messageComponent, /dashboard-message-action-group/u);
     assert.match(messageComponent, /dashboard-action-icon/u);
     assert.match(

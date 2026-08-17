@@ -1,26 +1,55 @@
 /** Background coordinator for Thunderbird events and AI workflows. */
 class ThunderbirdAI {
     constructor() {
+        this.initialization = Promise.resolve();
         this.setupEventListeners();
-        this.initializeMenus();
-        this.toolbarInitialization = this.initializeToolbar().catch(error => {
-            console.error('Could not initialize dashboard toolbar behavior:', error);
-        });
     }
 
     setupEventListeners() {
         browser.runtime.onMessage.addListener((request, sender) => this.handleMessage(request, sender));
         browser.menus.onClicked.addListener((info, tab) => this.handleMenuClick(info, tab));
-        browser.action.onClicked.addListener(() => {
-            void this.openDashboardFromToolbar();
+        browser.action.onClicked.addListener(tab => {
+            void this.openDashboardFromToolbar(tab);
+        });
+        browser.messageDisplayAction.onClicked.addListener(tab => {
+            void this.openSingleMailFromToolbar(tab);
         });
     }
 
-    /** Open the durable dashboard and make a bounded failure visible outside developer tools. */
-    async openDashboardFromToolbar() {
+    /** Finish localization and reset any popup assignments left by a prior release. */
+    async initialize() {
+        await this.initializeLaunchRouters();
+        await this.initializeMenus();
+    }
+
+    async initializeLaunchRouters() {
+        const preparations = [
+            DashboardLaunchService.prepareToolbarRouter(),
+            LaunchModeService.clearPopup(browser.messageDisplayAction)
+        ];
+        const results = await Promise.allSettled(preparations);
+        for (const result of results) {
+            if (result.status === 'rejected') {
+                console.warn('Could not clear a pre-update action popup assignment.', result.reason);
+            }
+        }
+    }
+
+    /** Route one global-toolbar click through the persisted dashboard preference. */
+    async openDashboardFromToolbar(tab = {}) {
+        await this.initialization;
         return RuntimeDiagnosticService.run('background', 'toolbar-dashboard', async () => {
             try {
-                await DashboardLaunchService.openExpanded('saved-preference');
+                const mode = await DashboardLaunchService.getMode();
+                if (mode === LaunchModeService.MODES.TAB) {
+                    await DashboardLaunchService.openExpanded('saved-preference');
+                } else {
+                    await LaunchModeService.openOverlay(
+                        browser.action,
+                        'global-dashboard.html',
+                        { tabId: tab.id, windowId: tab.windowId }
+                    );
+                }
                 return { success: true };
             } catch (error) {
                 console.error('Could not open dashboard tab from toolbar:', error);
@@ -34,8 +63,36 @@ class ThunderbirdAI {
         });
     }
 
-    async initializeToolbar() {
-        await DashboardLaunchService.applyToolbarMode(await DashboardLaunchService.getMode());
+    /** Route the message-toolbar button independently from the global dashboard setting. */
+    async openSingleMailFromToolbar(tab = {}) {
+        await this.initialization;
+        return RuntimeDiagnosticService.run('background', 'toolbar-single-mail', async () => {
+            try {
+                const mode = await LaunchModeService.getMode(
+                    CONFIG.STORAGE_KEYS.SINGLE_MAIL_OPEN_MODE
+                );
+                if (mode === LaunchModeService.MODES.TAB) {
+                    await SingleMailWorkspaceService.openFromDisplayedTab(
+                        tab,
+                        'saved-preference'
+                    );
+                } else {
+                    await LaunchModeService.openOverlay(
+                        browser.messageDisplayAction,
+                        'single-mail-ui.html',
+                        { tabId: tab.id, windowId: tab.windowId }
+                    );
+                }
+                return { success: true };
+            } catch (error) {
+                console.error('Could not open the single-mail assistant from the toolbar:', error);
+                await this.showNotification(
+                    I18n.t('singleMailLaunchFailedTitle'),
+                    I18n.t('singleMailLaunchFailedMessage')
+                );
+                return { success: false, data: { code: error?.code || 'SINGLE_MAIL_LAUNCH_FAILED' } };
+            }
+        });
     }
 
     async initializeMenus() {
@@ -56,6 +113,7 @@ class ThunderbirdAI {
     }
 
     async handleMessage(request) {
+        await this.initialization;
         return RuntimeDiagnosticService.run(
             'background',
             request?.action || 'unknown-message',
@@ -142,9 +200,6 @@ class ThunderbirdAI {
 
     async saveSettings(settings) {
         const success = await StorageManager.saveSettings(settings);
-        if (success) {
-            await DashboardLaunchService.applyToolbarMode(settings.dashboardOpenMode);
-        }
         if (success && I18n.isSupportedLanguage(settings.uiLanguage)) {
             await I18n.setLanguage(settings.uiLanguage);
             await this.initializeMenus();
@@ -159,7 +214,7 @@ class ThunderbirdAI {
             normalizedMode
         );
         if (success) {
-            await DashboardLaunchService.applyToolbarMode(normalizedMode);
+            await DashboardLaunchService.prepareToolbarRouter();
         }
         return { success, data: { mode: normalizedMode } };
     }
@@ -401,6 +456,7 @@ class ThunderbirdAI {
     }
 
     async handleMenuClick(info) {
+        await this.initialization;
         const messageId = info.targetMessageId;
         if (messageId === undefined || messageId === null) {
             return;
@@ -411,9 +467,7 @@ class ThunderbirdAI {
                 'ai-suggest-reply': 'reply'
             }[info.menuItemId];
             if (mode) {
-                await browser.tabs.create({
-                    url: `${browser.runtime.getURL('single-mail-ui.html')}?messageId=${encodeURIComponent(messageId)}&${mode}=1`
-                });
+                await SingleMailWorkspaceService.openExpanded(messageId, mode, 'context-menu');
                 return;
             }
             const taskByMenu = {
@@ -450,14 +504,17 @@ if (browser.runtime?.onInstalled?.addListener) {
 }
 
 RuntimeDiagnosticService.installGlobalHandlers('background');
+globalThis.thunderbirdAI = new ThunderbirdAI();
 globalThis.thunderbirdAIInitialization = RuntimeDiagnosticService.run(
     'background',
     'initialize',
-    () => I18n.initialize()
+    async () => {
+        await I18n.initialize();
+        await globalThis.thunderbirdAI.initialize();
+    }
 )
-    .then(() => {
-        globalThis.thunderbirdAI = new ThunderbirdAI();
-    })
     .catch(error => {
         console.error('Thunderbird AI Assistant failed to initialize:', error);
+        throw error;
     });
+globalThis.thunderbirdAI.initialization = globalThis.thunderbirdAIInitialization;

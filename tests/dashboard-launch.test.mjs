@@ -60,6 +60,7 @@ function loadLaunchService(initial = {}, options = {}) {
     loadScript(context, 'thunderbird-ai/config/locale-en.js');
     loadScript(context, 'thunderbird-ai/config/constants.js');
     Object.assign(context.CONFIG.UI, options.ui || {});
+    loadScript(context, 'thunderbird-ai/components/shared/LaunchModeService.js');
     loadScript(context, 'thunderbird-ai/components/shared/DashboardLaunchService.js');
     return {
         context,
@@ -102,17 +103,13 @@ test('third manual fullscreen use offers tab adoption and permanent dismissal is
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_EXPAND_PROMPT_SUPPRESSED], true);
 });
 
-test('toolbar mode switches between popup and direct tab without an intermediate overlay', async () => {
+test('toolbar router clears legacy popup state before opening a direct tab', async () => {
     const { service, popups, tabs } = loadLaunchService();
 
-    await service.applyToolbarMode('overlay');
-    await service.applyToolbarMode('tab');
+    await service.prepareToolbarRouter();
     await service.openExpanded('saved-preference');
 
-    assert.deepEqual(popups, [
-        { popup: 'global-dashboard.html' },
-        { popup: '' }
-    ]);
+    assert.deepEqual(popups, [{ popup: '' }]);
     assert.equal(tabs.length, 1);
     assert.equal(
         tabs[0].url,

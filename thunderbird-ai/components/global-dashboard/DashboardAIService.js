@@ -177,10 +177,7 @@ const DashboardAIService = {
 
     /** Open the existing single-message workspace in its requested AI mode. */
     async openWorkspace(messageId, mode) {
-        const parameters = new URLSearchParams({ messageId: String(messageId), [mode]: '1' });
-        await browser.tabs.create({
-            url: `${browser.runtime.getURL('single-mail-ui.html')}?${parameters.toString()}`
-        });
+        await SingleMailWorkspaceService.openExpanded(messageId, mode, 'dashboard');
     },
 
     /** Reject malformed or stale storage data without exposing it to rendering code. */
