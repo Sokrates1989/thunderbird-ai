@@ -1362,6 +1362,14 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.match(messageComponent, /dashboard-message-action-group/u);
     assert.match(messageComponent, /dashboard-action-icon/u);
     assert.match(
+        messageComponent,
+        /createElement\('label'\)[\s\S]*dashboard-message-selection-area[\s\S]*selectionArea\.append\(checkbox, content\)[\s\S]*item\.append\(selectionArea,/u
+    );
+    assert.match(
+        dashboardStyles,
+        /\.dashboard-message-selection-area\s*\{[^}]*align-self:\s*stretch[^}]*cursor:\s*pointer/su
+    );
+    assert.match(
         dashboardStyles,
         /\.dashboard-message-action\.archive,\s*\.dashboard-message-action\.export-pdf\s*\{[^}]*background:\s*#526d82/su
     );

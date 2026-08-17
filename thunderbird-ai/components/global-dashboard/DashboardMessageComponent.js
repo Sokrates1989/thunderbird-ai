@@ -36,7 +36,10 @@ const DashboardMessageComponent = class {
         if (options.previewEnabled) {
             content.appendChild(this.preview(message, options.previewLineCount));
         }
-        item.append(checkbox, content, this.actionButtons(message, subject, options.busy));
+        const selectionArea = document.createElement('label');
+        selectionArea.className = 'dashboard-message-selection-area';
+        selectionArea.append(checkbox, content);
+        item.append(selectionArea, this.actionButtons(message, subject, options.busy));
         return item;
     }
 
