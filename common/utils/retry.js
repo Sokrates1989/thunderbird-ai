@@ -30,7 +30,14 @@ const RetryService = {
     /** Retry a runtime message only when Thunderbird confirms it was not delivered. */
     async sendRuntimeMessage(message, options = {}) {
         return this.run(
-            () => browser.runtime.sendMessage(message),
+            () => this.withTimeout(
+                () => browser.runtime.sendMessage(message),
+                {
+                    timeoutMs: options.timeoutMs,
+                    code: 'RUNTIME_MESSAGE_TIMEOUT',
+                    stage: options.stage || message?.action || 'runtime-message'
+                }
+            ),
             {
                 maxAttempts: options.maxAttempts || this.DEFAULT_MAX_ATTEMPTS,
                 shouldRetry: error => this.isUndeliveredRuntimeMessage(error),
@@ -41,6 +48,35 @@ const RetryService = {
                 onRetry: options.onRetry
             }
         );
+    },
+
+    /**
+     * Bound a provider promise without retrying an operation whose completion is ambiguous.
+     * Callers may safely use this for reads and best-effort startup work. Mutating requests
+     * must still decide explicitly whether a timeout can be retried.
+     */
+    async withTimeout(operation, options = {}) {
+        const timeoutMs = Number(options.timeoutMs);
+        if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+            return Promise.resolve().then(operation);
+        }
+        let timeoutId;
+        const timeout = new Promise((_resolve, reject) => {
+            timeoutId = setTimeout(() => {
+                const stage = String(options.stage || 'async-operation');
+                const error = new Error(
+                    options.message || `Operation ${stage} timed out after ${timeoutMs} ms.`
+                );
+                error.code = String(options.code || 'ASYNC_OPERATION_TIMEOUT');
+                error.stage = stage;
+                reject(error);
+            }, timeoutMs);
+        });
+        try {
+            return await Promise.race([Promise.resolve().then(operation), timeout]);
+        } finally {
+            clearTimeout(timeoutId);
+        }
     },
 
     /** Recognize startup failures where Thunderbird had no receiving background listener. */

@@ -48,10 +48,16 @@ async function loadBackground(options = {}) {
                 getURL: value => value,
                 getBrowserInfo: options.getBrowserInfo || (async () => ({ version: '140.0' }))
             },
-            menus: { onClicked: eventTarget(), removeAll: async () => {}, create: async () => {} },
+            menus: {
+                onClicked: eventTarget(),
+                removeAll: options.removeMenus || (async () => {}),
+                create: options.createMenu || (async () => {})
+            },
             action: {
                 onClicked: { addListener: listener => { actionClickListener = listener; } },
-                setPopup: async details => popupAssignments.push({ ...details }),
+                setPopup: options.setDashboardPopup || (async details => {
+                    popupAssignments.push({ ...details });
+                }),
                 openPopup: async details => {
                     openedPopups.push(['dashboard', details ? { ...details } : null]);
                     return true;
@@ -59,7 +65,9 @@ async function loadBackground(options = {}) {
             },
             messageDisplayAction: {
                 onClicked: { addListener: listener => { messageActionClickListener = listener; } },
-                setPopup: async details => messagePopupAssignments.push({ ...details }),
+                setPopup: options.setSingleMailPopup || (async details => {
+                    messagePopupAssignments.push({ ...details });
+                }),
                 openPopup: async details => {
                     openedPopups.push(['single-mail', details ? { ...details } : null]);
                     return true;
@@ -104,6 +112,7 @@ async function loadBackground(options = {}) {
     loadScript(context, 'thunderbird-ai/config/locale-de.js');
     loadScript(context, 'thunderbird-ai/config/locale-en.js');
     loadScript(context, 'thunderbird-ai/config/constants.js');
+    Object.assign(context.CONFIG.UI, options.ui || {});
     loadScript(context, 'thunderbird-ai/components/shared/RuntimeDiagnosticService.js');
     loadScript(context, 'thunderbird-ai/components/shared/LaunchModeService.js');
     loadScript(context, 'thunderbird-ai/components/shared/SingleMailWorkspaceService.js');
@@ -282,6 +291,56 @@ test('failed background startup remains diagnosable without a rejected initializ
         storageState[config.STORAGE_KEYS.BACKGROUND_HEALTH_DIAGNOSTIC].state,
         'failed'
     );
+});
+
+test('stalled optional Thunderbird startup API is bounded and leaves settings reachable', async () => {
+    const neverSettles = new Promise(() => {});
+    const { ai, config, initializationResult, storageState } = await loadBackground({
+        setDashboardPopup: async () => neverSettles,
+        ui: {
+            BACKGROUND_STARTUP_STEP_TIMEOUT_MS: 5,
+            BACKGROUND_STARTUP_WRAPPER_GRACE_MS: 5,
+            BACKGROUND_INITIALIZATION_WAIT_TIMEOUT_MS: 30
+        },
+        console: { error() {}, log() {}, warn() {} }
+    });
+
+    assert.equal(initializationResult, true);
+    const health = await ai.handleMessage({ action: config.ACTIONS.GET_BACKGROUND_HEALTH });
+    assert.equal(health.data.state, 'ready');
+    assert.equal(health.data.code, 'BACKGROUND_READY_DEGRADED');
+    assert.deepEqual(
+        Array.from(health.data.warnings, warning => warning.stage),
+        ['clear-action-popup']
+    );
+    const settings = await ai.handleMessage({ action: config.ACTIONS.GET_SETTINGS });
+    assert.notEqual(settings.success, false);
+    const events = storageState[config.STORAGE_KEYS.RUNTIME_DIAGNOSTICS];
+    assert.ok(events.some(event => (
+        event.action === 'initialize-dashboard-action-router'
+        && event.state === 'reported-failure'
+        && event.stage === 'clear-action-popup'
+    )));
+});
+
+test('stalled context-menu provider does not prevent background requests', async () => {
+    const neverSettles = new Promise(() => {});
+    const { ai, config, initializationResult } = await loadBackground({
+        removeMenus: async () => neverSettles,
+        ui: {
+            BACKGROUND_STARTUP_STEP_TIMEOUT_MS: 5,
+            BACKGROUND_STARTUP_WRAPPER_GRACE_MS: 5,
+            BACKGROUND_INITIALIZATION_WAIT_TIMEOUT_MS: 30
+        },
+        console: { error() {}, log() {}, warn() {} }
+    });
+
+    assert.equal(initializationResult, true);
+    const health = await ai.handleMessage({ action: config.ACTIONS.GET_BACKGROUND_HEALTH });
+    assert.equal(health.data.code, 'BACKGROUND_READY_DEGRADED');
+    assert.ok(health.data.warnings.some(warning => warning.stage === 'context-menus'));
+    const settings = await ai.handleMessage({ action: config.ACTIONS.GET_SETTINGS });
+    assert.notEqual(settings.success, false);
 });
 
 test('install and update events defer stale dashboard cleanup until the next launch', async () => {

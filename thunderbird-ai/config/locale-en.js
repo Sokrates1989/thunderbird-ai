@@ -38,6 +38,7 @@ globalThis.LOCALE_MESSAGES.en = Object.freeze({
     supportDiagnosticsDetailsTitle: 'Complete technical diagnostic',
     supportDiagnosticsChecking: 'Checking the background and local storage…',
     supportDiagnosticsHealthy: 'The background service is ready and local storage is accessible.',
+    supportDiagnosticsDegraded: 'The background service is operational. At least one optional Thunderbird function did not respond during startup; the diagnostic identifies the exact step.',
     supportDiagnosticsFailed: 'The background service is not fully accessible. The details and local storage check below remain available.',
     supportDiagnosticsLiveHealthHeading: 'Current background status',
     supportDiagnosticsStoredHealthHeading: 'Last persisted background startup',

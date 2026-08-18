@@ -87,7 +87,7 @@ const SettingsManager = class {
      */
     async loadInitialSettings() {
         try {
-            const settings = await this.sendToBackground(CONFIG.ACTIONS.GET_SETTINGS);
+            const settings = await this.sendReadRequest(CONFIG.ACTIONS.GET_SETTINGS);
             if (!settings || settings.success === false) {
                 throw new Error(settings?.error || 'SETTINGS_RESPONSE_INVALID');
             }
@@ -146,14 +146,23 @@ const SettingsManager = class {
      * @async
      * @param {string} action - Action to perform
      * @param {Object} data - Data to send with the message (default: {})
+     * @param {Object} options - Delivery options such as an explicit read timeout
      * @returns {Promise<Object>} Response from background script
      * 
      * @example
      * const result = await this.sendToBackground('getSettings');
      * const result = await this.sendToBackground('saveSettings', { apiKey: 'sk-...' });
      */
-    async sendToBackground(action, data = {}) {
-        return RetryService.sendRuntimeMessage({ action, ...data });
+    async sendToBackground(action, data = {}, options = {}) {
+        return RetryService.sendRuntimeMessage({ action, ...data }, options);
+    }
+
+    /** Bound idempotent reads so a stalled background activates the protected local fallback. */
+    async sendReadRequest(action, data = {}) {
+        return this.sendToBackground(action, data, {
+            timeoutMs: CONFIG.UI.SETTINGS_READ_TIMEOUT_MS,
+            stage: `settings-read-${action}`
+        });
     }
 
     /**
@@ -168,7 +177,7 @@ const SettingsManager = class {
      */
     async getSettings() {
         try {
-            const settings = await this.sendToBackground(CONFIG.ACTIONS.GET_SETTINGS);
+            const settings = await this.sendReadRequest(CONFIG.ACTIONS.GET_SETTINGS);
             this.currentSettings = settings;
             return settings;
         } catch (error) {

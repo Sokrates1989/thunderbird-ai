@@ -140,7 +140,7 @@ const StatisticsComponent = class {
      * await this.loadStatistics();
      */
     async loadStatistics() {
-        const stats = await this.settingsManager.sendToBackground(CONFIG.ACTIONS.GET_STATISTICS);
+        const stats = await this.settingsManager.sendReadRequest(CONFIG.ACTIONS.GET_STATISTICS);
         if (!stats || stats.success === false) {
             throw new Error(stats?.error || 'STATISTICS_RESPONSE_INVALID');
         }

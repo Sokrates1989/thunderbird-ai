@@ -63,10 +63,19 @@ const SupportDiagnosticsComponent = class {
             const liveReady = liveHealth.ok
                 && liveHealth.value?.success
                 && liveHealth.value?.data?.state === 'ready';
-            this.elements.health.className = `support-health ${liveReady ? 'healthy' : 'failed'}`;
-            this.elements.health.textContent = I18n.t(
-                liveReady ? 'supportDiagnosticsHealthy' : 'supportDiagnosticsFailed'
-            );
+            const degraded = liveReady
+                && Array.isArray(liveHealth.value?.data?.warnings)
+                && liveHealth.value.data.warnings.length > 0;
+            let healthClass = 'failed';
+            let healthMessageKey = 'supportDiagnosticsFailed';
+            if (liveReady) {
+                healthClass = degraded ? 'degraded' : 'healthy';
+                healthMessageKey = degraded
+                    ? 'supportDiagnosticsDegraded'
+                    : 'supportDiagnosticsHealthy';
+            }
+            this.elements.health.className = `support-health ${healthClass}`;
+            this.elements.health.textContent = I18n.t(healthMessageKey);
             this.elements.copy.disabled = false;
         } catch (error) {
             console.error('Could not build support diagnostics:', error);
@@ -92,15 +101,25 @@ const SupportDiagnosticsComponent = class {
     }
 
     async probeBackground() {
-        const timeoutMs = 1800;
-        return Promise.race([
-            browser.runtime.sendMessage({ action: CONFIG.ACTIONS.GET_BACKGROUND_HEALTH }),
-            new Promise((_, reject) => setTimeout(() => {
-                const error = new Error('BACKGROUND_HEALTH_TIMEOUT');
-                error.code = 'BACKGROUND_HEALTH_TIMEOUT';
-                reject(error);
-            }, timeoutMs))
-        ]);
+        const deadline = Date.now() + CONFIG.UI.BACKGROUND_INITIALIZATION_WAIT_TIMEOUT_MS;
+        let response;
+        do {
+            response = await globalThis.RetryService.withTimeout(
+                () => browser.runtime.sendMessage({
+                    action: CONFIG.ACTIONS.GET_BACKGROUND_HEALTH
+                }),
+                {
+                    timeoutMs: 1800,
+                    code: 'BACKGROUND_HEALTH_TIMEOUT',
+                    stage: 'probe-background-health'
+                }
+            );
+            if (response?.data?.state !== 'starting') {
+                return response;
+            }
+            await globalThis.RetryService.wait(200);
+        } while (Date.now() < deadline);
+        return response;
     }
 
     /** Report presence and counts only; the API key and email contents never enter the report. */

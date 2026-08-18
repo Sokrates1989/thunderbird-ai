@@ -42,3 +42,23 @@ test('ambiguous closed-port failures are not retried to avoid duplicate side eff
     assert.equal(attempts, 1);
     assert.equal(delays.length, 0);
 });
+
+test('bounded runtime reads surface a stable timeout without retrying an ambiguous request', async () => {
+    let attempts = 0;
+    const { service } = loadRetryService(async () => {
+        attempts += 1;
+        return new Promise(() => {});
+    });
+
+    await assert.rejects(
+        service.sendRuntimeMessage(
+            { action: 'getSettings' },
+            { timeoutMs: 5, stage: 'settings-read-getSettings' }
+        ),
+        error => (
+            error.code === 'RUNTIME_MESSAGE_TIMEOUT'
+            && error.stage === 'settings-read-getSettings'
+        )
+    );
+    assert.equal(attempts, 1);
+});

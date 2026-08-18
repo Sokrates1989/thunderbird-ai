@@ -35,6 +35,7 @@ function loadServices(existingTabs = []) {
     loadScript(context, 'thunderbird-ai/config/locale-de.js');
     loadScript(context, 'thunderbird-ai/config/locale-en.js');
     loadScript(context, 'thunderbird-ai/config/constants.js');
+    loadScript(context, 'common/utils/retry.js');
     loadScript(context, 'thunderbird-ai/components/shared/LaunchModeService.js');
     loadScript(context, 'thunderbird-ai/components/shared/SingleMailWorkspaceService.js');
     return {

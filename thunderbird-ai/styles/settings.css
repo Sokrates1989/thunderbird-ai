@@ -164,6 +164,12 @@ body {
     color: #166523;
 }
 
+.support-health.degraded {
+    border-color: #d49a1f;
+    background: #fff7df;
+    color: #76520b;
+}
+
 .support-health.failed {
     border-color: #dc6b62;
     background: #fff0ef;

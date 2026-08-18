@@ -5,6 +5,7 @@
 const RuntimeDiagnosticService = {
     MAX_EVENTS: 100,
     WRITE_TIMEOUT_MS: 150,
+    HEALTH_STORAGE_TIMEOUT_MS: 750,
     sessionId: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
     writeQueue: Promise.resolve(),
     installedContexts: new Set(),
@@ -90,7 +91,10 @@ const RuntimeDiagnosticService = {
             technicalError: this.safeTechnicalError(details.technicalError)
         };
         try {
-            await browser.storage.local.set({ [key]: diagnostic });
+            await this.withStorageTimeout(
+                () => browser.storage.local.set({ [key]: diagnostic }),
+                'persist-background-health'
+            );
         } catch (error) {
             console.warn('Could not persist background health diagnostic:', error);
         }
@@ -100,9 +104,30 @@ const RuntimeDiagnosticService = {
     /** Load the latest content-free background startup record. */
     async loadBackgroundHealth() {
         const key = CONFIG.STORAGE_KEYS.BACKGROUND_HEALTH_DIAGNOSTIC;
-        const stored = await browser.storage.local.get(key);
+        const stored = await this.withStorageTimeout(
+            () => browser.storage.local.get(key),
+            'load-background-health'
+        );
         const diagnostic = stored?.[key];
         return diagnostic && typeof diagnostic === 'object' ? diagnostic : null;
+    },
+
+    /** Keep support-only health storage from holding the background event page open forever. */
+    async withStorageTimeout(operation, stage) {
+        let timeoutId;
+        const timeout = new Promise((_resolve, reject) => {
+            timeoutId = setTimeout(() => {
+                const error = new Error(`Diagnostic storage timed out during ${stage}.`);
+                error.code = 'DIAGNOSTIC_STORAGE_TIMEOUT';
+                error.stage = stage;
+                reject(error);
+            }, this.HEALTH_STORAGE_TIMEOUT_MS);
+        });
+        try {
+            return await Promise.race([Promise.resolve().then(operation), timeout]);
+        } finally {
+            clearTimeout(timeoutId);
+        }
     },
 
     /** Capture otherwise invisible page/background failures without persisting error messages. */

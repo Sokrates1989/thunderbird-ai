@@ -8,6 +8,7 @@ class ThunderbirdAI {
             stage: 'construct-background',
             timestamp: new Date().toISOString()
         };
+        this.startupWarnings = [];
         this.setupEventListeners();
     }
 
@@ -25,7 +26,14 @@ class ThunderbirdAI {
 
     /** Stop actions cleanly when startup failed instead of continuing with partial services. */
     async requireInitialization() {
-        const initialized = await this.initialization;
+        const initialized = await RetryService.withTimeout(
+            () => this.initialization,
+            {
+                timeoutMs: CONFIG.UI.BACKGROUND_INITIALIZATION_WAIT_TIMEOUT_MS,
+                code: 'BACKGROUND_INITIALIZATION_WAIT_TIMEOUT',
+                stage: 'await-background-initialization'
+            }
+        );
         if (initialized === true) {
             return;
         }
@@ -46,23 +54,74 @@ class ThunderbirdAI {
         });
     }
 
-    /** Finish localization and reset any popup assignments left by a prior release. */
+    /** Finish bounded, best-effort startup work without blocking the core message listener. */
     async initialize() {
-        await this.initializeLaunchRouters();
-        await this.initializeMenus();
+        const localization = await this.runStartupStep(
+            'localization',
+            () => I18n.initialize(),
+            { failOnProviderError: true }
+        );
+        if (localization.success === false && !I18n.language) {
+            I18n.language = I18n.browserLanguage();
+        }
+        await Promise.all([
+            this.runStartupStep(
+                'dashboard-action-router',
+                () => this.dashboardLaunchService().prepareToolbarRouter()
+            ),
+            this.runStartupStep(
+                'single-mail-action-router',
+                () => globalThis.LaunchModeService.clearPopup(browser.messageDisplayAction)
+            ),
+            this.runStartupStep('context-menus', () => this.initializeMenus())
+        ]);
     }
 
-    async initializeLaunchRouters() {
-        const launchModeService = globalThis.LaunchModeService;
-        const preparations = [
-            this.dashboardLaunchService().prepareToolbarRouter(),
-            launchModeService.clearPopup(browser.messageDisplayAction)
-        ];
-        const results = await Promise.allSettled(preparations);
-        for (const result of results) {
-            if (result.status === 'rejected') {
-                console.warn('Could not clear a pre-update action popup assignment.', result.reason);
+    /** Record the precise startup boundary and convert optional provider failures to warnings. */
+    async runStartupStep(stage, operation, options = {}) {
+        return RuntimeDiagnosticService.run(
+            'background',
+            `initialize-${stage}`,
+            async () => {
+                try {
+                    await RetryService.withTimeout(operation, {
+                        timeoutMs: CONFIG.UI.BACKGROUND_STARTUP_STEP_TIMEOUT_MS
+                            + CONFIG.UI.BACKGROUND_STARTUP_WRAPPER_GRACE_MS,
+                        code: 'BACKGROUND_STARTUP_STEP_TIMEOUT',
+                        stage
+                    });
+                    return { success: true };
+                } catch (error) {
+                    if (options.failOnProviderError === true
+                        && error?.code !== 'BACKGROUND_STARTUP_STEP_TIMEOUT') {
+                        error.stage = error?.stage || stage;
+                        throw error;
+                    }
+                    const warning = {
+                        code: error?.code || error?.name || 'BACKGROUND_STARTUP_STEP_FAILED',
+                        stage: error?.stage || stage
+                    };
+                    this.startupWarnings.push(warning);
+                    console.warn(`Background startup step ${stage} did not complete.`, error);
+                    return { success: false, data: warning };
+                }
             }
+        );
+    }
+
+    /** Refresh localized context menus without making an already-saved setting look lost. */
+    async refreshMenusAfterSettingsChange() {
+        try {
+            await RetryService.withTimeout(
+                () => this.initializeMenus(),
+                {
+                    timeoutMs: CONFIG.UI.BACKGROUND_STARTUP_STEP_TIMEOUT_MS,
+                    code: 'BACKGROUND_MENU_REFRESH_TIMEOUT',
+                    stage: 'refresh-context-menus'
+                }
+            );
+        } catch (error) {
+            console.warn('Settings were saved, but context menus could not be refreshed.', error);
         }
     }
 
@@ -130,19 +189,15 @@ class ThunderbirdAI {
     }
 
     async initializeMenus() {
-        try {
-            await browser.menus.removeAll();
-            const items = [
-                ['ai-summarize', I18n.t('contextSummarize')],
-                ['ai-categorize', I18n.t('contextCategorize')],
-                ['ai-suggest-reply', I18n.t('contextReply')],
-                ['ai-chat', I18n.t('contextChat')]
-            ];
-            for (const [id, title] of items) {
-                await browser.menus.create({ id, title, contexts: ['message_list'] });
-            }
-        } catch (error) {
-            console.error('Could not initialize context menus:', error);
+        await browser.menus.removeAll();
+        const items = [
+            ['ai-summarize', I18n.t('contextSummarize')],
+            ['ai-categorize', I18n.t('contextCategorize')],
+            ['ai-suggest-reply', I18n.t('contextReply')],
+            ['ai-chat', I18n.t('contextChat')]
+        ];
+        for (const [id, title] of items) {
+            await browser.menus.create({ id, title, contexts: ['message_list'] });
         }
     }
 
@@ -267,7 +322,7 @@ class ThunderbirdAI {
         const success = await StorageManager.saveSettings(settings);
         if (success && I18n.isSupportedLanguage(settings.uiLanguage)) {
             await I18n.setLanguage(settings.uiLanguage);
-            await this.initializeMenus();
+            await this.refreshMenusAfterSettingsChange();
         }
         return { success };
     }
@@ -595,19 +650,25 @@ globalThis.thunderbirdAIInitialization = RuntimeDiagnosticService.run(
     'background',
     'initialize',
     async () => {
-        await I18n.initialize();
         await globalThis.thunderbirdAI.initialize();
+        const startupWarnings = globalThis.thunderbirdAI.startupWarnings.slice();
         globalThis.thunderbirdAI.startupState = {
             state: 'ready',
-            code: 'BACKGROUND_READY',
+            code: startupWarnings.length ? 'BACKGROUND_READY_DEGRADED' : 'BACKGROUND_READY',
             stage: 'initialize-background',
             timestamp: new Date().toISOString(),
-            durationMs: Date.now() - backgroundInitializationStartedAt
+            durationMs: Date.now() - backgroundInitializationStartedAt,
+            warnings: startupWarnings
         };
         await backgroundStartingDiagnostic;
         await RuntimeDiagnosticService.recordBackgroundHealth(
             'ready',
-            globalThis.thunderbirdAI.startupState
+            {
+                ...globalThis.thunderbirdAI.startupState,
+                technicalError: startupWarnings.length
+                    ? `Degraded startup steps: ${startupWarnings.map(item => item.stage).join(', ')}`
+                    : ''
+            }
         );
         return true;
     }

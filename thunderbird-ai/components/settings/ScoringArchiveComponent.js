@@ -41,7 +41,7 @@ const ScoringArchiveComponent = class {
         this.refreshButton.disabled = true;
         this.count.textContent = I18n.t('scoreArchiveLoading');
         try {
-            const response = await this.settingsManager.sendToBackground(
+            const response = await this.settingsManager.sendReadRequest(
                 CONFIG.ACTIONS.GET_SCORE_ARCHIVE
             );
             if (!response?.success) {

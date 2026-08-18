@@ -60,6 +60,7 @@ function loadLaunchService(initial = {}, options = {}) {
     loadScript(context, 'thunderbird-ai/config/locale-en.js');
     loadScript(context, 'thunderbird-ai/config/constants.js');
     Object.assign(context.CONFIG.UI, options.ui || {});
+    loadScript(context, 'common/utils/retry.js');
     loadScript(context, 'thunderbird-ai/components/shared/LaunchModeService.js');
     loadScript(context, 'thunderbird-ai/components/shared/DashboardLaunchService.js');
     return {

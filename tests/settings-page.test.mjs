@@ -74,6 +74,8 @@ test('settings protect persisted values when the background cannot initialize', 
     const apiConfig = source('thunderbird-ai/components/settings/ApiConfigComponent.js');
 
     assert.match(settingsManager, /getSettings\(\{ migrate: false \}\)/u);
+    assert.match(settingsManager, /sendReadRequest\(CONFIG\.ACTIONS\.GET_SETTINGS\)/u);
+    assert.match(settingsManager, /SETTINGS_READ_TIMEOUT_MS/u);
     assert.match(settingsManager, /setPersistenceAvailable\(false\)/u);
     assert.match(settingsManager, /settingsBackgroundUnavailableReadOnly/u);
     assert.match(actions, /if \(!this\.persistenceAvailable\)/u);
