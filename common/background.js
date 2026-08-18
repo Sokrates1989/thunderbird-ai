@@ -2,7 +2,37 @@
 class ThunderbirdAI {
     constructor() {
         this.initialization = Promise.resolve();
+        this.startupState = {
+            state: 'starting',
+            code: 'BACKGROUND_STARTING',
+            stage: 'construct-background',
+            timestamp: new Date().toISOString()
+        };
         this.setupEventListeners();
+    }
+
+    /** Resolve the global service without touching a cross-script lexical binding in its TDZ. */
+    dashboardLaunchService() {
+        const service = globalThis.DashboardLaunchService;
+        if (!service) {
+            const error = new Error('Dashboard launch service was not loaded.');
+            error.code = 'BACKGROUND_DEPENDENCY_MISSING';
+            error.stage = 'resolve-dashboard-launch-service';
+            throw error;
+        }
+        return service;
+    }
+
+    /** Stop actions cleanly when startup failed instead of continuing with partial services. */
+    async requireInitialization() {
+        const initialized = await this.initialization;
+        if (initialized === true) {
+            return;
+        }
+        const error = new Error('Thunderbird AI background initialization failed.');
+        error.code = this.startupState.code || 'BACKGROUND_INITIALIZATION_FAILED';
+        error.stage = this.startupState.stage || 'initialize-background';
+        throw error;
     }
 
     setupEventListeners() {
@@ -23,9 +53,10 @@ class ThunderbirdAI {
     }
 
     async initializeLaunchRouters() {
+        const launchModeService = globalThis.LaunchModeService;
         const preparations = [
-            DashboardLaunchService.prepareToolbarRouter(),
-            LaunchModeService.clearPopup(browser.messageDisplayAction)
+            this.dashboardLaunchService().prepareToolbarRouter(),
+            launchModeService.clearPopup(browser.messageDisplayAction)
         ];
         const results = await Promise.allSettled(preparations);
         for (const result of results) {
@@ -37,14 +68,16 @@ class ThunderbirdAI {
 
     /** Route one global-toolbar click through the persisted dashboard preference. */
     async openDashboardFromToolbar(tab = {}) {
-        await this.initialization;
         return RuntimeDiagnosticService.run('background', 'toolbar-dashboard', async () => {
             try {
-                const mode = await DashboardLaunchService.getMode();
-                if (mode === LaunchModeService.MODES.TAB) {
-                    await DashboardLaunchService.openExpanded('saved-preference');
+                await this.requireInitialization();
+                const launchService = this.dashboardLaunchService();
+                const launchModeService = globalThis.LaunchModeService;
+                const mode = await launchService.getMode();
+                if (mode === launchModeService.MODES.TAB) {
+                    await launchService.openExpanded('saved-preference');
                 } else {
-                    await LaunchModeService.openOverlay(
+                    await launchModeService.openOverlay(
                         browser.action,
                         'global-dashboard.html',
                         { tabId: tab.id, windowId: tab.windowId }
@@ -65,19 +98,20 @@ class ThunderbirdAI {
 
     /** Route the message-toolbar button independently from the global dashboard setting. */
     async openSingleMailFromToolbar(tab = {}) {
-        await this.initialization;
         return RuntimeDiagnosticService.run('background', 'toolbar-single-mail', async () => {
             try {
-                const mode = await LaunchModeService.getMode(
+                await this.requireInitialization();
+                const launchModeService = globalThis.LaunchModeService;
+                const mode = await launchModeService.getMode(
                     CONFIG.STORAGE_KEYS.SINGLE_MAIL_OPEN_MODE
                 );
-                if (mode === LaunchModeService.MODES.TAB) {
+                if (mode === launchModeService.MODES.TAB) {
                     await SingleMailWorkspaceService.openFromDisplayedTab(
                         tab,
                         'saved-preference'
                     );
                 } else {
-                    await LaunchModeService.openOverlay(
+                    await launchModeService.openOverlay(
                         browser.messageDisplayAction,
                         'single-mail-ui.html',
                         { tabId: tab.id, windowId: tab.windowId }
@@ -113,12 +147,43 @@ class ThunderbirdAI {
     }
 
     async handleMessage(request) {
-        await this.initialization;
+        if (request?.action === CONFIG.ACTIONS.GET_BACKGROUND_HEALTH) {
+            return { success: true, data: this.backgroundHealth() };
+        }
         return RuntimeDiagnosticService.run(
             'background',
             request?.action || 'unknown-message',
-            () => this.dispatchMessage(request || {})
+            async () => {
+                try {
+                    await this.requireInitialization();
+                } catch (error) {
+                    return {
+                        success: false,
+                        error: I18n.t('backgroundUnavailable'),
+                        data: {
+                            code: error?.code || 'BACKGROUND_INITIALIZATION_FAILED',
+                            stage: error?.stage || 'initialize-background'
+                        }
+                    };
+                }
+                return this.dispatchMessage(request || {});
+            }
         );
+    }
+
+    /** Return startup state and dependency availability without exposing persisted user data. */
+    backgroundHealth() {
+        return {
+            ...this.startupState,
+            session: RuntimeDiagnosticService.sessionId,
+            dependencies: {
+                launchMode: Boolean(globalThis.LaunchModeService),
+                dashboardLaunch: Boolean(globalThis.DashboardLaunchService),
+                storage: Boolean(globalThis.StorageManager),
+                message: Boolean(globalThis.MessageService),
+                openAI: Boolean(globalThis.OpenAIService)
+            }
+        };
     }
 
     /** Route a runtime request while the outer boundary records start and completion. */
@@ -208,13 +273,14 @@ class ThunderbirdAI {
     }
 
     async setDashboardOpenMode(mode) {
-        const normalizedMode = DashboardLaunchService.normalizeMode(mode);
+        const launchService = this.dashboardLaunchService();
+        const normalizedMode = launchService.normalizeMode(mode);
         const success = await StorageManager.set(
             CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE,
             normalizedMode
         );
         if (success) {
-            await DashboardLaunchService.prepareToolbarRouter();
+            await launchService.prepareToolbarRouter();
         }
         return { success, data: { mode: normalizedMode } };
     }
@@ -456,12 +522,12 @@ class ThunderbirdAI {
     }
 
     async handleMenuClick(info) {
-        await this.initialization;
         const messageId = info.targetMessageId;
         if (messageId === undefined || messageId === null) {
             return;
         }
         try {
+            await this.requireInitialization();
             const mode = {
                 'ai-chat': 'chat',
                 'ai-suggest-reply': 'reply'
@@ -498,23 +564,69 @@ class ThunderbirdAI {
 }
 
 if (browser.runtime?.onInstalled?.addListener) {
-    browser.runtime.onInstalled.addListener(details => (
-        DashboardLaunchService.markDashboardTabCleanupPending(details)
-    ));
+    browser.runtime.onInstalled.addListener(details => {
+        const service = globalThis.DashboardLaunchService;
+        if (!service) {
+            void RuntimeDiagnosticService.recordBackgroundHealth('failed', {
+                code: 'BACKGROUND_DEPENDENCY_MISSING',
+                stage: 'on-installed-dashboard-cleanup'
+            });
+            return;
+        }
+        void service.markDashboardTabCleanupPending(details).catch(error => {
+            console.error('Could not schedule dashboard tab cleanup:', error);
+            void RuntimeDiagnosticService.record('background', 'install-cleanup', 'failed', {
+                code: error?.code || error?.name || 'DASHBOARD_CLEANUP_SCHEDULE_FAILED',
+                stage: 'on-installed-dashboard-cleanup',
+                location: RuntimeDiagnosticService.errorLocation(error)
+            });
+        });
+    });
 }
 
 RuntimeDiagnosticService.installGlobalHandlers('background');
 globalThis.thunderbirdAI = new ThunderbirdAI();
+const backgroundInitializationStartedAt = Date.now();
+const backgroundStartingDiagnostic = RuntimeDiagnosticService.recordBackgroundHealth('starting', {
+    code: 'BACKGROUND_STARTING',
+    stage: 'initialize-background'
+});
 globalThis.thunderbirdAIInitialization = RuntimeDiagnosticService.run(
     'background',
     'initialize',
     async () => {
         await I18n.initialize();
         await globalThis.thunderbirdAI.initialize();
+        globalThis.thunderbirdAI.startupState = {
+            state: 'ready',
+            code: 'BACKGROUND_READY',
+            stage: 'initialize-background',
+            timestamp: new Date().toISOString(),
+            durationMs: Date.now() - backgroundInitializationStartedAt
+        };
+        await backgroundStartingDiagnostic;
+        await RuntimeDiagnosticService.recordBackgroundHealth(
+            'ready',
+            globalThis.thunderbirdAI.startupState
+        );
+        return true;
     }
 )
-    .catch(error => {
+    .catch(async error => {
+        globalThis.thunderbirdAI.startupState = {
+            state: 'failed',
+            code: error?.code || error?.name || 'BACKGROUND_INITIALIZATION_FAILED',
+            stage: error?.stage || 'initialize-background',
+            location: RuntimeDiagnosticService.errorLocation(error),
+            timestamp: new Date().toISOString(),
+            durationMs: Date.now() - backgroundInitializationStartedAt
+        };
+        await backgroundStartingDiagnostic;
+        await RuntimeDiagnosticService.recordBackgroundHealth('failed', {
+            ...globalThis.thunderbirdAI.startupState,
+            technicalError: error?.message
+        });
         console.error('Thunderbird AI Assistant failed to initialize:', error);
-        throw error;
+        return false;
     });
 globalThis.thunderbirdAI.initialization = globalThis.thunderbirdAIInitialization;

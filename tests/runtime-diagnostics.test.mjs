@@ -56,3 +56,23 @@ test('runtime diagnostics sanitize failures and keep a bounded activity history'
     assert.doesNotMatch(JSON.stringify(events), /Sensitive subject|body/u);
     assert.ok(events.every(event => !/[ !]/u.test(event.action)));
 });
+
+test('background health keeps bounded startup evidence and redacts API keys', async () => {
+    const { context, service, storage } = loadDiagnostics();
+
+    await service.recordBackgroundHealth('failed', {
+        code: 'ReferenceError',
+        stage: 'initialize-background',
+        location: 'background.js:502:9',
+        durationMs: 27.6,
+        technicalError: 'Request with sk-secret-value failed\nwhile starting'
+    });
+
+    const health = await service.loadBackgroundHealth();
+    assert.equal(health.state, 'failed');
+    assert.equal(health.durationMs, 28);
+    assert.equal(health.location, 'background.js:502:9');
+    assert.doesNotMatch(JSON.stringify(storage), /sk-secret-value/u);
+    assert.match(health.technicalError, /\[redacted-api-key\]/u);
+    assert.equal(storage[context.CONFIG.STORAGE_KEYS.BACKGROUND_HEALTH_DIAGNOSTIC].state, 'failed');
+});

@@ -24,10 +24,21 @@ const ScoringArchiveComponent = class {
         refresh.textContent = I18n.t('refresh');
         refresh.addEventListener('click', () => this.loadArchive());
         this.container.append(title, help, refresh, this.count, this.list);
-        this.loadArchive();
+        this.refreshButton = refresh;
+        this.showUnavailable();
+    }
+
+    showUnavailable() {
+        this.count.textContent = I18n.t('scoreArchiveBackgroundRequired');
+        this.refreshButton.disabled = !this.settingsManager.settingsLoaded;
     }
 
     async loadArchive() {
+        if (!this.settingsManager.settingsLoaded) {
+            this.showUnavailable();
+            return;
+        }
+        this.refreshButton.disabled = true;
         this.count.textContent = I18n.t('scoreArchiveLoading');
         try {
             const response = await this.settingsManager.sendToBackground(
@@ -41,6 +52,8 @@ const ScoringArchiveComponent = class {
         } catch (error) {
             console.error('Could not load score archive:', error);
             this.count.textContent = I18n.t('scoreArchiveLoadFailed');
+        } finally {
+            this.refreshButton.disabled = false;
         }
     }
 

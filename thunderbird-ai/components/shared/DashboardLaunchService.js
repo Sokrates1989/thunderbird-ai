@@ -2,22 +2,22 @@
  * Coordinates dashboard launch mode, bounded tab API calls, and persisted launch diagnostics.
  * A stalled Thunderbird API call must never keep later toolbar clicks blocked indefinitely.
  */
-const DashboardLaunchService = {
-    MODES: LaunchModeService.MODES,
+globalThis.DashboardLaunchService = {
+    MODES: globalThis.LaunchModeService.MODES,
     PROMPTS: Object.freeze({ ADOPT_TAB: 'adopt-tab', DISCOVER_TAB: 'discover-tab' }),
     openInProgress: null,
 
     normalizeMode(value) {
-        return LaunchModeService.normalizeMode(value);
+        return globalThis.LaunchModeService.normalizeMode(value);
     },
 
     async getMode() {
-        return LaunchModeService.getMode(CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE);
+        return globalThis.LaunchModeService.getMode(CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE);
     },
 
     /** Remove any pre-update popup assignment so every click reaches the launch router. */
     async prepareToolbarRouter() {
-        await LaunchModeService.clearPopup(browser.action);
+        await globalThis.LaunchModeService.clearPopup(browser.action);
     },
 
     /** Share one bounded launch attempt across rapid callers and always release its lock. */
@@ -362,5 +362,3 @@ const DashboardLaunchService = {
         throw new Error(`Unsupported dashboard launch prompt: ${String(prompt)}`);
     }
 };
-
-globalThis.DashboardLaunchService = DashboardLaunchService;

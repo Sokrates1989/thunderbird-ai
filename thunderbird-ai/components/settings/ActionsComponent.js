@@ -49,6 +49,8 @@ const ActionsComponent = class {
     initialize() {
         this.createUI();
         this.attachEventListeners();
+        this.persistenceAvailable = false;
+        this.setPersistenceAvailable(false);
     }
 
     /**
@@ -108,6 +110,14 @@ const ActionsComponent = class {
      * await this.saveSettings();
      */
     async saveSettings() {
+        if (!this.persistenceAvailable) {
+            this.settingsManager.showStatus(
+                I18n.t('settingsWriteBlockedBackgroundUnavailable'),
+                'error',
+                0
+            );
+            return;
+        }
         try {
             // Collect settings from all components
             const settings = this.settingsManager.collectAllSettings();
@@ -136,7 +146,7 @@ const ActionsComponent = class {
             this.settingsManager.showStatus(I18n.t('settingsSaveFailed'), 'error');
         } finally {
             // Reset button state
-            this.elements.saveBtn.disabled = false;
+            this.elements.saveBtn.disabled = !this.persistenceAvailable;
             this.elements.saveBtn.innerHTML = `💾 ${I18n.t('saveSettings')}`;
         }
     }
@@ -152,6 +162,14 @@ const ActionsComponent = class {
      * await this.resetSettings();
      */
     async resetSettings() {
+        if (!this.persistenceAvailable) {
+            this.settingsManager.showStatus(
+                I18n.t('settingsWriteBlockedBackgroundUnavailable'),
+                'error',
+                0
+            );
+            return;
+        }
         if (confirm(I18n.t('resetConfirm'))) {
             try {
                 // Show loading state
@@ -165,8 +183,8 @@ const ActionsComponent = class {
                 const defaultSettings = {
                     openaiApiKey: '',
                     uiLanguage: I18n.getLanguage(),
-                    dashboardOpenMode: LaunchModeService.MODES.OVERLAY,
-                    singleMailOpenMode: LaunchModeService.MODES.OVERLAY,
+                    dashboardOpenMode: globalThis.LaunchModeService.MODES.OVERLAY,
+                    singleMailOpenMode: globalThis.LaunchModeService.MODES.OVERLAY,
                     ...Object.fromEntries(
                         CONFIG.OPENAI.MODEL_SETTINGS.map(definition => [
                             definition.property,
@@ -188,9 +206,20 @@ const ActionsComponent = class {
                 this.settingsManager.showStatus(I18n.t('settingsResetFailed'), 'error');
             } finally {
                 // Reset button state
-                this.elements.resetBtn.disabled = false;
+                this.elements.resetBtn.disabled = !this.persistenceAvailable;
                 this.elements.resetBtn.innerHTML = `🔄 ${I18n.t('resetSettings')}`;
             }
+        }
+    }
+
+    /** Disable destructive persistence controls until the authoritative settings read succeeds. */
+    setPersistenceAvailable(available) {
+        this.persistenceAvailable = Boolean(available);
+        if (this.elements.saveBtn) {
+            this.elements.saveBtn.disabled = !this.persistenceAvailable;
+        }
+        if (this.elements.resetBtn) {
+            this.elements.resetBtn.disabled = !this.persistenceAvailable;
         }
     }
 

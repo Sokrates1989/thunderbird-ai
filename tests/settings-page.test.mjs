@@ -40,25 +40,77 @@ test('settings expose independent persisted launch preferences for both entry po
     const launchSettings = source(
         'thunderbird-ai/components/settings/DashboardLaunchSettingsComponent.js'
     );
+    const supportDiagnostics = source(
+        'thunderbird-ai/components/settings/SupportDiagnosticsComponent.js'
+    );
 
     assert.match(settingsPage, /id="dashboard-launch-section"/u);
     assert.match(settingsPage, /DashboardLaunchService\.js/u);
     assert.match(settingsPage, /LaunchModeService\.js/u);
     assert.match(settingsPage, /RuntimeDiagnosticService\.js/u);
     assert.match(settingsPage, /DashboardLaunchSettingsComponent\.js/u);
+    assert.match(settingsPage, /id="support-diagnostics-section"/u);
+    assert.match(settingsPage, /SupportDiagnosticsComponent\.js/u);
     assert.match(settingsManager, /new DashboardLaunchSettingsComponent\(this\)/u);
+    assert.match(settingsManager, /new SupportDiagnosticsComponent\(this\)/u);
     assert.match(settingsManager, /dashboardLaunch\.getCurrentValues\(\)/u);
     assert.match(launchSettings, /value="overlay"/u);
     assert.match(launchSettings, /value="tab"/u);
     assert.match(launchSettings, /id="dashboardOpenMode"/u);
     assert.match(launchSettings, /id="singleMailOpenMode"/u);
-    assert.match(launchSettings, /singleMailOpenMode:\s*LaunchModeService\.normalizeMode/u);
-    assert.match(launchSettings, /id="dashboardLaunchDiagnosticDetails"/u);
-    assert.match(launchSettings, /DashboardLaunchService\.loadDiagnostic\(\)/u);
-    assert.match(launchSettings, /RuntimeDiagnosticService\.load\(\)/u);
-    assert.match(launchSettings, /formatSupportDiagnostics/u);
-    assert.match(launchSettings, /navigator\.clipboard\.writeText/u);
-    assert.match(settingsStyles, /\.dashboard-launch-diagnostics\s*\{/u);
+    assert.match(launchSettings, /singleMailOpenMode:\s*globalThis\.LaunchModeService\.normalizeMode/u);
+    assert.match(supportDiagnostics, /GET_BACKGROUND_HEALTH/u);
+    assert.match(supportDiagnostics, /loadBackgroundHealth\(\)/u);
+    assert.match(supportDiagnostics, /auditStorage\(\)/u);
+    assert.match(supportDiagnostics, /apiKeyPresent:\s*Boolean/u);
+    assert.doesNotMatch(supportDiagnostics, /openaiApiKey:\s*stored/u);
+    assert.match(supportDiagnostics, /navigator\.clipboard\.writeText/u);
+    assert.match(settingsStyles, /\.support-health\.failed\s*\{/u);
+});
+
+test('settings protect persisted values when the background cannot initialize', () => {
+    const settingsManager = source('thunderbird-ai/components/settings/SettingsManager.js');
+    const actions = source('thunderbird-ai/components/settings/ActionsComponent.js');
+    const apiConfig = source('thunderbird-ai/components/settings/ApiConfigComponent.js');
+
+    assert.match(settingsManager, /getSettings\(\{ migrate: false \}\)/u);
+    assert.match(settingsManager, /setPersistenceAvailable\(false\)/u);
+    assert.match(settingsManager, /settingsBackgroundUnavailableReadOnly/u);
+    assert.match(actions, /if \(!this\.persistenceAvailable\)/u);
+    assert.match(actions, /settingsWriteBlockedBackgroundUnavailable/u);
+    assert.doesNotMatch(apiConfig, /this\.loadCurrentSettings\(\);/u);
+});
+
+test('support storage audit reports API-key presence without exposing the key', async () => {
+    const context = createContext({
+        browser: {
+            i18n: { getUILanguage: () => 'en-US' },
+            storage: { local: {
+                get: async () => ({
+                    openaiApiKey: 'sk-super-secret-value',
+                    uiLanguage: 'de',
+                    dashboardOpenMode: 'tab',
+                    dashboardFeedbackArchive: [{ storageKey: 'one' }]
+                })
+            } }
+        }
+    });
+    loadScript(context, 'thunderbird-ai/config/locale-de.js');
+    loadScript(context, 'thunderbird-ai/config/locale-en.js');
+    loadScript(context, 'thunderbird-ai/config/constants.js');
+    loadScript(context, 'thunderbird-ai/components/shared/RuntimeDiagnosticService.js');
+    loadScript(context, 'thunderbird-ai/components/settings/SupportDiagnosticsComponent.js');
+    const component = Object.create(context.SupportDiagnosticsComponent.prototype);
+
+    const audit = await component.auditStorage();
+    const failedSource = await component.capture(async () => {
+        throw new Error('Request failed for sk-super-secret-value');
+    });
+
+    assert.equal(audit.apiKeyPresent, true);
+    assert.equal(audit.scoreReferences, 1);
+    assert.doesNotMatch(JSON.stringify(audit), /sk-super-secret-value/u);
+    assert.doesNotMatch(JSON.stringify(failedSource), /sk-super-secret-value/u);
 });
 
 test('usage statistics disclose and format the token-based USD estimate', () => {

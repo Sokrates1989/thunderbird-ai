@@ -33,10 +33,11 @@ const SettingsManager = class {
     constructor() {
         this.components = {};
         this.currentSettings = {};
+        this.settingsLoaded = false;
         this.statusElement = document.getElementById('status');
         this.statusTimer = null;
-        
-        this.initialize();
+
+        this.initialization = this.initialize();
     }
 
     /**
@@ -47,9 +48,10 @@ const SettingsManager = class {
      * @example
      * this.initialize();
      */
-    initialize() {
+    async initialize() {
         this.createComponents();
-        this.loadInitialSettings();
+        this.components.actions.setPersistenceAvailable(false);
+        await this.loadInitialSettings();
     }
 
     /**
@@ -64,6 +66,7 @@ const SettingsManager = class {
         // Create all components
         this.components.language = new LanguageComponent(this);
         this.components.dashboardLaunch = new DashboardLaunchSettingsComponent(this);
+        this.components.supportDiagnostics = new SupportDiagnosticsComponent(this);
         this.components.apiConfig = new ApiConfigComponent(this);
         this.components.apiTest = new ApiTestComponent(this);
         this.components.statistics = new StatisticsComponent(this);
@@ -85,14 +88,52 @@ const SettingsManager = class {
     async loadInitialSettings() {
         try {
             const settings = await this.sendToBackground(CONFIG.ACTIONS.GET_SETTINGS);
-            
-            if (settings) {
-                this.currentSettings = settings;
-                this.updateAllComponents(settings);
+            if (!settings || settings.success === false) {
+                throw new Error(settings?.error || 'SETTINGS_RESPONSE_INVALID');
             }
+            this.currentSettings = settings;
+            this.updateAllComponents(settings);
+            this.settingsLoaded = true;
+            this.components.actions.setPersistenceAvailable(true);
+            this.components.statistics.start();
+            void this.components.scoreArchive.loadArchive();
         } catch (error) {
             console.error('Error loading initial settings:', error);
-            this.showStatus(I18n.t('settingsLoadFailed'), 'error');
+            await this.loadReadOnlyFallback(error);
+        }
+    }
+
+    /** Show the actual local values without allowing a broken background to overwrite them. */
+    async loadReadOnlyFallback(backgroundError) {
+        try {
+            const settings = await globalThis.StorageManager.getSettings({ migrate: false });
+            this.currentSettings = settings;
+            this.updateAllComponents(settings);
+            this.components.statistics.updateDisplay(settings);
+            this.components.scoreArchive.showUnavailable();
+            this.setFormReadOnly(true);
+            this.showStatus(I18n.t('settingsBackgroundUnavailableReadOnly'), 'error', 0);
+        } catch (storageError) {
+            console.error('Could not read local settings fallback:', storageError);
+            this.showStatus(I18n.t('settingsLoadFailedProtected'), 'error', 0);
+        }
+        void this.components.supportDiagnostics.refresh();
+        console.error('Background settings request failed; write controls remain disabled.', {
+            backgroundError
+        });
+    }
+
+    /** Prevent transient form defaults from being mistaken for writable authoritative values. */
+    setFormReadOnly(readOnly) {
+        const selectors = [
+            '#language-section select',
+            '#dashboard-launch-section select',
+            '#api-config-section input',
+            '#api-config-section select',
+            '#api-test-section button'
+        ];
+        for (const element of document.querySelectorAll(selectors.join(','))) {
+            element.disabled = Boolean(readOnly);
         }
     }
 
@@ -186,8 +227,8 @@ const SettingsManager = class {
         const defaultSettings = {
             openaiApiKey: '',
             uiLanguage: I18n.getLanguage(),
-            dashboardOpenMode: LaunchModeService.MODES.OVERLAY,
-            singleMailOpenMode: LaunchModeService.MODES.OVERLAY,
+            dashboardOpenMode: globalThis.LaunchModeService.MODES.OVERLAY,
+            singleMailOpenMode: globalThis.LaunchModeService.MODES.OVERLAY,
             ...Object.fromEntries(
                 CONFIG.OPENAI.MODEL_SETTINGS.map(definition => [
                     definition.property,
@@ -226,15 +267,17 @@ const SettingsManager = class {
      * this.showStatus('Settings saved successfully!', 'success');
      * this.showStatus('An error occurred', 'error');
      */
-    showStatus(message, type = 'info') {
+    showStatus(message, type = 'info', durationMs = 5000) {
         clearTimeout(this.statusTimer);
         this.statusElement.textContent = message;
         this.statusElement.className = `status ${type}`;
         this.statusElement.style.display = 'block';
         
-        this.statusTimer = setTimeout(() => {
-            this.statusElement.style.display = 'none';
-        }, 5000);
+        if (durationMs > 0) {
+            this.statusTimer = setTimeout(() => {
+                this.statusElement.style.display = 'none';
+            }, durationMs);
+        }
     }
 
     /**

@@ -121,19 +121,13 @@ body {
     }
 }
 
-.dashboard-launch-diagnostics {
-    margin-top: 16px;
-    padding-top: 12px;
-    border-top: 1px solid #d8dde2;
-}
-
-.dashboard-launch-diagnostics summary {
+.support-diagnostics-details summary {
     cursor: pointer;
     font-weight: bold;
 }
 
-.dashboard-launch-diagnostics pre {
-    max-height: 230px;
+.support-diagnostics-details pre {
+    max-height: 420px;
     margin: 10px 0;
     padding: 10px;
     overflow: auto;
@@ -145,10 +139,35 @@ body {
     font: 12px/1.45 ui-monospace, "Cascadia Mono", monospace;
 }
 
-.dashboard-launch-diagnostic-actions {
+.support-diagnostic-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
+}
+
+.support-health {
+    margin: 12px 0;
+    padding: 10px 12px;
+    border: 1px solid #aab4be;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+.support-health.pending {
+    background: #eef3f7;
+    color: #33475b;
+}
+
+.support-health.healthy {
+    border-color: #64a96b;
+    background: #edf8ee;
+    color: #166523;
+}
+
+.support-health.failed {
+    border-color: #dc6b62;
+    background: #fff0ef;
+    color: #9c1d15;
 }
 
 .model-task-grid {

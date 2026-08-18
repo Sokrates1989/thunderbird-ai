@@ -1,5 +1,5 @@
 /** Routes extension action clicks without relying on manifest popup fallbacks. */
-const LaunchModeService = {
+globalThis.LaunchModeService = {
     MODES: Object.freeze({ OVERLAY: 'overlay', TAB: 'tab' }),
 
     normalizeMode(value) {
@@ -49,5 +49,3 @@ const LaunchModeService = {
         }
     }
 };
-
-globalThis.LaunchModeService = LaunchModeService;

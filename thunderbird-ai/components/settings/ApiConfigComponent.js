@@ -49,7 +49,6 @@ const ApiConfigComponent = class {
     initialize() {
         this.createUI();
         this.attachEventListeners();
-        this.loadCurrentSettings();
     }
 
     /**
@@ -118,31 +117,6 @@ const ApiConfigComponent = class {
             select.addEventListener('change', event => {
                 this.settingsManager.notifySettingChanged(property, event.target.value);
             });
-        }
-    }
-
-    /**
-     * Load current settings
-     * 
-     * Populates the form with current settings from storage.
-     * 
-     * @async
-     * @example
-     * await this.loadCurrentSettings();
-     */
-    async loadCurrentSettings() {
-        try {
-            const settings = await this.settingsManager.getSettings();
-            
-            if (settings) {
-                this.elements.apiKeyInput.value = settings.openaiApiKey || '';
-                for (const definition of CONFIG.OPENAI.MODEL_SETTINGS) {
-                    this.elements.modelSelects[definition.property].value =
-                        settings[definition.property] || definition.defaultModel;
-                }
-            }
-        } catch (error) {
-            console.error('Error loading API settings:', error);
         }
     }
 

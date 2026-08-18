@@ -212,8 +212,13 @@ async function loadBackground(options = {}) {
     loadScript(context, 'common/utils/retry.js');
     context.RetryService.wait = async () => {};
     loadScript(context, 'common/utils/dashboard-mailbox.js');
+    if (options.backgroundInitializationError) {
+        context.I18n.initialize = async () => {
+            throw options.backgroundInitializationError;
+        };
+    }
     loadScript(context, 'common/background.js');
-    await context.thunderbirdAIInitialization;
+    const initializationResult = await context.thunderbirdAIInitialization;
     return {
         actionClick: async () => {
             actionClickListener?.({ id: 4, windowId: 2 });
@@ -227,6 +232,7 @@ async function loadBackground(options = {}) {
         config: context.CONFIG,
         deleteCalls,
         install: details => installedListener?.(details),
+        initializationResult,
         mailboxService: context.DashboardMailboxService,
         notifications,
         openedPopups,
@@ -238,6 +244,45 @@ async function loadBackground(options = {}) {
         storageState
     };
 }
+
+test('background startup avoids cross-script lexical declarations', () => {
+    const launchMode = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/components/shared/LaunchModeService.js'),
+        'utf8'
+    );
+    const dashboardLaunch = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/components/shared/DashboardLaunchService.js'),
+        'utf8'
+    );
+    const background = fs.readFileSync(path.join(repositoryRoot, 'common/background.js'), 'utf8');
+
+    assert.doesNotMatch(launchMode, /const LaunchModeService\s*=/u);
+    assert.doesNotMatch(dashboardLaunch, /const DashboardLaunchService\s*=/u);
+    assert.match(background, /globalThis\.DashboardLaunchService/u);
+});
+
+test('failed background startup remains diagnosable without a rejected initialization promise', async () => {
+    const failure = new Error('Synthetic initialization failure');
+    failure.code = 'TEST_INITIALIZATION_FAILURE';
+    failure.stage = 'test-initialize';
+    const { ai, config, initializationResult, storageState } = await loadBackground({
+        backgroundInitializationError: failure,
+        console: { error() {}, log() {}, warn() {} }
+    });
+
+    assert.equal(initializationResult, false);
+    const health = await ai.handleMessage({ action: config.ACTIONS.GET_BACKGROUND_HEALTH });
+    assert.equal(health.success, true);
+    assert.equal(health.data.state, 'failed');
+    assert.equal(health.data.code, 'TEST_INITIALIZATION_FAILURE');
+    const settings = await ai.handleMessage({ action: config.ACTIONS.GET_SETTINGS });
+    assert.equal(settings.success, false);
+    assert.equal(settings.data.code, 'TEST_INITIALIZATION_FAILURE');
+    assert.equal(
+        storageState[config.STORAGE_KEYS.BACKGROUND_HEALTH_DIAGNOSTIC].state,
+        'failed'
+    );
+});
 
 test('install and update events defer stale dashboard cleanup until the next launch', async () => {
     const { config, install, storageState } = await loadBackground();

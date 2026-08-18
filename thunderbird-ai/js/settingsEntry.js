@@ -28,8 +28,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             await I18n.initialize();
             I18n.localizeDocument();
             const settingsManager = new SettingsManager();
-            console.log('Settings manager initialized successfully');
             window.settingsManager = settingsManager;
+            await settingsManager.initialization;
+            console.log('Settings manager initialized successfully');
         });
         
     } catch (error) {

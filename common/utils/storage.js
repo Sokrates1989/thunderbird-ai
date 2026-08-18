@@ -12,6 +12,12 @@ const StorageManager = {
         }
     },
 
+    /** Read a persistence-critical key and surface storage failures to the caller. */
+    async getStrict(key, defaultValue = null) {
+        const result = await browser.storage.local.get([key]);
+        return result[key] === undefined ? defaultValue : result[key];
+    },
+
     async set(key, value) {
         try {
             await browser.storage.local.set({ [key]: value });
@@ -31,6 +37,11 @@ const StorageManager = {
         }
     },
 
+    /** Read persistence-critical keys without converting failures into empty defaults. */
+    async getMultipleStrict(keys) {
+        return browser.storage.local.get(keys);
+    },
+
     async setMultiple(data) {
         try {
             await browser.storage.local.set(data);
@@ -47,13 +58,14 @@ const StorageManager = {
     },
 
     normalizeDashboardOpenMode(mode) {
-        return LaunchModeService.normalizeMode(mode);
+        return globalThis.LaunchModeService.normalizeMode(mode);
     },
 
     /** Return settings while transparently retiring legacy GPT-3.5/GPT-4 values. */
-    async getSettings() {
+    async getSettings(options = {}) {
+        const migrate = options.migrate !== false;
         const keys = Object.values(CONFIG.STORAGE_KEYS);
-        const result = await this.getMultiple(keys);
+        const result = await this.getMultipleStrict(keys);
         const storedModel = result[CONFIG.STORAGE_KEYS.MODEL];
         const model = this.normalizeModel(storedModel);
         const legacyFallback = storedModel && model !== CONFIG.OPENAI.DEFAULT_MODEL ? model : null;
@@ -67,7 +79,7 @@ const StorageManager = {
             );
         }
 
-        if (storedModel && storedModel !== model) {
+        if (migrate && storedModel && storedModel !== model) {
             await this.set(CONFIG.STORAGE_KEYS.MODEL, model);
         }
 
@@ -105,7 +117,7 @@ const StorageManager = {
             CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE,
             CONFIG.STORAGE_KEYS.SINGLE_MAIL_OPEN_MODE
         ];
-        const currentModes = await this.getMultiple(modeKeys);
+        const currentModes = await this.getMultipleStrict(modeKeys);
         const dashboardOpenMode = Object.hasOwn(settings, 'dashboardOpenMode')
             ? settings.dashboardOpenMode
             : currentModes[CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE];
@@ -139,7 +151,7 @@ const StorageManager = {
             CONFIG.STORAGE_KEYS.EMAILS_ANALYZED,
             CONFIG.STORAGE_KEYS.API_CALLS
         ];
-        const current = await this.getMultiple(keys);
+        const current = await this.getMultipleStrict(keys);
         const emailsAnalyzed = Number(current[CONFIG.STORAGE_KEYS.EMAILS_ANALYZED]) || 0;
         const apiCalls = Number(current[CONFIG.STORAGE_KEYS.API_CALLS]) || 0;
 
@@ -199,7 +211,7 @@ const StorageManager = {
 
         const write = this._apiUsageWriteQueue.catch(() => false).then(async () => {
             const key = CONFIG.STORAGE_KEYS.API_USAGE_BY_MODEL;
-            const current = await this.get(key, {});
+            const current = await this.getStrict(key, {});
             const byModel = this.normalizeApiUsageByModel(current);
             const previous = byModel[model] || {
                 inputTokens: 0,

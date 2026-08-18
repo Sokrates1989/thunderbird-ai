@@ -50,7 +50,14 @@ const StatisticsComponent = class {
     initialize() {
         this.createUI();
         this.attachEventListeners();
-        this.loadStatistics();
+    }
+
+    /** Start background-backed refresh only after authoritative settings initialization. */
+    start() {
+        this.stopAutoRefresh();
+        void this.loadStatistics().catch(error => {
+            console.error('Could not load initial usage statistics:', error);
+        });
         this.startAutoRefresh();
     }
 
@@ -133,15 +140,11 @@ const StatisticsComponent = class {
      * await this.loadStatistics();
      */
     async loadStatistics() {
-        try {
-            const stats = await this.settingsManager.sendToBackground(CONFIG.ACTIONS.GET_STATISTICS);
-            
-            if (stats) {
-                this.updateDisplay(stats);
-            }
-        } catch (error) {
-            console.error('Error loading statistics:', error);
+        const stats = await this.settingsManager.sendToBackground(CONFIG.ACTIONS.GET_STATISTICS);
+        if (!stats || stats.success === false) {
+            throw new Error(stats?.error || 'STATISTICS_RESPONSE_INVALID');
         }
+        this.updateDisplay(stats);
     }
 
     /**
@@ -184,7 +187,9 @@ const StatisticsComponent = class {
     startAutoRefresh() {
         // Refresh statistics every 30 seconds
         this.autoRefreshTimer = setInterval(() => {
-            this.loadStatistics();
+            void this.loadStatistics().catch(error => {
+                console.error('Could not auto-refresh usage statistics:', error);
+            });
         }, 30000);
     }
 

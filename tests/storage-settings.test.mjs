@@ -3,17 +3,22 @@ import test from 'node:test';
 
 import { createContext, loadScript } from '../test-support/load-script.mjs';
 
-function loadStorage(initial = {}) {
+function loadStorage(initial = {}, options = {}) {
     const values = { ...initial };
     const context = createContext({
         browser: {
             i18n: { getUILanguage: () => 'en-US' },
             storage: { local: {
-                get: async keys => Object.fromEntries(
-                    (Array.isArray(keys) ? keys : [keys])
-                        .filter(key => Object.hasOwn(values, key))
-                        .map(key => [key, values[key]])
-                ),
+                get: async keys => {
+                    if (options.failReads) {
+                        throw new Error('Storage unavailable');
+                    }
+                    return Object.fromEntries(
+                        (Array.isArray(keys) ? keys : [keys])
+                            .filter(key => Object.hasOwn(values, key))
+                            .map(key => [key, values[key]])
+                    );
+                },
                 set: async updates => Object.assign(values, updates)
             } }
         }
@@ -37,6 +42,27 @@ test('new installations receive requested task-specific model defaults', async (
     assert.equal(settings.chatModel, 'gpt-5.6-sol');
     assert.equal(settings.dashboardOpenMode, 'overlay');
     assert.equal(settings.singleMailOpenMode, 'overlay');
+});
+
+test('settings reads surface storage failures instead of inventing empty defaults', async () => {
+    const { service } = loadStorage({}, { failReads: true });
+
+    await assert.rejects(service.getSettings(), /Storage unavailable/u);
+});
+
+test('settings writes abort when existing launch preferences cannot be preserved', async () => {
+    const { context, service, values } = loadStorage({}, { failReads: true });
+    const settings = {
+        openaiApiKey: 'sk-must-not-be-written',
+        uiLanguage: 'en',
+        ...Object.fromEntries(context.CONFIG.OPENAI.MODEL_SETTINGS.map(definition => [
+            definition.property,
+            definition.defaultModel
+        ]))
+    };
+
+    await assert.rejects(service.saveSettings(settings), /Storage unavailable/u);
+    assert.deepEqual(values, {});
 });
 
 test('legacy general model is a migration fallback and saved task choices become independent', async () => {
