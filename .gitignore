@@ -1,3 +1,6 @@
+# Ignore macOS Finder metadata.
+.DS_Store
+
 # Ignore config.json.
 config.json
 
