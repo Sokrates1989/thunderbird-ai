@@ -1,0 +1,37 @@
+#!/bin/bash
+#
+# Copies the packaged XPI into every existing profile of the current macOS user.
+#
+set -euo pipefail
+
+readonly EXTENSION_ID='thunderbird-ai@example.com'
+readonly PAYLOAD_RELATIVE_PATH='Library/Application Support/Thunderbird AI/thunderbird-ai.xpi'
+
+install_home="${THUNDERBIRD_AI_INSTALL_HOME:-${HOME}}"
+payload_path="${THUNDERBIRD_AI_PAYLOAD_PATH:-${install_home}/${PAYLOAD_RELATIVE_PATH}}"
+profiles_root="${THUNDERBIRD_AI_PROFILES_ROOT:-${install_home}/Library/Thunderbird/Profiles}"
+
+if [[ ! -f "${payload_path}" ]]; then
+    printf 'Thunderbird AI payload is missing: %s\n' "${payload_path}" >&2
+    exit 1
+fi
+if [[ ! -d "${profiles_root}" ]]; then
+    printf 'No Thunderbird profile root exists for the current user: %s\n' "${profiles_root}" >&2
+    exit 1
+fi
+
+installed_profile_count=0
+while IFS= read -r profile_directory; do
+    extensions_directory="${profile_directory}/extensions"
+    destination_path="${extensions_directory}/${EXTENSION_ID}.xpi"
+    mkdir -p -- "${extensions_directory}"
+    install -m 0644 -- "${payload_path}" "${destination_path}"
+    installed_profile_count=$((installed_profile_count + 1))
+done < <(find "${profiles_root}" -mindepth 1 -maxdepth 1 -type d -print | LC_ALL=C sort)
+
+if ((installed_profile_count == 0)); then
+    printf 'No Thunderbird profiles were found below: %s\n' "${profiles_root}" >&2
+    exit 1
+fi
+
+printf 'Installed Thunderbird AI into %d profile(s).\n' "${installed_profile_count}"
