@@ -151,7 +151,7 @@ const SettingsManager = class {
      * 
      * @example
      * const result = await this.sendToBackground('getSettings');
-     * const result = await this.sendToBackground('saveSettings', { apiKey: 'sk-...' });
+     * const result = await this.sendToBackground('saveSettings', providerSettings);
      */
     async sendToBackground(action, data = {}, options = {}) {
         return RetryService.sendRuntimeMessage({ action, ...data }, options);
@@ -214,7 +214,7 @@ const SettingsManager = class {
      * 
      * @param {Object} settings - New settings to display
      * @example
-     * this.updateAllComponents({ openaiApiKey: 'sk-...', model: 'auto' });
+     * this.updateAllComponents({ aiProvider: 'openai', aiProviderConfigurations });
      */
     updateAllComponents(settings) {
         Object.values(this.components).forEach(component => {
@@ -234,16 +234,11 @@ const SettingsManager = class {
      */
     resetAllComponents() {
         const defaultSettings = {
-            openaiApiKey: '',
+            aiProvider: CONFIG.AI.DEFAULT_PROVIDER,
+            aiProviderConfigurations: globalThis.StorageManager.normalizeProviderConfigurations({}),
             uiLanguage: I18n.getLanguage(),
             dashboardOpenMode: globalThis.LaunchModeService.MODES.OVERLAY,
-            singleMailOpenMode: globalThis.LaunchModeService.MODES.OVERLAY,
-            ...Object.fromEntries(
-                CONFIG.OPENAI.MODEL_SETTINGS.map(definition => [
-                    definition.property,
-                    definition.defaultModel
-                ])
-            )
+            singleMailOpenMode: globalThis.LaunchModeService.MODES.OVERLAY
         };
         
         this.updateAllComponents(defaultSettings);
@@ -258,7 +253,7 @@ const SettingsManager = class {
      * @param {string} key - Setting key that changed
      * @param {*} value - New value for the setting
      * @example
-     * this.notifySettingChanged('openaiApiKey', 'sk-...');
+     * this.notifySettingChanged('aiProvider', 'anthropic');
      */
     notifySettingChanged(key, value) {
         this.currentSettings[key] = value;

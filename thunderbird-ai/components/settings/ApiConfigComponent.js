@@ -1,191 +1,266 @@
-/**
- * AI Mail Assistant for Thunderbird - API Configuration Component
- * 
- * This module provides the API configuration functionality for the settings page.
- * It handles OpenAI API key and model selection.
- * 
- * @module ApiConfigComponent
- * @author AI Mail Assistant for Thunderbird Team
- * @version 1.0.0
- */
-
-/**
- * API Configuration Component
- * 
- * Manages the OpenAI API configuration section including API key input
- * and model selection. Provides validation and user feedback.
- * 
- * @class ApiConfigComponent
- * @author AI Mail Assistant for Thunderbird Team
- * @version 1.0.0
- */
+/** Provider selection, credentials, endpoint, and per-task model settings. */
 const ApiConfigComponent = class {
-    /**
-     * Initialize the API Configuration Component
-     * 
-     * Sets up the component, creates the UI, and attaches event listeners.
-     * 
-     * @constructor
-     * @param {Object} settingsManager - Reference to the settings manager
-     * @example
-     * const apiConfig = new ApiConfigComponent(settingsManager);
-     */
     constructor(settingsManager) {
         this.settingsManager = settingsManager;
         this.container = document.getElementById('api-config-section');
         this.elements = {};
-        
-        this.initialize();
-    }
-
-    /**
-     * Initialize the component
-     * 
-     * Creates the UI structure and sets up event listeners.
-     * 
-     * @example
-     * this.initialize();
-     */
-    initialize() {
+        this.activeProvider = CONFIG.AI.DEFAULT_PROVIDER;
+        this.providerConfigurations = globalThis.StorageManager
+            .normalizeProviderConfigurations({});
         this.createUI();
+        this.renderActiveProvider();
         this.attachEventListeners();
     }
 
-    /**
-     * Create the UI structure
-     * 
-     * Builds the HTML structure for the API configuration section.
-     * 
-     * @example
-     * this.createUI();
-     */
+    /** Build the provider form once; dynamic values are assigned through DOM properties. */
     createUI() {
-        const modelOptions = CONFIG.OPENAI.AVAILABLE_MODELS
-            .map(model => `<option value="${model.value}">${I18n.modelLabel(model.value)}</option>`)
+        const providerOptions = Object.entries(CONFIG.AI.PROVIDERS)
+            .map(([providerId, definition]) => (
+                `<option value="${providerId}">${I18n.t(definition.labelKey)}</option>`
+            ))
             .join('');
-        const taskSelectors = CONFIG.OPENAI.MODEL_SETTINGS.map(definition => `
+        const protocolOptions = CONFIG.AI.PROTOCOLS
+            .map(item => `<option value="${item.value}">${I18n.t(item.labelKey)}</option>`)
+            .join('');
+        const authOptions = CONFIG.AI.AUTH_MODES
+            .map(item => `<option value="${item.value}">${I18n.t(item.labelKey)}</option>`)
+            .join('');
+        const taskInputs = CONFIG.AI.MODEL_SETTINGS.map(definition => `
             <div class="model-task-setting">
                 <label for="${definition.property}">${I18n.t(definition.labelKey)}</label>
-                <select id="${definition.property}" data-model-property="${definition.property}">
-                    ${modelOptions}
-                </select>
+                <input id="${definition.property}" type="text"
+                    data-model-property="${definition.property}"
+                    list="providerModelPresets" autocomplete="off" />
             </div>
         `).join('');
         this.container.innerHTML = `
             <h2>${I18n.t('apiConfigTitle')}</h2>
             <div class="setting-group">
-                <label for="openaiApiKey">${I18n.t('apiKeyLabel')}</label>
-                <input type="password" id="openaiApiKey" placeholder="sk-..." />
+                <label for="aiProvider">${I18n.t('providerLabel')}</label>
+                <select id="aiProvider">${providerOptions}</select>
+                <div class="help-text" id="providerHelp"></div>
+            </div>
+
+            <div class="provider-connection-grid">
+                <div class="setting-group provider-endpoint-setting">
+                    <label for="providerEndpoint">${I18n.t('providerEndpointLabel')}</label>
+                    <input id="providerEndpoint" type="url" spellcheck="false" />
+                    <div class="help-text">${I18n.t('providerEndpointHelp')}</div>
+                </div>
+                <div class="setting-group custom-provider-setting">
+                    <label for="providerProtocol">${I18n.t('providerProtocolLabel')}</label>
+                    <select id="providerProtocol">${protocolOptions}</select>
+                </div>
+                <div class="setting-group custom-provider-setting">
+                    <label for="providerAuthMode">${I18n.t('providerAuthLabel')}</label>
+                    <select id="providerAuthMode">${authOptions}</select>
+                </div>
+                <div class="setting-group custom-provider-setting">
+                    <label for="providerDefaultModel">${I18n.t('providerDefaultModelLabel')}</label>
+                    <input id="providerDefaultModel" type="text" autocomplete="off" />
+                    <div class="help-text">${I18n.t('providerDefaultModelHelp')}</div>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <label for="providerApiKey">${I18n.t('apiKeyLabel')}</label>
+                <input type="password" id="providerApiKey" autocomplete="off" />
                 <div class="help-text">
-                    ${I18n.t('apiKeyHelp')}
-                    <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">${I18n.t('apiKeyLink')}</a>
+                    <span id="apiKeyHelp"></span>
+                    <a id="providerApiKeyLink" target="_blank" rel="noopener noreferrer"></a>
                 </div>
             </div>
 
             <div class="setting-group">
                 <label>${I18n.t('modelRoutingTitle')}</label>
-                <div class="help-text" id="modelRoutingHelp">
-                    ${I18n.t('modelRoutingHelp')}
-                </div>
-                <div class="model-task-grid" aria-describedby="modelRoutingHelp">${taskSelectors}</div>
+                <div class="help-text" id="modelRoutingHelp">${I18n.t('modelRoutingHelp')}</div>
+                <datalist id="providerModelPresets"></datalist>
+                <div class="model-task-grid" aria-describedby="modelRoutingHelp">${taskInputs}</div>
             </div>
         `;
 
-        // Store element references
-        this.elements.apiKeyInput = document.getElementById('openaiApiKey');
-        this.elements.modelSelects = Object.fromEntries(
+        this.elements.providerSelect = document.getElementById('aiProvider');
+        this.elements.providerHelp = document.getElementById('providerHelp');
+        this.elements.endpointInput = document.getElementById('providerEndpoint');
+        this.elements.protocolSelect = document.getElementById('providerProtocol');
+        this.elements.authModeSelect = document.getElementById('providerAuthMode');
+        this.elements.defaultModelInput = document.getElementById('providerDefaultModel');
+        this.elements.apiKeyInput = document.getElementById('providerApiKey');
+        this.elements.apiKeyHelp = document.getElementById('apiKeyHelp');
+        this.elements.apiKeyLink = document.getElementById('providerApiKeyLink');
+        this.elements.modelPresets = document.getElementById('providerModelPresets');
+        this.elements.modelInputs = Object.fromEntries(
             [...this.container.querySelectorAll('[data-model-property]')]
-                .map(select => [select.dataset.modelProperty, select])
+                .map(input => [input.dataset.modelProperty, input])
         );
     }
 
-    /**
-     * Attach event listeners
-     * 
-     * Sets up event handlers for user interactions.
-     * 
-     * @example
-     * this.attachEventListeners();
-     */
     attachEventListeners() {
-        // API key validation on input
-        this.elements.apiKeyInput.addEventListener('input', (e) => {
-            this.validateApiKey(e.target.value);
+        this.elements.providerSelect.addEventListener('change', event => {
+            this.captureActiveConfiguration();
+            this.activeProvider = globalThis.AIProviderService.normalizeProviderId(
+                event.target.value
+            );
+            this.renderActiveProvider();
+            this.notifyChanged();
         });
-
-        for (const [property, select] of Object.entries(this.elements.modelSelects)) {
-            select.addEventListener('change', event => {
-                this.settingsManager.notifySettingChanged(property, event.target.value);
+        const connectionInputs = [
+            this.elements.endpointInput,
+            this.elements.protocolSelect,
+            this.elements.authModeSelect,
+            this.elements.defaultModelInput,
+            this.elements.apiKeyInput
+        ];
+        for (const input of connectionInputs) {
+            input.addEventListener('input', () => {
+                this.captureActiveConfiguration();
+                this.validateVisibleConfiguration();
+                this.notifyChanged();
+            });
+        }
+        for (const input of Object.values(this.elements.modelInputs)) {
+            input.addEventListener('input', () => {
+                this.captureActiveConfiguration();
+                this.notifyChanged();
             });
         }
     }
 
-    /**
-     * Validate API key format
-     * 
-     * Checks if the API key has the correct format and provides visual feedback.
-     * 
-     * @param {string} apiKey - The API key to validate
-     * @example
-     * this.validateApiKey('sk-...');
-     */
-    validateApiKey(apiKey) {
-        const isValid = apiKey.startsWith('sk-') && apiKey.length > 20;
-        
-        this.elements.apiKeyInput.classList.toggle('valid', isValid);
-        this.elements.apiKeyInput.classList.toggle('invalid', apiKey && !isValid);
-        
-        // Notify settings manager of the change
-        this.settingsManager.notifySettingChanged('openaiApiKey', apiKey);
+    /** Preserve the visible provider fields before switching provider or saving. */
+    captureActiveConfiguration() {
+        if (!this.providerConfigurations[this.activeProvider]) {
+            return;
+        }
+        const taskModels = {};
+        for (const definition of CONFIG.AI.MODEL_SETTINGS) {
+            const value = this.elements.modelInputs[definition.property].value.trim();
+            for (const task of definition.tasks) {
+                taskModels[task] = value;
+            }
+        }
+        this.providerConfigurations[this.activeProvider] = globalThis.AIProviderService
+            .normalizeConfiguration(this.activeProvider, {
+                ...this.providerConfigurations[this.activeProvider],
+                baseUrl: this.elements.endpointInput.value,
+                protocol: this.elements.protocolSelect.value,
+                authMode: this.elements.authModeSelect.value,
+                defaultModel: this.elements.defaultModelInput.value,
+                apiKey: this.elements.apiKeyInput.value,
+                taskModels
+            });
     }
 
-    /**
-     * Get current values
-     * 
-     * Returns the current values from the form fields.
-     * 
-     * @returns {Object} Current form values
-     * @example
-     * const values = this.getCurrentValues();
-     */
+    /** Render one provider without placing persisted credentials into generated markup. */
+    renderActiveProvider() {
+        const definition = CONFIG.AI.PROVIDERS[this.activeProvider];
+        const configuration = this.providerConfigurations[this.activeProvider];
+        const custom = this.activeProvider === 'custom';
+        this.elements.providerSelect.value = this.activeProvider;
+        this.elements.endpointInput.value = configuration.baseUrl;
+        this.elements.endpointInput.readOnly = !custom;
+        this.elements.protocolSelect.value = configuration.protocol;
+        this.elements.authModeSelect.value = configuration.authMode;
+        this.elements.defaultModelInput.value = configuration.defaultModel;
+        this.elements.apiKeyInput.value = configuration.apiKey;
+        this.elements.apiKeyInput.placeholder = definition.apiKeyRequired
+            ? I18n.t('apiKeyRequiredPlaceholder')
+            : I18n.t('apiKeyOptionalPlaceholder');
+        this.elements.providerHelp.textContent = I18n.t({
+            openai: 'providerHelpOpenAI',
+            anthropic: 'providerHelpAnthropic',
+            mistral: 'providerHelpMistral',
+            deepseek: 'providerHelpDeepSeek',
+            custom: 'providerHelpCustom'
+        }[this.activeProvider]);
+        this.elements.apiKeyHelp.textContent = I18n.t('apiKeyHelp', {
+            provider: I18n.t(definition.labelKey)
+        });
+        this.elements.apiKeyLink.hidden = !definition.apiKeyUrl;
+        this.elements.apiKeyLink.href = definition.apiKeyUrl || '#';
+        this.elements.apiKeyLink.textContent = I18n.t('apiKeyLink', {
+            provider: I18n.t(definition.labelKey)
+        });
+        for (const element of this.container.querySelectorAll('.custom-provider-setting')) {
+            element.hidden = !custom;
+        }
+        this.renderModelPresets(definition.modelPresets);
+        for (const modelDefinition of CONFIG.AI.MODEL_SETTINGS) {
+            const task = modelDefinition.tasks[0];
+            this.elements.modelInputs[modelDefinition.property].value =
+                configuration.taskModels[task] || 'auto';
+        }
+        this.validateVisibleConfiguration();
+    }
+
+    renderModelPresets(presets) {
+        this.elements.modelPresets.replaceChildren();
+        for (const model of ['auto', ...presets]) {
+            const option = document.createElement('option');
+            option.value = model;
+            this.elements.modelPresets.append(option);
+        }
+    }
+
+    /** Mark only locally detectable configuration problems; the test action verifies the API. */
+    validateVisibleConfiguration() {
+        const configuration = this.getActiveProviderConfiguration(false);
+        const definition = CONFIG.AI.PROVIDERS[this.activeProvider];
+        const apiKeyInvalid = definition.apiKeyRequired && !configuration.apiKey;
+        this.elements.apiKeyInput.classList.toggle('invalid', apiKeyInvalid);
+        this.elements.apiKeyInput.classList.toggle('valid', !apiKeyInvalid && Boolean(configuration.apiKey));
+        const endpointValid = Boolean(globalThis.AIProviderService.resolveEndpoint(
+            configuration,
+            false
+        ));
+        this.elements.endpointInput.classList.toggle('invalid', !endpointValid);
+        this.elements.endpointInput.classList.toggle('valid', endpointValid);
+    }
+
+    getActiveProviderConfiguration(capture = true) {
+        if (capture) {
+            this.captureActiveConfiguration();
+        }
+        return this.providerConfigurations[this.activeProvider];
+    }
+
+    /** Request only the exact custom endpoint origin from a direct user action. */
+    async ensureEndpointPermission() {
+        const configuration = this.getActiveProviderConfiguration();
+        if (configuration.provider !== 'custom') {
+            return true;
+        }
+        const origin = globalThis.AIProviderService.endpointPermission(configuration);
+        return browser.permissions.request({ origins: [origin] });
+    }
+
+    notifyChanged() {
+        this.settingsManager.notifySettingChanged('aiProvider', this.activeProvider);
+        this.settingsManager.notifySettingChanged(
+            'aiProviderConfigurations',
+            this.providerConfigurations
+        );
+    }
+
     getCurrentValues() {
+        this.captureActiveConfiguration();
         return {
-            openaiApiKey: this.elements.apiKeyInput.value.trim(),
-            ...Object.fromEntries(
-                Object.entries(this.elements.modelSelects)
-                    .map(([property, select]) => [property, select.value])
-            )
+            aiProvider: this.activeProvider,
+            aiProviderConfigurations: this.providerConfigurations
         };
     }
 
-    /**
-     * Update display
-     * 
-     * Updates the component display with new values.
-     * 
-     * @param {Object} settings - New settings to display
-     * @example
-     * this.updateDisplay({ openaiApiKey: 'sk-...', model: 'auto' });
-     */
     updateDisplay(settings) {
-        if (settings.openaiApiKey !== undefined) {
-            this.elements.apiKeyInput.value = settings.openaiApiKey;
-        }
-        for (const definition of CONFIG.OPENAI.MODEL_SETTINGS) {
-            const value = settings[definition.property];
-            if (value !== undefined) {
-                this.elements.modelSelects[definition.property].value = value;
-            }
-        }
+        this.providerConfigurations = globalThis.StorageManager.normalizeProviderConfigurations(
+            settings.aiProviderConfigurations,
+            { apiKey: settings.openaiApiKey, model: settings.model }
+        );
+        this.activeProvider = globalThis.AIProviderService.normalizeProviderId(
+            settings.aiProvider
+        );
+        this.renderActiveProvider();
     }
 };
 
-/**
- * Make ApiConfigComponent available globally for non-module environments
- * 
- * This allows the ApiConfigComponent to be accessed from any script without ES6 imports.
- * Used for Thunderbird add-on compatibility.
- */
 if (typeof window !== 'undefined') {
     window.ApiConfigComponent = ApiConfigComponent;
 }

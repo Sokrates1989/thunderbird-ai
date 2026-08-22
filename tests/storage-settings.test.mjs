@@ -26,6 +26,7 @@ function loadStorage(initial = {}, options = {}) {
     loadScript(context, 'thunderbird-ai/config/locale-de.js');
     loadScript(context, 'thunderbird-ai/config/locale-en.js');
     loadScript(context, 'thunderbird-ai/config/constants.js');
+    loadScript(context, 'common/utils/ai-provider.js');
     loadScript(context, 'thunderbird-ai/components/shared/LaunchModeService.js');
     loadScript(context, 'common/utils/storage.js');
     return { context, service: context.StorageManager, values };
@@ -35,6 +36,8 @@ test('new installations receive requested task-specific model defaults', async (
     const { service } = loadStorage();
     const settings = await service.getSettings();
 
+    assert.equal(settings.aiProvider, 'openai');
+    assert.equal(settings.providerConfig.baseUrl, 'https://api.openai.com/v1');
     assert.equal(settings.bulkModel, 'gpt-5.6-luna');
     assert.equal(settings.singleScoreModel, 'gpt-5.6-terra');
     assert.equal(settings.summarizeModel, 'gpt-5.6-sol');
@@ -42,6 +45,36 @@ test('new installations receive requested task-specific model defaults', async (
     assert.equal(settings.chatModel, 'gpt-5.6-sol');
     assert.equal(settings.dashboardOpenMode, 'overlay');
     assert.equal(settings.singleMailOpenMode, 'overlay');
+});
+
+test('legacy OpenAI credentials migrate without blocking independent provider profiles', async () => {
+    const { service, values } = loadStorage({
+        openaiApiKey: 'sk-existing-openai',
+        summarizeModel: 'gpt-5.6-terra'
+    });
+
+    const migrated = await service.getSettings();
+    assert.equal(migrated.aiProvider, 'openai');
+    assert.equal(migrated.providerConfig.apiKey, 'sk-existing-openai');
+    assert.equal(migrated.providerConfig.taskModels.summarize, 'gpt-5.6-terra');
+    assert.equal(values.aiProvider, 'openai');
+    assert.equal(values.aiProviderConfigurations.openai.apiKey, 'sk-existing-openai');
+
+    const configurations = migrated.aiProviderConfigurations;
+    configurations.anthropic.apiKey = 'anthropic-example';
+    configurations.anthropic.taskModels.summarize = 'claude-opus-5';
+    await service.saveSettings({
+        aiProvider: 'anthropic',
+        aiProviderConfigurations: configurations,
+        uiLanguage: 'en'
+    });
+
+    const selected = await service.getSettings();
+    assert.equal(selected.aiProvider, 'anthropic');
+    assert.equal(selected.providerConfig.apiKey, 'anthropic-example');
+    assert.equal(selected.summarizeModel, 'claude-opus-5');
+    assert.equal(selected.aiProviderConfigurations.openai.apiKey, 'sk-existing-openai');
+    assert.equal(values.openaiApiKey, 'sk-existing-openai');
 });
 
 test('settings reads surface storage failures instead of inventing empty defaults', async () => {
@@ -55,7 +88,7 @@ test('settings writes abort when existing launch preferences cannot be preserved
     const settings = {
         openaiApiKey: 'sk-must-not-be-written',
         uiLanguage: 'en',
-        ...Object.fromEntries(context.CONFIG.OPENAI.MODEL_SETTINGS.map(definition => [
+        ...Object.fromEntries(context.CONFIG.AI.MODEL_SETTINGS.map(definition => [
             definition.property,
             definition.defaultModel
         ]))
@@ -76,7 +109,7 @@ test('legacy general model is a migration fallback and saved task choices become
         uiLanguage: 'en',
         dashboardOpenMode: 'tab',
         singleMailOpenMode: 'overlay',
-        ...Object.fromEntries(context.CONFIG.OPENAI.MODEL_SETTINGS.map(definition => [
+        ...Object.fromEntries(context.CONFIG.AI.MODEL_SETTINGS.map(definition => [
             definition.property,
             definition.defaultModel
         ]))
@@ -98,7 +131,7 @@ test('saving a partial settings payload preserves both existing launch preferenc
     await service.saveSettings({
         openaiApiKey: 'sk-example',
         uiLanguage: 'en',
-        ...Object.fromEntries(context.CONFIG.OPENAI.MODEL_SETTINGS.map(definition => [
+        ...Object.fromEntries(context.CONFIG.AI.MODEL_SETTINGS.map(definition => [
             definition.property,
             definition.defaultModel
         ]))
@@ -112,12 +145,12 @@ test('concurrent token reports accumulate by model and produce a dated price est
     const { service, values } = loadStorage();
 
     await Promise.all([
-        service.recordApiUsage('gpt-5.6-luna', {
+        service.recordApiUsage('openai', 'gpt-5.6-luna', {
             input_tokens: 1_000_000,
             input_tokens_details: { cached_tokens: 200_000 },
             output_tokens: 100_000
         }),
-        service.recordApiUsage('gpt-5.6-terra', {
+        service.recordApiUsage('openai', 'gpt-5.6-terra', {
             input_tokens: 500_000,
             output_tokens: 50_000
         })
@@ -125,16 +158,33 @@ test('concurrent token reports accumulate by model and produce a dated price est
 
     const settings = await service.getSettings();
     assert.deepEqual(JSON.parse(JSON.stringify(values.apiUsageByModel)), {
-        'gpt-5.6-luna': {
+        'openai:gpt-5.6-luna': {
             inputTokens: 1_000_000,
             cachedInputTokens: 200_000,
             outputTokens: 100_000
         },
-        'gpt-5.6-terra': {
+        'openai:gpt-5.6-terra': {
             inputTokens: 500_000,
             cachedInputTokens: 0,
             outputTokens: 50_000
         }
     });
     assert.ok(Math.abs(settings.estimatedApiCostUsd - 1.884) < Number.EPSILON);
+});
+
+test('non-OpenAI provider usage is counted but excluded from the OpenAI price estimate', async () => {
+    const { service } = loadStorage();
+
+    await service.recordApiUsage('anthropic', 'claude-sonnet-5', {
+        input_tokens: 1_000_000,
+        output_tokens: 1_000_000
+    });
+    await service.recordApiUsage('openai', 'gpt-5.6-luna', {
+        input_tokens: 1_000_000,
+        output_tokens: 0
+    });
+
+    const settings = await service.getSettings();
+    assert.equal(settings.apiUsageByModel['anthropic:claude-sonnet-5'].inputTokens, 1_000_000);
+    assert.ok(Math.abs(settings.estimatedApiCostUsd - 0.2) < Number.EPSILON);
 });

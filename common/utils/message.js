@@ -216,7 +216,7 @@ const MessageService = {
             .toLowerCase();
     },
 
-    /** Find related messages locally, without sending mailbox contents to OpenAI. */
+    /** Find related messages locally, without sending mailbox contents to an AI provider. */
     async findSimilarMessages(messageId, limit = 5) {
         const source = await browser.messages.get(messageId);
         const folderId = source?.folder?.id;

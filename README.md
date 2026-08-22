@@ -1,6 +1,6 @@
 # AI Mail Assistant for Thunderbird
 
-Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe und weitere E-Mail-Analysen mit der OpenAI API.
+Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe und weitere E-Mail-Analysen mit wählbaren AI-Anbietern.
 
 ## Download und Veröffentlichungen
 
@@ -11,14 +11,14 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 
 Die stabilen Downloadnamen zeigen immer auf die aktuelle GitHub-Veröffentlichung. Jede Veröffentlichung behält zusätzlich versionierte Installer und SHA-256-Prüfsummen für eine nachvollziehbare Historie.
 
-## Umfang von Release 3.0.1
+## Umfang von Release 3.1.0
 
-Release 3.0.1 bereitet die Veröffentlichung bei Thunderbird Add-ons vor. Der
-öffentliche Name folgt der Thunderbird-Markenrichtlinie, die Erweiterung fordert
-die für den ausdrücklich gestarteten OpenAI-Transfer vorgesehene
-`sensitiveDataUpload`-Berechtigung an und beschreibt die übertragenen
-Datenkategorien direkt in den Einstellungen. Dauerhafte Add-on-ID, lokale
-Einstellungen und bestehende Arbeitsabläufe bleiben unverändert.
+Release 3.1.0 ergänzt eine Anbieterauswahl für OpenAI, Claude (Anthropic),
+Mistral, DeepSeek und individuell betriebene OpenAI- oder
+Anthropic-kompatible Endpunkte. OpenAI bleibt der Standard und vorhandene
+OpenAI-Schlüssel sowie Modellwahlen werden automatisch übernommen. Der Zugriff
+auf einen individuellen Endpunkt wird erst beim Speichern oder Testen für
+dessen exakten Host bei Thunderbird angefordert.
 
 ## Funktionen
 
@@ -31,6 +31,7 @@ Einstellungen und bestehende Arbeitsabläufe bleiben unverändert.
 - unabhängiger Risikowert für Phishing, Betrug, gefährliche Inhalte, potenziell Rechtswidriges und sonst unerwünschte Kontakte
 - lokale Suche nach ähnlichen Nachrichten im aktuellen Ordner
 - nachrichtenbezogener AI Chat
+- frei wählbarer AI-Anbieter: OpenAI, Claude (Anthropic), Mistral, DeepSeek oder ein HTTPS-/localhost-Endpunkt mit OpenAI-Chat-, OpenAI-Responses- oder Anthropic-Messages-kompatiblem Protokoll
 - lokale Ergebnisablage mit Verwaltung unter **Einstellungen** und Zwischenablage-Aktion
 - lokale, tokenbasierte Schätzung der bisherigen OpenAI-API-Kosten mit transparentem Preisstand
 - eigenes globales Posteingangs-Dashboard mit vollständiger Header-Paginierung, einer übersichtlich gruppierten und dauerhaft ein-/ausklappbaren Ansichtskonfiguration, stabiler Tab-Ansicht, umschaltbarer Konto- oder kombinierter Neueste-50-Ansicht, kontenübergreifender Score-Sortierung, durchsuchbarem Absenderfilter, Datumsfiltern, frei wählbaren 1–50 Nachrichten pro Konto, Einzelauswahl, Mehrfachlöschen, identischen Bulk-Aktionen ober- und unterhalb der Nachrichten sowie globaler oder nur für eine angeklickte E-Mail geladener lokaler Inhaltsvorschau
@@ -53,21 +54,37 @@ Einstellungen und bestehende Arbeitsabläufe bleiben unverändert.
 - kopierbare, inhaltsfreie Support-Diagnose mit Dashboard-Start und den letzten Hintergrund-/UI-Aktionsgrenzen; ein Vorgang ohne Abschluss zeigt die wahrscheinliche Blockadestelle
 - native Windows- und macOS-Installer mit kontrolliertem Thunderbird-Neustart
 
-## OpenAI-Modelle
+## AI-Anbieter und Modelle
 
-Das bevorzugte Modell wird pro AI-Funktion eingestellt. Die Standards sind:
+OpenAI bleibt der Standardanbieter und nutzt wie bisher die Responses API mit
+`store: false`. Claude verwendet die Anthropic Messages API, Mistral und
+DeepSeek verwenden ihre OpenAI-kompatiblen Chat-Completions-APIs. Für Claude
+ist ein separater Anthropic API-Schlüssel erforderlich; eine Anmeldung oder ein
+Abonnement in der Claude-App beziehungsweise in Claude Code kann nicht als
+API-Zugang des Add-ons wiederverwendet werden.
+
+Individuelle Endpunkte können eines der drei unterstützten JSON-Protokolle und
+Bearer-, `x-api-key`- oder keine Authentifizierung verwenden. Entfernte
+Endpunkte müssen HTTPS verwenden; HTTP ist nur für `localhost` und `127.0.0.1`
+zugelassen. Das Add-on stellt keine beliebige proprietäre API automatisch um:
+der individuelle Dienst muss zu einem der auswählbaren Protokolle kompatibel
+sein.
+
+Das bevorzugte Modell wird pro AI-Funktion und Anbieter eingestellt.
+**Automatisch** wählt die schnelle, ausgewogene oder qualitätsorientierte
+Vorgabe des aktuellen Anbieters. Bei OpenAI entsprechen diese Rollen:
 
 - `gpt-5.6-luna` für die kostensensitive Bulk-Auswertung
 - `gpt-5.6-terra` für das Scoring einer einzelnen E-Mail
 - `gpt-5.6-sol` für Zusammenfassungen, Antwortvorschläge und AI Chat
 
-Kategorisierung, bisherige Wichtigkeits- und Spam-Analyse, Übersetzung, Extraktion und Textverbesserung besitzen ebenfalls eine eigene Modellauswahl. **Automatisch** verwendet jeweils das aufgabenspezifische Standardmodell. Bulk-Aufrufe verarbeiten höchstens acht Nachrichten pro API-Aufruf bei maximal zwei parallelen Aufrufen. Das Add-on nutzt die OpenAI Responses API und setzt `store: false`.
+Kategorisierung, bisherige Wichtigkeits- und Spam-Analyse, Übersetzung, Extraktion und Textverbesserung besitzen ebenfalls eine eigene Modellauswahl. Jede vom gewählten Anbieter unterstützte Modell-ID kann manuell eingetragen werden. Bulk-Aufrufe verarbeiten höchstens acht Nachrichten pro API-Aufruf bei maximal zwei parallelen Aufrufen.
 
 Der **Spam-Wert** bewertet typische unerwünschte Massen-, Werbe- oder Streunachrichten. Der davon unabhängige **Risikowert** bewertet Signale für Phishing oder Social Engineering, Betrugsversuche, verdächtige Links oder Anhänge, Drohungen, möglicherweise rechtswidrige Angebote und unerwünschte Kontaktaufnahme. Er ist eine AI-Einschätzung und weder technischer Malwaretest noch rechtliches Urteil.
 
 Vor Einzel- und Bulk-Scorings zählt das Add-on lokal E-Mails mit derselben vollständigen Absenderadresse. Die Abfrage endet spätestens nach 1.000 Treffern, wird zehn Minuten im Arbeitsspeicher zwischengespeichert und erfasst zusätzlich List-Unsubscribe/List-ID, Bulk-Header, automatisierte Absender, Abmeldesprache und Kampagnenlinks als Signalnamen. Häufigkeit erhöht die Spam-Vermutung, gilt für sich allein aber nicht als Beweis, weil legitime Transaktions- und Systemmails ebenfalls häufig eintreffen können. Klare Newsletter werden auf einer ausdrücklich kalibrierten Spam-Skala höher eingestuft; gespeicherte Korrekturen für denselben Absender haben Vorrang vor der lokalen Untergrenze.
 
-Temporäre Netzwerkfehler, Zeitüberschreitungen, Anfragelimits und vorübergehende OpenAI-Serverfehler werden mit begrenzten Wartezeiten automatisch bis zu zweimal wiederholt. Ein `Retry-After`-Hinweis von OpenAI wird bis zu zehn Sekunden berücksichtigt. Fehlerhafte oder unberechtigte API-Schlüssel, ausgeschöpftes Guthaben und dauerhafte Clientfehler werden ohne nutzlose Wiederholung eindeutig gemeldet. Thunderbird-Verbindungsfehler werden nur dann wiederholt, wenn Thunderbird bestätigt, dass die Nachricht den Hintergrundprozess nicht erreicht hat.
+Temporäre Netzwerkfehler, Zeitüberschreitungen, Anfragelimits und vorübergehende Anbieterfehler werden mit begrenzten Wartezeiten automatisch bis zu zweimal wiederholt. Ein `Retry-After`-Hinweis wird bis zu zehn Sekunden berücksichtigt. Fehlerhafte oder unberechtigte API-Schlüssel, ausgeschöpftes Guthaben und dauerhafte Clientfehler werden ohne nutzlose Wiederholung eindeutig gemeldet. Thunderbird-Verbindungsfehler werden nur dann wiederholt, wenn Thunderbird bestätigt, dass die Nachricht den Hintergrundprozess nicht erreicht hat.
 
 ## Dashboard-Archivierung
 
@@ -77,23 +94,23 @@ Unter **Einstellungen → Thunderbird-Archivierung** zeigt **Archivordner prüfe
 
 ## Datenschutz
 
-Bei AI-Aktionen werden Betreff, Absender, Nachrichtentext und Namen erkannter Anhänge direkt von Thunderbird an die OpenAI API gesendet. Beim Verbessern eines Antwortentwurfs werden außerdem der aktuelle Entwurf und die letzten Änderungswünsche übertragen. Die normale Dashboard-Bulk-Auswertung überträgt ausschließlich explizit ausgewählte Nachrichten ohne vorhandenen Dashboard-Score; bereits bewertete Nachrichten werden ohne API-Aufruf übersprungen. Nur **Auswahl neu bewerten** sendet sie nach einer Bestätigung erneut. Nicht korrigierte AI-Scores speichern lokal ausschließlich eine stabile Nachrichtenidentität aus Konto und RFC Message-ID, Prozentwerte, Modell und Analysezeitpunkt. Bei einer Dashboard-Korrektur kommen die getrennten Kategorien und Freitexte für Wichtigkeit, Spam und Risiko hinzu, damit sie beim erneuten Öffnen vorausgewählt werden können. Fehlt die RFC Message-ID, werden Konto, Datum, Absender, Betreff und Größe als Ersatzidentität verwendet. Höchstens 1.000 dieser Score-Datensätze bleiben erhalten. Vor Version 2.6.0 gespeicherte Zwei-Werte-Datensätze bleiben erhalten und zeigen den Risikowert als **noch nicht bewertet**. Sie werden nicht automatisch erneut an OpenAI gesendet; eine ausdrückliche Neu-Bewertung oder manuelle Korrektur ergänzt den dritten Wert.
+Bei AI-Aktionen werden Betreff, Absender, Nachrichtentext und Namen erkannter Anhänge direkt von Thunderbird an den ausgewählten Anbieter oder individuellen Endpunkt gesendet. Beim Verbessern eines Antwortentwurfs werden außerdem der aktuelle Entwurf und die letzten Änderungswünsche übertragen. Die normale Dashboard-Bulk-Auswertung überträgt ausschließlich explizit ausgewählte Nachrichten ohne vorhandenen Dashboard-Score; bereits bewertete Nachrichten werden ohne API-Aufruf übersprungen. Nur **Auswahl neu bewerten** sendet sie nach einer Bestätigung erneut. Nicht korrigierte AI-Scores speichern lokal ausschließlich eine stabile Nachrichtenidentität aus Konto und RFC Message-ID, Prozentwerte, Anbieter, Modell und Analysezeitpunkt. Bei einer Dashboard-Korrektur kommen die getrennten Kategorien und Freitexte für Wichtigkeit, Spam und Risiko hinzu, damit sie beim erneuten Öffnen vorausgewählt werden können. Fehlt die RFC Message-ID, werden Konto, Datum, Absender, Betreff und Größe als Ersatzidentität verwendet. Höchstens 1.000 dieser Score-Datensätze bleiben erhalten. Vor Version 2.6.0 gespeicherte Zwei-Werte-Datensätze bleiben erhalten und zeigen den Risikowert als **noch nicht bewertet**. Sie werden nicht automatisch erneut an einen AI-Anbieter gesendet; eine ausdrückliche Neu-Bewertung oder manuelle Korrektur ergänzt den dritten Wert.
 
-Beim Scoring werden außerdem ausschließlich die aggregierten Ergebnisse der lokalen Spam-Vorprüfung an OpenAI gesendet: Trefferzahlen für denselben Absender insgesamt und in den letzten 30/90 Tagen, die Anzahl vorhandener Junk-Markierungen, erkannte Signalnamen und die daraus berechnete konservative Spam-Untergrenze. Inhalte anderer Nachrichten, rohe MIME-Header und URLs werden dafür nicht übertragen. Die Absenderstatistik wird nicht dauerhaft gespeichert; ihr Arbeitsspeicher-Cache verfällt nach zehn Minuten.
+Beim Scoring werden außerdem ausschließlich die aggregierten Ergebnisse der lokalen Spam-Vorprüfung an den ausgewählten Anbieter gesendet: Trefferzahlen für denselben Absender insgesamt und in den letzten 30/90 Tagen, die Anzahl vorhandener Junk-Markierungen, erkannte Signalnamen und die daraus berechnete konservative Spam-Untergrenze. Inhalte anderer Nachrichten, rohe MIME-Header und URLs werden dafür nicht übertragen. Die Absenderstatistik wird nicht dauerhaft gespeichert; ihr Arbeitsspeicher-Cache verfällt nach zehn Minuten.
 
-Bei einem als temporär erkannten Fehler kann derselbe AI-Inhalt innerhalb einer Benutzeraktion bis zu drei Mal an OpenAI gesendet werden. Ein bereits vom Server angenommener, aber lokal nicht mehr bestätigter Versuch kann dadurch zusätzliche API-Kosten verursachen; die lokale Statistik zählt deshalb die tatsächlich gestarteten API-Versuche. Ab Version 2.3.0 werden zusätzlich die von erfolgreichen OpenAI-Antworten gemeldeten Input-, Cache- und Output-Text-Tokens getrennt nach Modell lokal summiert. Die Einstellungen zeigen daraus eine USD-Schätzung mit fest ausgewiesenem Preisstand. Frühere Aufrufe, Steuern, Sondertarife sowie mögliche Langkontext- oder Cache-Schreibaufschläge sind nicht enthalten. Scoring-Korrekturen werden unter ihrer stabilen Nachrichtenidentität aktualisiert statt dupliziert.
+Bei einem als temporär erkannten Fehler kann derselbe AI-Inhalt innerhalb einer Benutzeraktion bis zu drei Mal an den Anbieter gesendet werden. Ein bereits vom Server angenommener, aber lokal nicht mehr bestätigter Versuch kann dadurch zusätzliche API-Kosten verursachen; die lokale Statistik zählt deshalb die tatsächlich gestarteten API-Versuche. Input-, Cache- und Output-Text-Tokens werden nach Anbieter und Modell lokal summiert. Die USD-Schätzung bepreist derzeit nur OpenAI-Modelle mit fest ausgewiesenem Preisstand; Aufrufe von Claude, Mistral, DeepSeek und individuellen Endpunkten werden gezählt, aber nicht bepreist. Scoring-Korrekturen werden unter ihrer stabilen Nachrichtenidentität aktualisiert statt dupliziert.
 
-Eine ausdrücklich gespeicherte Bewertung wird zusätzlich in einem separaten lokalen Lernarchiv gespeichert: höchstens 250 Datensätze mit einem auf 6.000 Zeichen begrenzten E-Mail-Auszug, Anhangnamen, ursprünglichen und korrigierten Werten sowie getrennten Kategorien und Freitextbegründungen für Wichtigkeit, Spam und Risiko. Normale Thunderbird-Löschvorgänge verändern dieses Archiv nicht. Bei einer späteren Einzel- oder Bulk-Auswertung werden höchstens fünf nach Absender und Betreff priorisierte Korrekturen als nicht vertrauenswürdige Kalibrierungsbeispiele an OpenAI gesendet. Das ist kontextbezogenes Lernen durch Beispiele und kein dauerhaftes Modell-Fine-Tuning. Ältere Referenzen ohne Risikowert bleiben lesbar; ihr Risikofeld ist bis zur manuellen Bearbeitung leer. Unter **Einstellungen** lassen sich alle Referenzen einsehen, manuell neu bewerten und entfernen. Die Suche nach ähnlichen Nachrichten und die optionale Dashboard-Inhaltsvorschau laufen ausschließlich lokal. Eine automatische E-Mail-Analyse beim Öffnen findet nicht statt.
+Eine ausdrücklich gespeicherte Bewertung wird zusätzlich in einem separaten lokalen Lernarchiv gespeichert: höchstens 250 Datensätze mit einem auf 6.000 Zeichen begrenzten E-Mail-Auszug, Anhangnamen, ursprünglichen und korrigierten Werten sowie getrennten Kategorien und Freitextbegründungen für Wichtigkeit, Spam und Risiko. Normale Thunderbird-Löschvorgänge verändern dieses Archiv nicht. Bei einer späteren Einzel- oder Bulk-Auswertung werden höchstens fünf nach Absender und Betreff priorisierte Korrekturen als nicht vertrauenswürdige Kalibrierungsbeispiele an den ausgewählten Anbieter gesendet. Das ist kontextbezogenes Lernen durch Beispiele und kein dauerhaftes Modell-Fine-Tuning. Ältere Referenzen ohne Risikowert bleiben lesbar; ihr Risikofeld ist bis zur manuellen Bearbeitung leer. Unter **Einstellungen** lassen sich alle Referenzen einsehen, manuell neu bewerten und entfernen. Die Suche nach ähnlichen Nachrichten und die optionale Dashboard-Inhaltsvorschau laufen ausschließlich lokal. Eine automatische E-Mail-Analyse beim Öffnen findet nicht statt.
 
 Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speicher des Thunderbird-Profils. Benutzer sollten ihr Thunderbird-Profil und Betriebssystemkonto deshalb wie andere lokale Zugangsdaten schützen.
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-3.0.1-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-3.1.0-win-x64.exe` herunterladen und starten.
 2. Im Setup **Deutsch** oder **English** wählen und die GNU General Public License bestätigen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung und zu den Berechtigungen zum Ändern, Verschieben und Löschen von Nachrichten bestätigen.
-5. Unter **Einstellungen** den OpenAI API-Schlüssel eintragen, die aufgabenspezifischen Modelle prüfen, die Verbindung testen und speichern. Die Oberflächensprache kann dort jederzeit unabhängig von der Thunderbird-Sprache geändert werden.
+5. Unter **Einstellungen** den AI-Anbieter auswählen, dessen API-Schlüssel eintragen, die aufgabenspezifischen Modelle prüfen, die Verbindung testen und speichern. Die Oberflächensprache kann dort jederzeit unabhängig von der Thunderbird-Sprache geändert werden.
 
 Der benutzerbezogene Installer benötigt keine Administratorrechte. Eine neue Setup-Datei aktualisiert die vorhandene Version; eine Deinstallation ist nicht nötig. Die feste Add-on-ID erhält die Einstellungen. Der aktuelle Test-Installer ist nicht Authenticode-signiert und kann deshalb eine SmartScreen-Warnung auslösen.
 
@@ -102,10 +119,10 @@ Version 1.5.1 korrigiert die in 1.3.0 bis 1.5.0 fehlerhaft gepackten Lokalisieru
 ## Installation unter macOS
 
 1. Thunderbird mindestens einmal starten, damit ein Profil angelegt ist.
-2. `Thunderbird-AI-Setup-3.0.1-macos.pkg` öffnen.
+2. `Thunderbird-AI-Setup-3.1.0-macos.pkg` öffnen.
 3. Die GNU General Public License bestätigen, offene Thunderbird-Entwürfe speichern und die Installation fortsetzen. Das macOS-Installationsprogramm fordert Thunderbird zum normalen Beenden auf und beendet es niemals erzwungen.
 4. Nach erfolgreicher Installation öffnet das Setup Thunderbird automatisch. Eine mögliche einmalige Rückfrage zur Aktivierung und zu den Berechtigungen zum Ändern, Verschieben und Löschen von Nachrichten bestätigen.
-5. Unter **Einstellungen** den OpenAI API-Schlüssel eintragen, die aufgabenspezifischen Modelle prüfen, die Verbindung testen und speichern.
+5. Unter **Einstellungen** den AI-Anbieter auswählen, dessen API-Schlüssel eintragen, die aufgabenspezifischen Modelle prüfen, die Verbindung testen und speichern.
 
 Der macOS-Installer installiert das Add-on ohne Administratorrechte für den aktuellen Benutzer in alle vorhandenen Thunderbird-Profile. Eine erneute Ausführung aktualisiert die vorhandene Installation; Einstellungen bleiben durch die feste Add-on-ID erhalten. Die anfängliche Oberflächensprache folgt automatisch Thunderbird und kann jederzeit in den Add-on-Einstellungen geändert werden. Das aktuelle Testpaket ist noch nicht mit einer Developer-ID signiert oder notarisiert; vor einer öffentlichen Veröffentlichung sind Signatur, Notarisierung und eine veröffentlichte SHA-256-Prüfsumme erforderlich.
 
@@ -133,8 +150,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-3.0.1-win-x64.exe`
-- `artifacts/Thunderbird-AI-Setup-3.0.1-macos.pkg`
+- `artifacts\Thunderbird-AI-Setup-3.1.0-win-x64.exe`
+- `artifacts/Thunderbird-AI-Setup-3.1.0-macos.pkg`
 
 Unter macOS werden XPI und Installer vom Repository-Stamm aus gebaut und isoliert geprüft:
 
@@ -186,9 +203,9 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 24. Den Antworteditor erneut öffnen, alle drei Optionen umschalten und wieder vorbereiten. Der Entwurf muss nur an den Absender gehen, kein Originalzitat enthalten und alle ursprünglichen Anhänge besitzen. Beim nächsten Öffnen müssen diese Werte vorausgewählt bleiben.
 25. Bei einem Compose-Fehler muss der aktuelle Text stattdessen in die Zwischenablage kopiert werden.
 26. **Werte korrigieren** ausführen. Das Einzelmail-Popup darf keine schnellen Schaltflächen für **Kategorisieren**, **Wichtigkeit prüfen** oder **API testen** mehr zeigen. Terra muss standardmäßig neue Wichtigkeits-, Spam- und Risikowerte liefern. Alle drei Werte ändern, getrennte Gründe auswählen, je einen Freitext eingeben und die Referenz speichern. Beim erneuten Scoring derselben E-Mail müssen die archivierten Werte und Gründe vorausgewählt und für die neue Bewertung berücksichtigt werden.
-27. **Ähnliche finden** prüfen; diese Aktion benötigt keinen OpenAI-Aufruf.
+27. **Ähnliche finden** prüfen; diese Aktion benötigt keinen externen AI-Aufruf.
 28. Beide **AI Chat**-Schaltflächen testen, Ergebnisse kopieren und lokal speichern.
-29. Unter **Einstellungen** die Modellauswahl für Bulk, Einzelmail-Scoring, Zusammenfassen, Antwortvorschlag, AI Chat und jede weitere AI-Funktion prüfen. Jede Bezeichnung und das zugehörige Auswahlfeld müssen unmittelbar zusammen in einer eigenen klar abgegrenzten Karte stehen. Standardmäßig müssen Luna, Terra beziehungsweise Sol wie im Abschnitt **OpenAI-Modelle** ausgewählt sein; jede Auswahl muss sich unabhängig ändern und speichern lassen.
+29. Unter **Einstellungen** nacheinander OpenAI, Claude, Mistral, DeepSeek und **Individueller Endpunkt** auswählen. Die integrierten Endpunkt-URLs müssen schreibgeschützt sein, Anbieterwechsel müssen noch nicht gespeicherte Schlüssel und Modelle getrennt behalten und OpenAI muss bei einer bestehenden Installation die bisherigen Werte übernehmen. Für den individuellen Endpunkt HTTPS beziehungsweise einen localhost-Testdienst, Protokoll und Authentifizierung eintragen; beim Testen muss Thunderbird nur Zugriff auf dessen exakten Host anfordern. Danach die Modellauswahl für Bulk, Einzelmail-Scoring, Zusammenfassen, Antwortvorschlag, AI Chat und jede weitere AI-Funktion prüfen. Jede Bezeichnung und das zugehörige Eingabefeld müssen unmittelbar zusammen in einer eigenen klar abgegrenzten Karte stehen; **Automatisch** muss je Anbieter die passende schnelle, ausgewogene oder qualitätsorientierte Vorgabe verwenden und jede Modell-ID muss sich unabhängig ändern und speichern lassen.
 30. Im **Archiv der Scoring-Referenzen** die gespeicherte Testmail öffnen, alle drei Werte und getrennten Gründe prüfen, manuell neu bewerten und speichern. Eine vor Version 2.6.0 gespeicherte Referenz muss mit leerem Risikofeld lesbar bleiben und sich nach Eingabe des Risikowerts speichern lassen. Danach die Referenz entfernen; die Thunderbird-E-Mail darf dabei nicht gelöscht oder verändert werden.
 31. Die Oberflächensprache auf **English** umstellen und globales Dashboard, Einzelmail-Popup, Antworteditor, Einstellungen und Hilfe prüfen. Danach zurück auf **Deutsch** wechseln. Alle sichtbaren Texte und Meldungen müssen der Auswahl folgen.
 32. In den **Einstellungen** darf kein Abschnitt für automatische E-Mail-Verarbeitung mehr erscheinen. Einen erfolgreichen API-Test oder eine andere AI-Aktion ausführen und anschließend die Nutzungsstatistiken aktualisieren. **Geschätzte API-Kosten** müssen als lokalisierter USD-Wert erscheinen und der Hinweis muss Beginn der Tokenaufzeichnung, Preisstand sowie Einschränkungen nennen.
@@ -204,14 +221,14 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 42. Nach mehreren Dashboard-Aktionen den Tab wechseln und das globale Toolbar-Symbol mindestens dreimal erneut verwenden. Ein hängender Thunderbird-Tabaufruf muss nach einem begrenzten Zeitlimit freigegeben werden, sodass der nächste Klick ohne Thunderbird-Neustart erneut versucht. Bei einem endgültigen Fehler muss eine lokalisierte Benachrichtigung mit Diagnosecode erscheinen. Unter **Einstellungen → AI Assistant öffnen → Support-Diagnose** müssen Add-on-/Thunderbird-Version, letzter Dashboard-Start und die letzten Hintergrund-/UI-Aktivitäten ohne E-Mail-Inhalte sichtbar und kopierbar sein. Ein absichtlich provozierter Fehler muss als fehlgeschlagener oder kontrolliert fehlgeschlagener Vorgang erscheinen.
 43. Im Dashboard mehrere Nachrichten auswählen und bis unter die letzte angezeigte Nachricht scrollen. Dort muss dieselbe Bulk-Aktionsleiste wie oberhalb der Nachrichten erscheinen; Auswahlzahl, Aktivierungszustand und Aktionen müssen in beiden Leisten synchron bleiben. Danach Dashboard und Einzelmail-Ansicht nach unten scrollen: Rechts unten muss jeweils ein kleiner runder Pfeil erscheinen, der die sichtbare Scrollfläche nach oben bewegt und am Anfang wieder verschwindet.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 3.0.1** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 3.1.0** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 Die Einstellungen enthalten eine **Support- und Speicherdiagnose**. Sie zeigt Hintergrundstart, Abhängigkeitsstatus, Laufzeiten und eine inhaltsfreie Prüfung lokaler Einstellungsdaten. API-Schlüssel werden ausschließlich als „vorhanden/nicht vorhanden“ gemeldet. Kann der Hintergrunddienst nicht starten, werden vorhandene Einstellungen lokal und schreibgeschützt dargestellt; Speichern und Zurücksetzen bleiben bis zu einem erfolgreichen Start deaktiviert.
 
 ## Technische Struktur
 
 - `thunderbird-ai/`: Manifest, getrennte globale und nachrichtenbezogene Seiten, Styles und UI-Komponenten
-- `common/`: Hintergrundskript sowie Storage-, Nachrichten- und OpenAI-Dienste
+- `common/`: Hintergrundskript sowie Storage-, Nachrichten- und anbieteroffene AI-Dienste
 - `tests/`: Node-basierte Unit- und Workflow-Tests ohne zusätzliche Laufzeitabhängigkeiten
 - `installer/windows/`: Inno-Setup-Build und Isolationstest
 - `installer/macos/`: nativer macOS-Paketbuild, lokalisierte Installer-Texte und Isolationstest

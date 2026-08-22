@@ -126,6 +126,8 @@ const SupportDiagnosticsComponent = class {
     async auditStorage() {
         const keys = [
             CONFIG.STORAGE_KEYS.OPENAI_API_KEY,
+            CONFIG.STORAGE_KEYS.AI_PROVIDER,
+            CONFIG.STORAGE_KEYS.AI_PROVIDER_CONFIGURATIONS,
             CONFIG.STORAGE_KEYS.UI_LANGUAGE,
             CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE,
             CONFIG.STORAGE_KEYS.SINGLE_MAIL_OPEN_MODE,
@@ -136,9 +138,17 @@ const SupportDiagnosticsComponent = class {
             CONFIG.STORAGE_KEYS.SAVED_RESULTS
         ];
         const stored = await browser.storage.local.get(keys);
+        const provider = globalThis.AIProviderService.normalizeProviderId(
+            stored[CONFIG.STORAGE_KEYS.AI_PROVIDER]
+        );
+        const providerConfigurations = stored[CONFIG.STORAGE_KEYS.AI_PROVIDER_CONFIGURATIONS];
         return {
             keysPresent: keys.filter(key => Object.hasOwn(stored, key)).length,
-            apiKeyPresent: Boolean(stored[CONFIG.STORAGE_KEYS.OPENAI_API_KEY]),
+            provider,
+            apiKeyPresent: Boolean(
+                providerConfigurations?.[provider]?.apiKey
+                || (provider === 'openai' && stored[CONFIG.STORAGE_KEYS.OPENAI_API_KEY])
+            ),
             uiLanguage: stored[CONFIG.STORAGE_KEYS.UI_LANGUAGE] || null,
             dashboardOpenMode: stored[CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE] || null,
             singleMailOpenMode: stored[CONFIG.STORAGE_KEYS.SINGLE_MAIL_OPEN_MODE] || null,
@@ -190,6 +200,7 @@ const SupportDiagnosticsComponent = class {
     formatStorageAudit(audit) {
         return I18n.t('supportDiagnosticsStorageDetails', {
             keys: audit.keysPresent,
+            provider: globalThis.AIProviderService.providerLabel(audit.provider),
             apiKey: I18n.t(audit.apiKeyPresent ? 'yes' : 'no'),
             language: audit.uiLanguage || '-',
             dashboardMode: audit.dashboardOpenMode || '-',

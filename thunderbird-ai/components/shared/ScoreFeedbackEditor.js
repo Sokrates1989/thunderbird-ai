@@ -52,8 +52,8 @@ const ScoreFeedbackEditor = {
         root.appendChild(prompt);
 
         const categories = new Map();
-        const scoreCategories = CONFIG.OPENAI.SCORE_FEEDBACK_CATEGORIES_BY_SCORE?.[name]
-            || CONFIG.OPENAI.SCORE_FEEDBACK_CATEGORIES;
+        const scoreCategories = CONFIG.AI.SCORE_FEEDBACK_CATEGORIES_BY_SCORE?.[name]
+            || CONFIG.AI.SCORE_FEEDBACK_CATEGORIES;
         for (const category of scoreCategories) {
             const label = document.createElement('label');
             label.className = 'score-feedback-reason-option';
@@ -69,7 +69,7 @@ const ScoreFeedbackEditor = {
 
         const text = document.createElement('textarea');
         text.rows = 3;
-        text.maxLength = CONFIG.OPENAI.DASHBOARD_FEEDBACK_REASON_CHARACTERS;
+        text.maxLength = CONFIG.AI.DASHBOARD_FEEDBACK_REASON_CHARACTERS;
         text.placeholder = I18n.t('singleScoreReasonPlaceholder');
         text.value = options.reasons?.text || '';
         root.appendChild(text);

@@ -220,13 +220,13 @@ const DashboardAIService = {
     },
 
     normalizeReasons(reasons) {
-        const allowed = new Set(CONFIG.OPENAI.SCORE_FEEDBACK_CATEGORIES);
+        const allowed = new Set(CONFIG.AI.SCORE_FEEDBACK_CATEGORIES);
         const normalizeSection = section => ({
             categories: Array.isArray(section?.categories)
                 ? [...new Set(section.categories.map(String).filter(value => allowed.has(value)))]
                 : [],
             text: String(section?.text || '').trim()
-                .slice(0, CONFIG.OPENAI.DASHBOARD_FEEDBACK_REASON_CHARACTERS)
+                .slice(0, CONFIG.AI.DASHBOARD_FEEDBACK_REASON_CHARACTERS)
         });
         return {
             importance: normalizeSection(reasons?.importance),

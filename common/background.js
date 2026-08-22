@@ -236,7 +236,8 @@ class ThunderbirdAI {
                 dashboardLaunch: Boolean(globalThis.DashboardLaunchService),
                 storage: Boolean(globalThis.StorageManager),
                 message: Boolean(globalThis.MessageService),
-                openAI: Boolean(globalThis.OpenAIService)
+                aiProvider: Boolean(globalThis.AIProviderService),
+                aiService: Boolean(globalThis.OpenAIService)
             }
         };
     }
@@ -294,7 +295,7 @@ class ThunderbirdAI {
                     return this.improveText(request.text, request.type);
                 case CONFIG.ACTIONS.TEST:
                 case CONFIG.ACTIONS.TEST_API:
-                    return OpenAIService.testConnection(request.apiKey, request.model);
+                    return OpenAIService.testConnection(request.providerConfig, request.model);
                 case CONFIG.ACTIONS.GET_SETTINGS:
                 case CONFIG.ACTIONS.GET_STATISTICS:
                     return StorageManager.getSettings();

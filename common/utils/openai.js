@@ -1,45 +1,58 @@
-/** OpenAI Responses API client and task-specific email prompts. */
+/** Provider-independent AI task client with bounded retries and email prompts. */
 const OpenAIService = {
     async getSettings() {
         const settings = await StorageManager.getSettings();
-        return {
-            apiKey: settings.openaiApiKey,
-            model: settings.model,
-            taskModels: settings.taskModels || {},
-            baseUrl: CONFIG.OPENAI.BASE_URL
-        };
+        const configuration = globalThis.AIProviderService.normalizeConfiguration(
+            settings.aiProvider,
+            settings.providerConfig
+        );
+        return { configuration, taskModels: configuration.taskModels || {} };
     },
 
-    resolveModel(task, preferredModel = CONFIG.OPENAI.DEFAULT_MODEL) {
-        const supported = CONFIG.OPENAI.AVAILABLE_MODELS.map(item => item.value);
-        if (preferredModel !== 'auto' && supported.includes(preferredModel)) {
-            return preferredModel;
-        }
-        return CONFIG.OPENAI.TASK_PROFILES[task]?.model || 'gpt-5.6-terra';
+    resolveModel(task, preferredModel = CONFIG.AI.DEFAULT_MODEL, configuration = null) {
+        const providerConfiguration = configuration
+            || globalThis.AIProviderService.normalizeConfiguration(CONFIG.AI.DEFAULT_PROVIDER);
+        return globalThis.AIProviderService.resolveModel(
+            providerConfiguration,
+            task,
+            preferredModel
+        );
     },
 
-    async testConnection(apiKey, preferredModel = CONFIG.OPENAI.DEFAULT_MODEL) {
+    async testConnection(configurationOverride = null, preferredModel = CONFIG.AI.DEFAULT_MODEL) {
         try {
             const settings = await this.getSettings();
-            const key = String(apiKey || settings.apiKey || '').trim();
-            if (!key) {
+            const configuration = configurationOverride && typeof configurationOverride === 'object'
+                ? globalThis.AIProviderService.normalizeConfiguration(
+                    configurationOverride.provider,
+                    configurationOverride
+                )
+                : globalThis.AIProviderService.normalizeConfiguration(
+                    settings.configuration.provider,
+                    {
+                        ...settings.configuration,
+                        apiKey: String(configurationOverride || settings.configuration.apiKey || '').trim()
+                    }
+                );
+            const definition = CONFIG.AI.PROVIDERS[configuration.provider];
+            if (definition.apiKeyRequired && !configuration.apiKey) {
                 return { success: false, message: I18n.t('apiKeyMissing') };
             }
-            if (!key.startsWith('sk-')) {
-                return { success: false, message: I18n.t('apiKeyInvalid') };
+            if (!globalThis.AIProviderService.isConfigured(configuration, 'test')) {
+                return { success: false, message: I18n.t('providerConfigurationIncomplete') };
             }
 
             const result = await this.request('test', {
                 instructions: I18n.t('testPrompt'),
                 input: I18n.t('testPrompt')
-            }, { apiKey: key, preferredModel });
+            }, { configuration, preferredModel });
             return {
                 success: true,
                 message: I18n.t('apiTestSuccess', { model: result.model }),
                 model: result.model
             };
         } catch (error) {
-            console.error('OpenAI connection test failed:', error);
+            console.error('AI provider connection test failed:', error);
             return {
                 success: false,
                 message: error?.userFacing === true
@@ -51,7 +64,7 @@ const OpenAIService = {
 
     async generateSummary(message) {
         const settings = await this.getSettings();
-        if (!settings.apiKey) {
+        if (!globalThis.AIProviderService.isConfigured(settings.configuration, 'summarize')) {
             return {
                 content: this.generateFallbackSummary(message),
                 usedApi: false,
@@ -80,8 +93,8 @@ const OpenAIService = {
             throw new Error(I18n.t('replyRefinementRequired'));
         }
 
-        const clippedDraft = draft.slice(0, CONFIG.OPENAI.MAX_REPLY_DRAFT_CHARACTERS);
-        const clippedInstruction = requestedChange.slice(0, CONFIG.OPENAI.MAX_REPLY_INSTRUCTION_CHARACTERS);
+        const clippedDraft = draft.slice(0, CONFIG.AI.MAX_REPLY_DRAFT_CHARACTERS);
+        const clippedInstruction = requestedChange.slice(0, CONFIG.AI.MAX_REPLY_INSTRUCTION_CHARACTERS);
         const previousRequests = history
             .filter(entry => entry?.role === 'user' && typeof entry.content === 'string')
             .slice(-4)
@@ -131,8 +144,8 @@ const OpenAIService = {
     /** Classify several messages in bounded Luna batches and retain successful partial batches. */
     async analyzeBulkTriage(messages, feedbackExamples = []) {
         const batches = [];
-        for (let index = 0; index < messages.length; index += CONFIG.OPENAI.BULK_TRIAGE_BATCH_SIZE) {
-            batches.push(messages.slice(index, index + CONFIG.OPENAI.BULK_TRIAGE_BATCH_SIZE));
+        for (let index = 0; index < messages.length; index += CONFIG.AI.BULK_TRIAGE_BATCH_SIZE) {
+            batches.push(messages.slice(index, index + CONFIG.AI.BULK_TRIAGE_BATCH_SIZE));
         }
         const results = new Array(batches.length);
         const failures = [];
@@ -149,7 +162,7 @@ const OpenAIService = {
                 }
             }
         };
-        const workerCount = Math.min(CONFIG.OPENAI.BULK_TRIAGE_CONCURRENCY, batches.length);
+        const workerCount = Math.min(CONFIG.AI.BULK_TRIAGE_CONCURRENCY, batches.length);
         await Promise.all(Array.from({ length: workerCount }, () => worker()));
         const scores = results.filter(Boolean).flat();
         if (!scores.length && messages.length) {
@@ -170,7 +183,7 @@ const OpenAIService = {
     async analyzeBulkTriageBatch(messages, feedbackExamples = []) {
         const messageInput = messages.map((message, index) => [
             `<bulk-email index="${index}">`,
-            this.formatEmailContext(message, CONFIG.OPENAI.BULK_TRIAGE_EMAIL_CHARACTERS),
+            this.formatEmailContext(message, CONFIG.AI.BULK_TRIAGE_EMAIL_CHARACTERS),
             '</bulk-email>'
         ].join('\n')).join('\n\n');
         const feedbackInput = this.formatBulkFeedbackExamples(feedbackExamples);
@@ -189,7 +202,7 @@ const OpenAIService = {
     async analyzeSingleScore(message, feedbackExamples = []) {
         const messageInput = [
             '<bulk-email index="0">',
-            this.formatEmailContext(message, CONFIG.OPENAI.BULK_TRIAGE_EMAIL_CHARACTERS),
+            this.formatEmailContext(message, CONFIG.AI.BULK_TRIAGE_EMAIL_CHARACTERS),
             '</bulk-email>'
         ].join('\n');
         const feedbackInput = this.formatBulkFeedbackExamples(feedbackExamples);
@@ -213,7 +226,7 @@ const OpenAIService = {
         if (!Array.isArray(examples) || !examples.length) {
             return '';
         }
-        const rows = examples.slice(0, CONFIG.OPENAI.BULK_TRIAGE_FEEDBACK_EXAMPLES)
+        const rows = examples.slice(0, CONFIG.AI.BULK_TRIAGE_FEEDBACK_EXAMPLES)
             .map((example, index) => [
                 `<operator-feedback-example index="${index}">`,
                 JSON.stringify({
@@ -347,7 +360,7 @@ const OpenAIService = {
         ].join('\n');
     },
 
-    formatEmailContext(message, maximum = CONFIG.OPENAI.MAX_EMAIL_CHARACTERS) {
+    formatEmailContext(message, maximum = CONFIG.AI.MAX_EMAIL_CHARACTERS) {
         const content = String(message.content || '');
         const clipped = content.length > maximum
             ? `${content.slice(0, maximum)}\n\n${I18n.t('contentTruncated', { maximum })}`
@@ -392,28 +405,36 @@ const OpenAIService = {
     /** Send one stateless request with bounded retries for classified transient failures. */
     async request(task, payload, overrides = {}) {
         const settings = await this.getSettings();
-        const apiKey = String(overrides.apiKey || settings.apiKey || '').trim();
-        if (!apiKey) {
+        const configuration = overrides.configuration
+            ? globalThis.AIProviderService.normalizeConfiguration(
+                overrides.configuration.provider,
+                overrides.configuration
+            )
+            : settings.configuration;
+        const providerDefinition = CONFIG.AI.PROVIDERS[configuration.provider];
+        if (providerDefinition.apiKeyRequired && !configuration.apiKey) {
             throw this.createRequestError('apiKeyMissing');
         }
 
-        const profile = CONFIG.OPENAI.TASK_PROFILES[task] || CONFIG.OPENAI.TASK_PROFILES.summarize;
+        const profile = CONFIG.AI.TASK_PROFILES[task] || CONFIG.AI.TASK_PROFILES.summarize;
         const preferredModel = overrides.preferredModel
+            || configuration.taskModels?.[task]
             || settings.taskModels?.[task]
-            || settings.model;
-        const model = this.resolveModel(task, preferredModel);
+            || CONFIG.AI.DEFAULT_MODEL;
+        const model = this.resolveModel(task, preferredModel, configuration);
         let attempts = 0;
         const result = await RetryService.run(
             async attempt => {
                 attempts = attempt;
-                return this.performRequest(settings, apiKey, model, profile, payload);
+                return this.performRequest(configuration, model, profile, payload);
             },
             {
-                maxAttempts: CONFIG.OPENAI.REQUEST_MAX_ATTEMPTS,
+                maxAttempts: CONFIG.AI.REQUEST_MAX_ATTEMPTS,
                 shouldRetry: error => this.shouldRetryRequest(error),
                 delayMs: (error, attempt) => this.requestRetryDelay(error, attempt),
                 onRetry: (error, attempt, delayMs) => {
-                    console.warn('Retrying transient OpenAI request.', {
+                    console.warn('Retrying transient AI provider request.', {
+                        provider: configuration.provider,
                         attempt,
                         delayMs,
                         status: error.status || null,
@@ -425,30 +446,25 @@ const OpenAIService = {
         return { ...result, retryCount: Math.max(0, attempts - 1) };
     },
 
-    /** Perform exactly one Responses API attempt with its own timeout controller. */
-    async performRequest(settings, apiKey, model, profile, payload) {
+    /** Perform exactly one provider request with its own timeout controller. */
+    async performRequest(configuration, model, profile, payload) {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), CONFIG.UI.LOADING_TIMEOUT);
 
         try {
+            const providerRequest = globalThis.AIProviderService.createRequest(
+                configuration,
+                model,
+                profile,
+                payload
+            );
             let response;
             try {
-                response = await fetch(`${settings.baseUrl}/responses`, {
+                response = await fetch(providerRequest.endpoint, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${apiKey}`
-                    },
+                    headers: providerRequest.headers,
                     signal: controller.signal,
-                    body: JSON.stringify({
-                        model,
-                        instructions: payload.instructions,
-                        input: payload.input,
-                        reasoning: { effort: profile.effort },
-                        text: { verbosity: profile.verbosity },
-                        max_output_tokens: profile.maxOutputTokens,
-                        store: false
-                    })
+                    body: JSON.stringify(providerRequest.body)
                 });
             } catch (error) {
                 if (error?.name === 'AbortError') {
@@ -468,16 +484,20 @@ const OpenAIService = {
             }
 
             const data = await response.json().catch(() => null);
-            const content = this.extractOutputText(data);
-            if (!content) {
+            const parsed = globalThis.AIProviderService.parseResponse(configuration, data, model);
+            if (!parsed.content) {
                 throw this.createRequestError('apiNoOutput');
             }
             try {
-                await StorageManager.recordApiUsage(model, data.usage);
+                await StorageManager.recordApiUsage(
+                    configuration.provider,
+                    parsed.model,
+                    parsed.usage
+                );
             } catch (error) {
-                console.error('Could not record OpenAI token usage:', error);
+                console.error('Could not record AI provider token usage:', error);
             }
-            return { content, usedApi: true, model };
+            return { content: parsed.content, usedApi: true, model: parsed.model };
         } finally {
             clearTimeout(timeout);
         }
@@ -504,7 +524,7 @@ const OpenAIService = {
         if (status === 429 && quotaError) {
             return this.createRequestError('apiQuotaFailed', {}, { status, code });
         }
-        if (status === 429 && retryAfterMs > CONFIG.OPENAI.RETRY_MAX_DELAY_MS) {
+        if (status === 429 && retryAfterMs > CONFIG.AI.RETRY_MAX_DELAY_MS) {
             return this.createRequestError('apiRateLimitLongWait', {}, {
                 status,
                 code,
@@ -550,7 +570,7 @@ const OpenAIService = {
             return false;
         }
         return error.retryAfterMs === null
-            || error.retryAfterMs <= CONFIG.OPENAI.RETRY_MAX_DELAY_MS;
+            || error.retryAfterMs <= CONFIG.AI.RETRY_MAX_DELAY_MS;
     },
 
     /** Prefer Retry-After; otherwise use exponential backoff with jitter. */
@@ -559,8 +579,8 @@ const OpenAIService = {
             return error.retryAfterMs;
         }
         return RetryService.exponentialDelay(failedAttempt, {
-            baseDelayMs: CONFIG.OPENAI.RETRY_BASE_DELAY_MS,
-            maxDelayMs: CONFIG.OPENAI.RETRY_MAX_DELAY_MS
+            baseDelayMs: CONFIG.AI.RETRY_BASE_DELAY_MS,
+            maxDelayMs: CONFIG.AI.RETRY_MAX_DELAY_MS
         });
     },
 
@@ -578,16 +598,7 @@ const OpenAIService = {
     },
 
     extractOutputText(response) {
-        if (typeof response?.output_text === 'string' && response.output_text.trim()) {
-            return response.output_text.trim();
-        }
-        return (response?.output || [])
-            .filter(item => item.type === 'message')
-            .flatMap(item => item.content || [])
-            .filter(item => item.type === 'output_text' && typeof item.text === 'string')
-            .map(item => item.text)
-            .join('\n')
-            .trim();
+        return globalThis.AIProviderService.extractResponsesText(response);
     }
 };
 

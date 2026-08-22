@@ -19,6 +19,30 @@ test('model selectors are compact self-contained cards instead of detached grid 
     assert.match(apiConfig, /class="model-task-grid" aria-describedby="modelRoutingHelp"/u);
 });
 
+test('settings expose built-in and compatible custom AI provider controls', () => {
+    const settingsPage = source('thunderbird-ai/pages/settings.html');
+    const apiConfig = source('thunderbird-ai/components/settings/ApiConfigComponent.js');
+    const manifest = JSON.parse(source('thunderbird-ai/manifest.json'));
+
+    assert.match(settingsPage, /ai-provider\.js/u);
+    assert.match(apiConfig, /id="aiProvider"/u);
+    assert.match(apiConfig, /id="providerEndpoint"/u);
+    assert.match(apiConfig, /id="providerProtocol"/u);
+    assert.match(apiConfig, /ensureEndpointPermission\(\)/u);
+    assert.match(apiConfig, /browser\.permissions\.request/u);
+    assert.deepEqual(manifest.host_permissions, [
+        'https://api.openai.com/*',
+        'https://api.anthropic.com/*',
+        'https://api.mistral.ai/*',
+        'https://api.deepseek.com/*'
+    ]);
+    assert.deepEqual(manifest.optional_host_permissions, [
+        'https://*/*',
+        'http://localhost/*',
+        'http://127.0.0.1/*'
+    ]);
+});
+
 test('settings no longer load or expose retired automatic email analysis', () => {
     const settingsPage = source('thunderbird-ai/pages/settings.html');
     const settingsManager = source('thunderbird-ai/components/settings/SettingsManager.js');
@@ -100,6 +124,7 @@ test('support storage audit reports API-key presence without exposing the key', 
     loadScript(context, 'thunderbird-ai/config/locale-de.js');
     loadScript(context, 'thunderbird-ai/config/locale-en.js');
     loadScript(context, 'thunderbird-ai/config/constants.js');
+    loadScript(context, 'common/utils/ai-provider.js');
     loadScript(context, 'thunderbird-ai/components/shared/RuntimeDiagnosticService.js');
     loadScript(context, 'thunderbird-ai/components/settings/SupportDiagnosticsComponent.js');
     const component = Object.create(context.SupportDiagnosticsComponent.prototype);

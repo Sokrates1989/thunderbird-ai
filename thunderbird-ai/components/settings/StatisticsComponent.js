@@ -247,7 +247,7 @@ const StatisticsComponent = class {
     }
 
     formatPricingDate() {
-        const date = new Date(`${CONFIG.OPENAI.PRICING_SNAPSHOT_DATE}T00:00:00Z`);
+        const date = new Date(`${CONFIG.AI.PRICING_SNAPSHOT_DATE}T00:00:00Z`);
         return date.toLocaleDateString(I18n.getLanguage());
     }
 

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extensionName__",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
   "author": "Sokrates1989",
@@ -33,7 +33,7 @@
     "64": "icon.svg"
   },
   "background": {
-    "scripts": ["locale-de.js", "locale-en.js", "constants.js", "RuntimeDiagnosticService.js", "retry.js", "LaunchModeService.js", "SingleMailWorkspaceService.js", "DashboardLaunchService.js", "storage.js", "message.js", "spam-precheck.js", "dashboard-training.js", "dashboard-mailbox.js", "openai.js", "ui.js", "background.js"]
+    "scripts": ["locale-de.js", "locale-en.js", "constants.js", "RuntimeDiagnosticService.js", "retry.js", "LaunchModeService.js", "SingleMailWorkspaceService.js", "DashboardLaunchService.js", "storage.js", "message.js", "spam-precheck.js", "dashboard-training.js", "dashboard-mailbox.js", "ai-provider.js", "openai.js", "ui.js", "background.js"]
   },
   "message_display_action": {
     "default_title": "__MSG_actionTitle__",
@@ -50,7 +50,15 @@
   },
 
   "host_permissions": [
-    "https://api.openai.com/*"
+    "https://api.openai.com/*",
+    "https://api.anthropic.com/*",
+    "https://api.mistral.ai/*",
+    "https://api.deepseek.com/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
   ],
   "web_accessible_resources": [
     {

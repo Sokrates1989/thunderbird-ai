@@ -121,6 +121,12 @@ const ActionsComponent = class {
         try {
             // Collect settings from all components
             const settings = this.settingsManager.collectAllSettings();
+            const permissionGranted = await this.settingsManager.components.apiConfig
+                .ensureEndpointPermission();
+            if (!permissionGranted) {
+                this.settingsManager.showStatus(I18n.t('providerPermissionDenied'), 'error');
+                return;
+            }
 
             // Show loading state
             this.elements.saveBtn.disabled = true;
@@ -143,7 +149,10 @@ const ActionsComponent = class {
             
         } catch (error) {
             console.error('Error saving settings:', error);
-            this.settingsManager.showStatus(I18n.t('settingsSaveFailed'), 'error');
+            this.settingsManager.showStatus(
+                error?.userFacing === true ? error.message : I18n.t('settingsSaveFailed'),
+                'error'
+            );
         } finally {
             // Reset button state
             this.elements.saveBtn.disabled = !this.persistenceAvailable;
@@ -181,16 +190,12 @@ const ActionsComponent = class {
                 
                 // Save default settings
                 const defaultSettings = {
-                    openaiApiKey: '',
+                    aiProvider: CONFIG.AI.DEFAULT_PROVIDER,
+                    aiProviderConfigurations: globalThis.StorageManager
+                        .normalizeProviderConfigurations({}),
                     uiLanguage: I18n.getLanguage(),
                     dashboardOpenMode: globalThis.LaunchModeService.MODES.OVERLAY,
-                    singleMailOpenMode: globalThis.LaunchModeService.MODES.OVERLAY,
-                    ...Object.fromEntries(
-                        CONFIG.OPENAI.MODEL_SETTINGS.map(definition => [
-                            definition.property,
-                            definition.defaultModel
-                        ])
-                    )
+                    singleMailOpenMode: globalThis.LaunchModeService.MODES.OVERLAY
                 };
 
                 const result = await this.settingsManager.sendToBackground(CONFIG.ACTIONS.SAVE_SETTINGS, defaultSettings);

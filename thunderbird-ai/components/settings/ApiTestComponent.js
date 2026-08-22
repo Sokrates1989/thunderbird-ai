@@ -2,7 +2,7 @@
  * AI Mail Assistant for Thunderbird - API Test Component
  * 
  * This module provides the API testing functionality for the settings page.
- * It handles OpenAI API connection testing and user feedback.
+ * It handles selected-provider connection testing and user feedback.
  * 
  * @module ApiTestComponent
  * @author AI Mail Assistant for Thunderbird Team
@@ -94,7 +94,7 @@ const ApiTestComponent = class {
     /**
      * Test API connection
      * 
-     * Tests the configured API key by making a simple request to OpenAI.
+     * Tests the visible provider configuration without saving it first.
      * Shows loading state and provides feedback on success or failure.
      * 
      * @async
@@ -103,16 +103,20 @@ const ApiTestComponent = class {
      */
     async testApiConnection() {
         try {
-            // Get current API key from the input field (not saved settings)
-            const apiKeyInput = document.getElementById('openaiApiKey');
-            const apiKey = apiKeyInput ? apiKeyInput.value.trim() : '';
-            const modelSelect = document.getElementById('bulkModel');
-            const model = modelSelect ? modelSelect.value : CONFIG.OPENAI.TASK_PROFILES.test.model;
-
-            if (!apiKey) {
+            const apiConfig = this.settingsManager.components.apiConfig;
+            const providerConfig = apiConfig.getActiveProviderConfiguration();
+            const definition = CONFIG.AI.PROVIDERS[providerConfig.provider];
+            if (definition.apiKeyRequired && !providerConfig.apiKey) {
                 this.showTestResult(`❌ ${I18n.t('apiKeyRequiredForTest')}`, 'error');
                 return;
             }
+            const permissionGranted = await apiConfig.ensureEndpointPermission();
+            if (!permissionGranted) {
+                this.showTestResult(`❌ ${I18n.t('providerPermissionDenied')}`, 'error');
+                return;
+            }
+            const model = providerConfig.taskModels.bulkTriage
+                || globalThis.AIProviderService.resolveModel(providerConfig, 'test');
 
             // Show loading state
             this.elements.testApiBtn.disabled = true;
@@ -120,7 +124,7 @@ const ApiTestComponent = class {
 
             // Test the connection
             const result = await this.settingsManager.sendToBackground(CONFIG.ACTIONS.TEST_API, {
-                apiKey,
+                providerConfig,
                 model
             });
 
@@ -132,7 +136,10 @@ const ApiTestComponent = class {
 
         } catch (error) {
             console.error('API test error:', error);
-            this.showTestResult(`❌ ${I18n.t('apiTestFailed')}`, 'error');
+            this.showTestResult(
+                `❌ ${error?.userFacing === true ? error.message : I18n.t('apiTestFailed')}`,
+                'error'
+            );
         } finally {
             // Reset button state
             this.elements.testApiBtn.disabled = false;

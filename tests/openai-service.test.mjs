@@ -25,16 +25,28 @@ function loadOpenAIService({ model = 'auto', taskModels, fetchImplementation, re
     loadScript(context, 'thunderbird-ai/config/locale-de.js');
     loadScript(context, 'thunderbird-ai/config/locale-en.js');
     loadScript(context, 'thunderbird-ai/config/constants.js');
+    loadScript(context, 'common/utils/ai-provider.js');
     loadScript(context, 'common/utils/retry.js');
     context.RetryService.wait = async delayMs => retryDelays.push(delayMs);
     const configuredTaskModels = taskModels === undefined
-        ? Object.fromEntries(context.CONFIG.OPENAI.MODEL_SETTINGS.flatMap(definition => (
+        ? Object.fromEntries(context.CONFIG.AI.MODEL_SETTINGS.flatMap(definition => (
             definition.tasks.map(task => [task, definition.defaultModel])
         )))
         : taskModels;
+    const providerConfig = context.AIProviderService.normalizeConfiguration('openai', {
+        apiKey: 'sk-test-key',
+        defaultModel: model,
+        taskModels: configuredTaskModels
+    });
     context.StorageManager = {
-        getSettings: async () => ({ openaiApiKey: 'sk-test-key', model, taskModels: configuredTaskModels }),
-        recordApiUsage: async (usedModel, usage) => recordedUsage.push([usedModel, usage])
+        getSettings: async () => ({
+            aiProvider: 'openai',
+            providerConfig,
+            taskModels: configuredTaskModels
+        }),
+        recordApiUsage: async (provider, usedModel, usage) => (
+            recordedUsage.push([provider, usedModel, usage])
+        )
     };
     loadScript(context, 'common/utils/openai.js');
     return { recordedUsage, retryDelays, service: context.OpenAIService, requests };
@@ -86,12 +98,14 @@ test('successful responses record model-specific token usage for cost statistics
 
     await service.request('summarize', { instructions: 'x', input: 'y' });
 
-    assert.deepEqual(recordedUsage.map(([model, value]) => ({
+    assert.deepEqual(recordedUsage.map(([provider, model, value]) => ({
+        provider,
         model,
         inputTokens: value.input_tokens,
         cachedTokens: value.input_tokens_details.cached_tokens,
         outputTokens: value.output_tokens
     })), [{
+        provider: 'openai',
         model: 'gpt-5.6-sol',
         inputTokens: 1200,
         cachedTokens: 200,
@@ -424,7 +438,18 @@ test('extractOutputText aggregates message output items safely', () => {
 
 test('summary fallback is used only when no API key is configured', async () => {
     const { service } = loadOpenAIService();
-    service.getSettings = async () => ({ apiKey: '', model: 'auto', baseUrl: 'https://api.openai.com/v1' });
+    service.getSettings = async () => ({
+        configuration: {
+            provider: 'openai',
+            protocol: 'openai-responses',
+            authMode: 'bearer',
+            baseUrl: 'https://api.openai.com/v1',
+            apiKey: '',
+            defaultModel: '',
+            taskModels: {}
+        },
+        taskModels: {}
+    });
 
     const result = await service.generateSummary({
         subject: 'Test',

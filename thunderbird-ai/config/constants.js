@@ -2,10 +2,97 @@
 
 const CONFIG = {
     ADDON_NAME: 'AI Mail Assistant for Thunderbird',
-    ADDON_VERSION: '3.0.1',
+    ADDON_VERSION: '3.1.0',
     ADDON_ID: 'thunderbird-ai@felicitas-wisdom.com',
 
-    OPENAI: {
+    AI: {
+        DEFAULT_PROVIDER: 'openai',
+        PROVIDERS: {
+            openai: {
+                labelKey: 'providerOpenAI',
+                protocol: 'openai-responses',
+                authMode: 'bearer',
+                baseUrl: 'https://api.openai.com/v1',
+                apiKeyUrl: 'https://platform.openai.com/api-keys',
+                apiKeyRequired: true,
+                modelPresets: ['gpt-5.6-luna', 'gpt-5.6-terra', 'gpt-5.6-sol'],
+                modelRoles: {
+                    fast: 'gpt-5.6-luna',
+                    balanced: 'gpt-5.6-terra',
+                    quality: 'gpt-5.6-sol'
+                }
+            },
+            anthropic: {
+                labelKey: 'providerAnthropic',
+                protocol: 'anthropic-messages',
+                authMode: 'x-api-key',
+                baseUrl: 'https://api.anthropic.com/v1',
+                apiKeyUrl: 'https://platform.claude.com/settings/keys',
+                apiKeyRequired: true,
+                modelPresets: [
+                    'claude-haiku-4-5-20251001',
+                    'claude-sonnet-5',
+                    'claude-opus-5'
+                ],
+                modelRoles: {
+                    fast: 'claude-haiku-4-5-20251001',
+                    balanced: 'claude-sonnet-5',
+                    quality: 'claude-sonnet-5'
+                }
+            },
+            mistral: {
+                labelKey: 'providerMistral',
+                protocol: 'openai-chat',
+                authMode: 'bearer',
+                baseUrl: 'https://api.mistral.ai/v1',
+                apiKeyUrl: 'https://console.mistral.ai/api-keys',
+                apiKeyRequired: true,
+                modelPresets: [
+                    'mistral-small-latest',
+                    'mistral-medium-latest',
+                    'mistral-large-latest'
+                ],
+                modelRoles: {
+                    fast: 'mistral-small-latest',
+                    balanced: 'mistral-medium-latest',
+                    quality: 'mistral-large-latest'
+                }
+            },
+            deepseek: {
+                labelKey: 'providerDeepSeek',
+                protocol: 'openai-chat',
+                authMode: 'bearer',
+                baseUrl: 'https://api.deepseek.com',
+                apiKeyUrl: 'https://platform.deepseek.com/api_keys',
+                apiKeyRequired: true,
+                modelPresets: ['deepseek-v4-flash', 'deepseek-v4-pro'],
+                modelRoles: {
+                    fast: 'deepseek-v4-flash',
+                    balanced: 'deepseek-v4-flash',
+                    quality: 'deepseek-v4-pro'
+                }
+            },
+            custom: {
+                labelKey: 'providerCustom',
+                protocol: 'openai-chat',
+                authMode: 'bearer',
+                baseUrl: '',
+                apiKeyUrl: '',
+                apiKeyRequired: false,
+                modelPresets: [],
+                modelRoles: { fast: '', balanced: '', quality: '' }
+            }
+        },
+        PROTOCOLS: [
+            { value: 'openai-chat', labelKey: 'providerProtocolOpenAIChat' },
+            { value: 'openai-responses', labelKey: 'providerProtocolOpenAIResponses' },
+            { value: 'anthropic-messages', labelKey: 'providerProtocolAnthropic' }
+        ],
+        AUTH_MODES: [
+            { value: 'bearer', labelKey: 'providerAuthBearer' },
+            { value: 'x-api-key', labelKey: 'providerAuthApiKeyHeader' },
+            { value: 'none', labelKey: 'providerAuthNone' }
+        ],
         BASE_URL: 'https://api.openai.com/v1',
         DEFAULT_MODEL: 'auto',
         REQUEST_MAX_ATTEMPTS: 3,
@@ -36,19 +123,19 @@ const CONFIG = {
             'gpt-5.6-sol': { input: 5.00, cachedInput: 0.50, output: 30.00 }
         },
         TASK_PROFILES: {
-            summarize: { model: 'gpt-5.6-sol', effort: 'low', verbosity: 'medium', maxOutputTokens: 1200 },
-            reply: { model: 'gpt-5.6-sol', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
-            replyRefine: { model: 'gpt-5.6-sol', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
-            categorize: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'low', maxOutputTokens: 350 },
-            importance: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'low', maxOutputTokens: 350 },
-            chat: { model: 'gpt-5.6-sol', effort: 'low', verbosity: 'medium', maxOutputTokens: 1200 },
-            translate: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'medium', maxOutputTokens: 1800 },
-            extract: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
-            spam: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'low', maxOutputTokens: 450 },
-            bulkTriage: { model: 'gpt-5.6-luna', effort: 'low', verbosity: 'low', maxOutputTokens: 1200 },
-            singleScore: { model: 'gpt-5.6-terra', effort: 'low', verbosity: 'low', maxOutputTokens: 300 },
-            improve: { model: 'gpt-5.6-terra', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
-            test: { model: 'gpt-5.6-luna', effort: 'none', verbosity: 'low', maxOutputTokens: 20 }
+            summarize: { model: 'gpt-5.6-sol', modelRole: 'quality', effort: 'low', verbosity: 'medium', maxOutputTokens: 1200 },
+            reply: { model: 'gpt-5.6-sol', modelRole: 'quality', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
+            replyRefine: { model: 'gpt-5.6-sol', modelRole: 'quality', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
+            categorize: { model: 'gpt-5.6-luna', modelRole: 'fast', effort: 'low', verbosity: 'low', maxOutputTokens: 350 },
+            importance: { model: 'gpt-5.6-luna', modelRole: 'fast', effort: 'low', verbosity: 'low', maxOutputTokens: 350 },
+            chat: { model: 'gpt-5.6-sol', modelRole: 'quality', effort: 'low', verbosity: 'medium', maxOutputTokens: 1200 },
+            translate: { model: 'gpt-5.6-luna', modelRole: 'fast', effort: 'low', verbosity: 'medium', maxOutputTokens: 1800 },
+            extract: { model: 'gpt-5.6-luna', modelRole: 'fast', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
+            spam: { model: 'gpt-5.6-luna', modelRole: 'fast', effort: 'low', verbosity: 'low', maxOutputTokens: 450 },
+            bulkTriage: { model: 'gpt-5.6-luna', modelRole: 'fast', effort: 'low', verbosity: 'low', maxOutputTokens: 1200 },
+            singleScore: { model: 'gpt-5.6-terra', modelRole: 'balanced', effort: 'low', verbosity: 'low', maxOutputTokens: 300 },
+            improve: { model: 'gpt-5.6-terra', modelRole: 'balanced', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
+            test: { model: 'gpt-5.6-luna', modelRole: 'fast', effort: 'none', verbosity: 'low', maxOutputTokens: 20 }
         },
         MODEL_SETTINGS: [
             { property: 'bulkModel', storageKey: 'bulkModel', labelKey: 'modelTaskBulk', tasks: ['bulkTriage'], defaultModel: 'gpt-5.6-luna' },
@@ -124,6 +211,8 @@ const CONFIG = {
 
     STORAGE_KEYS: {
         OPENAI_API_KEY: 'openaiApiKey',
+        AI_PROVIDER: 'aiProvider',
+        AI_PROVIDER_CONFIGURATIONS: 'aiProviderConfigurations',
         MODEL: 'model',
         BULK_MODEL: 'bulkModel',
         SINGLE_SCORE_MODEL: 'singleScoreModel',
@@ -318,7 +407,7 @@ const I18n = {
     },
 
     modelLabel(model) {
-        const definition = CONFIG.OPENAI.AVAILABLE_MODELS.find(item => item.value === model);
+        const definition = CONFIG.AI.AVAILABLE_MODELS.find(item => item.value === model);
         return definition?.labelKey ? this.t(definition.labelKey) : model;
     },
 

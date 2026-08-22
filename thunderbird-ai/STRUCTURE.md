@@ -13,7 +13,8 @@ thunderbird-ai/
 │   └── constants.js         # Constants and configuration
 ├── utils/                    # Utility modules
 │   ├── storage.js           # Storage management
-│   ├── openai.js            # OpenAI API service
+│   ├── ai-provider.js       # AI provider request/response adapters
+│   ├── openai.js            # Provider-independent AI task service
 │   ├── message.js           # Message operations
 │   └── ui.js               # UI utilities
 ├── pages/                    # Page components (future)
@@ -42,16 +43,16 @@ thunderbird-ai/
 - `DashboardLaunchService.js` focuses an existing durable dashboard tab before creating a fallback and coalesces concurrent launches. Every Thunderbird tab/window API call is bounded so a pending promise cannot block future toolbar clicks until restart. The service persists only the latest content-free launch diagnostic. `SupportDiagnosticsComponent.js` combines that record with bounded runtime events, background startup health, dependency presence, and a secret-free direct local-storage audit. If the background fails, Settings displays locally persisted values read-only and disables Save/Reset rather than presenting writable defaults. The single-message footer reuses the launch boundary. `DashboardLaunchPromptComponent.js` maintains the local three-use/five-open guidance counters and presents optional prompts without interrupting an already open dashboard dialog.
 - `SingleMailWorkspaceService.js` is the shared tab boundary for the message toolbar, the single-mail fullscreen control, dashboard actions, context-menu actions, reply preparation, and dashboard AI Chat. It focuses an existing message-and-mode workspace before creating a new tab and bounds Thunderbird tab calls independently from AI processing.
 - `PdfArchiverIntegrationService.js` owns the optional protocol-v1 message hand-off to the fixed PDF Archiver for Thunderbird extension ID. `PdfArchiverIntegrationComponent.js` translates unavailable, incompatible, and failed states and provides the official GitHub installation path; PDF content and native-host access remain exclusively inside the companion add-on.
-- `DashboardSenderFilterComponent.js`, `DashboardMessageComponent.js`, and `DashboardFeedbackComponent.js` render their focused UI areas without injecting mailbox HTML. `DashboardMessageComponent.js` owns one shared three-group action description for the visible columns and right-click surface plus the accessible per-message preview controls; `DashboardMessageContextMenuComponent.js` renders actions as direct titled groups or keyboard-accessible submenus. `DashboardPreviewController.js` keeps preview visibility and two-line viewport growth session-local to the targeted message. `DashboardBulkActionsComponent.js` renders the same synchronized bulk controls into the hosts above and below the message list, keeping markup and behavior in one implementation.
+- `DashboardSenderFilterComponent.js`, `DashboardMessageComponent.js`, and `DashboardFeedbackComponent.js` render their focused UI areas without injecting mailbox HTML. `DashboardMessageComponent.js` owns one shared three-group action description for the visible columns and right-click surface plus the accessible per-message preview controls; `DashboardMessageContextMenuComponent.js` renders actions as direct titled groups or keyboard-accessible submenus. `DashboardPreviewController.js` keeps preview visibility and four-line viewport growth session-local to the targeted message. `DashboardBulkActionsComponent.js` renders the same synchronized bulk controls into the hosts above and below the message list, keeping markup and behavior in one implementation.
 - `ScrollToTopComponent.js` owns the shared floating scroll shortcut for dashboard and single-message pages. Each entry point supplies its actual scroll surfaces so popup-internal lists and durable Thunderbird tabs use the same behavior.
 - `ScoreFeedbackEditor.js` and `score-feedback-editor.css` provide the shared importance, spam, and risk correction fields, score-specific reason categories, and separate free-text explanations used by the dashboard, single-message scoring, and Settings archive.
 - `DashboardAIService.js` delegates summaries, replies, and AI Chat to the shared single-message workspace, plans protected first-time versus explicit re-score operations for both single messages and selections, and persists bounded importance/spam/risk score metadata keyed by RFC Message-ID instead of Thunderbird's restart-volatile numeric ID. Legacy two-score metadata remains attached with a null risk score until explicit rescoring or correction.
 - `dashboard-training.js` owns the separate bounded archive of explicit operator corrections. It stores a clipped message snapshot, separate importance/spam/risk reasons, and selects at most five relevant examples; Thunderbird deletion never accesses its storage key. Legacy records remain loadable with an empty risk field.
 - `spam-precheck.js` owns the local sender-history calibration used before single and bulk scoring. It scans exact sender addresses across Thunderbird in bounded pages, caches aggregate counts briefly, combines them with safe newsletter signal names, and never retains other messages or raw MIME-header values.
-- Bulk and single-email score bodies cross to `background.js`, which retrieves normalized messages through `MessageService`, selects relevant corrections through `DashboardTrainingService`, and calls the shared OpenAI score formatting and parser. Bulk defaults to Luna, single scoring defaults to Terra, and both honor their independent saved model preference.
+- Bulk and single-email score bodies cross to `background.js`, which retrieves normalized messages through `MessageService`, selects relevant corrections through `DashboardTrainingService`, and calls the provider-independent task client. `ai-provider.js` formats and parses OpenAI Responses, Anthropic Messages, and OpenAI-compatible Chat Completions without changing the shared scoring contract. Each provider supplies fast, balanced, and quality defaults, and every task honors its independent saved model preference.
 - `ScoringArchiveComponent.js` exposes the local reference archive in Settings for manual rescoring, reason editing, and removal without touching Thunderbird messages.
 - `ArchiveSettingsGuideComponent.js` performs a read-only scan of Thunderbird archive-folder markers and capabilities, then presents the protected native configuration path and official help without guessing folders by localized names.
-- `retry.js` owns bounded backoff and promise-timeout mechanics. Domain services still decide whether an error is safe to retry: OpenAI classifies transient HTTP/network failures, while UI runtime messages retry only when Thunderbird confirms that no background listener received the request. Read-only Settings requests are time-limited so a stalled background switches to the protected local read-only view; mutating requests are never repeated after an ambiguous timeout. Background localization, action-router cleanup, and context-menu setup are isolated startup steps whose exact failure stage is retained in support diagnostics. Score-feedback writes are idempotent upserts under the stable message identity.
+- `retry.js` owns bounded backoff and promise-timeout mechanics. Domain services still decide whether an error is safe to retry: the AI task client classifies transient HTTP/network failures, while UI runtime messages retry only when Thunderbird confirms that no background listener received the request. Read-only Settings requests are time-limited so a stalled background switches to the protected local read-only view; mutating requests are never repeated after an ambiguous timeout. Background localization, action-router cleanup, and context-menu setup are isolated startup steps whose exact failure stage is retained in support diagnostics. Score-feedback writes are idempotent upserts under the stable message identity.
 
 ## 🏗️ Architecture Overview
 
@@ -71,9 +72,10 @@ thunderbird-ai/
 - Available globally as `CONFIG`
 
 #### **Utilities (`utils/`)**
-- **`storage.js`**: Browser storage operations, strict persistence-critical reads, settings management, serialized per-model token accounting, and dated API-cost estimation (global `StorageManager`)
+- **`storage.js`**: Browser storage operations, strict persistence-critical reads, provider-profile migration, serialized provider/model token accounting, and dated OpenAI cost estimation (global `StorageManager`)
 - **`retry.js`**: Shared bounded retry and Thunderbird runtime-delivery backoff (global `RetryService`)
-- **`openai.js`**: OpenAI API integration and AI services (global `OpenAIService`)
+- **`ai-provider.js`**: Provider configuration, endpoint validation, request formatting, response parsing, and normalized usage (global `AIProviderService`)
+- **`openai.js`**: Provider-independent prompts, AI workflows, retries, and error classification; the historical global name remains `OpenAIService` for compatibility
 - **`message.js`**: Email message operations and data extraction (global `MessageService`)
 - **`spam-precheck.js`**: Bounded sender-frequency and newsletter-signal aggregation for scoring (global `SpamPrecheckService`)
 - **`ui.js`**: Common UI utilities and helper functions (global `UIUtils`)
@@ -129,10 +131,11 @@ thunderbird-ai/
   - Error handling
 - **Dependencies**: Uses global `CONFIG`
 
-### **OpenAI Service**
+### **AI Provider and Task Services**
 - **Purpose**: AI integration
 - **Responsibilities**:
-  - API communication
+  - Provider selection and API communication
+  - Compatible OpenAI Responses, OpenAI Chat Completions, and Anthropic Messages adapters
   - Prompt management
   - Error handling
   - Fallback mechanisms
@@ -168,7 +171,7 @@ User Action → Component → Background Script → Service → API/Storage → 
 2. `MessageDisplay` component handles click
 3. Sends message to background script
 4. Background script calls `MessageService` to get email data
-5. Background script calls `OpenAIService` to generate summary
+5. Background script calls the provider-independent `OpenAIService` task client to generate the summary
 6. Background script updates statistics via `StorageManager`
 7. Response returned to component
 8. Component updates UI with results

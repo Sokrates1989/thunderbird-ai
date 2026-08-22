@@ -11,7 +11,7 @@ const DashboardTrainingService = {
             throw new Error(I18n.t('dashboardFeedbackInvalid'));
         }
         const reason = String(feedback?.reason || '').trim()
-            .slice(0, CONFIG.OPENAI.DASHBOARD_FEEDBACK_REASON_CHARACTERS);
+            .slice(0, CONFIG.AI.DASHBOARD_FEEDBACK_REASON_CHARACTERS);
         const reasons = this.normalizeReasons(feedback?.reasons, feedback?.reasons ? '' : reason);
         const storageKey = MessageService.messageIdentity(message);
         const records = await this.loadArchive();
@@ -30,7 +30,7 @@ const DashboardTrainingService = {
         };
         const bounded = [record, ...records.filter(item => item.storageKey !== storageKey)]
             .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
-            .slice(0, CONFIG.OPENAI.DASHBOARD_FEEDBACK_ARCHIVE_LIMIT);
+            .slice(0, CONFIG.AI.DASHBOARD_FEEDBACK_ARCHIVE_LIMIT);
         await browser.storage.local.set({
             [CONFIG.STORAGE_KEYS.DASHBOARD_FEEDBACK_ARCHIVE]: bounded
         });
@@ -104,7 +104,7 @@ const DashboardTrainingService = {
                 right.relevance - left.relevance
                 || right.record.updatedAt.localeCompare(left.record.updatedAt)
             ))
-            .slice(0, CONFIG.OPENAI.BULK_TRIAGE_FEEDBACK_EXAMPLES)
+            .slice(0, CONFIG.AI.BULK_TRIAGE_FEEDBACK_EXAMPLES)
             .map(item => item.record);
     },
 
@@ -121,7 +121,7 @@ const DashboardTrainingService = {
             author: String(message?.author || ''),
             date: this.normalizeDate(message?.date),
             content: String(message?.content || '')
-                .slice(0, CONFIG.OPENAI.BULK_TRIAGE_EMAIL_CHARACTERS),
+                .slice(0, CONFIG.AI.BULK_TRIAGE_EMAIL_CHARACTERS),
             attachments: (message?.attachments || [])
                 .map(attachment => ({
                     name: String(typeof attachment === 'string' ? attachment : attachment?.name || '')
@@ -145,7 +145,7 @@ const DashboardTrainingService = {
             originalScores,
             correctedScores,
             reason: String(record.reason || '')
-                .slice(0, CONFIG.OPENAI.DASHBOARD_FEEDBACK_REASON_CHARACTERS),
+                .slice(0, CONFIG.AI.DASHBOARD_FEEDBACK_REASON_CHARACTERS),
             reasons: this.normalizeReasons(record.reasons, record.reason),
             sourceModel: String(record.sourceModel || ''),
             createdAt,
@@ -185,12 +185,12 @@ const DashboardTrainingService = {
     },
 
     normalizeReasonSection(section, legacyReason = '') {
-        const allowed = new Set(CONFIG.OPENAI.SCORE_FEEDBACK_CATEGORIES);
+        const allowed = new Set(CONFIG.AI.SCORE_FEEDBACK_CATEGORIES);
         const categories = Array.isArray(section?.categories)
             ? [...new Set(section.categories.map(String).filter(category => allowed.has(category)))]
             : [];
         const text = String(section?.text || legacyReason || '').trim()
-            .slice(0, CONFIG.OPENAI.DASHBOARD_FEEDBACK_REASON_CHARACTERS);
+            .slice(0, CONFIG.AI.DASHBOARD_FEEDBACK_REASON_CHARACTERS);
         return { categories, text };
     },
 
@@ -200,7 +200,7 @@ const DashboardTrainingService = {
             .filter(Boolean)
             .filter((value, index, values) => values.indexOf(value) === index)
             .join(' | ')
-            .slice(0, CONFIG.OPENAI.DASHBOARD_FEEDBACK_REASON_CHARACTERS);
+            .slice(0, CONFIG.AI.DASHBOARD_FEEDBACK_REASON_CHARACTERS);
     },
 
     normalizeAuthor(value) {

@@ -30,9 +30,9 @@ const ReplyComposerComponent = class {
                 <div class="reply-composer-scroll">
                     <div class="reply-composer-messages" aria-live="polite"></div>
                     <label class="reply-composer-label" for="replyComposerDraft">${I18n.t('replyDraftLabel')}</label>
-                    <textarea id="replyComposerDraft" class="reply-composer-draft" rows="9" maxlength="${CONFIG.OPENAI.MAX_REPLY_DRAFT_CHARACTERS}" placeholder="${I18n.t('replyDraftPlaceholder')}"></textarea>
+                    <textarea id="replyComposerDraft" class="reply-composer-draft" rows="9" maxlength="${CONFIG.AI.MAX_REPLY_DRAFT_CHARACTERS}" placeholder="${I18n.t('replyDraftPlaceholder')}"></textarea>
                     <label class="reply-composer-label" for="replyComposerInstruction">${I18n.t('replyRefinementLabel')}</label>
-                    <textarea id="replyComposerInstruction" class="reply-composer-instruction" rows="3" maxlength="${CONFIG.OPENAI.MAX_REPLY_INSTRUCTION_CHARACTERS}" placeholder="${I18n.t('replyRefinementPlaceholder')}"></textarea>
+                    <textarea id="replyComposerInstruction" class="reply-composer-instruction" rows="3" maxlength="${CONFIG.AI.MAX_REPLY_INSTRUCTION_CHARACTERS}" placeholder="${I18n.t('replyRefinementPlaceholder')}"></textarea>
                     <div class="reply-composer-refine-row">
                         <small>${I18n.t('replyRefineShortcut')}</small>
                         <button type="button" class="reply-composer-refine">${I18n.t('replyRefine')}</button>

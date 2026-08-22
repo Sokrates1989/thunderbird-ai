@@ -4,13 +4,19 @@ Last updated: 22 August 2026
 
 AI Mail Assistant for Thunderbird does not automatically analyze opened email. Network processing begins only when the user explicitly starts an AI action or explicitly selects messages for dashboard analysis.
 
-## Data sent to OpenAI
+## Data sent to the selected AI provider
 
-Depending on the chosen action, the add-on sends the email subject, sender, readable message text, attachment names, the current reply draft, and the user's editing instruction directly from Thunderbird to the OpenAI API. Dashboard scoring can additionally send bounded aggregate spam signals and up to five locally stored correction examples. The add-on requests `store: false`; OpenAI independently controls its service-side processing under the user's OpenAI account and applicable OpenAI terms.
+Depending on the chosen action, the add-on sends the email subject, sender, readable message text, attachment names, the current reply draft, and the user's editing instruction directly from Thunderbird to the AI provider selected in Settings. Dashboard scoring can additionally send bounded aggregate spam signals and up to five locally stored correction examples. The supported built-in providers and destinations are:
 
-The OpenAI API key is supplied by the user and stored in Thunderbird's local extension storage. It is sent only to OpenAI for authenticated API requests and is never included in support diagnostics.
+- OpenAI at `https://api.openai.com/` using the Responses API with `store: false`;
+- Claude at `https://api.anthropic.com/` using the Anthropic Messages API;
+- Mistral at `https://api.mistral.ai/` using its Chat Completions API;
+- DeepSeek at `https://api.deepseek.com/` using its Chat Completions API; or
+- a custom HTTPS endpoint, or an HTTP loopback endpoint on `localhost` or `127.0.0.1`, using a user-selected compatible protocol.
 
-No other AI provider is implemented in version 3.0.1. This policy and the add-on's disclosures must be updated before another provider is enabled.
+The add-on maintainer does not proxy these requests. Each provider or custom-endpoint operator independently controls service-side processing, retention, account terms, and charges. OpenAI's `store: false` request field does not govern another provider or a custom endpoint. Users must review and trust the selected service before sending email data.
+
+API keys are supplied by the user, stored in Thunderbird's local extension storage, and sent only to the selected endpoint in the configured authentication header. A Claude app or Claude Code subscription is not reused; Claude requires a separate Anthropic API key. Keys are never included in support diagnostics. Thunderbird requests access to a custom endpoint's exact host only when the user saves or tests that endpoint.
 
 ## Local data
 
@@ -20,7 +26,7 @@ The add-on does not sell personal data, display advertising, or upload email aut
 
 ## Retention and deletion
 
-Local data remains until the user removes it through the add-on settings, clears Thunderbird extension data, or removes the relevant Thunderbird profile. Service-side retention by OpenAI is governed by the user's OpenAI plan and OpenAI's current policies.
+Local data remains until the user removes it through the add-on settings, clears Thunderbird extension data, or removes the relevant Thunderbird profile. Service-side retention is governed by the selected provider's or custom-endpoint operator's current policies and the user's account or deployment configuration.
 
 ## Contact
 

@@ -108,7 +108,7 @@ const UIUtils = {
      * @param {string} message - Error message to display
      * 
      * @example
-     * UIUtils.showError('Failed to connect to OpenAI API');
+     * UIUtils.showError('Failed to connect to the AI provider');
      */
     showError(message) {
         const dialog = document.getElementById('errorDialog');

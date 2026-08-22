@@ -68,6 +68,7 @@ body {
 
 .setting-group input[type="text"],
 .setting-group input[type="password"],
+.setting-group input[type="url"],
 .setting-group select {
     width: 100%;
     padding: 12px;
@@ -80,9 +81,33 @@ body {
 
 .setting-group input[type="text"]:focus,
 .setting-group input[type="password"]:focus,
+.setting-group input[type="url"]:focus,
 .setting-group select:focus {
     outline: none;
     border-color: #007acc;
+}
+
+.setting-group input.valid {
+    border-color: #2e7d32;
+}
+
+.setting-group input.invalid {
+    border-color: #c62828;
+}
+
+.setting-group input[readonly] {
+    background: #f3f5f7;
+    color: #46525e;
+}
+
+.provider-connection-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 14px;
+}
+
+.provider-endpoint-setting {
+    grid-column: 1 / -1;
 }
 
 .help-text {
@@ -200,12 +225,23 @@ body {
     line-height: 1.3;
 }
 
-.model-task-setting select {
+.model-task-setting select,
+.model-task-setting input {
     width: 100%;
     margin: 0;
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
+}
+
+@media (max-width: 620px) {
+    .provider-connection-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .provider-endpoint-setting {
+        grid-column: auto;
+    }
 }
 
 /* Checkbox styling */

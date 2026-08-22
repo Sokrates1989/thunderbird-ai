@@ -7,6 +7,7 @@ export const repositoryRoot = path.resolve(import.meta.dirname, '..');
 export function createContext(overrides = {}) {
     const context = vm.createContext({
         AbortController,
+        URL,
         URLSearchParams,
         clearTimeout,
         console,
