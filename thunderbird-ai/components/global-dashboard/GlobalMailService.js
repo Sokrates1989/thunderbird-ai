@@ -6,11 +6,46 @@
 const GlobalMailService = {
     QUERY_PAGE_SIZE: 100,
     ACCOUNT_QUERY_CONCURRENCY: 3,
+    API_TIMEOUT_MS: 15000,
+    ABORT_TIMEOUT_MS: 2000,
+    STARTUP_MAX_ATTEMPTS: 3,
+    STARTUP_RETRY_DELAY_MS: 500,
     DELETE_DIAGNOSTIC_CODE: 'DELETE_NOT_APPLIED',
 
-    /** Return all unread Inbox headers per supported account for correct global ranking. */
-    async listUnreadByAccount() {
-        const accounts = await browser.accounts.list(true);
+    /** Return unread headers after bounded retries while Thunderbird finishes starting. */
+    async listUnreadByAccount(options = {}) {
+        const settings = options && typeof options === 'object' ? options : {};
+        const requestedAttempts = Number(settings.maxAttempts);
+        const maxAttempts = Number.isInteger(requestedAttempts) && requestedAttempts > 0
+            ? requestedAttempts
+            : this.STARTUP_MAX_ATTEMPTS;
+        return RetryService.run(
+            attempt => this.scanUnreadByAccount({
+                acceptEmptyAccounts: attempt === maxAttempts
+            }),
+            {
+                maxAttempts,
+                shouldRetry: error => this.isStartupFailure(error),
+                delayMs: (_error, attempt) => this.STARTUP_RETRY_DELAY_MS * attempt,
+                onRetry: settings.onRetry
+            }
+        );
+    },
+
+    /** Execute one bounded account scan and reject a completely unavailable mail API. */
+    async scanUnreadByAccount(options = {}) {
+        let accounts;
+        try {
+            accounts = await this.mailApiCall(
+                () => browser.accounts.list(true),
+                'accounts-list'
+            );
+        } catch (error) {
+            throw this.startupError('MAIL_ACCOUNTS_UNAVAILABLE', error);
+        }
+        if (!accounts.length && !options.acceptEmptyAccounts) {
+            throw this.startupError('MAIL_ACCOUNTS_NOT_READY');
+        }
         const mailAccounts = accounts
             .map(account => ({ account, inbox: this.findInbox(account.rootFolder) }))
             .filter(item => item.inbox && !['nntp', 'rss'].includes(item.account.type));
@@ -25,7 +60,38 @@ const GlobalMailService = {
         };
         const workerCount = Math.min(this.ACCOUNT_QUERY_CONCURRENCY, mailAccounts.length);
         await Promise.all(Array.from({ length: workerCount }, () => worker()));
+        if (results.length && results.every(result => result.startupUnavailable)) {
+            throw this.startupError('MAILBOXES_NOT_READY');
+        }
         return results;
+    },
+
+    /** Bound one Thunderbird mail API read so a restored dashboard can always recover. */
+    mailApiCall(operation, stage, timeoutMs = this.API_TIMEOUT_MS) {
+        return RetryService.withTimeout(operation, {
+            timeoutMs,
+            code: 'THUNDERBIRD_MAIL_API_TIMEOUT',
+            stage
+        });
+    },
+
+    /** Create a stable diagnostic error for a Thunderbird startup readiness failure. */
+    startupError(code, cause = null) {
+        const error = new Error(code);
+        error.code = code;
+        if (cause) {
+            error.cause = cause;
+        }
+        return error;
+    },
+
+    /** Limit automatic retries to expected Thunderbird startup readiness failures. */
+    isStartupFailure(error) {
+        return [
+            'MAIL_ACCOUNTS_NOT_READY',
+            'MAIL_ACCOUNTS_UNAVAILABLE',
+            'MAILBOXES_NOT_READY'
+        ].includes(error?.code);
     },
 
     /** Add locally extracted body previews without failing the full dashboard. */
@@ -126,15 +192,24 @@ const GlobalMailService = {
     /** Isolate one account failure so the remaining accounts can still be displayed. */
     async listAccount({ account, inbox }) {
         let messageList = null;
+        let initialQueryCompleted = false;
         try {
-            messageList = await browser.messages.query({
-                folderId: inbox.id,
-                read: false,
-                messagesPerPage: this.QUERY_PAGE_SIZE
-            });
+            messageList = await this.mailApiCall(
+                () => browser.messages.query({
+                    folderId: inbox.id,
+                    read: false,
+                    messagesPerPage: this.QUERY_PAGE_SIZE
+                }),
+                `messages-query:${account.id}`
+            );
+            initialQueryCompleted = true;
             const messages = [...(messageList.messages || [])];
             while (messageList.id) {
-                messageList = await browser.messages.continueList(messageList.id);
+                const listId = messageList.id;
+                messageList = await this.mailApiCall(
+                    () => browser.messages.continueList(listId),
+                    `messages-continue:${account.id}`
+                );
                 messages.push(...(messageList.messages || []));
             }
             return {
@@ -151,12 +226,18 @@ const GlobalMailService = {
                 accountName: account.name,
                 inboxName: inbox.name,
                 messages: [],
-                failed: true
+                failed: true,
+                startupUnavailable: !initialQueryCompleted
             };
         } finally {
             if (messageList?.id && browser.messages.abortList) {
-                await browser.messages.abortList(messageList.id).catch(error => {
-                    console.warn(`Could not finalize message query ${messageList.id}:`, error);
+                const listId = messageList.id;
+                await this.mailApiCall(
+                    () => browser.messages.abortList(listId),
+                    `messages-abort:${account.id}`,
+                    this.ABORT_TIMEOUT_MS
+                ).catch(error => {
+                    console.warn(`Could not finalize message query ${listId}:`, error);
                 });
             }
         }

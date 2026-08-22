@@ -24,6 +24,7 @@ function message(id, day) {
 
 function loadService({
     accounts = [],
+    listAccounts = async () => accounts,
     query = async () => ({ id: null, messages: [] }),
     continueList = async () => ({ id: null, messages: [] }),
     getMessageContent = async () => '',
@@ -41,16 +42,16 @@ function loadService({
             STORAGE_KEYS: { DASHBOARD_DELETE_DIAGNOSTIC: 'dashboardDeleteDiagnostic' }
         },
         I18n: { t: key => key },
-        RetryService: { sendRuntimeMessage },
         MessageService: { getMessageContent },
         browser: {
+            runtime: { sendMessage: sendRuntimeMessage },
             storage: { local: {
                 get: async key => ({ [key]: storageState[key] }),
                 set: async values => Object.assign(storageState, values)
             } },
             accounts: { list: async includeFolders => {
                 assert.equal(includeFolders, true);
-                return accounts;
+                return listAccounts();
             } },
             messages: {
                 query,
@@ -62,6 +63,7 @@ function loadService({
             messageDisplay: { open: openMessage }
         }
     });
+    loadScript(context, 'common/utils/retry.js');
     loadScript(context, 'thunderbird-ai/components/shared/MailboxActionService.js');
     loadScript(context, 'thunderbird-ai/components/global-dashboard/GlobalMailService.js');
     return { aborted, service: context.GlobalMailService, storageState };
@@ -304,6 +306,49 @@ test('concurrent dashboard refresh requests share one mailbox scan', async () =>
     assert.equal(manager.refreshPromise, null);
 });
 
+test('failed startup scan clears the dashboard loading state and keeps refresh recoverable', async () => {
+    const DashboardManager = loadDashboardManager(
+        {
+            STARTUP_MAX_ATTEMPTS: 3,
+            API_TIMEOUT_MS: 5,
+            listUnreadByAccount: async () => {
+                const error = new Error('Mailbox API unavailable');
+                error.code = 'MAILBOXES_NOT_READY';
+                throw error;
+            }
+        },
+        undefined,
+        {
+            DashboardAIService: { loadResults: async () => ({}) },
+            RetryService: { withTimeout: operation => operation() }
+        }
+    );
+    const manager = Object.create(DashboardManager.prototype);
+    const busyStates = [];
+    const statuses = [];
+    let replacedChildren = 0;
+    manager.sourceAccounts = [{ accountId: 'stale' }];
+    manager.accounts = [{ accountId: 'stale' }];
+    manager.availableSenders = ['stale'];
+    manager.selectedMessageIds = new Set([7]);
+    manager.elements = {
+        accounts: { replaceChildren: () => { replacedChildren += 1; } }
+    };
+    manager.setBusy = busy => busyStates.push(busy);
+    manager.setStatus = (messageText, type) => statuses.push([messageText, type]);
+    manager.persistSelection = async () => {};
+    manager.renderSenderOptions = () => {};
+
+    await manager.performRefresh();
+
+    assert.deepEqual(busyStates, [true, false]);
+    assert.deepEqual(statuses, [['dashboardLoadFailed:{}', 'error']]);
+    assert.equal(replacedChildren, 1);
+    assert.equal(manager.sourceAccounts.length, 0);
+    assert.equal(manager.accounts.length, 0);
+    assert.equal(manager.selectedMessageIds.size, 0);
+});
+
 test('global dashboard reads every unread-header page for each Inbox', async () => {
     const firstInbox = inbox('inbox-a', 'Posteingang');
     const nestedInbox = inbox('inbox-b');
@@ -373,6 +418,65 @@ test('mailbox scans bound concurrent account queries without changing account or
         Array.from(results, result => result.accountId),
         accounts.map(item => item.id)
     );
+});
+
+test('dashboard startup retries a timed-out account API and then loads unread mail', async () => {
+    const accounts = [
+        account('personal', 'Personal', 'imap', {
+            id: 'root-personal',
+            subFolders: [inbox('personal-inbox')]
+        })
+    ];
+    let accountListCalls = 0;
+    const retries = [];
+    const { service } = loadService({
+        accounts,
+        listAccounts: async () => {
+            accountListCalls += 1;
+            if (accountListCalls === 1) {
+                return new Promise(() => {});
+            }
+            return accounts;
+        },
+        query: async () => ({ id: null, messages: [message(7, 7)] })
+    });
+    service.API_TIMEOUT_MS = 5;
+    service.STARTUP_RETRY_DELAY_MS = 0;
+
+    const results = await service.listUnreadByAccount({
+        maxAttempts: 2,
+        onRetry: (error, attempt) => retries.push([error.code, attempt])
+    });
+
+    assert.equal(accountListCalls, 2);
+    assert.deepEqual(retries, [['MAIL_ACCOUNTS_UNAVAILABLE', 1]]);
+    assert.equal(results[0].messages[0].id, 7);
+});
+
+test('dashboard startup stops retrying when every unread query remains unresponsive', async () => {
+    const accounts = [
+        account('personal', 'Personal', 'imap', {
+            id: 'root-personal',
+            subFolders: [inbox('personal-inbox')]
+        })
+    ];
+    let queryCalls = 0;
+    const { service } = loadService({
+        accounts,
+        query: async () => {
+            queryCalls += 1;
+            return new Promise(() => {});
+        }
+    });
+    service.API_TIMEOUT_MS = 5;
+    service.STARTUP_RETRY_DELAY_MS = 0;
+
+    await assert.rejects(
+        service.listUnreadByAccount({ maxAttempts: 2 }),
+        error => error.code === 'MAILBOXES_NOT_READY'
+    );
+
+    assert.equal(queryCalls, 2);
 });
 
 test('newest-first default sorts later pages before applying the display limit', () => {
@@ -1088,7 +1192,7 @@ test('one dashboard preview loads only its targeted message', async () => {
     assert.equal(target.previewFailed, false);
 });
 
-test('one preview grows by two lines, resets, closes, and reopens without another load', async () => {
+test('one preview grows by four lines, resets, closes, and reopens without another load', async () => {
     const calls = [];
     const PreviewController = loadPreviewController();
     const target = message(7, 7);
@@ -1114,7 +1218,7 @@ test('one preview grows by two lines, resets, closes, and reopens without anothe
         previewVisible: false,
         previewLineCount: 3,
         previewBaselineLineCount: 3,
-        previewNextLineCount: 5,
+        previewNextLineCount: 7,
         previewCanExpand: false,
         previewCanReset: false
     });
@@ -1123,7 +1227,7 @@ test('one preview grows by two lines, resets, closes, and reopens without anothe
     controller.expand(target);
     controller.expand(target);
 
-    assert.equal(controller.optionsFor(target).previewLineCount, 7);
+    assert.equal(controller.optionsFor(target).previewLineCount, 11);
     assert.equal(controller.optionsFor(target).previewCanReset, true);
     controller.reset(target);
     assert.equal(controller.optionsFor(target).previewLineCount, 3);
@@ -1714,7 +1818,7 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.match(messageComponent, /dashboardPreviewExpand/u);
     assert.match(messageComponent, /dashboardPreviewReset/u);
     assert.match(messageComponent, /dashboardPreviewClose/u);
-    assert.match(previewController, /LINE_STEP = 2/u);
+    assert.match(previewController, /LINE_STEP = 4/u);
     assert.match(previewController, /MAX_LINES = 20/u);
     assert.match(messageComponent, /dashboardArchiveOne/u);
     assert.match(messageComponent, /dashboardExportPdfOne/u);

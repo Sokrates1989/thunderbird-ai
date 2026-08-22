@@ -317,6 +317,7 @@ globalThis.LOCALE_MESSAGES.de = Object.freeze({
     dashboardRefresh: 'Aktualisieren',
     dashboardSettings: 'Einstellungen',
     dashboardLoading: 'Ungelesene E-Mails werden geladen…',
+    dashboardStartupRetrying: 'Thunderbird bereitet den E-Mail-Zugriff noch vor. Neuer Versuch ({attempt}/{max})…',
     dashboardLoaded: 'Angezeigt: {messages} von {matches} passenden ungelesenen E-Mails · Konten: {accounts}',
     dashboardLoadFailed: 'Die ungelesenen E-Mails konnten nicht geladen werden.',
     dashboardNoAccounts: 'Es wurde kein unterstütztes E-Mail-Konto mit Posteingang gefunden.',

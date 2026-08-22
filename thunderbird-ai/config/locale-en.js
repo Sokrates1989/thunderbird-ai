@@ -317,6 +317,7 @@ globalThis.LOCALE_MESSAGES.en = Object.freeze({
     dashboardRefresh: 'Refresh',
     dashboardSettings: 'Settings',
     dashboardLoading: 'Loading unread emails…',
+    dashboardStartupRetrying: 'Thunderbird is still preparing mail access. Retrying ({attempt}/{max})…',
     dashboardLoaded: 'Shown: {messages} of {matches} matching unread emails · Accounts: {accounts}',
     dashboardLoadFailed: 'The unread emails could not be loaded.',
     dashboardNoAccounts: 'No supported email account with an Inbox was found.',

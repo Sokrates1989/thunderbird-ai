@@ -1,6 +1,6 @@
 /** Owns session-local visibility and viewport size for dashboard message previews. */
 const DashboardPreviewController = class {
-    static LINE_STEP = 2;
+    static LINE_STEP = 4;
 
     static MAX_LINES = 20;
 
@@ -68,7 +68,7 @@ const DashboardPreviewController = class {
         }
     }
 
-    /** Increase one preview by the bounded two-line step. */
+    /** Increase one preview by the bounded four-line step. */
     expand(message) {
         const options = this.optionsFor(message);
         if (!options.previewCanExpand) {

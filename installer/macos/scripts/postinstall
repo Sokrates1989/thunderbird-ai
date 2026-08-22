@@ -37,6 +37,7 @@ fi
 printf 'Installed Thunderbird AI into %d profile(s).\n' "${installed_profile_count}"
 
 if [[ "${THUNDERBIRD_AI_SKIP_LAUNCH:-0}" != '1' ]]; then
+    /bin/sleep 2
     if ! /usr/bin/open -b 'org.mozilla.thunderbird'; then
         printf 'Thunderbird AI was installed, but Thunderbird could not be opened automatically.\n' >&2
     fi

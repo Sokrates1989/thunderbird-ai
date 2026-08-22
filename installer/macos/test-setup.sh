@@ -95,6 +95,8 @@ cmp -s \
 }
 grep -F "/usr/bin/open -b 'org.mozilla.thunderbird'" \
     "${expanded_product}/Thunderbird-AI-component.pkg/Scripts/postinstall" >/dev/null
+grep -F '/bin/sleep 2' \
+    "${expanded_product}/Thunderbird-AI-component.pkg/Scripts/postinstall" >/dev/null
 payload_files="$(pkgutil --payload-files "${package_path}")"
 printf '%s\n' "${payload_files}" | \
     grep -F 'Library/Application Support/Thunderbird AI/thunderbird-ai.xpi' >/dev/null

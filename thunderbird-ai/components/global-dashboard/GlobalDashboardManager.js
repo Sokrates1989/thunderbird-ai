@@ -397,8 +397,22 @@ const GlobalDashboardManager = class {
         this.setBusy(true, I18n.t('dashboardLoading'));
         try {
             const [sourceAccounts, aiResults] = await Promise.all([
-                GlobalMailService.listUnreadByAccount(),
-                DashboardAIService.loadResults()
+                GlobalMailService.listUnreadByAccount({
+                    onRetry: (_error, attempt) => {
+                        this.setBusy(true, I18n.t('dashboardStartupRetrying', {
+                            attempt: attempt + 1,
+                            max: GlobalMailService.STARTUP_MAX_ATTEMPTS
+                        }));
+                    }
+                }),
+                RetryService.withTimeout(
+                    () => DashboardAIService.loadResults(),
+                    {
+                        timeoutMs: GlobalMailService.API_TIMEOUT_MS,
+                        code: 'DASHBOARD_STORAGE_TIMEOUT',
+                        stage: 'dashboard-ai-results'
+                    }
+                )
             ]);
             this.aiResults = aiResults;
             this.sourceAccounts = DashboardAIService.attachResults(sourceAccounts, aiResults);

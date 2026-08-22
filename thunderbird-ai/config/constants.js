@@ -2,7 +2,7 @@
 
 const CONFIG = {
     ADDON_NAME: 'Thunderbird AI Assistant',
-    ADDON_VERSION: '2.17.0',
+    ADDON_VERSION: '2.17.1',
     ADDON_ID: 'thunderbird-ai@example.com',
 
     OPENAI: {
