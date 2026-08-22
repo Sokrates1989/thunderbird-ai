@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Builds the per-user macOS Installer package for Thunderbird AI Assistant.
+# Builds the per-user macOS Installer package for AI Mail Assistant for Thunderbird.
 #
 set -euo pipefail
 export COPYFILE_DISABLE=1

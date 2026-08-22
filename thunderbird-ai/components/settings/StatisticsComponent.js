@@ -1,11 +1,11 @@
 /**
- * Thunderbird AI Assistant - Statistics Component
+ * AI Mail Assistant for Thunderbird - Statistics Component
  * 
  * This module provides the statistics display functionality for the settings page.
  * It handles usage statistics and auto-refresh functionality.
  * 
  * @module StatisticsComponent
- * @author Thunderbird AI Assistant Team
+ * @author AI Mail Assistant for Thunderbird Team
  * @version 1.0.0
  */
 
@@ -16,7 +16,7 @@
  * Provides auto-refresh and manual refresh capabilities.
  * 
  * @class StatisticsComponent
- * @author Thunderbird AI Assistant Team
+ * @author AI Mail Assistant for Thunderbird Team
  * @version 1.0.0
  */
 const StatisticsComponent = class {

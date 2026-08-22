@@ -1,11 +1,11 @@
 /**
- * Thunderbird AI Assistant - Actions Component
+ * AI Mail Assistant for Thunderbird - Actions Component
  * 
  * This module provides the action buttons functionality for the settings page.
  * It handles save, reset, and close actions.
  * 
  * @module ActionsComponent
- * @author Thunderbird AI Assistant Team
+ * @author AI Mail Assistant for Thunderbird Team
  * @version 1.0.0
  */
 
@@ -16,7 +16,7 @@
  * Provides user feedback and confirmation dialogs.
  * 
  * @class ActionsComponent
- * @author Thunderbird AI Assistant Team
+ * @author AI Mail Assistant for Thunderbird Team
  * @version 1.0.0
  */
 const ActionsComponent = class {

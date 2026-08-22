@@ -14,7 +14,7 @@ const PdfArchiverIntegrationComponent = class {
             PdfArchiverIntegrationService.openInstallPage()
                 .then(() => this.elements.dialog.close())
                 .catch(error => {
-                    console.error('Could not open Thunderbird PDF Archiver installation page:', error);
+                    console.error('Could not open PDF Archiver for Thunderbird installation page:', error);
                     this.setStatus(I18n.t('dashboardPdfArchiverInstallFailed'), 'error');
                 });
         });

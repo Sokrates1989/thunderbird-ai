@@ -735,7 +735,7 @@ const GlobalDashboardManager = class {
 
     /** Report unexpected companion failures without treating them as mailbox load errors. */
     showPdfArchiverError(error) {
-        console.error('Could not hand the message to Thunderbird PDF Archiver:', error);
+        console.error('Could not hand the message to PDF Archiver for Thunderbird:', error);
         this.setStatus(I18n.t('dashboardPdfArchiverOpenFailed'), 'error');
     }
 

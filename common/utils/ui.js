@@ -1,11 +1,11 @@
 /**
- * Thunderbird AI Assistant - UI Utilities
+ * AI Mail Assistant for Thunderbird - UI Utilities
  * 
- * This module provides user interface utilities for the Thunderbird AI Assistant.
+ * This module provides user interface utilities for the AI Mail Assistant for Thunderbird.
  * It handles toast notifications, loading overlays, error dialogs, and other UI components.
  * 
  * @module UIUtils
- * @author Thunderbird AI Assistant Team
+ * @author AI Mail Assistant for Thunderbird Team
  * @version 1.0.0
  */
 

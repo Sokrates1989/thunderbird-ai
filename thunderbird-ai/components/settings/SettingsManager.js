@@ -1,11 +1,11 @@
 /**
- * Thunderbird AI Assistant - Settings Manager
+ * AI Mail Assistant for Thunderbird - Settings Manager
  * 
  * This module provides the main settings management functionality.
  * It coordinates all UI components and handles communication with the background script.
  * 
  * @module SettingsManager
- * @author Thunderbird AI Assistant Team
+ * @author AI Mail Assistant for Thunderbird Team
  * @version 1.0.0
  */
 
@@ -17,7 +17,7 @@
  * centralized settings management.
  * 
  * @class SettingsManager
- * @author Thunderbird AI Assistant Team
+ * @author AI Mail Assistant for Thunderbird Team
  * @version 1.0.0
  */
 const SettingsManager = class {

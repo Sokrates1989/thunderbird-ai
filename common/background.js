@@ -692,7 +692,7 @@ globalThis.thunderbirdAIInitialization = RuntimeDiagnosticService.run(
             ...globalThis.thunderbirdAI.startupState,
             technicalError: error?.message
         });
-        console.error('Thunderbird AI Assistant failed to initialize:', error);
+        console.error('AI Mail Assistant for Thunderbird failed to initialize:', error);
         return false;
     });
 globalThis.thunderbirdAI.initialization = globalThis.thunderbirdAIInitialization;

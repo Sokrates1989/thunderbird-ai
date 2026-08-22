@@ -1,11 +1,11 @@
 /**
- * Thunderbird AI Assistant - API Configuration Component
+ * AI Mail Assistant for Thunderbird - API Configuration Component
  * 
  * This module provides the API configuration functionality for the settings page.
  * It handles OpenAI API key and model selection.
  * 
  * @module ApiConfigComponent
- * @author Thunderbird AI Assistant Team
+ * @author AI Mail Assistant for Thunderbird Team
  * @version 1.0.0
  */
 
@@ -16,7 +16,7 @@
  * and model selection. Provides validation and user feedback.
  * 
  * @class ApiConfigComponent
- * @author Thunderbird AI Assistant Team
+ * @author AI Mail Assistant for Thunderbird Team
  * @version 1.0.0
  */
 const ApiConfigComponent = class {

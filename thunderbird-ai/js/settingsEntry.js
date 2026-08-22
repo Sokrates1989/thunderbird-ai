@@ -1,11 +1,11 @@
 /**
- * Thunderbird AI Assistant - Settings Entry Point
+ * AI Mail Assistant for Thunderbird - Settings Entry Point
  * 
  * This module serves as the entry point for the settings page.
  * It initializes the SettingsManager when the settings page is loaded.
  * 
  * @module SettingsEntry
- * @author Thunderbird AI Assistant Team
+ * @author AI Mail Assistant for Thunderbird Team
  * @version 1.0.0
  */
 

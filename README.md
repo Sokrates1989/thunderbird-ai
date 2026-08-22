@@ -1,4 +1,4 @@
-# Thunderbird AI Assistant
+# AI Mail Assistant for Thunderbird
 
 Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe und weitere E-Mail-Analysen mit der OpenAI API.
 
@@ -10,6 +10,15 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 - [Aktueller Windows-Installer](https://github.com/Sokrates1989/thunderbird-ai/releases/latest/download/Thunderbird-AI-Setup-win-x64.exe)
 
 Die stabilen Downloadnamen zeigen immer auf die aktuelle GitHub-Veröffentlichung. Jede Veröffentlichung behält zusätzlich versionierte Installer und SHA-256-Prüfsummen für eine nachvollziehbare Historie.
+
+## Umfang von Release 3.0.1
+
+Release 3.0.1 bereitet die Veröffentlichung bei Thunderbird Add-ons vor. Der
+öffentliche Name folgt der Thunderbird-Markenrichtlinie, die Erweiterung fordert
+die für den ausdrücklich gestarteten OpenAI-Transfer vorgesehene
+`sensitiveDataUpload`-Berechtigung an und beschreibt die übertragenen
+Datenkategorien direkt in den Einstellungen. Dauerhafte Add-on-ID, lokale
+Einstellungen und bestehende Arbeitsabläufe bleiben unverändert.
 
 ## Funktionen
 
@@ -31,7 +40,7 @@ Die stabilen Downloadnamen zeigen immer auf die aktuelle GitHub-Veröffentlichun
 - direkte Dashboard-Aktionen für die bestehende Zusammenfassung, den interaktiven Antworteditor und den nachrichtenbezogenen AI Chat
 - dieselben farbcodierten AI- und E-Mail-Aktionsgruppen in der Einzelmail-Ansicht: Zusammenfassen, Antwort, Chat, Werte korrigieren, als gelesen markieren, PDF-Export, Archivieren und Löschen
 - sichere Antwortübergabe mit bevorzugter Thunderbird-Identität: eine exakt unter An/CC/BCC gefundene eigene Adresse hat Vorrang, andernfalls wird die Standardidentität des ursprünglichen Kontos verwendet
-- optionale Übergabe einer einzelnen Dashboard-Mail an Thunderbird PDF Archiver; fehlt eine kompatible Installation, führt ein lokalisierter Dialog zur offiziellen GitHub-Seite
+- optionale Übergabe einer einzelnen Dashboard-Mail an PDF Archiver for Thunderbird; fehlt eine kompatible Installation, führt ein lokalisierter Dialog zur offiziellen GitHub-Seite
 - klar getrennte AI-Aktionen, Leseoptionen und E-Mail-Aktionen mit Icons; Leseoptionen öffnen die Originalmail in einem neuen Thunderbird-Tab, blenden bei ausgeschalteter globaler Vorschau nur den angeklickten Inhalt ein oder markieren die Mail als gelesen
 - noch nicht bewertete Einzelmails lassen sich direkt in ihrer AI-Aktionsspalte über denselben geschützten Scoring-Ablauf wie die Bulk-Auswertung analysieren; danach ersetzt **Werte korrigieren** diese Schaltfläche, während das Kontextmenü zusätzlich eine bestätigte Neu-Analyse anbietet
 - jede sichtbare Einzelvorschau lässt sich unabhängig in Vier-Zeilen-Schritten bis 20 Zeilen vergrößern, direkt auf ihre Ausgangshöhe zurücksetzen, schließen oder über das Vollbildsymbol als Originalmail in einem neuen Tab öffnen
@@ -76,11 +85,11 @@ Bei einem als temporär erkannten Fehler kann derselbe AI-Inhalt innerhalb einer
 
 Eine ausdrücklich gespeicherte Bewertung wird zusätzlich in einem separaten lokalen Lernarchiv gespeichert: höchstens 250 Datensätze mit einem auf 6.000 Zeichen begrenzten E-Mail-Auszug, Anhangnamen, ursprünglichen und korrigierten Werten sowie getrennten Kategorien und Freitextbegründungen für Wichtigkeit, Spam und Risiko. Normale Thunderbird-Löschvorgänge verändern dieses Archiv nicht. Bei einer späteren Einzel- oder Bulk-Auswertung werden höchstens fünf nach Absender und Betreff priorisierte Korrekturen als nicht vertrauenswürdige Kalibrierungsbeispiele an OpenAI gesendet. Das ist kontextbezogenes Lernen durch Beispiele und kein dauerhaftes Modell-Fine-Tuning. Ältere Referenzen ohne Risikowert bleiben lesbar; ihr Risikofeld ist bis zur manuellen Bearbeitung leer. Unter **Einstellungen** lassen sich alle Referenzen einsehen, manuell neu bewerten und entfernen. Die Suche nach ähnlichen Nachrichten und die optionale Dashboard-Inhaltsvorschau laufen ausschließlich lokal. Eine automatische E-Mail-Analyse beim Öffnen findet nicht statt.
 
-Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speicher des Thunderbird-Profils. Für eine breitere Veröffentlichung sollte zusätzlich geprüft werden, ob dieses Sicherheitsmodell den eigenen Anforderungen entspricht.
+Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speicher des Thunderbird-Profils. Benutzer sollten ihr Thunderbird-Profil und Betriebssystemkonto deshalb wie andere lokale Zugangsdaten schützen.
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-3.0.0-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-3.0.1-win-x64.exe` herunterladen und starten.
 2. Im Setup **Deutsch** oder **English** wählen und die GNU General Public License bestätigen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung und zu den Berechtigungen zum Ändern, Verschieben und Löschen von Nachrichten bestätigen.
@@ -93,7 +102,7 @@ Version 1.5.1 korrigiert die in 1.3.0 bis 1.5.0 fehlerhaft gepackten Lokalisieru
 ## Installation unter macOS
 
 1. Thunderbird mindestens einmal starten, damit ein Profil angelegt ist.
-2. `Thunderbird-AI-Setup-3.0.0-macos.pkg` öffnen.
+2. `Thunderbird-AI-Setup-3.0.1-macos.pkg` öffnen.
 3. Die GNU General Public License bestätigen, offene Thunderbird-Entwürfe speichern und die Installation fortsetzen. Das macOS-Installationsprogramm fordert Thunderbird zum normalen Beenden auf und beendet es niemals erzwungen.
 4. Nach erfolgreicher Installation öffnet das Setup Thunderbird automatisch. Eine mögliche einmalige Rückfrage zur Aktivierung und zu den Berechtigungen zum Ändern, Verschieben und Löschen von Nachrichten bestätigen.
 5. Unter **Einstellungen** den OpenAI API-Schlüssel eintragen, die aufgabenspezifischen Modelle prüfen, die Verbindung testen und speichern.
@@ -124,8 +133,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-3.0.0-win-x64.exe`
-- `artifacts/Thunderbird-AI-Setup-3.0.0-macos.pkg`
+- `artifacts\Thunderbird-AI-Setup-3.0.1-win-x64.exe`
+- `artifacts/Thunderbird-AI-Setup-3.0.1-macos.pkg`
 
 Unter macOS werden XPI und Installer vom Repository-Stamm aus gebaut und isoliert geprüft:
 
@@ -135,11 +144,22 @@ Unter macOS werden XPI und Installer vom Repository-Stamm aus gebaut und isolier
 ./installer/macos/test-setup.sh
 ```
 
+Das Reviewer-Quellpaket für Thunderbird Add-ons wird ausschließlich aus von Git
+erfassten Dateien gebaut:
+
+```bash
+./scripts/build-atn-source.sh
+```
+
+Build-Anleitung, direkt nutzbare Listing-Texte, Berechtigungserklärungen und
+Reviewer-Testschritte stehen in [ATN_SOURCE_BUILD.md](ATN_SOURCE_BUILD.md) und im
+[Thunderbird-Add-ons-Einreichungsblatt](docs/atn-submission.md).
+
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
 ## Manueller Funktionstest
 
-1. In Thunderbirds Hauptsymbolleiste auf **Thunderbird AI Assistant** klicken. Während des Ladens muss der animierte Ladehinweis sichtbar sein. Danach muss das globale Dashboard die unterstützten Konten standardmäßig getrennt auflisten. **Datum: Neueste zuerst** ist der Standard; die aktuellsten ungelesenen Nachrichten müssen oben stehen, auch wenn ein Konto sehr viele ungelesene Nachrichten enthält. Das Panel **Ansicht** muss beim ersten Start geöffnet und in die vier Bereiche Darstellung/Sortierung, Zeitraum/Absender, Inhaltsvorschau und AI-Filter gegliedert sein. Panel schließen, Dashboard erneut öffnen und den geschlossenen Zustand prüfen; danach wieder öffnen und auch diesen Zustand über ein erneutes Öffnen hinweg prüfen.
+1. In Thunderbirds Hauptsymbolleiste auf **AI Mail Assistant for Thunderbird** klicken. Während des Ladens muss der animierte Ladehinweis sichtbar sein. Danach muss das globale Dashboard die unterstützten Konten standardmäßig getrennt auflisten. **Datum: Neueste zuerst** ist der Standard; die aktuellsten ungelesenen Nachrichten müssen oben stehen, auch wenn ein Konto sehr viele ungelesene Nachrichten enthält. Das Panel **Ansicht** muss beim ersten Start geöffnet und in die vier Bereiche Darstellung/Sortierung, Zeitraum/Absender, Inhaltsvorschau und AI-Filter gegliedert sein. Panel schließen, Dashboard erneut öffnen und den geschlossenen Zustand prüfen; danach wieder öffnen und auch diesen Zustand über ein erneutes Öffnen hinweg prüfen.
 2. Auf **Konten kombinieren: neueste 50 Nachrichten** umschalten. Es muss genau eine Liste mit höchstens 50 Nachrichten erscheinen, die aus allen Konten global nach Datum ausgewählt wurden. Ein selten genutztes Konto mit alten Nachrichten darf keine neueren Nachrichten eines aktiven Kontos verdrängen. Jede Zeile muss ihr Ursprungskonto anzeigen. Danach zurück zur kontogetrennten Ansicht wechseln; die Auswahl muss nach erneutem Öffnen erhalten bleiben.
 3. Die vier lokalen Sortierungen prüfen: neueste/älteste zuerst und **Beteiligte** A–Z/Z–A. Die maximale Anzahl erst auf 2 und dann auf 15 setzen. In der getrennten Ansicht dürfen pro Konto nie mehr Nachrichten als dieser Wert erscheinen; in der kombinierten oder global sortierten Ansicht ist die Grenze fest 50 und das Mengenfeld deaktiviert.
 4. Den Absender-Filter öffnen, **Alle Absender** deaktivieren und einzelne Absender auswählen. Im Suchfeld nacheinander zwei unterschiedliche Absender suchen und jeweils aktivieren. Beide müssen ausgewählt bleiben, obwohl immer nur das aktuelle Suchergebnis sichtbar ist. Nur passende Nachrichten dürfen erscheinen; der Filter muss nach erneutem Öffnen erhalten bleiben.
@@ -156,7 +176,7 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 15. An einer Nachricht **Antwort vorschlagen** anklicken. Der vorhandene interaktive Antworteditor muss in einem eigenen Tab erscheinen.
 15a. An einer Nachricht **AI Chat** anklicken. Derselbe nachrichtenbezogene Chat wie in der Einzelmail-Ansicht muss in einem eigenen Tab erscheinen. Ein weiterer Klick für dieselbe Nachricht und denselben AI-Modus muss den vorhandenen Workspace fokussieren, sofern Thunderbird die Tab-Erkennung unterstützt.
 16. Bei einer entbehrlichen Testnachricht die direkte Schaltfläche **Löschen** anklicken. Der eingebettete Dialog muss den Inhalt deutlich abdunkeln und einen großen roten Papierkorb-Button sowie einen kleineren grauen Abbrechen-Button mit X-Symbol zeigen. Zunächst abbrechen, danach bestätigen; nur diese Nachricht darf aus der Übersicht verschwinden. Anschließend muss ein prominenter Ergebnisdialog Erfolg oder Fehler zusammen mit der technischen Löschdiagnose anzeigen. Wird das Toolbar-Popup vorher geschlossen, muss dieses noch nicht quittierte Ergebnis beim nächsten Öffnen erneut erscheinen. Ab Thunderbird 137 muss der Hintergrundprozess den Vorgang als rückgängig machbare Benutzeraktion an Thunderbird übergeben.
-17. Mehrere entbehrliche Testnachrichten auswählen, **Ausgewählte löschen** anklicken und bestätigen. Nur die ausgewählten Nachrichten dürfen verschwinden. Thunderbird verwendet dabei die Lösch- und Papierkorb-Einstellungen des jeweiligen Kontos. Eine Erfolgsmeldung darf erst erscheinen, nachdem bis zu drei kurz verzögerte Aktualisierungen der ungelesenen Übersicht die Nachrichten nicht mehr enthalten. Erfolg, Fehler und technische Löschdiagnose dürfen nur im prominenten Ergebnisdialog erscheinen und den normalen Dashboard-Status nicht dauerhaft ersetzen. Für zusätzliche Hintergrundprotokolle: **Add-ons und Themes → Zahnrad → Add-ons debuggen → Thunderbird AI Assistant → Untersuchen** öffnen und im Drei-Punkte-Menü **Log nicht leeren** aktivieren. Die Einträge `Submitting dashboard delete request` und die anschließende Abschluss- oder Fehlermeldung enthalten Version, Aufrufmodus und Anzahlen, aber keine E-Mail-Inhalte oder internen Nachrichtenkennungen.
+17. Mehrere entbehrliche Testnachrichten auswählen, **Ausgewählte löschen** anklicken und bestätigen. Nur die ausgewählten Nachrichten dürfen verschwinden. Thunderbird verwendet dabei die Lösch- und Papierkorb-Einstellungen des jeweiligen Kontos. Eine Erfolgsmeldung darf erst erscheinen, nachdem bis zu drei kurz verzögerte Aktualisierungen der ungelesenen Übersicht die Nachrichten nicht mehr enthalten. Erfolg, Fehler und technische Löschdiagnose dürfen nur im prominenten Ergebnisdialog erscheinen und den normalen Dashboard-Status nicht dauerhaft ersetzen. Für zusätzliche Hintergrundprotokolle: **Add-ons und Themes → Zahnrad → Add-ons debuggen → AI Mail Assistant for Thunderbird → Untersuchen** öffnen und im Drei-Punkte-Menü **Log nicht leeren** aktivieren. Die Einträge `Submitting dashboard delete request` und die anschließende Abschluss- oder Fehlermeldung enthalten Version, Aufrufmodus und Anzahlen, aber keine E-Mail-Inhalte oder internen Nachrichtenkennungen.
 18. Eine E-Mail öffnen und den nachrichtenbezogenen **AI Assistant**-Button anklicken. Statt des Dashboards muss die Einzelmail-Oberfläche mit getrennten Spalten **AI-Aktionen** und **E-Mail-Aktionen** erscheinen. Die E-Mail-Aktionen müssen dieselben Farben und Funktionen wie das Dashboard verwenden: grün für **Als gelesen markieren**, grau für **Als PDF exportieren** und **Archivieren**, rot für **Löschen**. **Werte korrigieren** muss violett dargestellt werden.
 19. Eine reine Text-E-Mail und eine HTML-E-Mail öffnen und jeweils **Zusammenfassen** ausführen.
 20. **Antwort vorschlagen** ausführen; ein eigener Thunderbird-Tab muss den ersten, direkt bearbeitbaren Entwurf anzeigen. Bei langem Inhalt muss nur der mittlere Arbeitsbereich scrollen, während **Antwort kopieren** und **In Thunderbird vorbereiten** dauerhaft sichtbar bleiben.
@@ -179,12 +199,12 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 37. Unter **Einstellungen → Thunderbird-Archivierung** auf **Archivordner prüfen** klicken. Ein von Thunderbird als Archiv gekennzeichneter Testordner muss mit Pfad, vorhandenen direkten Jahresordnern und Unterordner-Fähigkeit erscheinen. Ein lediglich gleich benannter, aber nicht als Archiv gekennzeichneter Ordner darf nicht fälschlich erkannt werden. Über **Thunderbird-Hilfe öffnen** muss die offizielle Anleitung im Standardbrowser erscheinen. Anschließend die nicht per Add-on auslesbare Auswahl **Jährliche archivierte Ordner** einmal manuell über den angezeigten Menüpfad kontrollieren.
 38. Für einen klaren Newsletter mit List-Unsubscribe/List-ID oder sichtbarer Abmeldemöglichkeit **Werte korrigieren** ausführen. Der Spam-Wert darf nicht mehr im einstelligen Bereich bleiben und muss mindestens die lokale Untergrenze erreichen. Anschließend mehrere Newsletter desselben Absenders in der Bulk-Auswertung prüfen; eine höhere Absenderhäufigkeit muss die lokale Vorprüfung erhöhen. Eine häufige, aber ausdrücklich als erwünscht korrigierte Systemmail desselben Absenders erneut bewerten; die gespeicherte Absenderkorrektur muss Vorrang behalten.
 39. Unter **Einstellungen → AI Assistant öffnen** die Modi für **Globale Posteingangsübersicht** und **Assistant für eine geöffnete E-Mail** unabhängig ändern und speichern. Für das Dashboard zunächst **Als kompaktes Overlay öffnen** speichern und fünfmal das globale Toolbar-Symbol verwenden. Beim fünften tatsächlichen Öffnen muss ein lokalisierter Hinweis mit **Später**, **Jetzt ausprobieren** und **Diesen Hinweis nicht mehr anzeigen** erscheinen. **Später** muss einen neuen Fünfer-Zyklus beginnen; **Jetzt ausprobieren** muss den dauerhaften Tab öffnen, ohne den Standard zu ändern. Anschließend dreimal das Vollbildsymbol im Overlay verwenden. Beim dritten Mal muss der geöffnete Tab anbieten, künftig immer direkt im Tab zu starten. **Immer im Tab öffnen** auswählen und prüfen, dass weitere Toolbar-Klicks ohne vorgeschaltetes Overlay direkt den vorhandenen Thunderbird-Tab fokussieren. Danach das Dashboard wieder auf Overlay stellen, die Einzelmail-Ansicht auf Tab stellen und eine geöffnete E-Mail über die Nachrichten-Toolbar aufrufen; sie muss direkt in einem eigenen Tab erscheinen. Einzelmail danach auf Overlay stellen, erneut öffnen und dort das Vollbildsymbol verwenden. Bei aktivierter Option **Diesen Hinweis nicht mehr anzeigen** darf der jeweilige Dashboard-Hinweis auch nach weiteren Öffnungen nicht zurückkehren.
-40. An einer Dashboard-Mail **Als PDF exportieren** anklicken. Mit installiertem Thunderbird PDF Archiver 0.5.0 oder neuer muss dessen vorhandener Prüfdialog exakt diese E-Mail und ihre Anhänge laden; der AI Assistant erzeugt selbst keine PDF. Danach PDF Archiver testweise deaktivieren und die Aktion erneut ausführen. Nun muss ein lokalisierter Installationsdialog erscheinen, dessen GitHub-Schaltfläche die offizielle Projektseite in einem Thunderbird-Tab öffnet. Eine inkompatible Protokollversion muss denselben sicheren Aktualisierungspfad mit einem spezifischen Hinweis verwenden.
+40. An einer Dashboard-Mail **Als PDF exportieren** anklicken. Mit installiertem PDF Archiver for Thunderbird 0.5.0 oder neuer muss dessen vorhandener Prüfdialog exakt diese E-Mail und ihre Anhänge laden; der AI Assistant erzeugt selbst keine PDF. Danach PDF Archiver testweise deaktivieren und die Aktion erneut ausführen. Nun muss ein lokalisierter Installationsdialog erscheinen, dessen GitHub-Schaltfläche die offizielle Projektseite in einem Thunderbird-Tab öffnet. Eine inkompatible Protokollversion muss denselben sicheren Aktualisierungspfad mit einem spezifischen Hinweis verwenden.
 41. Das Dashboard als eigenen Tab öffnen und anschließend das Add-on aktualisieren, ohne diesen Tab vorher manuell zu schließen. Beim ersten Dashboard-Start nach dem Update müssen alle alten AI-Dashboard-Tabs geschlossen und genau ein frischer Tab geöffnet werden; normale Mail-, Kalender-, Einstellungen- und Verfassen-Tabs müssen unverändert bleiben. Danach das globale Toolbar-Symbol sowie das Vollbildsymbol erneut und rasch mehrfach verwenden. Der vorhandene frische Dashboard-Tab und sein Thunderbird-Fenster müssen fokussiert werden; es darf nur ein neuer Tab entstehen, falls der vorhandene Tab währenddessen geschlossen wurde oder Thunderbird die Erkennung nicht unterstützt. Im Einzelmail-Popup müssen die AI-Aktionen dieselbe blaue/violette Hierarchie wie das Dashboard verwenden. **Posteingangsübersicht** muss denselben vorhandenen Dashboard-Tab fokussieren. Die dauerhaft eingeblendete **Löschdiagnose** und ein zusätzliches Löschresultat im Dashboard-Status dürfen nicht erscheinen; technische Details bleiben im Ergebnisdialog einer Löschaktion verfügbar.
 42. Nach mehreren Dashboard-Aktionen den Tab wechseln und das globale Toolbar-Symbol mindestens dreimal erneut verwenden. Ein hängender Thunderbird-Tabaufruf muss nach einem begrenzten Zeitlimit freigegeben werden, sodass der nächste Klick ohne Thunderbird-Neustart erneut versucht. Bei einem endgültigen Fehler muss eine lokalisierte Benachrichtigung mit Diagnosecode erscheinen. Unter **Einstellungen → AI Assistant öffnen → Support-Diagnose** müssen Add-on-/Thunderbird-Version, letzter Dashboard-Start und die letzten Hintergrund-/UI-Aktivitäten ohne E-Mail-Inhalte sichtbar und kopierbar sein. Ein absichtlich provozierter Fehler muss als fehlgeschlagener oder kontrolliert fehlgeschlagener Vorgang erscheinen.
 43. Im Dashboard mehrere Nachrichten auswählen und bis unter die letzte angezeigte Nachricht scrollen. Dort muss dieselbe Bulk-Aktionsleiste wie oberhalb der Nachrichten erscheinen; Auswahlzahl, Aktivierungszustand und Aktionen müssen in beiden Leisten synchron bleiben. Danach Dashboard und Einzelmail-Ansicht nach unten scrollen: Rechts unten muss jeweils ein kleiner runder Pfeil erscheinen, der die sichtbare Scrollfläche nach oben bewegt und am Anfang wieder verschwindet.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 3.0.0** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 3.0.1** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 Die Einstellungen enthalten eine **Support- und Speicherdiagnose**. Sie zeigt Hintergrundstart, Abhängigkeitsstatus, Laufzeiten und eine inhaltsfreie Prüfung lokaler Einstellungsdaten. API-Schlüssel werden ausschließlich als „vorhanden/nicht vorhanden“ gemeldet. Kann der Hintergrunddienst nicht starten, werden vorhandene Einstellungen lokal und schreibgeschützt dargestellt; Speichern und Zurücksetzen bleiben bis zu einem erfolgreichen Start deaktiviert.
 
@@ -200,4 +220,4 @@ Das Add-on verwendet globale Skripte statt ES-Modulen, da sie in der im Manifest
 
 ## Lizenz und Beiträge
 
-Thunderbird AI Assistant ist freie Open-Source-Software unter der [GNU General Public License Version 3 oder neuer](LICENSE). Forks und Änderungen sind ausdrücklich erlaubt; Beiträge als [Pull Request](CONTRIBUTING.md) sind besonders willkommen. Für Sicherheitsmeldungen gilt die [Security Policy](SECURITY.md). Die für eine Veröffentlichung relevante Datenverarbeitung beschreibt die [Privacy Policy](PRIVACY.md).
+AI Mail Assistant for Thunderbird ist freie Open-Source-Software unter der [GNU General Public License Version 3 oder neuer](LICENSE). Forks und Änderungen sind ausdrücklich erlaubt; Beiträge als [Pull Request](CONTRIBUTING.md) sind besonders willkommen. Für Sicherheitsmeldungen gilt die [Security Policy](SECURITY.md). Die für eine Veröffentlichung relevante Datenverarbeitung beschreibt die [Privacy Policy](PRIVACY.md); Store-Metadaten und Reviewer-Schritte enthält das [Thunderbird-Add-ons-Einreichungsblatt](docs/atn-submission.md).

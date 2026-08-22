@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Thunderbird AI Test",
   "version": "1.0.0",
-  "description": "Simple test add-on for Thunderbird AI Assistant",
+  "description": "Simple test add-on for AI Mail Assistant for Thunderbird",
   "author": "Test",
   "browser_specific_settings": {
     "gecko": {

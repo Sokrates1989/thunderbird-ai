@@ -1,5 +1,5 @@
 /**
- * Owns the optional, versioned hand-off to Thunderbird PDF Archiver.
+ * Owns the optional, versioned hand-off to PDF Archiver for Thunderbird.
  * The AI Assistant never receives PDF data and never duplicates archive logic.
  */
 const PdfArchiverIntegrationService = {

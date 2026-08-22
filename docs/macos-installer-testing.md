@@ -1,7 +1,7 @@
 # macOS-Installer testen
 
 Das primäre macOS-Artefakt heißt
-`Thunderbird-AI-Setup-3.0.0-macos.pkg`. Es verwendet ausschließlich die
+`Thunderbird-AI-Setup-3.0.1-macos.pkg`. Es verwendet ausschließlich die
 macOS-Installationsdomäne des aktuellen Benutzerverzeichnisses und benötigt
 keine Administratorrechte.
 
@@ -25,7 +25,7 @@ enthaltene automatische Startbefehl wird stattdessen statisch geprüft.
 
 1. Thunderbird mindestens einmal starten und anschließend eine E-Mail sowie
    einen ungespeicherten Testentwurf öffnen.
-2. `artifacts/Thunderbird-AI-Setup-3.0.0-macos.pkg` öffnen. Die GPL-Lizenzseite lesen und bestätigen. Im
+2. `artifacts/Thunderbird-AI-Setup-3.0.1-macos.pkg` öffnen. Die GPL-Lizenzseite lesen und bestätigen. Im
    Installationsprogramm muss der lokalisierte Hinweis zur benutzerbezogenen
    Installation und zum sicheren Thunderbird-Beenden erscheinen. Es darf keine
    Administratorabfrage geben.
@@ -34,14 +34,14 @@ enthaltene automatische Startbefehl wird stattdessen statisch geprüft.
    Thunderbird darf nicht erzwungen beendet werden.
 4. Nach erfolgreicher Installation muss Thunderbird automatisch geöffnet werden.
    Eine mögliche einmalige Aktivierungs- oder Berechtigungsabfrage bestätigen.
-   **Thunderbird AI Assistant** muss unter
+   **AI Mail Assistant for Thunderbird** muss unter
    **Add-ons und Themes** erscheinen.
    Ein beim Start wiederhergestelltes Dashboard muss den E-Mail-Zugriff bei noch
    nicht bereitem Thunderbird begrenzt wiederholen und anschließend entweder die
    ungelesenen Nachrichten anzeigen oder mit wieder aktivierter Aktualisieren-
    Schaltfläche enden; der Ladezustand darf nicht dauerhaft sichtbar bleiben.
 5. Eine E-Mail öffnen, die Zusammenfassung ausführen und den API-Test in den
-   Einstellungen aufrufen. Im Einzelmail-Popup muss **Version 3.0.0** stehen.
+   Einstellungen aufrufen. Im Einzelmail-Popup muss **Version 3.0.1** stehen.
 6. Eine abweichende Sprache unter **Einstellungen** speichern und nach einem
    Thunderbird-Neustart prüfen, dass sie erhalten bleibt.
 7. Den Installer erneut ausführen. Die vorhandene Installation muss ohne

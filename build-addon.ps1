@@ -56,7 +56,7 @@ function New-XpiPackage {
 }
 
 Write-Host "========================================"
-Write-Host "Thunderbird AI Assistant - Dynamic Build"
+Write-Host "AI Mail Assistant for Thunderbird - Dynamic Build"
 Write-Host "========================================"
 Write-Host
 

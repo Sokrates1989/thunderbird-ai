@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for improving Thunderbird AI Assistant. Fork the repository, create a focused branch, and open a pull request against `main`. Bug reports and feature proposals belong in GitHub Issues before broad or compatibility-breaking work begins.
+Thank you for improving AI Mail Assistant for Thunderbird. Fork the repository, create a focused branch, and open a pull request against `main`. Bug reports and feature proposals belong in GitHub Issues before broad or compatibility-breaking work begins.
 
 ## Development checks
 

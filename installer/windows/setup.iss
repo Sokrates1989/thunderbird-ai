@@ -1,10 +1,10 @@
 ; Builds a per-user Windows setup around the verified Thunderbird AI XPI.
 
 #ifndef AppVersion
-  #define AppVersion "3.0.0"
+  #define AppVersion "3.0.1"
 #endif
 
-#define AppName "Thunderbird AI Assistant"
+#define AppName "AI Mail Assistant for Thunderbird"
 #define AppPublisher "Sokrates1989"
 #define AppUrl "https://github.com/Sokrates1989/thunderbird-ai"
 #define ExtensionId "thunderbird-ai@felicitas-wisdom.com"

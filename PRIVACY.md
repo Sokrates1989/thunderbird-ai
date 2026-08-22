@@ -2,7 +2,7 @@
 
 Last updated: 22 August 2026
 
-Thunderbird AI Assistant does not automatically analyze opened email. Network processing begins only when the user explicitly starts an AI action or explicitly selects messages for dashboard analysis.
+AI Mail Assistant for Thunderbird does not automatically analyze opened email. Network processing begins only when the user explicitly starts an AI action or explicitly selects messages for dashboard analysis.
 
 ## Data sent to OpenAI
 
@@ -10,7 +10,7 @@ Depending on the chosen action, the add-on sends the email subject, sender, read
 
 The OpenAI API key is supplied by the user and stored in Thunderbird's local extension storage. It is sent only to OpenAI for authenticated API requests and is never included in support diagnostics.
 
-No other AI provider is implemented in version 3.0.0. This policy and the add-on's disclosures must be updated before another provider is enabled.
+No other AI provider is implemented in version 3.0.1. This policy and the add-on's disclosures must be updated before another provider is enabled.
 
 ## Local data
 

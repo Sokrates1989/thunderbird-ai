@@ -1,4 +1,4 @@
-# Thunderbird AI Assistant - Naming Conventions & File Differences
+# AI Mail Assistant for Thunderbird - Naming Conventions & File Differences
 
 ## 📁 File Differences
 

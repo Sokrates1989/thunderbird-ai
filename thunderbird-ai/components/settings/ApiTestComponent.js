@@ -1,11 +1,11 @@
 /**
- * Thunderbird AI Assistant - API Test Component
+ * AI Mail Assistant for Thunderbird - API Test Component
  * 
  * This module provides the API testing functionality for the settings page.
  * It handles OpenAI API connection testing and user feedback.
  * 
  * @module ApiTestComponent
- * @author Thunderbird AI Assistant Team
+ * @author AI Mail Assistant for Thunderbird Team
  * @version 1.0.0
  */
 
@@ -16,7 +16,7 @@
  * Provides real-time feedback and error handling.
  * 
  * @class ApiTestComponent
- * @author Thunderbird AI Assistant Team
+ * @author AI Mail Assistant for Thunderbird Team
  * @version 1.0.0
  */
 const ApiTestComponent = class {

@@ -1,11 +1,11 @@
 /**
- * Thunderbird AI Assistant - Single Mail UI Entry Point
+ * AI Mail Assistant for Thunderbird - Single Mail UI Entry Point
  * 
  * This module serves as the entry point for the single mail UI popup.
  * It initializes the SingleMailManager when the popup is loaded.
  * 
  * @module SingleMailUIEntry
- * @author Thunderbird AI Assistant Team
+ * @author AI Mail Assistant for Thunderbird Team
  * @version 1.0.0
  */
 

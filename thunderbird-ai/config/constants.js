@@ -1,8 +1,8 @@
-// Thunderbird AI Assistant - shared configuration and localized UI strings.
+// AI Mail Assistant for Thunderbird - shared configuration and localized UI strings.
 
 const CONFIG = {
-    ADDON_NAME: 'Thunderbird AI Assistant',
-    ADDON_VERSION: '3.0.0',
+    ADDON_NAME: 'AI Mail Assistant for Thunderbird',
+    ADDON_VERSION: '3.0.1',
     ADDON_ID: 'thunderbird-ai@felicitas-wisdom.com',
 
     OPENAI: {

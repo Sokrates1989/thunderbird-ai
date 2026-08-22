@@ -739,6 +739,8 @@ test('packaged UI sources contain no unfinished actions or retired models', () =
     assert.match(source, /ReplyComposerComponent\.js/u);
     assert.match(source, /messages\.getFull/u);
     assert.ok(manifest.permissions.includes('clipboardWrite'));
+    assert.ok(manifest.permissions.includes('sensitiveDataUpload'));
+    assert.equal(manifest.version, '3.0.1');
     assert.equal(manifest.compose_action, undefined);
     assert.ok(
         manifest.background.scripts.indexOf('RuntimeDiagnosticService.js')
