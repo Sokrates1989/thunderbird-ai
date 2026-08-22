@@ -33,6 +33,7 @@ package_path="${REPOSITORY_ROOT}/artifacts/Thunderbird-AI-Setup-${version}-macos
 
 THUNDERBIRD_AI_INSTALL_HOME="${test_home}" \
 THUNDERBIRD_AI_PAYLOAD_PATH="${xpi_path}" \
+THUNDERBIRD_AI_SKIP_LAUNCH=1 \
     "${SCRIPT_DIRECTORY}/scripts/postinstall"
 
 for profile_directory in "${first_profile}" "${second_profile}"; do
@@ -58,6 +59,7 @@ if (defaults.language !== "auto" || defaults.version !== process.argv[2]) {
 printf 'stale update fixture\n' >"${second_profile}/extensions/${EXTENSION_ID}.xpi"
 THUNDERBIRD_AI_INSTALL_HOME="${test_home}" \
 THUNDERBIRD_AI_PAYLOAD_PATH="${xpi_path}" \
+THUNDERBIRD_AI_SKIP_LAUNCH=1 \
     "${SCRIPT_DIRECTORY}/scripts/postinstall"
 cmp -s "${xpi_path}" "${second_profile}/extensions/${EXTENSION_ID}.xpi" || {
     printf 'Second installation did not update the profile XPI.\n' >&2
@@ -68,6 +70,7 @@ missing_home="${temporary_directory}/missing-home"
 mkdir -p -- "${missing_home}"
 if THUNDERBIRD_AI_INSTALL_HOME="${missing_home}" \
     THUNDERBIRD_AI_PAYLOAD_PATH="${xpi_path}" \
+    THUNDERBIRD_AI_SKIP_LAUNCH=1 \
     "${SCRIPT_DIRECTORY}/scripts/postinstall" >/dev/null 2>&1; then
     printf 'Postinstall unexpectedly accepted a home without Thunderbird profiles.\n' >&2
     exit 1
@@ -88,8 +91,10 @@ cmp -s \
     "${SCRIPT_DIRECTORY}/scripts/postinstall" \
     "${expanded_product}/Thunderbird-AI-component.pkg/Scripts/postinstall" || {
         printf 'Product archive contains an unexpected postinstall script.\n' >&2
-        exit 1
-    }
+    exit 1
+}
+grep -F "/usr/bin/open -b 'org.mozilla.thunderbird'" \
+    "${expanded_product}/Thunderbird-AI-component.pkg/Scripts/postinstall" >/dev/null
 payload_files="$(pkgutil --payload-files "${package_path}")"
 printf '%s\n' "${payload_files}" | \
     grep -F 'Library/Application Support/Thunderbird AI/thunderbird-ai.xpi' >/dev/null

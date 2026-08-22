@@ -1,7 +1,7 @@
 # macOS-Installer testen
 
 Das primäre macOS-Artefakt heißt
-`Thunderbird-AI-Setup-2.16.0-macos.pkg`. Es verwendet ausschließlich die
+`Thunderbird-AI-Setup-2.17.0-macos.pkg`. Es verwendet ausschließlich die
 macOS-Installationsdomäne des aktuellen Benutzerverzeichnisses und benötigt
 keine Administratorrechte.
 
@@ -17,25 +17,27 @@ Der Test verwendet ausschließlich ein mit `mktemp` erzeugtes Verzeichnis. Er
 baut die XPI und das native Paket, prüft die Benutzer-Installationsdomäne, die
 Thunderbird-Schließanforderung, den enthaltenen XPI-Pfad, die automatische
 Sprachübergabe sowie Installation und Aktualisierung in zwei künstlichen
-Profilen. Ein echtes Thunderbird-Profil wird weder gelesen noch verändert und
-Thunderbird wird nicht beendet oder gestartet.
+Profilen. Während dieses Isolationstests wird ein echtes Thunderbird-Profil
+weder gelesen noch verändert und Thunderbird nicht beendet oder gestartet; der
+enthaltene automatische Startbefehl wird stattdessen statisch geprüft.
 
 ## Manueller Abnahmetest
 
 1. Thunderbird mindestens einmal starten und anschließend eine E-Mail sowie
    einen ungespeicherten Testentwurf öffnen.
-2. `artifacts/Thunderbird-AI-Setup-2.16.0-macos.pkg` öffnen. Im
+2. `artifacts/Thunderbird-AI-Setup-2.17.0-macos.pkg` öffnen. Im
    Installationsprogramm muss der lokalisierte Hinweis zur benutzerbezogenen
    Installation und zum sicheren Thunderbird-Beenden erscheinen. Es darf keine
    Administratorabfrage geben.
 3. Die Installation zunächst mit geöffnetem Thunderbird fortsetzen. macOS muss
    zum normalen Beenden auffordern. Den Entwurf speichern und fortfahren;
    Thunderbird darf nicht erzwungen beendet werden.
-4. Thunderbird erneut starten und eine mögliche einmalige Aktivierungs- oder
-   Berechtigungsabfrage bestätigen. **Thunderbird AI Assistant** muss unter
+4. Nach erfolgreicher Installation muss Thunderbird automatisch geöffnet werden.
+   Eine mögliche einmalige Aktivierungs- oder Berechtigungsabfrage bestätigen.
+   **Thunderbird AI Assistant** muss unter
    **Add-ons und Themes** erscheinen.
 5. Eine E-Mail öffnen, die Zusammenfassung ausführen und den API-Test in den
-   Einstellungen aufrufen. Im Einzelmail-Popup muss **Version 2.16.0** stehen.
+   Einstellungen aufrufen. Im Einzelmail-Popup muss **Version 2.17.0** stehen.
 6. Eine abweichende Sprache unter **Einstellungen** speichern und nach einem
    Thunderbird-Neustart prüfen, dass sie erhalten bleibt.
 7. Den Installer erneut ausführen. Die vorhandene Installation muss ohne
