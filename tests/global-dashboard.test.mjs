@@ -141,7 +141,7 @@ function loadMessageContextMenuComponent() {
     return context.DashboardMessageContextMenuComponent;
 }
 
-function loadDashboardAIService() {
+function loadDashboardAIService(options = {}) {
     const storageState = {};
     const openedTabs = [];
     const sentMessages = [];
@@ -161,7 +161,11 @@ function loadDashboardAIService() {
                             reasons: message.reasons
                         } };
                     }
-                    return { success: true, data: { results: [], failedCount: 0, model: 'gpt-5.6-luna' } };
+                    return { success: true, data: options.bulkData || {
+                        results: [],
+                        failedCount: 0,
+                        model: 'gpt-5.6-luna'
+                    } };
                 }
             },
             storage: {
@@ -190,6 +194,26 @@ function loadDashboardAIService() {
     loadScript(context, 'thunderbird-ai/components/shared/SingleMailWorkspaceService.js');
     loadScript(context, 'thunderbird-ai/components/global-dashboard/DashboardAIService.js');
     return { context, openedTabs, sentMessages, service: context.DashboardAIService, storageState };
+}
+
+function loadAnalysisController(options = {}) {
+    const loaded = loadDashboardAIService(options);
+    const diagnosticActions = [];
+    loaded.context.RuntimeDiagnosticService = {
+        run: async (_context, action, operation) => {
+            diagnosticActions.push(action);
+            return operation();
+        }
+    };
+    loadScript(
+        loaded.context,
+        'thunderbird-ai/components/global-dashboard/DashboardAnalysisController.js'
+    );
+    return {
+        ...loaded,
+        Controller: loaded.context.DashboardAnalysisController,
+        diagnosticActions
+    };
 }
 
 function loadDashboardManager(
@@ -549,7 +573,7 @@ test('dashboard grouping mode is normalized and persisted independently', async 
     assert.equal(preferences.normalizeContextMenuStyle('invalid'), 'headings');
 });
 
-test('message actions expose three groups and hide only an already visible preview', () => {
+test('message actions swap first-time analysis for correction and context-only re-analysis', () => {
     const MessageComponent = loadMessageComponent();
     const calls = [];
     const component = new MessageComponent({
@@ -558,6 +582,8 @@ test('message actions expose three groups and hide only an already visible previ
         onSummarize: () => calls.push('summarize'),
         onReply: () => calls.push('reply'),
         onChat: () => calls.push('chat'),
+        onAnalyze: () => calls.push('analyze'),
+        onReanalyze: () => calls.push('reanalyze'),
         onCorrectScores: () => calls.push('correct'),
         onShowPreview: () => calls.push('preview'),
         onExpandPreview: () => calls.push('expand-preview'),
@@ -580,6 +606,11 @@ test('message actions expose three groups and hide only an already visible previ
         busy: false,
         previewVisible: true
     });
+    mail.aiAnalysis = { importanceScore: 80, spamScore: 5, riskScore: 12 };
+    const analyzedGroups = component.actionGroups(mail, mail.subject, {
+        busy: false,
+        previewVisible: false
+    });
 
     assert.deepEqual(Array.from(groups, group => group.titleKey), [
         'dashboardAIActionsGroup',
@@ -591,12 +622,29 @@ test('message actions expose three groups and hide only an already visible previ
         'dashboardOpenInTabOne',
         'dashboardMarkReadOne'
     ]);
+    assert.deepEqual(Array.from(groups[0].actions, action => action.textKey), [
+        'dashboardSummarizeOne',
+        'dashboardReplyOne',
+        'dashboardChatOne',
+        'dashboardAnalyzeOne'
+    ]);
+    assert.deepEqual(Array.from(analyzedGroups[0].actions, action => action.textKey), [
+        'dashboardSummarizeOne',
+        'dashboardReplyOne',
+        'dashboardChatOne',
+        'dashboardCorrectScores',
+        'dashboardReanalyzeOne'
+    ]);
+    assert.equal(analyzedGroups[0].actions[4].contextOnly, true);
     assert.equal(groups[1].actions[0].hidden, false);
     assert.equal(hiddenGroups[1].actions[0].hidden, true);
+    groups[0].actions[3].execute();
+    analyzedGroups[0].actions[3].execute();
+    analyzedGroups[0].actions[4].execute();
     groups[1].actions[0].execute();
     groups[1].actions[1].execute();
     groups[1].actions[2].execute();
-    assert.deepEqual(calls, ['preview', 'open', 'read']);
+    assert.deepEqual(calls, ['analyze', 'correct', 'reanalyze', 'preview', 'open', 'read']);
 });
 
 test('message context menu defaults to direct headings and removes hidden actions', () => {
@@ -609,7 +657,8 @@ test('message context menu defaults to direct headings and removes hidden action
         titleKey: 'read',
         actions: [
             { textKey: 'preview', hidden: true },
-            { textKey: 'open', hidden: false }
+            { textKey: 'open', hidden: false },
+            { textKey: 'reanalyze', contextOnly: true }
         ]
     }];
 
@@ -617,7 +666,7 @@ test('message context menu defaults to direct headings and removes hidden action
     assert.equal(ContextMenuComponent.normalizeStyle('submenus'), 'submenus');
     assert.deepEqual(
         Array.from(component.visibleGroups(groups)[0].actions, action => action.textKey),
-        ['open']
+        ['open', 'reanalyze']
     );
 });
 
@@ -747,6 +796,66 @@ test('dashboard AI scores persist without mail content and direct actions open s
     assert.match(openedTabs[0].url, /single-mail-ui\.html\?messageId=42&summarize=1/u);
     assert.match(openedTabs[1].url, /single-mail-ui\.html\?messageId=42&reply=1/u);
     assert.match(openedTabs[2].url, /single-mail-ui\.html\?messageId=42&chat=1/u);
+});
+
+test('one message uses bulk scoring once and exposes only explicit confirmed re-analysis', async () => {
+    const { Controller, diagnosticActions, sentMessages } = loadAnalysisController({
+        bulkData: {
+            results: [{
+                messageId: 42,
+                importanceScore: 83,
+                spamScore: 7,
+                riskScore: 16
+            }],
+            failedCount: 0,
+            model: 'gpt-5.6-luna'
+        }
+    });
+    const mail = {
+        id: 42,
+        headerMessageId: 'single-score@example.test',
+        subject: 'Score only this message'
+    };
+    const accounts = [{ accountId: 'personal', messages: [mail] }];
+    const busyStates = [];
+    const statuses = [];
+    const confirmations = [];
+    let results = {};
+    let rebuildCount = 0;
+    let approveRescore = false;
+    const controller = new Controller({
+        getAccounts: () => accounts,
+        getResults: () => results,
+        setResults: value => { results = value; },
+        getSelectedMessageIds: () => new Set(),
+        rebuild: async () => { rebuildCount += 1; },
+        setBusy: (busy, messageText) => busyStates.push([busy, messageText]),
+        setStatus: (messageText, type) => statuses.push([messageText, type]),
+        confirm: messageText => {
+            confirmations.push(messageText);
+            return approveRescore;
+        }
+    });
+
+    await controller.analyzeMessage(mail);
+    await controller.analyzeMessage(mail);
+    await controller.rescoreMessage(mail);
+    approveRescore = true;
+    await controller.rescoreMessage(mail);
+
+    assert.equal(mail.aiAnalysis.importanceScore, 83);
+    assert.equal(mail.aiAnalysis.spamScore, 7);
+    assert.equal(mail.aiAnalysis.riskScore, 16);
+    assert.equal(sentMessages.length, 2);
+    assert.deepEqual(Array.from(sentMessages[0].messageIds), [42]);
+    assert.deepEqual(Array.from(sentMessages[1].messageIds), [42]);
+    assert.deepEqual(diagnosticActions, ['score-message', 'rescore-message']);
+    assert.equal(rebuildCount, 2);
+    assert.equal(confirmations.length, 2);
+    assert.match(confirmations[0], /Score only this message/u);
+    assert.deepEqual(Array.from(busyStates, state => state[0]), [true, false, true, false]);
+    assert.ok(statuses.some(([text]) => /already has AI scores/u.test(text)));
+    assert.ok(statuses.some(([text, type]) => /was analyzed with/u.test(text) && type === 'success'));
 });
 
 test('ordinary bulk scoring skips persisted results and protects them from replacement', async () => {
@@ -1431,6 +1540,13 @@ test('manifest routes both toolbar actions through the wake-safe background serv
         ),
         'utf8'
     );
+    const analysisController = fs.readFileSync(
+        path.join(
+            repositoryRoot,
+            'thunderbird-ai/components/global-dashboard/DashboardAnalysisController.js'
+        ),
+        'utf8'
+    );
     const bulkActionsComponent = fs.readFileSync(
         path.join(
             repositoryRoot,
@@ -1524,6 +1640,7 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.match(dashboard, /DashboardSenderFilterComponent\.js/u);
     assert.match(dashboard, /DashboardViewPreferences\.js/u);
     assert.match(dashboard, /DashboardAIService\.js/u);
+    assert.match(dashboard, /DashboardAnalysisController\.js/u);
     assert.match(dashboard, /SingleMailWorkspaceService\.js/u);
     assert.match(dashboard, /DashboardMessageComponent\.js/u);
     assert.match(dashboard, /DashboardMessageContextMenuComponent\.js/u);
@@ -1531,6 +1648,8 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.ok(dashboard.indexOf('DashboardMessageContextMenuComponent.js')
         < dashboard.indexOf('GlobalDashboardManager.js'));
     assert.ok(dashboard.indexOf('DashboardPreviewController.js')
+        < dashboard.indexOf('GlobalDashboardManager.js'));
+    assert.ok(dashboard.indexOf('DashboardAnalysisController.js')
         < dashboard.indexOf('GlobalDashboardManager.js'));
     assert.match(dashboard, /dashboard-context-menu\.css/u);
     assert.match(dashboard, /ScoreFeedbackEditor\.js/u);
@@ -1600,6 +1719,11 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.match(messageComponent, /dashboardArchiveOne/u);
     assert.match(messageComponent, /dashboardExportPdfOne/u);
     assert.match(messageComponent, /dashboardChatOne/u);
+    assert.match(messageComponent, /dashboardAnalyzeOne/u);
+    assert.match(messageComponent, /dashboardReanalyzeOne/u);
+    assert.match(messageComponent, /contextOnly: true/u);
+    assert.match(analysisController, /DashboardAIService\.analyzePlan/u);
+    assert.match(analysisController, /score.*-\$\{scope\}/u);
     assert.match(messageComponent, /dashboard-message-action-group/u);
     assert.match(messageComponent, /dashboard-action-icon/u);
     assert.match(messageComponent, /addEventListener\('contextmenu'/u);

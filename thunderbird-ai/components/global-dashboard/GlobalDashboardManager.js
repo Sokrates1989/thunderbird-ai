@@ -55,6 +55,16 @@ const GlobalDashboardManager = class {
             dateStyle: 'short',
             timeStyle: 'short'
         });
+        this.analysisController = new DashboardAnalysisController({
+            getAccounts: () => this.sourceAccounts,
+            getResults: () => this.aiResults,
+            setResults: results => { this.aiResults = results; },
+            getSelectedMessageIds: () => this.selectedMessageIds,
+            rebuild: () => this.rebuildCurrentView(),
+            setBusy: (busy, message) => this.setBusy(busy, message),
+            setStatus: (message, type) => this.setStatus(message, type),
+            confirm: message => window.confirm(message)
+        });
         this.senderFilterComponent = new DashboardSenderFilterComponent({
             details: this.elements.senderFilterDetails,
             summary: this.elements.senderSummary,
@@ -66,10 +76,12 @@ const GlobalDashboardManager = class {
             hosts: document.querySelectorAll('[data-dashboard-bulk-actions-host]'),
             onToggleAll: selected => this.toggleAllVisible(selected),
             onAnalyze: () => {
-                this.analyzeSelected().catch(error => this.showUnexpectedError(error));
+                this.analysisController.analyzeSelection()
+                    .catch(error => this.showUnexpectedError(error));
             },
             onRescore: () => {
-                this.rescoreSelected().catch(error => this.showUnexpectedError(error));
+                this.analysisController.rescoreSelection()
+                    .catch(error => this.showUnexpectedError(error));
             },
             onMarkRead: () => {
                 this.markSelectedAsRead().catch(error => this.showUnexpectedError(error));
@@ -107,6 +119,14 @@ const GlobalDashboardManager = class {
             onChat: message => {
                 this.openMessageWorkspace(message, 'chat')
                     .catch(error => this.showWorkspaceError(error));
+            },
+            onAnalyze: message => {
+                this.analysisController.analyzeMessage(message)
+                    .catch(error => this.showUnexpectedError(error));
+            },
+            onReanalyze: message => {
+                this.analysisController.rescoreMessage(message)
+                    .catch(error => this.showUnexpectedError(error));
             },
             onCorrectScores: message => this.feedbackComponent.open(message),
             onShowPreview: message => {
@@ -558,89 +578,6 @@ const GlobalDashboardManager = class {
         }
         this.render(this.accounts);
         this.persistSelection();
-    }
-
-    /** Analyze only selected messages without persisted scores. */
-    async analyzeSelected() {
-        await this.runSelectedAnalysis(false);
-    }
-
-    /** Confirm the intentional replacement of scores for every selected message. */
-    async rescoreSelected() {
-        const plan = DashboardAIService.createAnalysisPlan(
-            this.sourceAccounts,
-            this.selectedMessageIds,
-            true
-        );
-        if (!plan.messageIds.length
-            || !window.confirm(I18n.t('dashboardRescoreSelectedConfirm', {
-                count: plan.messageIds.length
-            }))) {
-            return;
-        }
-        await this.runSelectedAnalysis(true);
-    }
-
-    /** Execute a protected first-time analysis or an explicitly confirmed replacement. */
-    async runSelectedAnalysis(includeAnalyzed) {
-        const plan = DashboardAIService.createAnalysisPlan(
-            this.sourceAccounts,
-            this.selectedMessageIds,
-            includeAnalyzed
-        );
-        if (!plan.selectedCount) {
-            return;
-        }
-        if (!plan.messageIds.length) {
-            this.setStatus(I18n.t('dashboardAnalysisAllSkipped', {
-                count: plan.skippedCount
-            }));
-            return;
-        }
-        const progressKey = includeAnalyzed
-            ? 'dashboardRescoreInProgress'
-            : 'dashboardAnalysisInProgress';
-        this.setBusy(true, I18n.t(progressKey, { count: plan.messageIds.length }));
-        try {
-            const data = await RuntimeDiagnosticService.run(
-                'dashboard',
-                includeAnalyzed ? 'rescore-selection' : 'score-selection',
-                () => DashboardAIService.analyzePlan(plan)
-            );
-            this.aiResults = await DashboardAIService.saveResults(
-                this.aiResults,
-                DashboardAIService.addStorageKeys(this.sourceAccounts, data.results),
-                data.model,
-                { preserveExisting: !includeAnalyzed }
-            );
-            DashboardAIService.attachResults(this.sourceAccounts, this.aiResults);
-            await this.rebuildCurrentView();
-            const skipped = includeAnalyzed ? 0 : plan.skippedCount;
-            let statusKey;
-            if (data.failedCount) {
-                statusKey = skipped
-                    ? 'dashboardAnalysisPartialWithSkipped'
-                    : 'dashboardAnalysisPartial';
-            } else {
-                statusKey = skipped
-                    ? 'dashboardAnalysisSuccessWithSkipped'
-                    : 'dashboardAnalysisSuccess';
-            }
-            this.setStatus(I18n.t(statusKey, {
-                count: data.results.length,
-                failed: data.failedCount,
-                skipped,
-                model: I18n.modelLabel(data.model)
-            }), data.failedCount ? 'warning' : 'success');
-        } catch (error) {
-            console.error('Could not analyze selected dashboard messages:', error);
-            this.setStatus(
-                error?.userFacing === true ? error.message : I18n.t('dashboardAnalysisFailed'),
-                'error'
-            );
-        } finally {
-            this.setBusy(false);
-        }
     }
 
     /** Open the existing single-message summary or reply workspace. */

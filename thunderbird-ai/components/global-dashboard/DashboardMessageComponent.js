@@ -6,6 +6,8 @@ const DashboardMessageComponent = class {
         this.onSummarize = options.onSummarize;
         this.onReply = options.onReply;
         this.onChat = options.onChat;
+        this.onAnalyze = options.onAnalyze;
+        this.onReanalyze = options.onReanalyze;
         this.onCorrectScores = options.onCorrectScores;
         this.onShowPreview = options.onShowPreview;
         this.onExpandPreview = options.onExpandPreview;
@@ -233,6 +235,19 @@ const DashboardMessageComponent = class {
                 () => this.onCorrectScores(message),
                 { icon: '🎚️', className: 'feedback' }
             ));
+            aiActions.push(action(
+                'dashboardReanalyzeOne',
+                'dashboardReanalyzeMessage',
+                () => this.onReanalyze(message),
+                { icon: '↻', className: 'reanalyze', contextOnly: true }
+            ));
+        } else {
+            aiActions.push(action(
+                'dashboardAnalyzeOne',
+                'dashboardAnalyzeMessage',
+                () => this.onAnalyze(message),
+                { icon: '✨', className: 'analyze' }
+            ));
         }
         return [
             {
@@ -301,7 +316,9 @@ const DashboardMessageComponent = class {
         actions.className = 'dashboard-message-actions';
         for (const group of groups) {
             const actionGroup = this.actionGroup(group.titleKey, group.type);
-            for (const action of group.actions.filter(candidate => !candidate.hidden)) {
+            for (const action of group.actions.filter(candidate => (
+                !candidate.hidden && !candidate.contextOnly
+            ))) {
                 actionGroup.appendChild(this.actionButton(action));
             }
             actions.appendChild(actionGroup);
