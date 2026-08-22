@@ -35,9 +35,11 @@ const GlobalDashboardManager = class {
         this.availableSenders = [];
         this.selectedSenderKeys = null;
         this.selectedMessageIds = new Set();
+        this.expandedPreviewMessageIds = new Set();
         this.displayOptionsExpanded = true;
         this.previewEnabled = false;
         this.previewLineCount = 3;
+        this.contextMenuStyle = 'headings';
         this.sortOrder = GlobalMailViewService.DEFAULT_SORT_ORDER;
         this.viewMode = GlobalMailViewService.DEFAULT_VIEW_MODE;
         this.messageLimit = GlobalMailViewService.DEFAULT_LIMIT;
@@ -80,6 +82,10 @@ const GlobalDashboardManager = class {
                 this.trashSelected().catch(error => this.showUnexpectedError(error));
             }
         });
+        this.messageContextMenuComponent = new DashboardMessageContextMenuComponent({
+            onStyleChanged: style => this.handleContextMenuStyleChange(style),
+            onError: error => this.showUnexpectedError(error)
+        });
         this.messageComponent = new DashboardMessageComponent({
             formatDate: value => this.formatDate(value),
             onSelectionChanged: (messageId, selected) => this.handleMessageSelection(messageId, selected),
@@ -96,6 +102,14 @@ const GlobalDashboardManager = class {
                     .catch(error => this.showWorkspaceError(error));
             },
             onCorrectScores: message => this.feedbackComponent.open(message),
+            onShowPreview: message => {
+                this.showPreviewForMessage(message)
+                    .catch(error => this.showUnexpectedError(error));
+            },
+            onOpenInTab: message => {
+                this.openMessageInTab(message)
+                    .catch(error => this.showMessageOpenError(error));
+            },
             onMarkRead: message => {
                 this.markOneAsRead(message).catch(error => this.showUnexpectedError(error));
             },
@@ -108,6 +122,20 @@ const GlobalDashboardManager = class {
             },
             onTrash: message => {
                 this.trashOne(message).catch(error => this.showUnexpectedError(error));
+            },
+            onContextMenu: (event, actionGroups) => {
+                const currentGroups = actionGroups.map(group => ({
+                    ...group,
+                    actions: group.actions.map(action => ({
+                        ...action,
+                        disabled: this.busy
+                    }))
+                }));
+                this.messageContextMenuComponent.open(
+                    event,
+                    currentGroups,
+                    this.contextMenuStyle
+                );
             }
         });
         this.feedbackComponent = new DashboardFeedbackComponent({
@@ -268,6 +296,12 @@ const GlobalDashboardManager = class {
         this.render(this.accounts);
     }
 
+    /** Persist the operator-selected direct or submenu right-click layout. */
+    async handleContextMenuStyleChange(style) {
+        this.contextMenuStyle = DashboardViewPreferences.normalizeContextMenuStyle(style);
+        await this.savePreferences();
+    }
+
     /** Validate the query controls, persist them, and rebuild the visible slice. */
     async handleViewControlChange(changedElement = null) {
         const fromDate = GlobalMailViewService.normalizeDate(this.elements.dateFrom.value);
@@ -386,6 +420,11 @@ const GlobalDashboardManager = class {
         if (this.previewEnabled) {
             this.setStatus(I18n.t('dashboardPreviewsLoading'));
             await GlobalMailService.loadPreviews(this.accounts);
+        } else if (this.expandedPreviewMessageIds.size) {
+            const expandedMessages = this.allMessages().filter(message => (
+                this.expandedPreviewMessageIds.has(message.id)
+            ));
+            await GlobalMailService.loadPreviews([{ messages: expandedMessages }]);
         }
         this.render(this.accounts);
         this.showLoadedStatus();
@@ -463,10 +502,12 @@ const GlobalDashboardManager = class {
 
     /** Delegate one message row while retaining dashboard state ownership. */
     renderMessage(message) {
+        const previewVisible = this.previewEnabled
+            || this.expandedPreviewMessageIds.has(message.id);
         return this.messageComponent.render(message, {
             selected: this.selectedMessageIds.has(message.id),
             busy: this.busy,
-            previewEnabled: this.previewEnabled,
+            previewVisible,
             previewLineCount: this.previewLineCount,
             showAccount: this.accounts.length === 1 && this.accounts[0].combined === true
         });
@@ -599,6 +640,34 @@ const GlobalDashboardManager = class {
         await DashboardAIService.openWorkspace(message.id, mode);
     }
 
+    /** Load and reveal only the explicitly targeted message body in this dashboard. */
+    async showPreviewForMessage(message) {
+        if (this.previewEnabled || this.expandedPreviewMessageIds.has(message.id)) {
+            return;
+        }
+        this.setBusy(true, I18n.t('dashboardPreviewOneLoading'));
+        try {
+            const loaded = await GlobalMailService.loadPreview(message);
+            this.expandedPreviewMessageIds.add(message.id);
+            this.render(this.accounts);
+            this.setStatus(
+                I18n.t(loaded ? 'dashboardPreviewOneLoaded' : 'dashboardPreviewOneFailed'),
+                loaded ? 'success' : 'warning'
+            );
+        } finally {
+            this.setBusy(false);
+        }
+    }
+
+    /** Open the directly targeted Thunderbird message in its own active tab. */
+    async openMessageInTab(message) {
+        await RuntimeDiagnosticService.run(
+            'dashboard',
+            'open-message-tab',
+            () => GlobalMailService.openInTab(message.id)
+        );
+    }
+
     /** Archive an operator correction and immediately reapply score sort/filter controls. */
     async saveScoreFeedback(message, reasons) {
         const account = this.sourceAccounts.find(candidate => (
@@ -702,6 +771,12 @@ const GlobalDashboardManager = class {
     showWorkspaceError(error) {
         console.error('Could not open the single-message AI workspace:', error);
         this.setStatus(I18n.t('dashboardWorkspaceOpenFailed'), 'error');
+    }
+
+    /** Translate Thunderbird message-tab failures at the dashboard boundary. */
+    showMessageOpenError(error) {
+        console.error('Could not open the dashboard message in a Thunderbird tab:', error);
+        this.setStatus(I18n.t('dashboardOpenInTabFailed'), 'error');
     }
 
     /** Report unexpected companion failures without treating them as mailbox load errors. */
@@ -873,6 +948,9 @@ const GlobalDashboardManager = class {
     /** Disable every mutating or view-changing control during asynchronous work. */
     setBusy(busy, message = null) {
         this.busy = busy;
+        if (busy) {
+            this.messageContextMenuComponent.close();
+        }
         this.elements.refresh.disabled = busy;
         this.elements.showPreview.disabled = busy;
         this.elements.previewLines.disabled = busy || !this.previewEnabled;

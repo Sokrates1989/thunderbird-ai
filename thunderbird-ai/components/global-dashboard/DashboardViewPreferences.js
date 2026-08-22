@@ -8,6 +8,7 @@ const DashboardViewPreferences = {
                 keys.DASHBOARD_DISPLAY_OPTIONS_EXPANDED,
                 keys.DASHBOARD_SHOW_PREVIEW,
                 keys.DASHBOARD_PREVIEW_LINES,
+                keys.DASHBOARD_CONTEXT_MENU_STYLE,
                 keys.DASHBOARD_SORT_ORDER,
                 keys.DASHBOARD_VIEW_MODE,
                 keys.DASHBOARD_MESSAGE_LIMIT,
@@ -26,6 +27,9 @@ const DashboardViewPreferences = {
             displayOptionsExpanded: stored[keys.DASHBOARD_DISPLAY_OPTIONS_EXPANDED] !== false,
             previewEnabled: stored[keys.DASHBOARD_SHOW_PREVIEW] === true,
             previewLineCount: this.normalizePreviewLines(stored[keys.DASHBOARD_PREVIEW_LINES]),
+            contextMenuStyle: this.normalizeContextMenuStyle(
+                stored[keys.DASHBOARD_CONTEXT_MENU_STYLE]
+            ),
             sortOrder: GlobalMailViewService.normalizeSortOrder(stored[keys.DASHBOARD_SORT_ORDER]),
             viewMode: GlobalMailViewService.normalizeViewMode(stored[keys.DASHBOARD_VIEW_MODE]),
             messageLimit: GlobalMailViewService.normalizeLimit(stored[keys.DASHBOARD_MESSAGE_LIMIT]),
@@ -57,6 +61,7 @@ const DashboardViewPreferences = {
             [keys.DASHBOARD_DISPLAY_OPTIONS_EXPANDED]: state.displayOptionsExpanded,
             [keys.DASHBOARD_SHOW_PREVIEW]: state.previewEnabled,
             [keys.DASHBOARD_PREVIEW_LINES]: state.previewLineCount,
+            [keys.DASHBOARD_CONTEXT_MENU_STYLE]: state.contextMenuStyle,
             [keys.DASHBOARD_SORT_ORDER]: state.sortOrder,
             [keys.DASHBOARD_VIEW_MODE]: state.viewMode,
             [keys.DASHBOARD_MESSAGE_LIMIT]: state.messageLimit,
@@ -89,6 +94,10 @@ const DashboardViewPreferences = {
     normalizePreviewLines(value) {
         const lines = Number.parseInt(value, 10);
         return Number.isFinite(lines) ? Math.min(20, Math.max(1, lines)) : 3;
+    },
+
+    normalizeContextMenuStyle(value) {
+        return value === 'submenus' ? 'submenus' : 'headings';
     }
 };
 

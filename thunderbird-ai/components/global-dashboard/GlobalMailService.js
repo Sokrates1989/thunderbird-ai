@@ -38,19 +38,35 @@ const GlobalMailService = {
             while (nextIndex < messages.length) {
                 const message = messages[nextIndex];
                 nextIndex += 1;
-                try {
-                    message.preview = await MessageService.getMessageContent(message.id);
-                    message.previewFailed = false;
-                } catch (error) {
-                    console.warn(`Could not load preview for message ${message.id}:`, error);
-                    message.preview = '';
-                    message.previewFailed = true;
-                }
+                await this.loadPreview(message);
             }
         };
         const workerCount = Math.min(Math.max(1, concurrency), messages.length);
         await Promise.all(Array.from({ length: workerCount }, () => worker()));
         return accounts;
+    },
+
+    /** Load one local body preview and retain a renderable failure state on the header. */
+    async loadPreview(message) {
+        try {
+            message.preview = await MessageService.getMessageContent(message.id);
+            message.previewFailed = false;
+            return true;
+        } catch (error) {
+            console.warn(`Could not load preview for message ${message.id}:`, error);
+            message.preview = '';
+            message.previewFailed = true;
+            return false;
+        }
+    },
+
+    /** Open one known Thunderbird message in a dedicated active message tab. */
+    async openInTab(messageId) {
+        return browser.messageDisplay.open({
+            messageId,
+            location: 'tab',
+            active: true
+        });
     },
 
     /** Delegate deletion to the shared mailbox action boundary. */

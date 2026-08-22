@@ -7,10 +7,13 @@ const DashboardMessageComponent = class {
         this.onReply = options.onReply;
         this.onChat = options.onChat;
         this.onCorrectScores = options.onCorrectScores;
+        this.onShowPreview = options.onShowPreview;
+        this.onOpenInTab = options.onOpenInTab;
         this.onMarkRead = options.onMarkRead;
         this.onExportPdf = options.onExportPdf;
         this.onArchive = options.onArchive;
         this.onTrash = options.onTrash;
+        this.onContextMenu = options.onContextMenu;
     }
 
     /** Build one accessible message row without injecting untrusted HTML. */
@@ -33,13 +36,24 @@ const DashboardMessageComponent = class {
         if (message.aiAnalysis) {
             content.appendChild(this.analysisScores(message.aiAnalysis));
         }
-        if (options.previewEnabled) {
+        if (options.previewVisible) {
             content.appendChild(this.preview(message, options.previewLineCount));
         }
         const selectionArea = document.createElement('label');
         selectionArea.className = 'dashboard-message-selection-area';
         selectionArea.append(checkbox, content);
-        item.append(selectionArea, this.actionButtons(message, subject, options.busy));
+        const actionGroups = this.actionGroups(message, subject, options);
+        item.tabIndex = 0;
+        item.setAttribute('aria-label', I18n.t('dashboardMessageContextLabel', { subject }));
+        item.addEventListener('contextmenu', event => {
+            this.onContextMenu(event, actionGroups);
+        });
+        item.addEventListener('keydown', event => {
+            if (event.key === 'ContextMenu' || (event.shiftKey && event.key === 'F10')) {
+                this.onContextMenu(event, actionGroups);
+            }
+        });
+        item.append(selectionArea, this.actionButtons(actionGroups));
         return item;
     }
 
@@ -125,83 +139,107 @@ const DashboardMessageComponent = class {
         return preview;
     }
 
-    /** Separate reusable AI workflows from ordinary Thunderbird mailbox actions. */
-    actionButtons(message, subject, busy) {
-        const actions = document.createElement('div');
-        actions.className = 'dashboard-message-actions';
-        const aiActions = this.actionGroup('dashboardAIActionsGroup', 'ai');
-        aiActions.append(
-            this.actionButton(
-                'dashboardSummarizeOne',
-                'dashboardSummarizeMessage',
-                subject,
-                busy,
-                () => this.onSummarize(message),
-                { icon: '📝' }
-            ),
-            this.actionButton(
-                'dashboardReplyOne',
-                'dashboardReplyMessage',
-                subject,
-                busy,
-                () => this.onReply(message),
-                { icon: '✍️' }
-            ),
-            this.actionButton(
-                'dashboardChatOne',
-                'dashboardChatMessage',
-                subject,
-                busy,
-                () => this.onChat(message),
-                { icon: '💬' }
-            )
-        );
+    /** Define the shared row and right-click actions in their visible column order. */
+    actionGroups(message, subject, options) {
+        const action = (textKey, labelKey, execute, actionOptions = {}) => ({
+            textKey,
+            labelKey,
+            subject,
+            execute,
+            disabled: options.busy,
+            ...actionOptions
+        });
+        const aiActions = [
+            action('dashboardSummarizeOne', 'dashboardSummarizeMessage', () => {
+                this.onSummarize(message);
+            }, { icon: '📝' }),
+            action('dashboardReplyOne', 'dashboardReplyMessage', () => {
+                this.onReply(message);
+            }, { icon: '✍️' }),
+            action('dashboardChatOne', 'dashboardChatMessage', () => {
+                this.onChat(message);
+            }, { icon: '💬' })
+        ];
         if (message.aiAnalysis) {
-            aiActions.appendChild(this.actionButton(
+            aiActions.push(action(
                 'dashboardCorrectScores',
                 'dashboardCorrectScoresMessage',
-                subject,
-                busy,
                 () => this.onCorrectScores(message),
                 { icon: '🎚️', className: 'feedback' }
             ));
         }
-        const mailActions = this.actionGroup('dashboardMailActionsGroup', 'mail');
-        mailActions.append(
-            this.actionButton(
-                'dashboardMarkReadOne',
-                'dashboardMarkReadMessage',
-                subject,
-                busy,
-                () => this.onMarkRead(message),
-                { icon: '✓', className: 'mark-read' }
-            ),
-            this.actionButton(
-                'dashboardExportPdfOne',
-                'dashboardExportPdfMessage',
-                subject,
-                busy,
-                () => this.onExportPdf(message),
-                { icon: '📄', className: 'export-pdf' }
-            ),
-            this.actionButton(
-                'dashboardArchiveOne',
-                'dashboardArchiveMessage',
-                subject,
-                busy,
-                () => this.onArchive(message),
-                { icon: '📦', className: 'archive' }
-            ),
-            this.actionButton(
-                'dashboardTrashOne',
-                'dashboardTrashMessage',
-                subject,
-                busy,
-                () => this.onTrash(message),
-                { icon: '🗑️', className: 'danger' }
-            )
-        );
-        actions.append(aiActions, mailActions);
+        return [
+            {
+                titleKey: 'dashboardAIActionsGroup',
+                type: 'ai',
+                actions: aiActions
+            },
+            {
+                titleKey: 'dashboardReadActionsGroup',
+                type: 'read',
+                actions: [
+                    action(
+                        'dashboardShowPreviewOne',
+                        'dashboardShowPreviewMessage',
+                        () => this.onShowPreview(message),
+                        {
+                            icon: '👁',
+                            className: 'show-preview',
+                            hidden: options.previewVisible
+                        }
+                    ),
+                    action(
+                        'dashboardOpenInTabOne',
+                        'dashboardOpenInTabMessage',
+                        () => this.onOpenInTab(message),
+                        { icon: '↗', className: 'open-message' }
+                    ),
+                    action(
+                        'dashboardMarkReadOne',
+                        'dashboardMarkReadMessage',
+                        () => this.onMarkRead(message),
+                        { icon: '✓', className: 'mark-read' }
+                    )
+                ]
+            },
+            {
+                titleKey: 'dashboardMailActionsGroup',
+                type: 'mail',
+                actions: [
+                    action(
+                        'dashboardExportPdfOne',
+                        'dashboardExportPdfMessage',
+                        () => this.onExportPdf(message),
+                        { icon: '📄', className: 'export-pdf' }
+                    ),
+                    action(
+                        'dashboardArchiveOne',
+                        'dashboardArchiveMessage',
+                        () => this.onArchive(message),
+                        { icon: '📦', className: 'archive' }
+                    ),
+                    action(
+                        'dashboardTrashOne',
+                        'dashboardTrashMessage',
+                        () => this.onTrash(message),
+                        { icon: '🗑️', className: 'danger' }
+                    )
+                ]
+            }
+        ];
+    }
+
+    /** Render every non-hidden action descriptor into its matching column. */
+    actionButtons(groups) {
+        const actions = document.createElement('div');
+        actions.className = 'dashboard-message-actions';
+        for (const group of groups) {
+            const actionGroup = this.actionGroup(group.titleKey, group.type);
+            for (const action of group.actions.filter(candidate => !candidate.hidden)) {
+                actionGroup.appendChild(this.actionButton(action));
+            }
+            actions.appendChild(actionGroup);
+        }
         return actions;
     }
 
@@ -220,16 +258,19 @@ const DashboardMessageComponent = class {
     }
 
     /** Build an icon-labelled button without placing decorative icons in its accessible name. */
-    actionButton(textKey, labelKey, subject, busy, callback, options = {}) {
+    actionButton(action) {
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = `dashboard-message-action ${options.className || ''}`.trim();
-        button.disabled = busy;
-        button.setAttribute('aria-label', I18n.t(labelKey, { subject }));
-        const icon = this.textElement('span', 'dashboard-action-icon', options.icon || '');
+        button.className = `dashboard-message-action ${action.className || ''}`.trim();
+        button.disabled = action.disabled;
+        button.setAttribute('aria-label', I18n.t(action.labelKey, { subject: action.subject }));
+        const icon = this.textElement('span', 'dashboard-action-icon', action.icon || '');
         icon.setAttribute('aria-hidden', 'true');
-        button.append(icon, this.textElement('span', 'dashboard-action-label', I18n.t(textKey)));
-        button.addEventListener('click', callback);
+        button.append(
+            icon,
+            this.textElement('span', 'dashboard-action-label', I18n.t(action.textKey))
+        );
+        button.addEventListener('click', action.execute);
         return button;
     }
 

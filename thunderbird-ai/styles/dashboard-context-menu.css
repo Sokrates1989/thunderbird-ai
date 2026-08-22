@@ -1,0 +1,165 @@
+/* Per-message context menu shared by the dashboard popup and expanded tab. */
+.dashboard-message-context-menu,
+.dashboard-context-submenu {
+    position: fixed;
+    z-index: 1000;
+    min-width: 230px;
+    max-width: min(330px, calc(100vw - 16px));
+    padding: 5px;
+    border: 1px solid #aab4bd;
+    border-radius: 7px;
+    background: #fff;
+    color: #202124;
+    box-shadow: 0 9px 28px rgb(0 0 0 / 28%);
+    font-size: 12px;
+}
+
+.dashboard-message-context-menu {
+    max-height: calc(100vh - 16px);
+}
+
+.dashboard-message-context-menu[data-style="headings"] {
+    overflow-y: auto;
+}
+
+.dashboard-context-menu-group + .dashboard-context-menu-group {
+    margin-top: 5px;
+    padding-top: 5px;
+    border-top: 1px solid #d9dde1;
+}
+
+.dashboard-context-menu-title {
+    padding: 5px 8px 3px;
+    color: #59636c;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.dashboard-context-menu-item {
+    display: grid;
+    box-sizing: border-box;
+    width: 100%;
+    grid-template-columns: 20px minmax(0, 1fr);
+    gap: 7px;
+    align-items: center;
+    padding: 7px 8px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+}
+
+.dashboard-context-menu-item:hover,
+.dashboard-context-menu-item:focus-visible {
+    outline: 0;
+    background: #e8f4fc;
+    color: #075985;
+}
+
+.dashboard-context-menu-item:disabled {
+    cursor: default;
+    opacity: 0.5;
+}
+
+.dashboard-context-menu-item:disabled:hover {
+    background: transparent;
+    color: inherit;
+}
+
+.dashboard-context-menu-icon,
+.dashboard-context-menu-check {
+    text-align: center;
+    line-height: 1;
+}
+
+.dashboard-context-menu-label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.dashboard-context-menu-separator {
+    height: 1px;
+    margin: 5px 3px;
+    background: #d9dde1;
+}
+
+.dashboard-context-menu-parent {
+    position: relative;
+}
+
+.dashboard-context-menu-trigger {
+    grid-template-columns: minmax(0, 1fr) 14px;
+}
+
+.dashboard-context-menu-arrow {
+    color: #66717a;
+    font-size: 18px;
+    line-height: 0.8;
+    text-align: right;
+}
+
+.dashboard-context-submenu {
+    position: absolute;
+    top: -5px;
+    left: calc(100% + 4px);
+    display: none;
+    max-height: min(420px, calc(100vh - 16px));
+    overflow-y: auto;
+}
+
+.dashboard-context-menu-parent[data-open="true"] > .dashboard-context-submenu {
+    display: block;
+}
+
+.dashboard-context-menu-parent.opens-left > .dashboard-context-submenu {
+    right: calc(100% + 4px);
+    left: auto;
+}
+
+.dashboard-context-menu-radio {
+    grid-template-columns: 20px minmax(0, 1fr);
+}
+
+.dashboard-context-menu-radio[aria-checked="true"] {
+    font-weight: 700;
+}
+
+@media (max-width: 520px) {
+    .dashboard-message-context-menu,
+    .dashboard-context-submenu {
+        min-width: 190px;
+        max-width: 210px;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .dashboard-message-context-menu,
+    .dashboard-context-submenu {
+        border-color: #62666b;
+        background: #292a2d;
+        color: #f1f3f4;
+        box-shadow: 0 9px 28px rgb(0 0 0 / 58%);
+    }
+
+    .dashboard-context-menu-title,
+    .dashboard-context-menu-arrow {
+        color: #bdc1c6;
+    }
+
+    .dashboard-context-menu-group + .dashboard-context-menu-group,
+    .dashboard-context-menu-separator {
+        border-color: #4a4d51;
+        background: #4a4d51;
+    }
+
+    .dashboard-context-menu-item:hover,
+    .dashboard-context-menu-item:focus-visible {
+        background: #17394c;
+        color: #a9dcf8;
+    }
+}

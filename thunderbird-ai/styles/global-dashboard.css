@@ -954,6 +954,7 @@ body {
 }
 
 .dashboard-bulk-action-group.mail,
+.dashboard-message-action-group.read,
 .dashboard-message-action-group.mail {
     padding-left: 9px;
     border-left: 1px solid #c8cfd5;
@@ -1096,6 +1097,11 @@ body.dashboard-expanded-view {
     background: #eaf1f6;
 }
 
+.dashboard-message:focus-visible {
+    outline: 3px solid #4c9ed9;
+    outline-offset: 2px;
+}
+
 .dashboard-message-select {
     margin-top: 2px;
 }
@@ -1184,10 +1190,10 @@ body.dashboard-expanded-view {
 
 .dashboard-message-actions {
     display: grid;
-    grid-template-columns: repeat(2, minmax(110px, 1fr));
+    grid-template-columns: repeat(3, minmax(105px, 1fr));
     gap: 9px;
-    width: min(300px, 42vw);
-    max-width: 300px;
+    width: min(450px, 55vw);
+    max-width: 450px;
 }
 
 .dashboard-message-action {
@@ -1311,6 +1317,7 @@ body.dashboard-expanded-view {
     }
 
     .dashboard-bulk-action-group.mail,
+    .dashboard-message-action-group.read,
     .dashboard-message-action-group.mail {
         border-color: #4a4d51;
     }

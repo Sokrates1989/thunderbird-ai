@@ -29,7 +29,8 @@ function loadService({
     getMessageContent = async () => '',
     sendRuntimeMessage = async () => ({ success: true, data: { state: 'completed' } }),
     archiveMessages = async () => {},
-    updateMessage = async () => {}
+    updateMessage = async () => {},
+    openMessage = async () => ({})
 }) {
     const aborted = [];
     const storageState = {};
@@ -57,7 +58,8 @@ function loadService({
                 abortList: async id => aborted.push(id),
                 archive: archiveMessages,
                 update: updateMessage
-            }
+            },
+            messageDisplay: { open: openMessage }
         }
     });
     loadScript(context, 'thunderbird-ai/components/shared/MailboxActionService.js');
@@ -111,6 +113,21 @@ function loadSenderFilterComponent() {
     const context = createContext({ I18n: { getLanguage: () => 'en' } });
     loadScript(context, 'thunderbird-ai/components/global-dashboard/DashboardSenderFilterComponent.js');
     return context.DashboardSenderFilterComponent;
+}
+
+function loadMessageComponent() {
+    const context = createContext({ I18n: { t: key => key } });
+    loadScript(context, 'thunderbird-ai/components/global-dashboard/DashboardMessageComponent.js');
+    return context.DashboardMessageComponent;
+}
+
+function loadMessageContextMenuComponent() {
+    const context = createContext({ I18n: { t: key => key } });
+    loadScript(
+        context,
+        'thunderbird-ai/components/global-dashboard/DashboardMessageContextMenuComponent.js'
+    );
+    return context.DashboardMessageContextMenuComponent;
 }
 
 function loadDashboardAIService() {
@@ -498,22 +515,96 @@ test('dashboard grouping mode is normalized and persisted independently', async 
     const { context, preferences, storage } = loadViewPreferences({
         dashboardViewMode: 'combined',
         dashboardDisplayOptionsExpanded: false,
-        dashboardRiskMinimum: 63
+        dashboardRiskMinimum: 63,
+        dashboardContextMenuStyle: 'submenus'
     });
 
     const loaded = await preferences.load();
     assert.equal(loaded.viewMode, 'combined');
     assert.equal(loaded.displayOptionsExpanded, false);
     assert.equal(loaded.riskMinimum, 63);
+    assert.equal(loaded.contextMenuStyle, 'submenus');
     loaded.viewMode = 'account';
     loaded.displayOptionsExpanded = true;
     loaded.riskMinimum = 71;
+    loaded.contextMenuStyle = 'headings';
     await preferences.save(loaded);
 
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_VIEW_MODE], 'account');
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_DISPLAY_OPTIONS_EXPANDED], true);
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_RISK_MINIMUM], 71);
+    assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_CONTEXT_MENU_STYLE], 'headings');
     assert.equal(context.GlobalMailViewService.normalizeViewMode('invalid'), 'account');
+    assert.equal(preferences.normalizeContextMenuStyle('invalid'), 'headings');
+});
+
+test('message actions expose three groups and hide only an already visible preview', () => {
+    const MessageComponent = loadMessageComponent();
+    const calls = [];
+    const component = new MessageComponent({
+        formatDate: value => value,
+        onSelectionChanged() {},
+        onSummarize: () => calls.push('summarize'),
+        onReply: () => calls.push('reply'),
+        onChat: () => calls.push('chat'),
+        onCorrectScores: () => calls.push('correct'),
+        onShowPreview: () => calls.push('preview'),
+        onOpenInTab: () => calls.push('open'),
+        onMarkRead: () => calls.push('read'),
+        onExportPdf: () => calls.push('pdf'),
+        onArchive: () => calls.push('archive'),
+        onTrash: () => calls.push('trash'),
+        onContextMenu() {}
+    });
+    const mail = message(42, 20);
+
+    const groups = component.actionGroups(mail, mail.subject, {
+        busy: false,
+        previewVisible: false
+    });
+    const hiddenGroups = component.actionGroups(mail, mail.subject, {
+        busy: false,
+        previewVisible: true
+    });
+
+    assert.deepEqual(Array.from(groups, group => group.titleKey), [
+        'dashboardAIActionsGroup',
+        'dashboardReadActionsGroup',
+        'dashboardMailActionsGroup'
+    ]);
+    assert.deepEqual(Array.from(groups[1].actions, action => action.textKey), [
+        'dashboardShowPreviewOne',
+        'dashboardOpenInTabOne',
+        'dashboardMarkReadOne'
+    ]);
+    assert.equal(groups[1].actions[0].hidden, false);
+    assert.equal(hiddenGroups[1].actions[0].hidden, true);
+    groups[1].actions[0].execute();
+    groups[1].actions[1].execute();
+    groups[1].actions[2].execute();
+    assert.deepEqual(calls, ['preview', 'open', 'read']);
+});
+
+test('message context menu defaults to direct headings and removes hidden actions', () => {
+    const ContextMenuComponent = loadMessageContextMenuComponent();
+    const component = new ContextMenuComponent({
+        onStyleChanged: async () => {},
+        onError() {}
+    });
+    const groups = [{
+        titleKey: 'read',
+        actions: [
+            { textKey: 'preview', hidden: true },
+            { textKey: 'open', hidden: false }
+        ]
+    }];
+
+    assert.equal(ContextMenuComponent.normalizeStyle('unknown'), 'headings');
+    assert.equal(ContextMenuComponent.normalizeStyle('submenus'), 'submenus');
+    assert.deepEqual(
+        Array.from(component.visibleGroups(groups)[0].actions, action => action.textKey),
+        ['open']
+    );
 });
 
 test('dashboard selection survives popup closure and is stored without message content', async () => {
@@ -856,6 +947,73 @@ test('dashboard previews are loaded locally and one MIME failure stays isolated'
     assert.equal(accounts[0].messages[2].preview, 'Body 3');
 });
 
+test('one dashboard preview loads only its targeted message', async () => {
+    const calls = [];
+    const { service } = loadService({
+        getMessageContent: async id => {
+            calls.push(id);
+            return `Body ${id}`;
+        }
+    });
+    const target = message(7, 7);
+
+    const loaded = await service.loadPreview(target);
+
+    assert.equal(loaded, true);
+    assert.deepEqual(calls, [7]);
+    assert.equal(target.preview, 'Body 7');
+    assert.equal(target.previewFailed, false);
+});
+
+test('one-click preview reveal is session-local and ignores repeated requests', async () => {
+    const calls = [];
+    const DashboardManager = loadDashboardManager({
+        loadPreview: async mail => {
+            calls.push(mail.id);
+            mail.preview = 'Local body';
+            return true;
+        }
+    });
+    const manager = Object.create(DashboardManager.prototype);
+    const target = message(7, 7);
+    const busyStates = [];
+    const statuses = [];
+    let renderCount = 0;
+    manager.previewEnabled = false;
+    manager.expandedPreviewMessageIds = new Set();
+    manager.accounts = [{ messages: [target] }];
+    manager.setBusy = busy => busyStates.push(busy);
+    manager.render = () => { renderCount += 1; };
+    manager.setStatus = (text, type) => statuses.push([text, type]);
+
+    await manager.showPreviewForMessage(target);
+    await manager.showPreviewForMessage(target);
+
+    assert.deepEqual(calls, [7]);
+    assert.deepEqual([...manager.expandedPreviewMessageIds], [7]);
+    assert.equal(renderCount, 1);
+    assert.deepEqual(busyStates, [true, false]);
+    assert.deepEqual(statuses, [[
+        'dashboardPreviewOneLoaded:{}',
+        'success'
+    ]]);
+});
+
+test('dashboard opens a directly targeted message in a new active Thunderbird tab', async () => {
+    const calls = [];
+    const { service } = loadService({
+        openMessage: async details => {
+            calls.push({ ...details });
+            return { id: 9 };
+        }
+    });
+
+    const tab = await service.openInTab(42);
+
+    assert.deepEqual(calls, [{ messageId: 42, location: 'tab', active: true }]);
+    assert.equal(tab.id, 9);
+});
+
 test('dashboard deletion delegates unique IDs to the persistent background context', async () => {
     const calls = [];
     const { service } = loadService({
@@ -1195,6 +1353,10 @@ test('manifest routes both toolbar actions through the wake-safe background serv
         path.join(repositoryRoot, 'thunderbird-ai/styles/global-dashboard.css'),
         'utf8'
     );
+    const contextMenuStyles = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/styles/dashboard-context-menu.css'),
+        'utf8'
+    );
     const dashboardEntry = fs.readFileSync(
         path.join(repositoryRoot, 'thunderbird-ai/js/global-dashboard.js'),
         'utf8'
@@ -1208,6 +1370,13 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     );
     const messageComponent = fs.readFileSync(
         path.join(repositoryRoot, 'thunderbird-ai/components/global-dashboard/DashboardMessageComponent.js'),
+        'utf8'
+    );
+    const messageContextMenuComponent = fs.readFileSync(
+        path.join(
+            repositoryRoot,
+            'thunderbird-ai/components/global-dashboard/DashboardMessageContextMenuComponent.js'
+        ),
         'utf8'
     );
     const bulkActionsComponent = fs.readFileSync(
@@ -1305,6 +1474,10 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.match(dashboard, /DashboardAIService\.js/u);
     assert.match(dashboard, /SingleMailWorkspaceService\.js/u);
     assert.match(dashboard, /DashboardMessageComponent\.js/u);
+    assert.match(dashboard, /DashboardMessageContextMenuComponent\.js/u);
+    assert.ok(dashboard.indexOf('DashboardMessageContextMenuComponent.js')
+        < dashboard.indexOf('GlobalDashboardManager.js'));
+    assert.match(dashboard, /dashboard-context-menu\.css/u);
     assert.match(dashboard, /ScoreFeedbackEditor\.js/u);
     assert.match(dashboard, /DashboardFeedbackComponent\.js/u);
     assert.match(dashboard, /id="dashboardFeedbackDialog"/u);
@@ -1354,18 +1527,28 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.match(dashboardEntry, /URLSearchParams\(window\.location\.search\)/u);
     assert.match(
         dashboardStyles,
-        /\.dashboard-message-actions\s*\{[^}]*grid-template-columns:\s*repeat\(2,/su
+        /\.dashboard-message-actions\s*\{[^}]*grid-template-columns:\s*repeat\(3,/su
     );
     assert.match(
         dashboardStyles,
         /\.dashboard-bulk-action-groups\s*\{[^}]*grid-template-columns:\s*repeat\(2,/su
     );
     assert.match(messageComponent, /dashboardMarkReadOne/u);
+    assert.match(messageComponent, /dashboardReadActionsGroup/u);
+    assert.match(messageComponent, /dashboardShowPreviewOne/u);
+    assert.match(messageComponent, /dashboardOpenInTabOne/u);
     assert.match(messageComponent, /dashboardArchiveOne/u);
     assert.match(messageComponent, /dashboardExportPdfOne/u);
     assert.match(messageComponent, /dashboardChatOne/u);
     assert.match(messageComponent, /dashboard-message-action-group/u);
     assert.match(messageComponent, /dashboard-action-icon/u);
+    assert.match(messageComponent, /addEventListener\('contextmenu'/u);
+    assert.match(messageComponent, /event\.shiftKey && event\.key === 'F10'/u);
+    assert.match(messageContextMenuComponent, /dashboardContextMenuLayout/u);
+    assert.match(messageContextMenuComponent, /role', 'menuitemradio'/u);
+    assert.match(messageContextMenuComponent, /setSubmenuOpen/u);
+    assert.match(contextMenuStyles, /\.dashboard-message-context-menu/u);
+    assert.match(contextMenuStyles, /\.dashboard-context-submenu/u);
     assert.match(bulkActionsComponent, /this\.hosts\.map\(host => this\.renderInto\(host\)\)/u);
     assert.match(
         messageComponent,
