@@ -1,13 +1,14 @@
 ; Builds a per-user Windows setup around the verified Thunderbird AI XPI.
 
 #ifndef AppVersion
-  #define AppVersion "2.17.1"
+  #define AppVersion "3.0.0"
 #endif
 
 #define AppName "Thunderbird AI Assistant"
 #define AppPublisher "Sokrates1989"
 #define AppUrl "https://github.com/Sokrates1989/thunderbird-ai"
-#define ExtensionId "thunderbird-ai@example.com"
+#define ExtensionId "thunderbird-ai@felicitas-wisdom.com"
+#define LegacyExtensionId "thunderbird-ai@example.com"
 #define ExtensionFileName "thunderbird-ai-" + AppVersion + ".xpi"
 #define GermanExtensionSource "thunderbird-ai-de.xpi"
 #define EnglishExtensionSource "thunderbird-ai-en.xpi"
@@ -48,6 +49,7 @@ WizardStyle=modern dynamic
 ShowLanguageDialog=yes
 SetupLogging=yes
 UninstallDisplayName={#AppName}
+LicenseFile=..\..\LICENSE
 VersionInfoVersion={#AppVersion}
 VersionInfoProductName={#AppName}
 VersionInfoProductVersion={#AppVersion}
@@ -73,6 +75,7 @@ english.ProfileInstallFailed=The extension could not be copied into the Thunderb
 Type: files; Name: "{app}\thunderbird-ai-*.xpi"
 
 [Files]
+Source: "..\..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\..\{#GermanExtensionSource}"; DestDir: "{app}"; DestName: "{#ExtensionFileName}"; Flags: ignoreversion; Languages: german
 Source: "..\..\{#EnglishExtensionSource}"; DestDir: "{app}"; DestName: "{#ExtensionFileName}"; Flags: ignoreversion; Languages: english
 
@@ -166,6 +169,7 @@ var
   ProfilesRoot: String;
   ExtensionsDirectory: String;
   DestinationPath: String;
+  LegacyPath: String;
   SourcePath: String;
 begin
   ProfilesRoot := ThunderbirdProfilesRoot;
@@ -185,6 +189,9 @@ begin
           if DirExists(ExtensionsDirectory) then
           begin
             DestinationPath := AddBackslash(ExtensionsDirectory) + '{#ExtensionId}.xpi';
+            LegacyPath := AddBackslash(ExtensionsDirectory) + '{#LegacyExtensionId}.xpi';
+            if FileExists(LegacyPath) and not DeleteFile(LegacyPath) then
+              RaiseException(FmtMessage(CustomMessage('ProfileInstallFailed'), [LegacyPath]));
             if not CopyFile(SourcePath, DestinationPath, False) then
               RaiseException(FmtMessage(CustomMessage('ProfileInstallFailed'), [DestinationPath]));
           end;
@@ -246,7 +253,12 @@ end;
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
+  begin
+    RegDeleteValue(HKCU32, '{#ExtensionRegistrySubkey}', '{#LegacyExtensionId}');
+    if IsWin64 then
+      RegDeleteValue(HKCU64, '{#ExtensionRegistrySubkey}', '{#LegacyExtensionId}');
     InstallExtensionIntoExistingProfiles;
+  end;
 end;
 
 function InitializeUninstall: Boolean;

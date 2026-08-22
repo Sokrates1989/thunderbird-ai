@@ -156,6 +156,10 @@ test('first dashboard launch after an update closes prior dashboards and creates
         storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_TAB_CLEANUP_PENDING],
         true
     );
+    assert.equal(
+        storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_INSTALL_EVENT].version,
+        context.CONFIG.ADDON_VERSION
+    );
 
     const opened = await service.openExpanded('saved-preference');
 
@@ -167,6 +171,22 @@ test('first dashboard launch after an update closes prior dashboards and creates
         storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_TAB_CLEANUP_PENDING],
         false
     );
+});
+
+test('a restored dashboard claims one post-install reload and retains a short recovery window', async () => {
+    const { context, service, storage } = loadLaunchService();
+
+    await service.markDashboardTabCleanupPending({ reason: 'update' });
+    const first = await service.prepareRestoredDashboard();
+    const second = await service.prepareRestoredDashboard();
+
+    assert.equal(first.reloadRequired, true);
+    assert.equal(first.recentInstall, true);
+    assert.equal(first.version, context.CONFIG.ADDON_VERSION);
+    assert.equal(second.reloadRequired, false);
+    assert.equal(second.recentInstall, true);
+    assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_TAB_CLEANUP_PENDING], false);
+    assert.equal(await service.hasRecentInstallEvent(), true);
 });
 
 test('failed post-update cleanup creates a fresh tab without focusing a stale dashboard', async () => {

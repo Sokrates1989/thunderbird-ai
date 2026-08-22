@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extensionName__",
-  "version": "2.17.1",
+  "version": "3.0.0",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
   "author": "Sokrates1989",
+  "homepage_url": "https://github.com/Sokrates1989/thunderbird-ai",
   "browser_specific_settings": {
     "gecko": {
-      "id": "thunderbird-ai@example.com",
+      "id": "thunderbird-ai@felicitas-wisdom.com",
       "strict_min_version": "128.0"
     }
   },

@@ -349,6 +349,21 @@ test('failed startup scan clears the dashboard loading state and keeps refresh r
     assert.equal(manager.selectedMessageIds.size, 0);
 });
 
+test('a recent installer run gives actionable recovery advice when no unread mail appears', () => {
+    const DashboardManager = loadDashboardManager({});
+    const manager = Object.create(DashboardManager.prototype);
+    const statuses = [];
+    manager.recentInstallEvent = true;
+    manager.sourceAccounts = [{ accountId: 'personal' }];
+    manager.accounts = [{ matchingCount: 0, messages: [] }];
+    manager.allMessages = () => [];
+    manager.setStatus = (messageText, type) => statuses.push([messageText, type]);
+
+    manager.showLoadedStatus();
+
+    assert.deepEqual(statuses, [['dashboardNoUnreadAfterInstall:{}', 'warning']]);
+});
+
 test('global dashboard reads every unread-header page for each Inbox', async () => {
     const firstInbox = inbox('inbox-a', 'Posteingang');
     const nestedInbox = inbox('inbox-b');
@@ -1803,6 +1818,9 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.match(dashboardStyles, /\.dashboard-pdf-archiver-dialog\s*\{[^}]*box-shadow:/su);
     assert.match(dashboardStyles, /\.dashboard-expanded-view \.dashboard-accounts\s*\{[^}]*max-height:\s*none/su);
     assert.match(dashboardEntry, /URLSearchParams\(window\.location\.search\)/u);
+    assert.match(dashboardEntry, /PREPARE_RESTORED_DASHBOARD/u);
+    assert.match(dashboardEntry, /post-install-recovery/u);
+    assert.match(dashboardEntry, /searchParams\.set\('release', CONFIG\.ADDON_VERSION\)/u);
     assert.match(
         dashboardStyles,
         /\.dashboard-message-actions\s*\{[^}]*grid-template-columns:\s*repeat\(3,/su
@@ -1854,7 +1872,7 @@ test('manifest routes both toolbar actions through the wake-safe background serv
         dashboardStyles,
         /\.dashboard-message-action\.archive,\s*\.dashboard-message-action\.export-pdf\s*\{[^}]*background:\s*#526d82/su
     );
-    assert.match(pdfIntegration, /thunderbird-pdf-archiver@sokrates1989\.de/u);
+    assert.match(pdfIntegration, /thunderbird-pdf@felicitas-wisdom\.com/u);
     assert.match(pdfIntegration, /thunderbird-pdf-archiver:open-review/u);
     assert.match(singleMailManager, /parameters\.get\('summarize'\) === '1'[\s\S]*executeAIAction\('SUMMARIZE_EMAIL'\)/u);
     assert.match(singleMailPage, /ScoreFeedbackEditor\.js/u);

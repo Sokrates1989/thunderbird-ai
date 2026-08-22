@@ -163,6 +163,8 @@ Write-Host "Processing common directory..."
 $commonConflicts = Copy-FilesRecursively -SourceDir "common" -DestDir "temp_addon" -FileMap $fileMap
 $allConflicts += $commonConflicts
 
+Copy-Item -LiteralPath 'LICENSE' -Destination (Join-Path 'temp_addon' 'LICENSE')
+
 # Handle conflicts
 if ($allConflicts.Count -gt 0) {
     Write-Host
@@ -232,6 +234,7 @@ try {
     }
     foreach ($requiredEntry in @(
             'manifest.json',
+            'LICENSE',
             'install-defaults.json',
             '_locales/de/messages.json',
             '_locales/en/messages.json'

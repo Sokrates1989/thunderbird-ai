@@ -67,7 +67,7 @@ const extensionId = String(manifest.browser_specific_settings?.gecko?.id || "");
 if (!/^\d+\.\d+\.\d+$/.test(version)) {
     throw new Error(`Manifest version ${JSON.stringify(version)} is not semantic.`);
 }
-if (extensionId !== "thunderbird-ai@example.com") {
+if (extensionId !== "thunderbird-ai@felicitas-wisdom.com") {
     throw new Error(`Unexpected extension ID ${JSON.stringify(extensionId)}.`);
 }
 process.stdout.write(`${version}\n${extensionId}`);
@@ -109,6 +109,7 @@ for required_directory in thunderbird-ai common; do
 done
 
 cp -R -- "${REPOSITORY_ROOT}/thunderbird-ai/_locales" "${stage_directory}/_locales"
+cp -- "${REPOSITORY_ROOT}/LICENSE" "${stage_directory}/LICENSE"
 node -e '
 const fs = require("node:fs");
 const output = `${JSON.stringify({ language: process.argv[2], version: process.argv[3] }, null, 2)}\n`;
@@ -128,6 +129,7 @@ if printf '%s\n' "${entry_names}" | grep -F '\' >/dev/null; then
 fi
 for required_entry in \
     manifest.json \
+    LICENSE \
     install-defaults.json \
     _locales/de/messages.json \
     _locales/en/messages.json; do

@@ -2,6 +2,15 @@
 
 Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe und weitere E-Mail-Analysen mit der OpenAI API.
 
+## Download und Veröffentlichungen
+
+- [Aktuelle Veröffentlichung](https://github.com/Sokrates1989/thunderbird-ai/releases/latest)
+- [Installer- und Versionshistorie](https://github.com/Sokrates1989/thunderbird-ai/releases)
+- [Aktueller macOS-Installer](https://github.com/Sokrates1989/thunderbird-ai/releases/latest/download/Thunderbird-AI-Setup-macos.pkg)
+- [Aktueller Windows-Installer](https://github.com/Sokrates1989/thunderbird-ai/releases/latest/download/Thunderbird-AI-Setup-win-x64.exe)
+
+Die stabilen Downloadnamen zeigen immer auf die aktuelle GitHub-Veröffentlichung. Jede Veröffentlichung behält zusätzlich versionierte Installer und SHA-256-Prüfsummen für eine nachvollziehbare Historie.
+
 ## Funktionen
 
 - Zusammenfassung des tatsächlichen Nachrichtentexts aus dem dekodierten MIME-Baum
@@ -25,7 +34,7 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 - optionale Übergabe einer einzelnen Dashboard-Mail an Thunderbird PDF Archiver; fehlt eine kompatible Installation, führt ein lokalisierter Dialog zur offiziellen GitHub-Seite
 - klar getrennte AI-Aktionen, Leseoptionen und E-Mail-Aktionen mit Icons; Leseoptionen öffnen die Originalmail in einem neuen Thunderbird-Tab, blenden bei ausgeschalteter globaler Vorschau nur den angeklickten Inhalt ein oder markieren die Mail als gelesen
 - noch nicht bewertete Einzelmails lassen sich direkt in ihrer AI-Aktionsspalte über denselben geschützten Scoring-Ablauf wie die Bulk-Auswertung analysieren; danach ersetzt **Werte korrigieren** diese Schaltfläche, während das Kontextmenü zusätzlich eine bestätigte Neu-Analyse anbietet
-- jede sichtbare Einzelvorschau lässt sich unabhängig in Zwei-Zeilen-Schritten bis 20 Zeilen vergrößern, direkt auf ihre Ausgangshöhe zurücksetzen, schließen oder über das Vollbildsymbol als Originalmail in einem neuen Tab öffnen
+- jede sichtbare Einzelvorschau lässt sich unabhängig in Vier-Zeilen-Schritten bis 20 Zeilen vergrößern, direkt auf ihre Ausgangshöhe zurücksetzen, schließen oder über das Vollbildsymbol als Originalmail in einem neuen Tab öffnen
 - dieselben Einzelmail-Aktionen über ein Rechtsklick-Kontextmenü auf der gesamten Dashboard-Zeile; direkt sichtbare Gruppenüberschriften sind Standard, gruppierte Untermenüs lassen sich im Kontextmenü dauerhaft auswählen
 - vollständig deutsch- oder englischsprachige Oberfläche mit expliziter Sprachauswahl
 - getrennt wählbarer Start des globalen Dashboards und der Einzelmail-Ansicht als kompaktes Overlay oder dauerhafter Thunderbird-Tab; die Einzelmail-Ansicht besitzt zusätzlich eine Vollbild-Schaltfläche
@@ -71,8 +80,8 @@ Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speic
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-2.17.1-win-x64.exe` herunterladen und starten.
-2. Im Setup **Deutsch** oder **English** wählen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
+1. `Thunderbird-AI-Setup-3.0.0-win-x64.exe` herunterladen und starten.
+2. Im Setup **Deutsch** oder **English** wählen und die GNU General Public License bestätigen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung und zu den Berechtigungen zum Ändern, Verschieben und Löschen von Nachrichten bestätigen.
 5. Unter **Einstellungen** den OpenAI API-Schlüssel eintragen, die aufgabenspezifischen Modelle prüfen, die Verbindung testen und speichern. Die Oberflächensprache kann dort jederzeit unabhängig von der Thunderbird-Sprache geändert werden.
@@ -84,12 +93,16 @@ Version 1.5.1 korrigiert die in 1.3.0 bis 1.5.0 fehlerhaft gepackten Lokalisieru
 ## Installation unter macOS
 
 1. Thunderbird mindestens einmal starten, damit ein Profil angelegt ist.
-2. `Thunderbird-AI-Setup-2.17.1-macos.pkg` öffnen.
-3. Offene Thunderbird-Entwürfe speichern und die Installation fortsetzen. Das macOS-Installationsprogramm fordert Thunderbird zum normalen Beenden auf und beendet es niemals erzwungen.
+2. `Thunderbird-AI-Setup-3.0.0-macos.pkg` öffnen.
+3. Die GNU General Public License bestätigen, offene Thunderbird-Entwürfe speichern und die Installation fortsetzen. Das macOS-Installationsprogramm fordert Thunderbird zum normalen Beenden auf und beendet es niemals erzwungen.
 4. Nach erfolgreicher Installation öffnet das Setup Thunderbird automatisch. Eine mögliche einmalige Rückfrage zur Aktivierung und zu den Berechtigungen zum Ändern, Verschieben und Löschen von Nachrichten bestätigen.
 5. Unter **Einstellungen** den OpenAI API-Schlüssel eintragen, die aufgabenspezifischen Modelle prüfen, die Verbindung testen und speichern.
 
 Der macOS-Installer installiert das Add-on ohne Administratorrechte für den aktuellen Benutzer in alle vorhandenen Thunderbird-Profile. Eine erneute Ausführung aktualisiert die vorhandene Installation; Einstellungen bleiben durch die feste Add-on-ID erhalten. Die anfängliche Oberflächensprache folgt automatisch Thunderbird und kann jederzeit in den Add-on-Einstellungen geändert werden. Das aktuelle Testpaket ist noch nicht mit einer Developer-ID signiert oder notarisiert; vor einer öffentlichen Veröffentlichung sind Signatur, Notarisierung und eine veröffentlichte SHA-256-Prüfsumme erforderlich.
+
+Version 3.0.0 verwendet die dauerhafte Veröffentlichungs-ID `thunderbird-ai@felicitas-wisdom.com`. Die privaten Vorabversionen mit `thunderbird-ai@example.com` werden beim nativen Setup entfernt. Bei einer manuellen XPI-Installation muss die Vorabversion einmalig selbst deinstalliert werden.
+
+Wird ein bereits geöffneter Dashboard-Tab nach einer Installation wiederhergestellt, lädt ihn Version 3.0.0 einmal gezielt als frisches Erweiterungsdokument. Falls kurz nach der Installation trotzdem keine ungelesenen E-Mails erscheinen, zeigt das Dashboard zusätzlich den sicheren Wiederherstellungsweg: Tab schließen und über die Thunderbird-AI-Schaltfläche neu öffnen.
 
 ## Entwicklung und Tests
 
@@ -111,8 +124,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-2.17.1-win-x64.exe`
-- `artifacts/Thunderbird-AI-Setup-2.17.1-macos.pkg`
+- `artifacts\Thunderbird-AI-Setup-3.0.0-win-x64.exe`
+- `artifacts/Thunderbird-AI-Setup-3.0.0-macos.pkg`
 
 Unter macOS werden XPI und Installer vom Repository-Stamm aus gebaut und isoliert geprüft:
 
@@ -171,7 +184,7 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 42. Nach mehreren Dashboard-Aktionen den Tab wechseln und das globale Toolbar-Symbol mindestens dreimal erneut verwenden. Ein hängender Thunderbird-Tabaufruf muss nach einem begrenzten Zeitlimit freigegeben werden, sodass der nächste Klick ohne Thunderbird-Neustart erneut versucht. Bei einem endgültigen Fehler muss eine lokalisierte Benachrichtigung mit Diagnosecode erscheinen. Unter **Einstellungen → AI Assistant öffnen → Support-Diagnose** müssen Add-on-/Thunderbird-Version, letzter Dashboard-Start und die letzten Hintergrund-/UI-Aktivitäten ohne E-Mail-Inhalte sichtbar und kopierbar sein. Ein absichtlich provozierter Fehler muss als fehlgeschlagener oder kontrolliert fehlgeschlagener Vorgang erscheinen.
 43. Im Dashboard mehrere Nachrichten auswählen und bis unter die letzte angezeigte Nachricht scrollen. Dort muss dieselbe Bulk-Aktionsleiste wie oberhalb der Nachrichten erscheinen; Auswahlzahl, Aktivierungszustand und Aktionen müssen in beiden Leisten synchron bleiben. Danach Dashboard und Einzelmail-Ansicht nach unten scrollen: Rechts unten muss jeweils ein kleiner runder Pfeil erscheinen, der die sichtbare Scrollfläche nach oben bewegt und am Anfang wieder verschwindet.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 2.17.1** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 3.0.0** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 Die Einstellungen enthalten eine **Support- und Speicherdiagnose**. Sie zeigt Hintergrundstart, Abhängigkeitsstatus, Laufzeiten und eine inhaltsfreie Prüfung lokaler Einstellungsdaten. API-Schlüssel werden ausschließlich als „vorhanden/nicht vorhanden“ gemeldet. Kann der Hintergrunddienst nicht starten, werden vorhandene Einstellungen lokal und schreibgeschützt dargestellt; Speichern und Zurücksetzen bleiben bis zu einem erfolgreichen Start deaktiviert.
 
@@ -184,3 +197,7 @@ Die Einstellungen enthalten eine **Support- und Speicherdiagnose**. Sie zeigt Hi
 - `installer/macos/`: nativer macOS-Paketbuild, lokalisierte Installer-Texte und Isolationstest
 
 Das Add-on verwendet globale Skripte statt ES-Modulen, da sie in der im Manifest festgelegten Reihenfolge geladen werden.
+
+## Lizenz und Beiträge
+
+Thunderbird AI Assistant ist freie Open-Source-Software unter der [GNU General Public License Version 3 oder neuer](LICENSE). Forks und Änderungen sind ausdrücklich erlaubt; Beiträge als [Pull Request](CONTRIBUTING.md) sind besonders willkommen. Für Sicherheitsmeldungen gilt die [Security Policy](SECURITY.md). Die für eine Veröffentlichung relevante Datenverarbeitung beschreibt die [Privacy Policy](PRIVACY.md).

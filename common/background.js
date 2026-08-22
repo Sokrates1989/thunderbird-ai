@@ -201,7 +201,7 @@ class ThunderbirdAI {
         }
     }
 
-    async handleMessage(request) {
+    async handleMessage(request, sender = {}) {
         if (request?.action === CONFIG.ACTIONS.GET_BACKGROUND_HEALTH) {
             return { success: true, data: this.backgroundHealth() };
         }
@@ -221,7 +221,7 @@ class ThunderbirdAI {
                         }
                     };
                 }
-                return this.dispatchMessage(request || {});
+                return this.dispatchMessage(request || {}, sender);
             }
         );
     }
@@ -242,7 +242,7 @@ class ThunderbirdAI {
     }
 
     /** Route a runtime request while the outer boundary records start and completion. */
-    async dispatchMessage(request) {
+    async dispatchMessage(request, sender = {}) {
         try {
             switch (request.action) {
                 case CONFIG.ACTIONS.SUMMARIZE:
@@ -298,6 +298,11 @@ class ThunderbirdAI {
                 case CONFIG.ACTIONS.GET_SETTINGS:
                 case CONFIG.ACTIONS.GET_STATISTICS:
                     return StorageManager.getSettings();
+                case CONFIG.ACTIONS.PREPARE_RESTORED_DASHBOARD:
+                    return {
+                        success: true,
+                        data: await this.dashboardLaunchService().prepareRestoredDashboard(sender)
+                    };
                 case CONFIG.ACTIONS.SAVE_SETTINGS:
                     return this.saveSettings(request);
                 case CONFIG.ACTIONS.SET_DASHBOARD_OPEN_MODE:

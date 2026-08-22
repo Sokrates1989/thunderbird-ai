@@ -3,7 +3,7 @@
  * The AI Assistant never receives PDF data and never duplicates archive logic.
  */
 const PdfArchiverIntegrationService = {
-    EXTENSION_ID: 'thunderbird-pdf-archiver@sokrates1989.de',
+    EXTENSION_ID: 'thunderbird-pdf@felicitas-wisdom.com',
     INSTALL_URL: 'https://github.com/Sokrates1989/thunderbird-pdf-extractor-plugin#install-on-windows',
     PROTOCOL_VERSION: 1,
 

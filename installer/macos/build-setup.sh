@@ -53,7 +53,7 @@ const version = String(manifest.version || "");
 if (!/^\d+\.\d+\.\d+$/.test(version)) {
     throw new Error(`Manifest version ${JSON.stringify(version)} is not semantic.`);
 }
-if (manifest.browser_specific_settings?.gecko?.id !== "thunderbird-ai@example.com") {
+if (manifest.browser_specific_settings?.gecko?.id !== "thunderbird-ai@felicitas-wisdom.com") {
     throw new Error("Manifest extension ID does not match the installer identity.");
 }
 process.stdout.write(version);
@@ -77,7 +77,7 @@ process.stdin.on("data", chunk => { input += chunk; });
 process.stdin.on("end", () => {
     const manifest = JSON.parse(input);
     if (manifest.version !== process.argv[1] ||
-        manifest.browser_specific_settings?.gecko?.id !== "thunderbird-ai@example.com") {
+        manifest.browser_specific_settings?.gecko?.id !== "thunderbird-ai@felicitas-wisdom.com") {
         throw new Error("Packaged XPI does not match the source manifest.");
     }
 });
@@ -85,6 +85,7 @@ process.stdin.on("end", () => {
 
 entry_names="$(unzip -Z1 "${xpi_path}")"
 for required_entry in \
+    LICENSE \
     install-defaults.json \
     _locales/de/messages.json \
     _locales/en/messages.json; do
@@ -112,8 +113,12 @@ payload_directory="${payload_root}/Library/Application Support/Thunderbird AI"
 component_package="${temporary_directory}/Thunderbird-AI-component.pkg"
 distribution_path="${temporary_directory}/distribution.xml"
 expanded_package="${temporary_directory}/expanded"
+resources_directory="${temporary_directory}/resources"
 mkdir -p -- "${payload_directory}"
 install -m 0644 -- "${xpi_path}" "${payload_directory}/thunderbird-ai.xpi"
+install -m 0644 -- "${REPOSITORY_ROOT}/LICENSE" "${payload_directory}/LICENSE"
+cp -R -- "${SCRIPT_DIRECTORY}/resources" "${resources_directory}"
+install -m 0644 -- "${REPOSITORY_ROOT}/LICENSE" "${resources_directory}/LICENSE.txt"
 xattr -cr "${payload_root}"
 
 sed "s/@APP_VERSION@/${version}/g" \
@@ -135,13 +140,16 @@ rm -f -- "${output_path}"
 
 productbuild_arguments=(
     --distribution "${distribution_path}"
-    --resources "${SCRIPT_DIRECTORY}/resources"
+    --resources "${resources_directory}"
     --package-path "${temporary_directory}"
 )
 if [[ -n "${signing_identity}" ]]; then
     productbuild_arguments+=(--sign "${signing_identity}")
 fi
 productbuild "${productbuild_arguments[@]}" "${output_path}"
+
+stable_output_path="${artifacts_directory}/Thunderbird-AI-Setup-macos.pkg"
+cp -- "${output_path}" "${stable_output_path}"
 
 pkgutil --expand "${output_path}" "${expanded_package}"
 xmllint --noout "${expanded_package}/Distribution"
@@ -151,3 +159,4 @@ xmllint --noout "${expanded_package}/Distribution"
 }
 
 printf 'Created %s (%s bytes).\n' "${output_path}" "$(stat -f '%z' "${output_path}")"
+printf 'Created stable release alias %s.\n' "${stable_output_path}"

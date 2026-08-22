@@ -6,7 +6,7 @@ set -euo pipefail
 
 readonly SCRIPT_DIRECTORY="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 readonly REPOSITORY_ROOT="$(cd -- "${SCRIPT_DIRECTORY}/../.." && pwd)"
-readonly EXTENSION_ID='thunderbird-ai@example.com'
+readonly EXTENSION_ID='thunderbird-ai@felicitas-wisdom.com'
 
 for command_name in node pkgutil installer unzip; do
     command -v "${command_name}" >/dev/null 2>&1 || {
@@ -23,6 +23,7 @@ first_profile="${profiles_root}/fixture.default"
 second_profile="${profiles_root}/fixture.default-esr"
 mkdir -p -- "${first_profile}/extensions" "${second_profile}"
 printf 'old fixture\n' >"${first_profile}/extensions/${EXTENSION_ID}.xpi"
+printf 'legacy fixture\n' >"${first_profile}/extensions/thunderbird-ai@example.com.xpi"
 
 "${SCRIPT_DIRECTORY}/build-setup.sh"
 
@@ -47,6 +48,10 @@ for profile_directory in "${first_profile}" "${second_profile}"; do
         exit 1
     }
 done
+[[ ! -e "${first_profile}/extensions/thunderbird-ai@example.com.xpi" ]] || {
+    printf 'Legacy private extension identity was not removed.\n' >&2
+    exit 1
+}
 
 defaults_json="$(unzip -p "${xpi_path}" install-defaults.json)"
 node -e '
@@ -85,6 +90,8 @@ grep -F 'enable_localSystem="false"' \
     "${expanded_product}/Distribution" >/dev/null
 grep -F '<app id="org.mozilla.thunderbird"/>' \
     "${expanded_product}/Distribution" >/dev/null
+grep -F '<license file="LICENSE.txt" mime-type="text/plain"/>' \
+    "${expanded_product}/Distribution" >/dev/null
 grep -F "version=\"${version}\"" \
     "${expanded_product}/Distribution" >/dev/null
 cmp -s \
@@ -100,6 +107,14 @@ grep -F '/bin/sleep 2' \
 payload_files="$(pkgutil --payload-files "${package_path}")"
 printf '%s\n' "${payload_files}" | \
     grep -F 'Library/Application Support/Thunderbird AI/thunderbird-ai.xpi' >/dev/null
+printf '%s\n' "${payload_files}" | \
+    grep -F 'Library/Application Support/Thunderbird AI/LICENSE' >/dev/null
+cmp -s \
+    "${package_path}" \
+    "${REPOSITORY_ROOT}/artifacts/Thunderbird-AI-Setup-macos.pkg" || {
+        printf 'Stable macOS release alias differs from the versioned package.\n' >&2
+        exit 1
+    }
 
 domain_information="$(installer -dominfo -pkg "${package_path}")"
 printf '%s\n' "${domain_information}" | grep -F 'CurrentUserHomeDirectory' >/dev/null

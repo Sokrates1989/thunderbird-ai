@@ -5,6 +5,7 @@
 globalThis.DashboardLaunchService = {
     MODES: globalThis.LaunchModeService.MODES,
     PROMPTS: Object.freeze({ ADOPT_TAB: 'adopt-tab', DISCOVER_TAB: 'discover-tab' }),
+    INSTALL_NOTICE_WINDOW_MS: 10 * 60 * 1000,
     openInProgress: null,
 
     normalizeMode(value) {
@@ -72,8 +73,77 @@ globalThis.DashboardLaunchService = {
             return;
         }
         await browser.storage.local.set({
-            [CONFIG.STORAGE_KEYS.DASHBOARD_TAB_CLEANUP_PENDING]: true
+            [CONFIG.STORAGE_KEYS.DASHBOARD_TAB_CLEANUP_PENDING]: true,
+            [CONFIG.STORAGE_KEYS.DASHBOARD_INSTALL_EVENT]: {
+                reason: details.reason,
+                version: CONFIG.ADDON_VERSION,
+                timestamp: Date.now()
+            }
         });
+    },
+
+    /** Claim one restored dashboard after an install so it can reload into a fresh document. */
+    async prepareRestoredDashboard() {
+        const keys = CONFIG.STORAGE_KEYS;
+        const stored = await this.withTimeout(
+            () => browser.storage.local.get([
+                keys.DASHBOARD_TAB_CLEANUP_PENDING,
+                keys.DASHBOARD_INSTALL_EVENT
+            ]),
+            'prepare-restored-dashboard',
+            CONFIG.UI.DASHBOARD_DIAGNOSTIC_TIMEOUT_MS
+        );
+        const installEvent = this.normalizeInstallEvent(stored?.[keys.DASHBOARD_INSTALL_EVENT]);
+        if (stored?.[keys.DASHBOARD_TAB_CLEANUP_PENDING] !== true) {
+            return { reloadRequired: false, recentInstall: this.isRecentInstallEvent(installEvent) };
+        }
+        await this.withTimeout(
+            () => browser.storage.local.set({
+                [keys.DASHBOARD_TAB_CLEANUP_PENDING]: false
+            }),
+            'claim-restored-dashboard',
+            CONFIG.UI.DASHBOARD_DIAGNOSTIC_TIMEOUT_MS
+        );
+        return {
+            reloadRequired: true,
+            recentInstall: true,
+            reason: installEvent?.reason || 'update',
+            version: installEvent?.version || CONFIG.ADDON_VERSION
+        };
+    },
+
+    /** Report a bounded post-install window without retaining unrelated storage values. */
+    async hasRecentInstallEvent() {
+        const key = CONFIG.STORAGE_KEYS.DASHBOARD_INSTALL_EVENT;
+        const stored = await this.withTimeout(
+            () => browser.storage.local.get(key),
+            'load-dashboard-install-event',
+            CONFIG.UI.DASHBOARD_DIAGNOSTIC_TIMEOUT_MS
+        );
+        return this.isRecentInstallEvent(this.normalizeInstallEvent(stored?.[key]));
+    },
+
+    /** Normalize the non-sensitive install marker used only for recovery messaging. */
+    normalizeInstallEvent(value) {
+        if (!value || typeof value !== 'object') {
+            return null;
+        }
+        const timestamp = Number(value.timestamp);
+        if (!Number.isFinite(timestamp) || timestamp <= 0) {
+            return null;
+        }
+        return {
+            reason: ['install', 'update'].includes(value.reason) ? value.reason : 'update',
+            version: String(value.version || '').slice(0, 32),
+            timestamp
+        };
+    },
+
+    /** Keep recovery advice limited to the minutes directly after installation. */
+    isRecentInstallEvent(installEvent, now = Date.now()) {
+        return Boolean(installEvent)
+            && now >= installEvent.timestamp
+            && now - installEvent.timestamp <= this.INSTALL_NOTICE_WINDOW_MS;
     },
 
     /** Close only prior dashboard content tabs and keep cleanup pending after a provider failure. */

@@ -51,6 +51,7 @@ const GlobalDashboardManager = class {
         this.aiResults = {};
         this.busy = false;
         this.refreshPromise = null;
+        this.recentInstallEvent = false;
         this.dateFormatter = new Intl.DateTimeFormat(I18n.getLanguage(), {
             dateStyle: 'short',
             timeStyle: 'short'
@@ -222,6 +223,11 @@ const GlobalDashboardManager = class {
             });
         }
         await this.loadPreferences();
+        this.recentInstallEvent = await DashboardLaunchService.hasRecentInstallEvent()
+            .catch(error => {
+                console.warn('Could not inspect the dashboard install marker:', error);
+                return false;
+            });
         this.applyPreferenceControls();
         await this.refresh();
         await this.deleteComponent.initialize();
@@ -429,7 +435,11 @@ const GlobalDashboardManager = class {
             await this.persistSelection();
             this.elements.accounts.replaceChildren();
             this.renderSenderOptions();
-            this.setStatus(I18n.t('dashboardLoadFailed'), 'error');
+            this.setStatus(I18n.t(
+                this.recentInstallEvent
+                    ? 'dashboardLoadFailedAfterInstall'
+                    : 'dashboardLoadFailed'
+            ), 'error');
         } finally {
             this.setBusy(false);
         }
@@ -482,6 +492,10 @@ const GlobalDashboardManager = class {
             (total, account) => total + (account.matchingCount || 0),
             0
         );
+        if (matchingCount === 0 && this.recentInstallEvent) {
+            this.setStatus(I18n.t('dashboardNoUnreadAfterInstall'), 'warning');
+            return;
+        }
         this.setStatus(I18n.t('dashboardLoaded', {
             accounts: this.sourceAccounts.length,
             messages: messageCount,

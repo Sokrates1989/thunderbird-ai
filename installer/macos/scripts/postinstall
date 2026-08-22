@@ -4,7 +4,8 @@
 #
 set -euo pipefail
 
-readonly EXTENSION_ID='thunderbird-ai@example.com'
+readonly EXTENSION_ID='thunderbird-ai@felicitas-wisdom.com'
+readonly LEGACY_EXTENSION_ID='thunderbird-ai@example.com'
 readonly PAYLOAD_RELATIVE_PATH='Library/Application Support/Thunderbird AI/thunderbird-ai.xpi'
 
 install_home="${THUNDERBIRD_AI_INSTALL_HOME:-${HOME}}"
@@ -25,6 +26,7 @@ while IFS= read -r profile_directory; do
     extensions_directory="${profile_directory}/extensions"
     destination_path="${extensions_directory}/${EXTENSION_ID}.xpi"
     mkdir -p -- "${extensions_directory}"
+    rm -f -- "${extensions_directory}/${LEGACY_EXTENSION_ID}.xpi"
     install -m 0644 -- "${payload_path}" "${destination_path}"
     installed_profile_count=$((installed_profile_count + 1))
 done < <(find "${profiles_root}" -mindepth 1 -maxdepth 1 -type d -print | LC_ALL=C sort)

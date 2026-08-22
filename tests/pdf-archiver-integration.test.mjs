@@ -29,7 +29,7 @@ test('installed PDF Archiver receives the selected message through the versioned
 
     assert.equal(result.status, 'opened');
     assert.equal(calls.length, 1);
-    assert.equal(calls[0][0], 'thunderbird-pdf-archiver@sokrates1989.de');
+    assert.equal(calls[0][0], 'thunderbird-pdf@felicitas-wisdom.com');
     assert.equal(calls[0][1].messageId, 42);
     assert.equal(calls[0][1].protocolVersion, 1);
     assert.equal(calls[0][1].type, 'thunderbird-pdf-archiver:open-review');

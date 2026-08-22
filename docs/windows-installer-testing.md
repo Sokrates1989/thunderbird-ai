@@ -1,7 +1,7 @@
 # Windows-Installer testen
 
 Das primäre Windows-Artefakt heißt
-`Thunderbird-AI-Setup-2.17.1-win-x64.exe`. Es installiert das Add-on nur für den
+`Thunderbird-AI-Setup-3.0.0-win-x64.exe`. Es installiert das Add-on nur für den
 aktuellen Benutzer und benötigt keine Administratorrechte.
 
 ## Automatisierter Isolationstest
@@ -24,7 +24,7 @@ beendet oder gestartet.
 ## Manueller Abnahmetest
 
 1. Offene Entwürfe speichern und den Installer ohne Administratorrechte starten.
-2. Im Sprachdialog **Deutsch** wählen und die Erklärung zum kontrollierten Thunderbird-Neustart bestätigen.
+2. Im Sprachdialog **Deutsch** wählen, die GPL-Lizenzseite bestätigen und die Erklärung zum kontrollierten Thunderbird-Neustart bestätigen. Ohne Lizenzbestätigung darf Setup nicht fortfahren.
 3. Prüfen, dass Thunderbird normal beendet und anschließend wieder gestartet
    wird. Der Installer darf den Prozess niemals erzwingen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung des seitlich
@@ -32,7 +32,7 @@ beendet oder gestartet.
 5. Prüfen, dass **Thunderbird AI Assistant** unter Add-ons erscheint und die
    vorhandenen API-Einstellungen erhalten geblieben sind.
 6. Eine E-Mail öffnen, die Zusammenfassung ausführen und den API-Test in den
-   Einstellungen aufrufen. Im Einzelmail-Popup muss **Version 2.17.1** stehen und die Oberfläche muss deutsch sein.
+   Einstellungen aufrufen. Im Einzelmail-Popup muss **Version 3.0.0** stehen und die Oberfläche muss deutsch sein.
 7. In den Einstellungen **English** wählen und speichern. Popup, Antworteditor und Hilfe müssen anschließend englisch erscheinen; nach einem Thunderbird-Neustart muss die Auswahl erhalten bleiben.
 8. Den Installer erneut auf Englisch ausführen und kontrollieren, dass das Update ohne
    vorherige Deinstallation funktioniert.

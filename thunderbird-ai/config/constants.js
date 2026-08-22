@@ -2,8 +2,8 @@
 
 const CONFIG = {
     ADDON_NAME: 'Thunderbird AI Assistant',
-    ADDON_VERSION: '2.17.1',
-    ADDON_ID: 'thunderbird-ai@example.com',
+    ADDON_VERSION: '3.0.0',
+    ADDON_ID: 'thunderbird-ai@felicitas-wisdom.com',
 
     OPENAI: {
         BASE_URL: 'https://api.openai.com/v1',
@@ -167,6 +167,7 @@ const CONFIG = {
         DASHBOARD_LAUNCH_DIAGNOSTIC: 'dashboardLaunchDiagnostic',
         BACKGROUND_HEALTH_DIAGNOSTIC: 'backgroundHealthDiagnostic',
         DASHBOARD_TAB_CLEANUP_PENDING: 'dashboardTabCleanupPending',
+        DASHBOARD_INSTALL_EVENT: 'dashboardInstallEvent',
         RUNTIME_DIAGNOSTICS: 'runtimeDiagnostics',
         DASHBOARD_OPEN_MODE: 'dashboardOpenMode',
         SINGLE_MAIL_OPEN_MODE: 'singleMailOpenMode',
@@ -206,6 +207,7 @@ const CONFIG = {
         TEST_API: 'testApiConnection',
         GET_STATISTICS: 'getStatistics',
         GET_BACKGROUND_HEALTH: 'getBackgroundHealth',
+        PREPARE_RESTORED_DASHBOARD: 'prepareRestoredDashboard',
         TRANSLATE: 'translateMessage',
         EXTRACT_INFO: 'extractInfo',
         CHECK_SPAM: 'checkSpam',

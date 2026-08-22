@@ -89,7 +89,7 @@ $extensionId = [string]$sourceManifest.browser_specific_settings.gecko.id
 if ($version -notmatch '^\d+\.\d+\.\d+$') {
     throw "Manifest version '$version' is not a three-part semantic version."
 }
-if ($extensionId -ne 'thunderbird-ai@example.com') {
+if ($extensionId -ne 'thunderbird-ai@felicitas-wisdom.com') {
     throw "Manifest extension ID '$extensionId' does not match the installer update identity."
 }
 
@@ -156,5 +156,9 @@ if ($TestMode) {
     Write-Output (Join-Path $testOutput "Thunderbird-AI-Setup-$version-test.exe")
 }
 else {
-    Write-Output (Join-Path $repositoryRoot "artifacts\Thunderbird-AI-Setup-$version-win-x64.exe")
+    $versionedSetup = Join-Path $repositoryRoot "artifacts\Thunderbird-AI-Setup-$version-win-x64.exe"
+    $stableSetup = Join-Path $repositoryRoot 'artifacts\Thunderbird-AI-Setup-win-x64.exe'
+    Copy-Item -LiteralPath $versionedSetup -Destination $stableSetup -Force
+    Write-Output $versionedSetup
+    Write-Output $stableSetup
 }
