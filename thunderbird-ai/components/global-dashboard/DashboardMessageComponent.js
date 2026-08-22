@@ -8,6 +8,9 @@ const DashboardMessageComponent = class {
         this.onChat = options.onChat;
         this.onCorrectScores = options.onCorrectScores;
         this.onShowPreview = options.onShowPreview;
+        this.onExpandPreview = options.onExpandPreview;
+        this.onResetPreview = options.onResetPreview;
+        this.onHidePreview = options.onHidePreview;
         this.onOpenInTab = options.onOpenInTab;
         this.onMarkRead = options.onMarkRead;
         this.onExportPdf = options.onExportPdf;
@@ -36,12 +39,15 @@ const DashboardMessageComponent = class {
         if (message.aiAnalysis) {
             content.appendChild(this.analysisScores(message.aiAnalysis));
         }
-        if (options.previewVisible) {
-            content.appendChild(this.preview(message, options.previewLineCount));
-        }
         const selectionArea = document.createElement('label');
         selectionArea.className = 'dashboard-message-selection-area';
         selectionArea.append(checkbox, content);
+        const messageMain = document.createElement('div');
+        messageMain.className = 'dashboard-message-main';
+        messageMain.appendChild(selectionArea);
+        if (options.previewVisible) {
+            messageMain.appendChild(this.preview(message, subject, options));
+        }
         const actionGroups = this.actionGroups(message, subject, options);
         item.tabIndex = 0;
         item.setAttribute('aria-label', I18n.t('dashboardMessageContextLabel', { subject }));
@@ -53,7 +59,7 @@ const DashboardMessageComponent = class {
                 this.onContextMenu(event, actionGroups);
             }
         });
-        item.append(selectionArea, this.actionButtons(actionGroups));
+        item.append(messageMain, this.actionButtons(actionGroups));
         return item;
     }
 
@@ -123,20 +129,80 @@ const DashboardMessageComponent = class {
         return scores;
     }
 
-    /** Render a scrollable, line-bounded local body preview. */
-    preview(message, previewLineCount) {
-        const preview = this.textElement(
+    /** Render one independently resizable preview with direct reading controls. */
+    preview(message, subject, options) {
+        const panel = document.createElement('div');
+        panel.className = 'dashboard-message-preview-panel';
+        panel.setAttribute('role', 'group');
+        panel.setAttribute('aria-label', I18n.t('dashboardPreviewPanelLabel', { subject }));
+        const previewContent = this.textElement(
             'div',
             'dashboard-message-preview',
             message.previewFailed
                 ? I18n.t('dashboardPreviewUnavailable')
                 : message.preview || I18n.t('dashboardPreviewEmpty')
         );
-        preview.style.setProperty('--dashboard-preview-lines', String(previewLineCount));
+        previewContent.style.setProperty(
+            '--dashboard-preview-lines',
+            String(options.previewLineCount)
+        );
         if (message.previewFailed) {
-            preview.dataset.type = 'error';
+            previewContent.dataset.type = 'error';
         }
-        return preview;
+        const close = this.previewControl(
+            '×',
+            I18n.t('dashboardPreviewClose', { subject }),
+            () => this.onHidePreview(message),
+            'close'
+        );
+        const controls = document.createElement('div');
+        controls.className = 'dashboard-preview-controls';
+        if (options.previewCanReset) {
+            controls.appendChild(this.previewControl(
+                '−',
+                I18n.t('dashboardPreviewReset', {
+                    subject,
+                    lines: options.previewBaselineLineCount
+                }),
+                () => this.onResetPreview(message),
+                'reset'
+            ));
+        }
+        if (options.previewCanExpand && !message.previewFailed) {
+            controls.appendChild(this.previewControl(
+                '+',
+                I18n.t('dashboardPreviewExpand', {
+                    subject,
+                    lines: options.previewNextLineCount
+                }),
+                () => this.onExpandPreview(message),
+                'expand'
+            ));
+        }
+        controls.appendChild(this.previewControl(
+            '⛶',
+            I18n.t('dashboardOpenInTabMessage', { subject }),
+            () => this.onOpenInTab(message),
+            'open-tab'
+        ));
+        panel.append(previewContent, close, controls);
+        return panel;
+    }
+
+    /** Create an icon-only preview control with a complete accessible label. */
+    previewControl(icon, label, callback, type) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `dashboard-preview-control ${type}`;
+        button.setAttribute('aria-label', label);
+        button.title = label;
+        button.textContent = icon;
+        button.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            callback();
+        });
+        return button;
     }
 
     /** Define the shared row and right-click actions in their visible column order. */

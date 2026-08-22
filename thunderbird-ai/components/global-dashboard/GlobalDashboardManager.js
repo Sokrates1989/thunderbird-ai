@@ -35,7 +35,6 @@ const GlobalDashboardManager = class {
         this.availableSenders = [];
         this.selectedSenderKeys = null;
         this.selectedMessageIds = new Set();
-        this.expandedPreviewMessageIds = new Set();
         this.displayOptionsExpanded = true;
         this.previewEnabled = false;
         this.previewLineCount = 3;
@@ -86,6 +85,14 @@ const GlobalDashboardManager = class {
             onStyleChanged: style => this.handleContextMenuStyleChange(style),
             onError: error => this.showUnexpectedError(error)
         });
+        this.previewController = new DashboardPreviewController({
+            getBaselineLines: () => this.previewLineCount,
+            isGlobalEnabled: () => this.previewEnabled,
+            loadPreview: message => GlobalMailService.loadPreview(message),
+            render: () => this.render(this.accounts),
+            setBusy: (busy, message) => this.setBusy(busy, message),
+            setStatus: (message, type) => this.setStatus(message, type)
+        });
         this.messageComponent = new DashboardMessageComponent({
             formatDate: value => this.formatDate(value),
             onSelectionChanged: (messageId, selected) => this.handleMessageSelection(messageId, selected),
@@ -103,9 +110,12 @@ const GlobalDashboardManager = class {
             },
             onCorrectScores: message => this.feedbackComponent.open(message),
             onShowPreview: message => {
-                this.showPreviewForMessage(message)
+                this.previewController.show(message)
                     .catch(error => this.showUnexpectedError(error));
             },
+            onExpandPreview: message => this.previewController.expand(message),
+            onResetPreview: message => this.previewController.reset(message),
+            onHidePreview: message => this.previewController.hide(message),
             onOpenInTab: message => {
                 this.openMessageInTab(message)
                     .catch(error => this.showMessageOpenError(error));
@@ -269,6 +279,7 @@ const GlobalDashboardManager = class {
     /** Persist preview visibility and load bodies only for the current visible slice. */
     async handlePreviewToggle() {
         this.previewEnabled = this.elements.showPreview.checked;
+        this.previewController.setGlobalEnabled(this.previewEnabled);
         this.applyPreferenceControls();
         await this.savePreferences();
         if (!this.previewEnabled) {
@@ -420,11 +431,11 @@ const GlobalDashboardManager = class {
         if (this.previewEnabled) {
             this.setStatus(I18n.t('dashboardPreviewsLoading'));
             await GlobalMailService.loadPreviews(this.accounts);
-        } else if (this.expandedPreviewMessageIds.size) {
-            const expandedMessages = this.allMessages().filter(message => (
-                this.expandedPreviewMessageIds.has(message.id)
-            ));
-            await GlobalMailService.loadPreviews([{ messages: expandedMessages }]);
+        } else {
+            const expandedMessages = this.previewController.expandedMessages(this.allMessages());
+            if (expandedMessages.length) {
+                await GlobalMailService.loadPreviews([{ messages: expandedMessages }]);
+            }
         }
         this.render(this.accounts);
         this.showLoadedStatus();
@@ -502,13 +513,10 @@ const GlobalDashboardManager = class {
 
     /** Delegate one message row while retaining dashboard state ownership. */
     renderMessage(message) {
-        const previewVisible = this.previewEnabled
-            || this.expandedPreviewMessageIds.has(message.id);
         return this.messageComponent.render(message, {
             selected: this.selectedMessageIds.has(message.id),
             busy: this.busy,
-            previewVisible,
-            previewLineCount: this.previewLineCount,
+            ...this.previewController.optionsFor(message),
             showAccount: this.accounts.length === 1 && this.accounts[0].combined === true
         });
     }
@@ -638,25 +646,6 @@ const GlobalDashboardManager = class {
     /** Open the existing single-message summary or reply workspace. */
     async openMessageWorkspace(message, mode) {
         await DashboardAIService.openWorkspace(message.id, mode);
-    }
-
-    /** Load and reveal only the explicitly targeted message body in this dashboard. */
-    async showPreviewForMessage(message) {
-        if (this.previewEnabled || this.expandedPreviewMessageIds.has(message.id)) {
-            return;
-        }
-        this.setBusy(true, I18n.t('dashboardPreviewOneLoading'));
-        try {
-            const loaded = await GlobalMailService.loadPreview(message);
-            this.expandedPreviewMessageIds.add(message.id);
-            this.render(this.accounts);
-            this.setStatus(
-                I18n.t(loaded ? 'dashboardPreviewOneLoaded' : 'dashboardPreviewOneFailed'),
-                loaded ? 'success' : 'warning'
-            );
-        } finally {
-            this.setBusy(false);
-        }
     }
 
     /** Open the directly targeted Thunderbird message in its own active tab. */
@@ -925,7 +914,7 @@ const GlobalDashboardManager = class {
         const selected = this.selectedMessageIds.size;
         this.bulkActionsComponent.update({ busy: this.busy, total, selected });
         for (const element of this.elements.accounts.querySelectorAll(
-            '.dashboard-message-select, .dashboard-message-action'
+            '.dashboard-message-select, .dashboard-message-action, .dashboard-preview-control'
         )) {
             element.disabled = this.busy;
         }

@@ -1097,6 +1097,10 @@ body.dashboard-expanded-view {
     background: #eaf1f6;
 }
 
+.dashboard-message-main {
+    min-width: 0;
+}
+
 .dashboard-message:focus-visible {
     outline: 3px solid #4c9ed9;
     outline-offset: 2px;
@@ -1171,13 +1175,19 @@ body.dashboard-expanded-view {
     color: #5d666d;
 }
 
-.dashboard-message-preview {
-    max-height: calc(var(--dashboard-preview-lines, 3) * 1.35em);
-    margin-top: 7px;
-    padding: 6px 7px;
-    overflow-y: auto;
+.dashboard-message-preview-panel {
+    position: relative;
+    margin: 7px 0 0 26px;
+    padding: 6px 6px 4px;
     border-left: 2px solid #aab4bd;
     background: #fff;
+}
+
+.dashboard-message-preview {
+    max-height: calc(var(--dashboard-preview-lines, 3) * 1.35em);
+    margin-right: 24px;
+    padding: 0 2px;
+    overflow-y: auto;
     font-size: 11px;
     line-height: 1.35;
     overflow-wrap: anywhere;
@@ -1186,6 +1196,53 @@ body.dashboard-expanded-view {
 
 .dashboard-message-preview[data-type="error"] {
     color: #b42318;
+}
+
+.dashboard-preview-controls {
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end;
+    padding-top: 4px;
+}
+
+.dashboard-preview-control {
+    display: grid;
+    width: 24px;
+    height: 22px;
+    padding: 0;
+    place-items: center;
+    border: 1px solid #aab4bd;
+    border-radius: 4px;
+    background: #f5f7f9;
+    color: #3e4850;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.dashboard-preview-control.close {
+    position: absolute;
+    top: 3px;
+    right: 4px;
+}
+
+.dashboard-preview-control:hover,
+.dashboard-preview-control:focus-visible {
+    border-color: #087cc1;
+    outline: 0;
+    background: #e8f4fc;
+    color: #075985;
+}
+
+.dashboard-preview-control:focus-visible {
+    outline: 2px solid #4c9ed9;
+    outline-offset: 1px;
+}
+
+.dashboard-preview-control:disabled {
+    cursor: default;
+    opacity: 0.5;
 }
 
 .dashboard-message-actions {
@@ -1322,8 +1379,20 @@ body.dashboard-expanded-view {
         border-color: #4a4d51;
     }
 
-    .dashboard-message-preview {
+    .dashboard-message-preview-panel {
         background: #252629;
+    }
+
+    .dashboard-preview-control {
+        border-color: #62666b;
+        background: #303134;
+        color: #f1f3f4;
+    }
+
+    .dashboard-preview-control:hover,
+    .dashboard-preview-control:focus-visible {
+        background: #17394c;
+        color: #a9dcf8;
     }
 
     .dashboard-sender-filter summary,

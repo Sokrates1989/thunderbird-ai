@@ -121,6 +121,17 @@ function loadMessageComponent() {
     return context.DashboardMessageComponent;
 }
 
+function loadPreviewController() {
+    const context = createContext({
+        I18n: { t: (key, replacements = {}) => `${key}:${JSON.stringify(replacements)}` }
+    });
+    loadScript(
+        context,
+        'thunderbird-ai/components/global-dashboard/DashboardPreviewController.js'
+    );
+    return context.DashboardPreviewController;
+}
+
 function loadMessageContextMenuComponent() {
     const context = createContext({ I18n: { t: key => key } });
     loadScript(
@@ -549,6 +560,9 @@ test('message actions expose three groups and hide only an already visible previ
         onChat: () => calls.push('chat'),
         onCorrectScores: () => calls.push('correct'),
         onShowPreview: () => calls.push('preview'),
+        onExpandPreview: () => calls.push('expand-preview'),
+        onResetPreview: () => calls.push('reset-preview'),
+        onHidePreview: () => calls.push('hide-preview'),
         onOpenInTab: () => calls.push('open'),
         onMarkRead: () => calls.push('read'),
         onExportPdf: () => calls.push('pdf'),
@@ -965,38 +979,69 @@ test('one dashboard preview loads only its targeted message', async () => {
     assert.equal(target.previewFailed, false);
 });
 
-test('one-click preview reveal is session-local and ignores repeated requests', async () => {
+test('one preview grows by two lines, resets, closes, and reopens without another load', async () => {
     const calls = [];
-    const DashboardManager = loadDashboardManager({
+    const PreviewController = loadPreviewController();
+    const target = message(7, 7);
+    const busyStates = [];
+    const statuses = [];
+    let baselineLines = 3;
+    let globalEnabled = false;
+    let renderCount = 0;
+    const controller = new PreviewController({
+        getBaselineLines: () => baselineLines,
+        isGlobalEnabled: () => globalEnabled,
         loadPreview: async mail => {
             calls.push(mail.id);
             mail.preview = 'Local body';
             return true;
-        }
+        },
+        render: () => { renderCount += 1; },
+        setBusy: busy => busyStates.push(busy),
+        setStatus: (text, type) => statuses.push([text, type])
     });
-    const manager = Object.create(DashboardManager.prototype);
-    const target = message(7, 7);
-    const busyStates = [];
-    const statuses = [];
-    let renderCount = 0;
-    manager.previewEnabled = false;
-    manager.expandedPreviewMessageIds = new Set();
-    manager.accounts = [{ messages: [target] }];
-    manager.setBusy = busy => busyStates.push(busy);
-    manager.render = () => { renderCount += 1; };
-    manager.setStatus = (text, type) => statuses.push([text, type]);
 
-    await manager.showPreviewForMessage(target);
-    await manager.showPreviewForMessage(target);
+    assert.deepEqual({ ...controller.optionsFor(target) }, {
+        previewVisible: false,
+        previewLineCount: 3,
+        previewBaselineLineCount: 3,
+        previewNextLineCount: 5,
+        previewCanExpand: false,
+        previewCanReset: false
+    });
+    await controller.show(target);
+    await controller.show(target);
+    controller.expand(target);
+    controller.expand(target);
 
+    assert.equal(controller.optionsFor(target).previewLineCount, 7);
+    assert.equal(controller.optionsFor(target).previewCanReset, true);
+    controller.reset(target);
+    assert.equal(controller.optionsFor(target).previewLineCount, 3);
+    assert.equal(controller.optionsFor(target).previewCanReset, false);
+
+    for (let index = 0; index < 20; index += 1) {
+        controller.expand(target);
+    }
+    assert.equal(controller.optionsFor(target).previewLineCount, 20);
+    assert.equal(controller.optionsFor(target).previewCanExpand, false);
+    controller.hide(target);
+    assert.equal(controller.optionsFor(target).previewVisible, false);
+    assert.equal(controller.optionsFor(target).previewLineCount, 3);
+
+    await controller.show(target);
     assert.deepEqual(calls, [7]);
-    assert.deepEqual([...manager.expandedPreviewMessageIds], [7]);
-    assert.equal(renderCount, 1);
-    assert.deepEqual(busyStates, [true, false]);
-    assert.deepEqual(statuses, [[
-        'dashboardPreviewOneLoaded:{}',
-        'success'
-    ]]);
+    controller.hide(target);
+    globalEnabled = true;
+    controller.setGlobalEnabled(true);
+    assert.equal(controller.optionsFor(target).previewVisible, true);
+    baselineLines = 5;
+    assert.equal(controller.optionsFor(target).previewLineCount, 5);
+
+    assert.ok(renderCount >= 8);
+    assert.deepEqual(busyStates, [true, false, true, false]);
+    assert.equal(statuses.length, 2);
+    assert.deepEqual(statuses[0], ['dashboardPreviewOneLoaded:{}', 'success']);
 });
 
 test('dashboard opens a directly targeted message in a new active Thunderbird tab', async () => {
@@ -1379,6 +1424,13 @@ test('manifest routes both toolbar actions through the wake-safe background serv
         ),
         'utf8'
     );
+    const previewController = fs.readFileSync(
+        path.join(
+            repositoryRoot,
+            'thunderbird-ai/components/global-dashboard/DashboardPreviewController.js'
+        ),
+        'utf8'
+    );
     const bulkActionsComponent = fs.readFileSync(
         path.join(
             repositoryRoot,
@@ -1475,7 +1527,10 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.match(dashboard, /SingleMailWorkspaceService\.js/u);
     assert.match(dashboard, /DashboardMessageComponent\.js/u);
     assert.match(dashboard, /DashboardMessageContextMenuComponent\.js/u);
+    assert.match(dashboard, /DashboardPreviewController\.js/u);
     assert.ok(dashboard.indexOf('DashboardMessageContextMenuComponent.js')
+        < dashboard.indexOf('GlobalDashboardManager.js'));
+    assert.ok(dashboard.indexOf('DashboardPreviewController.js')
         < dashboard.indexOf('GlobalDashboardManager.js'));
     assert.match(dashboard, /dashboard-context-menu\.css/u);
     assert.match(dashboard, /ScoreFeedbackEditor\.js/u);
@@ -1537,6 +1592,11 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.match(messageComponent, /dashboardReadActionsGroup/u);
     assert.match(messageComponent, /dashboardShowPreviewOne/u);
     assert.match(messageComponent, /dashboardOpenInTabOne/u);
+    assert.match(messageComponent, /dashboardPreviewExpand/u);
+    assert.match(messageComponent, /dashboardPreviewReset/u);
+    assert.match(messageComponent, /dashboardPreviewClose/u);
+    assert.match(previewController, /LINE_STEP = 2/u);
+    assert.match(previewController, /MAX_LINES = 20/u);
     assert.match(messageComponent, /dashboardArchiveOne/u);
     assert.match(messageComponent, /dashboardExportPdfOne/u);
     assert.match(messageComponent, /dashboardChatOne/u);
@@ -1551,10 +1611,12 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.match(contextMenuStyles, /\.dashboard-message-context-menu/u);
     assert.match(contextMenuStyles, /\.dashboard-context-menu-content/u);
     assert.match(contextMenuStyles, /\.dashboard-context-submenu/u);
+    assert.match(dashboardStyles, /\.dashboard-preview-controls/u);
+    assert.match(dashboardStyles, /\.dashboard-preview-control\.close/u);
     assert.match(bulkActionsComponent, /this\.hosts\.map\(host => this\.renderInto\(host\)\)/u);
     assert.match(
         messageComponent,
-        /createElement\('label'\)[\s\S]*dashboard-message-selection-area[\s\S]*selectionArea\.append\(checkbox, content\)[\s\S]*item\.append\(selectionArea,/u
+        /createElement\('label'\)[\s\S]*dashboard-message-selection-area[\s\S]*selectionArea\.append\(checkbox, content\)[\s\S]*dashboard-message-main[\s\S]*messageMain\.appendChild\(selectionArea\)[\s\S]*item\.append\(messageMain,/u
     );
     assert.match(
         dashboardStyles,
