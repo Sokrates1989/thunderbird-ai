@@ -13,7 +13,7 @@ const DashboardMessageContextMenuComponent = class {
         this.origin = null;
         this.currentStyle = 'headings';
         this.boundOutsidePointer = event => this.handleOutsidePointer(event);
-        this.boundWindowChange = () => this.close();
+        this.boundWindowResize = () => this.close();
     }
 
     /** Normalize persisted values to the faster direct-action layout. */
@@ -39,17 +39,20 @@ const DashboardMessageContextMenuComponent = class {
         menu.setAttribute('role', 'menu');
         menu.setAttribute('aria-label', I18n.t('dashboardContextMenuLabel'));
         menu.addEventListener('keydown', keyEvent => this.handleKeydown(keyEvent));
+        const content = document.createElement('div');
+        content.className = 'dashboard-context-menu-content';
 
         if (this.currentStyle === 'submenus') {
             for (const group of visibleGroups) {
-                menu.appendChild(this.submenuGroup(group));
+                content.appendChild(this.submenuGroup(group));
             }
         } else {
             for (const group of visibleGroups) {
-                menu.appendChild(this.headingGroup(group));
+                content.appendChild(this.headingGroup(group));
             }
         }
         menu.append(
+            content,
             this.separator(),
             this.layoutSubmenu()
         );
@@ -219,6 +222,14 @@ const DashboardMessageContextMenuComponent = class {
                 'opens-left',
                 parentBounds.right + submenu.offsetWidth > window.innerWidth - 8
             );
+            const stacksVertically = window.matchMedia('(max-width: 430px)').matches;
+            const submenuTop = stacksVertically
+                ? parentBounds.bottom + 4
+                : parentBounds.top;
+            parent.classList.toggle(
+                'opens-up',
+                submenuTop + submenu.offsetHeight > window.innerHeight - 8
+            );
         }
     }
 
@@ -313,8 +324,7 @@ const DashboardMessageContextMenuComponent = class {
     /** Dismiss the menu when interaction leaves it or its viewport changes. */
     bindDismissalListeners() {
         document.addEventListener('pointerdown', this.boundOutsidePointer, true);
-        window.addEventListener('resize', this.boundWindowChange);
-        window.addEventListener('scroll', this.boundWindowChange, true);
+        window.addEventListener('resize', this.boundWindowResize);
     }
 
     handleOutsidePointer(event) {
@@ -326,8 +336,7 @@ const DashboardMessageContextMenuComponent = class {
     /** Remove the transient menu and optionally return keyboard focus to its row. */
     close(restoreFocus = false) {
         document.removeEventListener('pointerdown', this.boundOutsidePointer, true);
-        window.removeEventListener('resize', this.boundWindowChange);
-        window.removeEventListener('scroll', this.boundWindowChange, true);
+        window.removeEventListener('resize', this.boundWindowResize);
         this.menu?.remove();
         this.menu = null;
         if (restoreFocus) {

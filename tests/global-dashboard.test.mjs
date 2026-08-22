@@ -1547,7 +1547,9 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.match(messageContextMenuComponent, /dashboardContextMenuLayout/u);
     assert.match(messageContextMenuComponent, /role', 'menuitemradio'/u);
     assert.match(messageContextMenuComponent, /setSubmenuOpen/u);
+    assert.doesNotMatch(messageContextMenuComponent, /addEventListener\('scroll'/u);
     assert.match(contextMenuStyles, /\.dashboard-message-context-menu/u);
+    assert.match(contextMenuStyles, /\.dashboard-context-menu-content/u);
     assert.match(contextMenuStyles, /\.dashboard-context-submenu/u);
     assert.match(bulkActionsComponent, /this\.hosts\.map\(host => this\.renderInto\(host\)\)/u);
     assert.match(
