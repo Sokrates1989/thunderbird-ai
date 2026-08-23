@@ -38,6 +38,11 @@ test('release workflow publishes complete stable aliases with checksums', () => 
     assert.match(workflow, /gh release edit "\$TAG" --draft=false --latest/u);
 });
 
+test('GitHub CLI release commands receive explicit repository context', () => {
+    const explicitRepositoryContexts = workflow.match(/GH_REPO: \$\{\{ github\.repository \}\}/gu) ?? [];
+    assert.equal(explicitRepositoryContexts.length, 2);
+});
+
 test('official GitHub actions are pinned to full commit hashes', () => {
     const actionReferences = [...workflow.matchAll(/uses: actions\/[a-z-]+@([^\s]+)/gu)];
     assert.ok(actionReferences.length >= 4);
