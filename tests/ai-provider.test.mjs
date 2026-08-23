@@ -80,7 +80,7 @@ test('Claude uses Anthropic Messages headers, payload, text, and usage fields', 
     });
 });
 
-test('Mistral and DeepSeek use the OpenAI-compatible chat contract', () => {
+test('Mistral and DeepSeek use compatible chat requests with bounded DeepSeek output', () => {
     const { service } = loadProviderService();
     const expectedEndpoints = {
         mistral: 'https://api.mistral.ai/v1/chat/completions',
@@ -101,6 +101,13 @@ test('Mistral and DeepSeek use the OpenAI-compatible chat contract', () => {
             { role: 'system', content: 'System rules' },
             { role: 'user', content: 'Email data' }
         ]);
+        if (provider === 'deepseek') {
+            assert.deepEqual(JSON.parse(JSON.stringify(request.body.thinking)), {
+                type: 'disabled'
+            });
+        } else {
+            assert.equal(request.body.thinking, undefined);
+        }
         assert.equal(parsed.content, `${provider} result`);
         assert.equal(parsed.usage.input_tokens, 7);
         assert.equal(parsed.usage.output_tokens, 3);

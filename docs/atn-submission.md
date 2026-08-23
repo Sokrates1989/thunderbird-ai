@@ -1,7 +1,7 @@
 # Thunderbird Add-ons submission sheet
 
 This document contains copy-ready listing and reviewer information for the
-first public submission of AI Mail Assistant for Thunderbird 3.1.0. Keep the
+first public submission of AI Mail Assistant for Thunderbird 3.1.1. Keep the
 listing synchronized with `PRIVACY.md` whenever providers or data categories
 change.
 
@@ -15,7 +15,7 @@ Official references:
 
 - Name: `AI Mail Assistant for Thunderbird`
 - Extension ID: `thunderbird-ai@felicitas-wisdom.com`
-- Version: `3.1.0`
+- Version: `3.1.1`
 - Minimum Thunderbird: `128.0`
 - Recommended primary category: `Message and News Reading`
 - Recommended secondary category, if available: `Message Composition`
@@ -141,8 +141,8 @@ above already contains the required short data-collection summary.
 
 ## Reviewer notes
 
-1. Upload `artifacts/thunderbird-ai-3.1.0.xpi` as the listed extension.
-2. Attach `artifacts/thunderbird-ai-3.1.0-atn-source.zip` as source code.
+1. Upload `artifacts/thunderbird-ai-3.1.1.xpi` as the listed extension.
+2. Attach `artifacts/thunderbird-ai-3.1.1-atn-source.zip` as source code.
 3. The source archive contains `ATN_SOURCE_BUILD.md` with a no-network XPI build.
 4. Test on Thunderbird 128 or newer with a synthetic email account and synthetic
    messages only.

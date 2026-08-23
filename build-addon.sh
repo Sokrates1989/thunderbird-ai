@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Builds the flattened Thunderbird AI XPI on macOS.
+# Builds the flattened Thunderbird AI XPI on Linux or macOS.
 #
 set -euo pipefail
 
@@ -152,4 +152,4 @@ process.stdin.on("end", () => {
 });
 ' "${version}" "${extension_id}"
 
-printf 'Created %s (%s bytes).\n' "${output_path}" "$(stat -f '%z' "${output_path}")"
+printf 'Created %s (%s bytes).\n' "${output_path}" "$(stat -f '%z' "${output_path}" 2>/dev/null || stat -c '%s' "${output_path}")"

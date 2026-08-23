@@ -163,6 +163,11 @@ const AIProviderService = {
                 ],
                 max_tokens: profile.maxOutputTokens
             };
+            if (configuration.provider === 'deepseek') {
+                // DeepSeek V4 defaults to thinking mode, which can consume a bounded
+                // output budget before the content-only contract receives an answer.
+                body.thinking = { type: 'disabled' };
+            }
         }
         return { endpoint, headers, body };
     },

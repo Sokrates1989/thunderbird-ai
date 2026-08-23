@@ -6,19 +6,23 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 
 - [Aktuelle Veröffentlichung](https://github.com/Sokrates1989/thunderbird-ai/releases/latest)
 - [Installer- und Versionshistorie](https://github.com/Sokrates1989/thunderbird-ai/releases)
+- [Aktuelles XPI](https://github.com/Sokrates1989/thunderbird-ai/releases/latest/download/thunderbird-ai.xpi)
 - [Aktueller macOS-Installer](https://github.com/Sokrates1989/thunderbird-ai/releases/latest/download/Thunderbird-AI-Setup-macos.pkg)
 - [Aktueller Windows-Installer](https://github.com/Sokrates1989/thunderbird-ai/releases/latest/download/Thunderbird-AI-Setup-win-x64.exe)
+- [SHA-256-Prüfsummen](https://github.com/Sokrates1989/thunderbird-ai/releases/latest/download/SHA256SUMS.txt)
 
 Die stabilen Downloadnamen zeigen immer auf die aktuelle GitHub-Veröffentlichung. Jede Veröffentlichung behält zusätzlich versionierte Installer und SHA-256-Prüfsummen für eine nachvollziehbare Historie.
 
-## Umfang von Release 3.1.0
+## Umfang von Release 3.1.1
 
-Release 3.1.0 ergänzt eine Anbieterauswahl für OpenAI, Claude (Anthropic),
-Mistral, DeepSeek und individuell betriebene OpenAI- oder
-Anthropic-kompatible Endpunkte. OpenAI bleibt der Standard und vorhandene
-OpenAI-Schlüssel sowie Modellwahlen werden automatisch übernommen. Der Zugriff
-auf einen individuellen Endpunkt wird erst beim Speichern oder Testen für
-dessen exakten Host bei Thunderbird angefordert.
+Release 3.1.1 behebt leere DeepSeek-Antworten, indem der bei DeepSeek V4
+standardmäßig aktive Denkmodus für die inhaltsorientierten Add-on-Aufgaben
+ausdrücklich ausgeschaltet wird. Dadurch bleibt das knappe Ausgabelimit des
+Verbindungstests für die sichtbare Antwort verfügbar. Die seit 3.1.0 vorhandene
+Anbieterauswahl für OpenAI, Claude (Anthropic), Mistral, DeepSeek und
+individuelle kompatible Endpunkte bleibt unverändert. Neu ist außerdem eine
+vollständige GitHub-Veröffentlichung mit nativen Windows- und macOS-Builds bei
+jeder neuen Manifest-Version.
 
 ## Funktionen
 
@@ -63,6 +67,10 @@ ist ein separater Anthropic API-Schlüssel erforderlich; eine Anmeldung oder ein
 Abonnement in der Claude-App beziehungsweise in Claude Code kann nicht als
 API-Zugang des Add-ons wiederverwendet werden.
 
+DeepSeek V4 aktiviert seinen Denkmodus standardmäßig. Das Add-on setzt ihn
+explizit auf `disabled`, weil die vorhandenen E-Mail-Funktionen nur den finalen
+Text verarbeiten und begrenzte Ausgabelimits verwenden.
+
 Individuelle Endpunkte können eines der drei unterstützten JSON-Protokolle und
 Bearer-, `x-api-key`- oder keine Authentifizierung verwenden. Entfernte
 Endpunkte müssen HTTPS verwenden; HTTP ist nur für `localhost` und `127.0.0.1`
@@ -106,7 +114,7 @@ Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speic
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-3.1.0-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-3.1.1-win-x64.exe` herunterladen und starten.
 2. Im Setup **Deutsch** oder **English** wählen und die GNU General Public License bestätigen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung und zu den Berechtigungen zum Ändern, Verschieben und Löschen von Nachrichten bestätigen.
@@ -119,7 +127,7 @@ Version 1.5.1 korrigiert die in 1.3.0 bis 1.5.0 fehlerhaft gepackten Lokalisieru
 ## Installation unter macOS
 
 1. Thunderbird mindestens einmal starten, damit ein Profil angelegt ist.
-2. `Thunderbird-AI-Setup-3.1.0-macos.pkg` öffnen.
+2. `Thunderbird-AI-Setup-3.1.1-macos.pkg` öffnen.
 3. Die GNU General Public License bestätigen, offene Thunderbird-Entwürfe speichern und die Installation fortsetzen. Das macOS-Installationsprogramm fordert Thunderbird zum normalen Beenden auf und beendet es niemals erzwungen.
 4. Nach erfolgreicher Installation öffnet das Setup Thunderbird automatisch. Eine mögliche einmalige Rückfrage zur Aktivierung und zu den Berechtigungen zum Ändern, Verschieben und Löschen von Nachrichten bestätigen.
 5. Unter **Einstellungen** den AI-Anbieter auswählen, dessen API-Schlüssel eintragen, die aufgabenspezifischen Modelle prüfen, die Verbindung testen und speichern.
@@ -150,8 +158,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-3.1.0-win-x64.exe`
-- `artifacts/Thunderbird-AI-Setup-3.1.0-macos.pkg`
+- `artifacts\Thunderbird-AI-Setup-3.1.1-win-x64.exe`
+- `artifacts/Thunderbird-AI-Setup-3.1.1-macos.pkg`
 
 Unter macOS werden XPI und Installer vom Repository-Stamm aus gebaut und isoliert geprüft:
 
@@ -173,6 +181,28 @@ Reviewer-Testschritte stehen in [ATN_SOURCE_BUILD.md](ATN_SOURCE_BUILD.md) und i
 [Thunderbird-Add-ons-Einreichungsblatt](docs/atn-submission.md).
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
+
+## Automatische Windows- und macOS-Veröffentlichung
+
+Ein Push auf `main` im offiziellen Repository startet den
+[Release-Workflow](.github/workflows/release.yml). Nur wenn die Version aus
+`thunderbird-ai/manifest.json` noch keine veröffentlichte GitHub Release besitzt,
+werden alle Tests und Builds ausgeführt:
+
+- Ubuntu baut und testet das XPI sowie das Reviewer-Quellarchiv.
+- Ein nativer macOS-Runner baut und prüft das `.pkg`.
+- Ein nativer Windows-Runner baut und prüft das Inno-Setup-`.exe`.
+- Erst nach allen erfolgreichen Jobs werden der Tag `v<Version>`, die als
+  **Latest** markierte GitHub Release, versionierte Dateien, stabile
+  Download-Aliase und SHA-256-Prüfsummen gemeinsam veröffentlicht.
+
+Damit ist kein plattformfremder lokaler Cross-Build und nach der Einrichtung
+kein manueller Schritt in der GitHub-Oberfläche erforderlich. GitHub Actions
+muss für das Repository aktiviert sein; eine Organisationsrichtlinie darf die
+im Workflow auf den abschließenden Job begrenzte Berechtigung `contents: write`
+nicht blockieren. Der Push einer neuen Manifest-Version ist bewusst zugleich
+die externe Veröffentlichungsfreigabe. Pushes mit unveränderter Version,
+Pull Requests und Forks veröffentlichen nichts.
 
 ## Manueller Funktionstest
 
@@ -205,7 +235,7 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 26. **Werte korrigieren** ausführen. Das Einzelmail-Popup darf keine schnellen Schaltflächen für **Kategorisieren**, **Wichtigkeit prüfen** oder **API testen** mehr zeigen. Terra muss standardmäßig neue Wichtigkeits-, Spam- und Risikowerte liefern. Alle drei Werte ändern, getrennte Gründe auswählen, je einen Freitext eingeben und die Referenz speichern. Beim erneuten Scoring derselben E-Mail müssen die archivierten Werte und Gründe vorausgewählt und für die neue Bewertung berücksichtigt werden.
 27. **Ähnliche finden** prüfen; diese Aktion benötigt keinen externen AI-Aufruf.
 28. Beide **AI Chat**-Schaltflächen testen, Ergebnisse kopieren und lokal speichern.
-29. Unter **Einstellungen** nacheinander OpenAI, Claude, Mistral, DeepSeek und **Individueller Endpunkt** auswählen. Die integrierten Endpunkt-URLs müssen schreibgeschützt sein, Anbieterwechsel müssen noch nicht gespeicherte Schlüssel und Modelle getrennt behalten und OpenAI muss bei einer bestehenden Installation die bisherigen Werte übernehmen. Für den individuellen Endpunkt HTTPS beziehungsweise einen localhost-Testdienst, Protokoll und Authentifizierung eintragen; beim Testen muss Thunderbird nur Zugriff auf dessen exakten Host anfordern. Danach die Modellauswahl für Bulk, Einzelmail-Scoring, Zusammenfassen, Antwortvorschlag, AI Chat und jede weitere AI-Funktion prüfen. Jede Bezeichnung und das zugehörige Eingabefeld müssen unmittelbar zusammen in einer eigenen klar abgegrenzten Karte stehen; **Automatisch** muss je Anbieter die passende schnelle, ausgewogene oder qualitätsorientierte Vorgabe verwenden und jede Modell-ID muss sich unabhängig ändern und speichern lassen.
+29. Unter **Einstellungen** nacheinander OpenAI, Claude, Mistral, DeepSeek und **Individueller Endpunkt** auswählen. Die integrierten Endpunkt-URLs müssen schreibgeschützt sein, Anbieterwechsel müssen noch nicht gespeicherte Schlüssel und Modelle getrennt behalten und OpenAI muss bei einer bestehenden Installation die bisherigen Werte übernehmen. Mit einem DeepSeek-Testschlüssel muss **API-Verbindung testen** sichtbaren Antworttext statt einer Leerausgabe liefern. Für den individuellen Endpunkt HTTPS beziehungsweise einen localhost-Testdienst, Protokoll und Authentifizierung eintragen; beim Testen muss Thunderbird nur Zugriff auf dessen exakten Host anfordern. Danach die Modellauswahl für Bulk, Einzelmail-Scoring, Zusammenfassen, Antwortvorschlag, AI Chat und jede weitere AI-Funktion prüfen. Jede Bezeichnung und das zugehörige Eingabefeld müssen unmittelbar zusammen in einer eigenen klar abgegrenzten Karte stehen; **Automatisch** muss je Anbieter die passende schnelle, ausgewogene oder qualitätsorientierte Vorgabe verwenden und jede Modell-ID muss sich unabhängig ändern und speichern lassen.
 30. Im **Archiv der Scoring-Referenzen** die gespeicherte Testmail öffnen, alle drei Werte und getrennten Gründe prüfen, manuell neu bewerten und speichern. Eine vor Version 2.6.0 gespeicherte Referenz muss mit leerem Risikofeld lesbar bleiben und sich nach Eingabe des Risikowerts speichern lassen. Danach die Referenz entfernen; die Thunderbird-E-Mail darf dabei nicht gelöscht oder verändert werden.
 31. Die Oberflächensprache auf **English** umstellen und globales Dashboard, Einzelmail-Popup, Antworteditor, Einstellungen und Hilfe prüfen. Danach zurück auf **Deutsch** wechseln. Alle sichtbaren Texte und Meldungen müssen der Auswahl folgen.
 32. In den **Einstellungen** darf kein Abschnitt für automatische E-Mail-Verarbeitung mehr erscheinen. Einen erfolgreichen API-Test oder eine andere AI-Aktion ausführen und anschließend die Nutzungsstatistiken aktualisieren. **Geschätzte API-Kosten** müssen als lokalisierter USD-Wert erscheinen und der Hinweis muss Beginn der Tokenaufzeichnung, Preisstand sowie Einschränkungen nennen.
@@ -221,7 +251,7 @@ Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das R
 42. Nach mehreren Dashboard-Aktionen den Tab wechseln und das globale Toolbar-Symbol mindestens dreimal erneut verwenden. Ein hängender Thunderbird-Tabaufruf muss nach einem begrenzten Zeitlimit freigegeben werden, sodass der nächste Klick ohne Thunderbird-Neustart erneut versucht. Bei einem endgültigen Fehler muss eine lokalisierte Benachrichtigung mit Diagnosecode erscheinen. Unter **Einstellungen → AI Assistant öffnen → Support-Diagnose** müssen Add-on-/Thunderbird-Version, letzter Dashboard-Start und die letzten Hintergrund-/UI-Aktivitäten ohne E-Mail-Inhalte sichtbar und kopierbar sein. Ein absichtlich provozierter Fehler muss als fehlgeschlagener oder kontrolliert fehlgeschlagener Vorgang erscheinen.
 43. Im Dashboard mehrere Nachrichten auswählen und bis unter die letzte angezeigte Nachricht scrollen. Dort muss dieselbe Bulk-Aktionsleiste wie oberhalb der Nachrichten erscheinen; Auswahlzahl, Aktivierungszustand und Aktionen müssen in beiden Leisten synchron bleiben. Danach Dashboard und Einzelmail-Ansicht nach unten scrollen: Rechts unten muss jeweils ein kleiner runder Pfeil erscheinen, der die sichtbare Scrollfläche nach oben bewegt und am Anfang wieder verschwindet.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 3.1.0** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 3.1.1** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 Die Einstellungen enthalten eine **Support- und Speicherdiagnose**. Sie zeigt Hintergrundstart, Abhängigkeitsstatus, Laufzeiten und eine inhaltsfreie Prüfung lokaler Einstellungsdaten. API-Schlüssel werden ausschließlich als „vorhanden/nicht vorhanden“ gemeldet. Kann der Hintergrunddienst nicht starten, werden vorhandene Einstellungen lokal und schreibgeschützt dargestellt; Speichern und Zurücksetzen bleiben bis zu einem erfolgreichen Start deaktiviert.
 
