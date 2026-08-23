@@ -1,5 +1,7 @@
 # AI Mail Assistant for Thunderbird - Code Structure
 
+> [Deutsche Version](STRUCTURE.de.md)
+
 ## 📁 Directory Structure
 
 ```

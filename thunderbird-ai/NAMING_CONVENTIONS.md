@@ -1,5 +1,7 @@
 # AI Mail Assistant for Thunderbird - Naming Conventions & File Differences
 
+> [Deutsche Version](NAMING_CONVENTIONS.de.md)
+
 ## 📁 File Differences
 
 ### **Background Scripts**
@@ -182,4 +184,4 @@ const MyComponent = class {
 - Maintain clear dependency order
 - Test global variable availability
 
-This naming convention ensures that when the build script flattens the directory structure, there are no naming conflicts and the modular architecture remains functional while being fully compatible with Thunderbird's non-module environment. 
+This naming convention ensures that when the build script flattens the directory structure, there are no naming conflicts and the modular architecture remains functional while being fully compatible with Thunderbird's non-module environment.

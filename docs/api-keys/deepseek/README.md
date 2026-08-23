@@ -1,48 +1,48 @@
-# DeepSeek-API-Schlüssel erstellen
+# Create a DeepSeek API key
 
-Das Add-on verwendet DeepSeeks OpenAI-kompatible Chat-Completions-API. Für die
-E-Mail-Funktionen wird der Denkmodus ausdrücklich deaktiviert, damit die
-sichtbare Antwort innerhalb des vorgesehenen Ausgabelimits bleibt.
+> [Deutsche Version](README.de.md)
 
-Offizielle Seiten:
+The add-on uses DeepSeek's OpenAI-compatible Chat Completions API. It explicitly
+disables thinking mode for email actions so the visible answer remains within
+the intended output budget.
 
-- [DeepSeek Platform: API Keys](https://platform.deepseek.com/api_keys)
-- [DeepSeek API-Dokumentation](https://api-docs.deepseek.com/)
-- [DeepSeek API-Fehlercodes](https://api-docs.deepseek.com/quick_start/error_codes/)
-- [DeepSeek Guthaben aufladen](https://platform.deepseek.com/top_up)
+Official pages:
 
-## Schlüssel anlegen
+- [DeepSeek Platform API keys](https://platform.deepseek.com/api_keys)
+- [DeepSeek API documentation](https://api-docs.deepseek.com/)
+- [DeepSeek API error codes](https://api-docs.deepseek.com/quick_start/error_codes/)
+- [Top up DeepSeek credit](https://platform.deepseek.com/top_up)
 
-1. Bei der [DeepSeek Platform](https://platform.deepseek.com/) anmelden oder ein
-   Konto erstellen.
-2. Unter **API Keys** einen neuen Schlüssel anlegen.
-3. Den Schlüssel sofort kopieren und sicher speichern.
-4. Unter **Billing** beziehungsweise **Top Up** prüfen, ob ausreichend
-   API-Guthaben vorhanden ist. Das Web-Chat-Produkt und die API-Abrechnung sind
-   nicht als derselbe Zugang zu behandeln.
+## Create the key
 
-## Im Add-on eintragen
+1. Sign in to or create an account on the
+   [DeepSeek Platform](https://platform.deepseek.com/).
+2. Create a key under **API Keys**.
+3. Copy the key immediately and store it securely.
+4. Check available API credit under **Billing** or **Top Up**. Do not assume
+   that the web-chat product and API billing are the same access.
 
-1. **Thunderbird AI Assistant → Einstellungen** öffnen.
-2. Als **AI-Anbieter** `DeepSeek` wählen.
-3. Den Schlüssel in **API-Schlüssel** einfügen. Die feste Basis-URL muss
-   `https://api.deepseek.com` anzeigen.
-4. Die Modelle zunächst auf **Automatisch** lassen.
-5. **API-Verbindung testen** und anschließend **Speichern** wählen.
+## Configure the add-on
 
-## Häufige Fehler
+1. Open **Thunderbird AI Assistant → Settings**.
+2. Select `DeepSeek` as **AI provider**.
+3. Paste the key into **API key**. The fixed base URL must show
+   `https://api.deepseek.com`.
+4. Leave the models on **Automatic** initially.
+5. Select **Test API connection**, then **Save**.
 
-- **401 Authentication Fails:** Schlüssel prüfen oder neu erstellen.
-- **402 Insufficient Balance:** Kontostand prüfen und Guthaben aufladen.
-- **429 Rate Limit Reached:** Anfragen kurz aussetzen und später erneut testen.
-- **500 oder 503:** DeepSeek meldet einen temporären Serverfehler oder hohe
-  Auslastung. Nach kurzer Wartezeit erneut versuchen.
-- **Kein sichtbarer Text:** Mindestens Version 3.1.1 des Add-ons verwenden. Seit
-  dieser Version wird DeepSeek V4 für die Add-on-Aufgaben ohne Denkmodus
-  aufgerufen.
+## Common errors
 
-Nach erfolgreichem Verbindungstest die
-[einheitliche Anbietertestfolge](../README.md#einheitlicher-anbietertest)
-durchführen. Der am 23. August 2026 gemeldete Verbindungstest und die
-Einzelmail-Analyse sind in der
-[AI-Anbieter-Testmatrix](../../ai-provider-testing.md) als Smoke-Test erfasst.
+- **401 Authentication Fails:** Check or replace the key.
+- **402 Insufficient Balance:** Check the account balance and add credit.
+- **429 Rate Limit Reached:** Pause requests briefly and retry later.
+- **500 or 503:** DeepSeek reports a temporary server error or high load. Retry
+  after a short wait.
+- **No visible text:** Use add-on version 3.1.1 or newer. These versions call
+  DeepSeek V4 without thinking mode for add-on tasks.
+
+After the connection succeeds, complete the
+[shared provider acceptance test](../README.md#shared-provider-acceptance-test).
+The connection test and single-message analysis reported on 23 August 2026 are
+recorded as a smoke test in the
+[AI provider test matrix](../../ai-provider-testing.md).

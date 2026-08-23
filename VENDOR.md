@@ -1,5 +1,7 @@
 # Build dependencies
 
+> [Deutsche Version](VENDOR.de.md)
+
 ## Inno Setup
 
 The Windows setup executable is produced by Inno Setup 6.7.3. Inno Setup is

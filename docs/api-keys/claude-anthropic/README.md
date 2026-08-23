@@ -1,50 +1,50 @@
-# Claude-/Anthropic-API-Schlüssel erstellen
+# Create a Claude/Anthropic API key
 
-Das Add-on verbindet sich direkt mit der Anthropic Messages API. Dafür ist ein
-Anthropic-API-Schlüssel erforderlich; eine Anmeldung bei Claude.ai oder Claude
-Code kann nicht als Schlüssel verwendet werden.
+> [Deutsche Version](README.de.md)
 
-Offizielle Seiten:
+The add-on connects directly to the Anthropic Messages API. It requires an
+Anthropic API key; a Claude.ai or Claude Code sign-in cannot be used as the key.
 
-- [API-Schlüssel in der Claude Console](https://platform.claude.com/settings/keys)
-- [Claude API: Erste Schritte](https://platform.claude.com/docs/en/get-started)
-- [Claude API: Authentifizierung](https://platform.claude.com/docs/en/manage-claude/authentication)
-- [Claude API: Preise und Abrechnung](https://platform.claude.com/docs/en/about-claude/pricing)
+Official pages:
 
-## Schlüssel anlegen
+- [API keys in the Claude Console](https://platform.claude.com/settings/keys)
+- [Claude API getting started](https://platform.claude.com/docs/en/get-started)
+- [Claude API authentication](https://platform.claude.com/docs/en/manage-claude/authentication)
+- [Claude API pricing and billing](https://platform.claude.com/docs/en/about-claude/pricing)
 
-1. In der [Claude Console](https://platform.claude.com/) anmelden oder ein Konto
-   erstellen.
-2. Abrechnung beziehungsweise vorhandenes API-Guthaben prüfen. Ein bezahltes
-   Claude-App- oder Claude-Code-Abonnement ist kein Ersatz für API-Zugang.
-3. Unter **Settings → API keys** einen neuen Schlüssel erstellen.
-4. Wenn Workspaces verfügbar sind, einen eigenen Workspace für Thunderbird AI
-   verwenden. Beim Erstellen eine sinnvolle Ablaufzeit festlegen.
-5. Den Schlüssel sofort kopieren und sicher speichern.
+## Create the key
 
-Für dieses Add-on wird ein normaler API-Schlüssel benötigt, kein Admin-API-Key.
-Normale Anthropic-Schlüssel werden vom Add-on als `x-api-key` an die Messages
-API gesendet.
+1. Sign in to or create an account in the
+   [Claude Console](https://platform.claude.com/).
+2. Check billing or available API credit. A paid Claude app or Claude Code
+   subscription is not a substitute for API access.
+3. Create a key under **Settings → API keys**.
+4. If workspaces are available, use a dedicated Thunderbird AI workspace and
+   choose an appropriate expiration period.
+5. Copy the key immediately and store it securely.
 
-## Im Add-on eintragen
+The add-on needs a normal API key, not an Admin API key. It sends normal
+Anthropic keys to the Messages API as `x-api-key`.
 
-1. **Thunderbird AI Assistant → Einstellungen** öffnen.
-2. Als **AI-Anbieter** `Claude (Anthropic)` wählen.
-3. Den Schlüssel in **API-Schlüssel** einfügen. Die feste Basis-URL muss
-   `https://api.anthropic.com/v1` anzeigen.
-4. Die Modelle zunächst auf **Automatisch** lassen.
-5. **API-Verbindung testen** und anschließend **Speichern** wählen.
+## Configure the add-on
 
-## Häufige Fehler
+1. Open **Thunderbird AI Assistant → Settings**.
+2. Select `Claude (Anthropic)` as **AI provider**.
+3. Paste the key into **API key**. The fixed base URL must show
+   `https://api.anthropic.com/v1`.
+4. Leave the models on **Automatic** initially.
+5. Select **Test API connection**, then **Save**.
 
-- **Authentifizierung fehlgeschlagen / 401:** Schlüssel, Workspace und
-  Ablaufdatum prüfen. Abgelaufene Schlüssel können nicht reaktiviert werden.
-- **Guthaben oder Ausgabenlimit erreicht:** In der Claude Console unter
-  **Settings → Billing** Guthaben, monatliches Ausgabenlimit und Nutzung prüfen.
-- **Modell nicht verfügbar:** **Automatisch** verwenden oder eine Modell-ID
-  eintragen, die im eigenen Anthropic-Workspace verfügbar ist.
+## Common errors
 
-Nach erfolgreichem Verbindungstest die
-[einheitliche Anbietertestfolge](../README.md#einheitlicher-anbietertest)
-durchführen. Anthropic empfiehlt, Schlüssel regelmäßig zu rotieren und einen
-verdächtigen Schlüssel sofort zu widerrufen.
+- **Authentication failed / 401:** Check the key, workspace, and expiration.
+  Expired keys cannot be reactivated.
+- **Credit or spending limit reached:** Check credit, usage, and the monthly
+  spend limit under **Settings → Billing** in the Claude Console.
+- **Model unavailable:** Use **Automatic** or enter a model ID available to the
+  current Anthropic workspace.
+
+After the connection succeeds, complete the
+[shared provider acceptance test](../README.md#shared-provider-acceptance-test).
+Anthropic recommends regular rotation and immediate revocation of suspicious
+keys.

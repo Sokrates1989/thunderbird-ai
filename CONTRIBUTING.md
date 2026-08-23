@@ -1,5 +1,7 @@
 # Contributing
 
+> [Deutsche Version](CONTRIBUTING.de.md)
+
 Thank you for improving AI Mail Assistant for Thunderbird. Fork the repository, create a focused branch, and open a pull request against `main`. Bug reports and feature proposals belong in GitHub Issues before broad or compatibility-breaking work begins.
 
 ## Development checks

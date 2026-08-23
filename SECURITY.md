@@ -1,5 +1,7 @@
 # Security Policy
 
+> [Deutsche Version](SECURITY.de.md)
+
 ## Supported versions
 
 Security fixes are provided for the latest published release. Users should update through the newest GitHub or Thunderbird Add-ons release before reporting an issue.

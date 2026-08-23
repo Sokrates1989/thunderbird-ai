@@ -1,56 +1,53 @@
-# OpenAI API-Schlüssel erstellen
+# Create an OpenAI API key
 
-OpenAI ist der Standardanbieter des Add-ons. Das Add-on verwendet die OpenAI
-Responses API und sendet Anfragen mit `store: false`.
+> [Deutsche Version](README.de.md)
 
-## Vor dem Start
+OpenAI is the add-on's default provider. The add-on uses the OpenAI Responses
+API and sends requests with `store: false`.
 
-Ein ChatGPT-Free-, Plus-, Pro-, Business- oder Enterprise-Zugang enthält nicht
-automatisch API-Guthaben. ChatGPT und die OpenAI API besitzen getrennte
-Abrechnungssysteme. Für das Add-on wird ein Schlüssel der **OpenAI API
-Platform** benötigt.
+## Before you start
 
-Offizielle Seiten:
+ChatGPT Free, Plus, Pro, Business, or Enterprise access does not automatically
+include API credit. ChatGPT and the OpenAI API use separate billing systems.
+The add-on needs a key from the **OpenAI API Platform**.
 
-- [OpenAI API-Schlüssel](https://platform.openai.com/api-keys)
-- [OpenAI API Quickstart](https://developers.openai.com/api/docs/quickstart)
-- [API-Abrechnung verwalten](https://platform.openai.com/settings/organization/billing/overview)
-- [Warum ChatGPT- und API-Abrechnung getrennt sind](https://help.openai.com/en/articles/9039756-managing-billing-settings-on-chatgpt-web-and-platform)
+Official pages:
 
-## Schlüssel anlegen
+- [OpenAI API keys](https://platform.openai.com/api-keys)
+- [OpenAI API quickstart](https://developers.openai.com/api/docs/quickstart)
+- [Manage API billing](https://platform.openai.com/settings/organization/billing/overview)
+- [Why ChatGPT and API billing are separate](https://help.openai.com/en/articles/9039756-managing-billing-settings-on-chatgpt-web-and-platform)
 
-1. Bei der [OpenAI API Platform](https://platform.openai.com/) anmelden oder ein
-   Konto erstellen.
-2. Falls erforderlich, unter **Billing** eine Zahlungsmethode oder API-Guthaben
-   einrichten. Ein vorhandenes ChatGPT-Abonnement reicht dafür nicht aus.
-3. Die Seite **API keys** öffnen.
-4. **Create new secret key** wählen. Wenn Projekte angeboten werden, ein eigenes
-   Projekt für Thunderbird AI verwenden und den Schlüssel möglichst eng darauf
-   beschränken.
-5. Den neuen Schlüssel sofort kopieren und sicher speichern. Der vollständige
-   Wert wird später möglicherweise nicht noch einmal angezeigt.
+## Create the key
 
-## Im Add-on eintragen
+1. Sign in to or create an account on the
+   [OpenAI API Platform](https://platform.openai.com/).
+2. If required, configure an API payment method or credit under **Billing**.
+   An existing ChatGPT subscription is not sufficient.
+3. Open **API keys**.
+4. Select **Create new secret key**. If projects are available, use a dedicated
+   Thunderbird AI project and restrict the key as narrowly as practical.
+5. Copy the new key immediately and store it securely. The complete value may
+   not be shown again.
 
-1. **Thunderbird AI Assistant → Einstellungen** öffnen.
-2. Als **AI-Anbieter** `OpenAI` wählen.
-3. Den Schlüssel in **API-Schlüssel** einfügen. Die feste Basis-URL muss
-   `https://api.openai.com/v1` anzeigen.
-4. Die aufgabenspezifischen Modelle zunächst auf **Automatisch** lassen.
-5. **API-Verbindung testen** und anschließend **Speichern** wählen.
+## Configure the add-on
 
-## Häufige Fehler
+1. Open **Thunderbird AI Assistant → Settings**.
+2. Select `OpenAI` as **AI provider**.
+3. Paste the key into **API key**. The fixed base URL must show
+   `https://api.openai.com/v1`.
+4. Leave task models on **Automatic** initially.
+5. Select **Test API connection**, then **Save**.
 
-- **Authentifizierung fehlgeschlagen / 401:** Der Schlüssel ist falsch,
-  widerrufen oder gehört nicht zum aktiven Projekt.
-- **Guthaben oder Kontingent fehlt / 402 oder 429:** API-Abrechnung, Projektlimit
-  und Nutzungsgrenzen in der API Platform prüfen. Ein ChatGPT-Abo ändert diese
-  Grenzen nicht.
-- **Modell nicht verfügbar:** Zunächst **Automatisch** verwenden. Manuell
-  eingetragene Modell-IDs müssen für das gewählte API-Projekt freigeschaltet
-  sein.
+## Common errors
 
-Nach erfolgreichem Verbindungstest die
-[einheitliche Anbietertestfolge](../README.md#einheitlicher-anbietertest)
-durchführen. Den Schlüssel bei einem Verdacht auf Offenlegung auf der
-API-Schlüsselseite widerrufen und ersetzen.
+- **Authentication failed / 401:** The key is incorrect, revoked, or does not
+  belong to the active project.
+- **No credit or quota / 402 or 429:** Check API billing, project limits, and
+  usage limits. A ChatGPT subscription does not change these limits.
+- **Model unavailable:** Start with **Automatic**. A manually entered model ID
+  must be enabled for the selected API project.
+
+After the connection succeeds, complete the
+[shared provider acceptance test](../README.md#shared-provider-acceptance-test).
+Revoke and replace a potentially exposed key on the API-key page.

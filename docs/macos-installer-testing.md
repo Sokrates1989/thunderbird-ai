@@ -1,60 +1,49 @@
-# macOS-Installer testen
+# Test the macOS installer
 
-Das primäre macOS-Artefakt heißt
-`Thunderbird-AI-Setup-3.1.2-macos.pkg`. Es verwendet ausschließlich die
-macOS-Installationsdomäne des aktuellen Benutzerverzeichnisses und benötigt
-keine Administratorrechte.
+> [Deutsche Version](macos-installer-testing.de.md)
 
-## Automatisierter Isolationstest
+The primary macOS artifact is
+`Thunderbird-AI-Setup-3.1.3-macos.pkg`. It uses only the current-user macOS
+installation domain and requires no administrator privileges.
 
-Vom Repository-Stamm auf macOS aus:
+## Automated isolation test
+
+From the repository root on macOS:
 
 ```bash
 ./installer/macos/test-setup.sh
 ```
 
-Der Test verwendet ausschließlich ein mit `mktemp` erzeugtes Verzeichnis. Er
-baut die XPI und das native Paket, prüft die Benutzer-Installationsdomäne, die
-Thunderbird-Schließanforderung, den enthaltenen XPI-Pfad, die automatische
-Sprachübergabe sowie Installation und Aktualisierung in zwei künstlichen
-Profilen. Während dieses Isolationstests wird ein echtes Thunderbird-Profil
-weder gelesen noch verändert und Thunderbird nicht beendet oder gestartet; der
-enthaltene automatische Startbefehl wird stattdessen statisch geprüft.
+The test uses only a directory created with `mktemp`. It builds the XPI and
+native package, verifies the user installation domain, Thunderbird quit
+request, embedded XPI path, automatic language handoff, and install/update in
+two synthetic profiles. It neither reads nor modifies a real profile and does
+not quit or launch Thunderbird; the packaged launch command is inspected
+statically.
 
-## Manueller Abnahmetest
+## Manual acceptance test
 
-1. Thunderbird mindestens einmal starten und anschließend eine E-Mail sowie
-   einen ungespeicherten Testentwurf öffnen.
-2. `artifacts/Thunderbird-AI-Setup-3.1.2-macos.pkg` öffnen. Die GPL-Lizenzseite lesen und bestätigen. Im
-   Installationsprogramm muss der lokalisierte Hinweis zur benutzerbezogenen
-   Installation und zum sicheren Thunderbird-Beenden erscheinen. Es darf keine
-   Administratorabfrage geben.
-3. Die Installation zunächst mit geöffnetem Thunderbird fortsetzen. macOS muss
-   zum normalen Beenden auffordern. Den Entwurf speichern und fortfahren;
-   Thunderbird darf nicht erzwungen beendet werden.
-4. Nach erfolgreicher Installation muss Thunderbird automatisch geöffnet werden.
-   Eine mögliche einmalige Aktivierungs- oder Berechtigungsabfrage bestätigen.
-   **AI Mail Assistant for Thunderbird** muss unter
-   **Add-ons und Themes** erscheinen.
-   Ein beim Start wiederhergestelltes Dashboard muss den E-Mail-Zugriff bei noch
-   nicht bereitem Thunderbird begrenzt wiederholen und anschließend entweder die
-   ungelesenen Nachrichten anzeigen oder mit wieder aktivierter Aktualisieren-
-   Schaltfläche enden; der Ladezustand darf nicht dauerhaft sichtbar bleiben.
-5. In den Einstellungen OpenAI, Claude, Mistral, DeepSeek und den individuellen
-   Endpunkt auswählen; OpenAI muss der Standard sein. Mit einem verfügbaren
-   Testschlüssel eine E-Mail öffnen, die Zusammenfassung ausführen und den
-   API-Test aufrufen. Im Einzelmail-Popup muss **Version 3.1.2** stehen.
-6. Eine abweichende Sprache unter **Einstellungen** speichern und nach einem
-   Thunderbird-Neustart prüfen, dass sie erhalten bleibt.
-7. Den Installer erneut ausführen. Die vorhandene Installation muss ohne
-   vorherige Deinstallation aktualisiert werden; API-Schlüssel und gespeicherte
-   Einstellungen müssen erhalten bleiben.
-8. Wenn mehrere Thunderbird-Profile vorhanden sind, jedes Profil starten und
-   prüfen, dass dieselbe Add-on-Version erkannt wird.
-9. Das Add-on über Thunderbirds Add-on-Verwaltung entfernen und Thunderbird
-   neu starten. Es darf in diesem Profil nicht mehr geladen werden.
+1. Start Thunderbird at least once, then open an email and an unsaved test
+   draft.
+2. Open `artifacts/Thunderbird-AI-Setup-3.1.3-macos.pkg`, read and accept the GPL,
+   and confirm the localized current-user and safe-quit guidance. No
+   administrator prompt may appear.
+3. Continue while Thunderbird is open. macOS must request a normal quit. Save
+   the draft; Thunderbird must never be force-terminated.
+4. Thunderbird must open automatically after installation. Accept any one-time
+   activation or permission prompt and confirm the add-on appears under
+   **Add-ons and Themes**. A restored dashboard must either load unread mail or
+   end with refresh re-enabled; loading must not remain indefinitely.
+5. Select OpenAI, Claude, Mistral, DeepSeek, and the custom endpoint in settings;
+   OpenAI must be the default. With an available test key, summarise an email
+   and run the API test. The single-message popup must show **Version 3.1.3**.
+6. Save a different UI language and confirm it survives a Thunderbird restart.
+7. Run the installer again. It must update without prior removal and preserve
+   API keys and settings.
+8. If several profiles exist, confirm each detects the same add-on version.
+9. Remove the add-on through Thunderbird, restart it, and confirm the add-on no
+   longer loads in that profile.
 
-Das aktuelle Testpaket ist nicht mit einer Apple Developer ID signiert und
-nicht notarisiert. Vor einem öffentlichen Release muss das Paket mit einer
-Developer-ID-Installer-Identität gebaut, von Apple notarisiert und zusammen mit
-seiner SHA-256-Prüfsumme veröffentlicht werden.
+The test package is not Apple Developer ID-signed or notarized. A public build
+must be signed with a Developer ID Installer identity, notarized by Apple, and
+published with its SHA-256 checksum.

@@ -1,6 +1,8 @@
 # Privacy Policy
 
-Last updated: 22 August 2026
+> [Deutsche Version](PRIVACY.de.md)
+
+Last updated: 23 August 2026
 
 AI Mail Assistant for Thunderbird does not automatically analyze opened email. Network processing begins only when the user explicitly starts an AI action or explicitly selects messages for dashboard analysis.
 

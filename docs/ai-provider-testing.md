@@ -1,44 +1,42 @@
-# AI-Anbieter-Testmatrix
+# AI provider test matrix
 
-Diese Matrix trennt automatisierte Protokolltests von echten manuellen
-API-Tests. Automatisierte Tests verwenden absichtlich keine realen Schlüssel
-und verursachen keine Anbieter-Kosten. Ein Live-Test kann nur mit einem lokal in
-Thunderbird eingetragenen Schlüssel durchgeführt werden.
+> [Deutsche Version](ai-provider-testing.de.md)
 
-## Aktueller Stand
+This matrix separates automated protocol tests from real manual API tests.
+Automated tests intentionally use no real keys and incur no provider charges. A
+live test requires a key entered locally in Thunderbird.
 
-| Anbieter | Automatisierter Vertragstest | Manueller Live-Test | Status |
+## Current status
+
+| Provider | Automated contract test | Manual live test | Status |
 | --- | --- | --- | --- |
-| OpenAI | Responses-Endpunkt, Bearer-Authentifizierung, Modellrouting und Antwortparser | noch offen | Vertrag getestet |
-| Claude (Anthropic) | Messages-Endpunkt, `x-api-key`, Versionsheader, Modellrouting und Antwortparser | noch offen | Vertrag getestet |
-| Mistral | Chat-Completions-Endpunkt, Bearer-Authentifizierung, Modellrouting und Antwortparser | noch offen | Vertrag getestet |
-| DeepSeek | Chat-Completions-Endpunkt, Bearer-Authentifizierung, deaktivierter Denkmodus, Modellrouting und Antwortparser | API-Test und Einzelmail-Analyse am 23.08.2026 erfolgreich gemeldet | Smoke-Test erfolgreich; vollständige Abnahme offen |
-| Individueller Endpunkt | drei Protokolle, drei Authentifizierungsarten, exakte Host-Berechtigung und HTTP-Sicherheitsgrenze | abhängig vom konkreten Dienst | Vertrag getestet |
+| OpenAI | Responses endpoint, Bearer authentication, model routing, and response parser | pending | Contract tested |
+| Claude (Anthropic) | Messages endpoint, `x-api-key`, version header, model routing, and response parser | pending | Contract tested |
+| Mistral | Chat Completions endpoint, Bearer authentication, model routing, and response parser | pending | Contract tested |
+| DeepSeek | Chat Completions endpoint, Bearer authentication, disabled thinking mode, model routing, and response parser | API test and single-message analysis reported successful on 23 August 2026 | Smoke test successful; full acceptance pending |
+| Custom endpoint | Three protocols, three authentication modes, exact host permission, and HTTP security boundary | depends on the service | Contract tested |
 
-## Vollständige manuelle Abnahme
+## Full manual acceptance
 
-Für jeden integrierten Anbieter wird die
-[einheitliche Anbietertestfolge](api-keys/README.md#einheitlicher-anbietertest)
-mit **Automatisch** als Modellauswahl durchgeführt. Damit werden repräsentativ
-diese Pfade geprüft:
+Run the [shared provider acceptance test](api-keys/README.md#shared-provider-acceptance-test)
+for each built-in provider with **Automatic** model selection. The sequence
+representatively covers:
 
-- Verbindungstest und Bulk-Analyse: schnelles Modell
-- Einzelmail-Analyse: ausgewogenes Modell
-- Zusammenfassung, Antwort und AI Chat: Qualitätsmodell
-- Neu-Analyse: Aktualisierung vorhandener lokaler Ergebnisse
-- Thunderbird-Neustart: persistente, anbieterspezifische Konfiguration
+- connection test and bulk analysis: fast model;
+- single-message analysis: balanced model;
+- summary, reply, and AI Chat: quality model;
+- re-analysis: replacement of an existing local result; and
+- Thunderbird restart: persistent provider-specific configuration.
 
-Die vollständige Abnahme eines Anbieters wird erst eingetragen, wenn alle neun
-Schritte erfolgreich waren. Schlüssel, vollständige E-Mail-Inhalte und
-personenbezogene Ergebnisse gehören nicht in diese Datei.
+Record full acceptance only after all nine steps pass. Keys, complete email
+content, and personal results must never be added to this file.
 
-## Automatisierte Prüfung
+## Automated verification
 
-Die Protokollverträge werden unter anderem in
-[`tests/ai-provider.test.mjs`](../tests/ai-provider.test.mjs) geprüft. Sie decken
-Request-URL, Authentifizierungsheader, Payload, Antworttext, Token-Nutzung,
-Modellrollen und Sicherheitsregeln für individuelle Endpunkte ab. Sie können
-mit dem vollständigen Testlauf ausgeführt werden:
+The protocol contracts are covered in
+[`tests/ai-provider.test.mjs`](../tests/ai-provider.test.mjs). They verify request
+URL, authentication headers, payload, response text, token usage, model roles,
+and custom-endpoint security rules. Run them with the complete suite:
 
 ```bash
 npm test
