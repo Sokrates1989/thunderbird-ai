@@ -12,7 +12,7 @@ and API access are not automatically the same product.
 - [Create a Claude/Anthropic API key](claude-anthropic/README.md)
 - [Create a Mistral API key](mistral/README.md)
 - [Create a DeepSeek API key](deepseek/README.md)
-- [Configure a custom AI endpoint](custom-endpoint/README.md)
+- [Configure a custom AI endpoint, including Hugging Face Inference Providers](custom-endpoint/README.md)
 
 ## Use keys safely
 

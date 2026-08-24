@@ -13,7 +13,7 @@ automatisch dasselbe Produkt.
 - [Claude-/Anthropic-API-Schlüssel erstellen](claude-anthropic/README.de.md)
 - [Mistral-API-Schlüssel erstellen](mistral/README.de.md)
 - [DeepSeek-API-Schlüssel erstellen](deepseek/README.de.md)
-- [Individuellen AI-Endpunkt einrichten](custom-endpoint/README.de.md)
+- [Individuellen AI-Endpunkt einschließlich Hugging Face Inference Providers einrichten](custom-endpoint/README.de.md)
 
 ## Schlüssel sicher verwenden
 
