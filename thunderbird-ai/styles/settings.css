@@ -619,11 +619,10 @@ body {
     font-weight: bold;
 }
 
-.saved-result pre {
+.saved-result-content {
     max-height: 260px;
+    margin: 10px 0;
     overflow: auto;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
     font: inherit;
 }
 

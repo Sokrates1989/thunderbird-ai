@@ -40,6 +40,10 @@ Skripte eindeutige Dateinamen und globale Bindungen statt ES-Modulimporten.
   Übergabe an die feste PDF-Archiver-ID; PDF-Daten bleiben im Begleit-Add-on.
 - Nachrichten-, Kontextmenü-, Vorschau-, Bulk- und Nach-oben-Komponenten besitzen
   jeweils nur ihre UI-Grenze und teilen eine einzige Aktionsbeschreibung.
+- `MarkdownRenderer.js`, `MarkdownInlineRenderer.js` und `markdown-content.css` formatieren nicht
+  vertrauenswürdige AI-Ausgaben in Aktionsergebnissen, Chat, Antwortverlauf und
+  gespeicherten Ergebnissen ohne rohes HTML, ausführbare Links oder externe
+  Bildabrufe. Bearbeitbare Entwürfe und Nutzernachrichten bleiben reiner Text.
 - `ScoreFeedbackEditor.js`, `dashboard-training.js` und
   `ScoringArchiveComponent.js` besitzen getrennte Score-Begründungen und das
   löschunabhängige Korrekturarchiv.

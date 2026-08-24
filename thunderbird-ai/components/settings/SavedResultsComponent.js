@@ -33,8 +33,9 @@ const SavedResultsComponent = class {
                 ? new Date(result.savedAt).toLocaleString(I18n.getLanguage())
                 : '';
             summary.textContent = `${result.title || I18n.t('resultsDefault')} · ${date}`;
-            const content = document.createElement('pre');
-            content.textContent = result.content || '';
+            const content = document.createElement('div');
+            content.className = 'saved-result-content markdown-content';
+            MarkdownRenderer.renderInto(content, result.content || '');
             const actions = document.createElement('div');
             actions.className = 'saved-result-actions';
             actions.append(

@@ -102,7 +102,14 @@ Thunderbird behavior that mocks cannot prove.
     content-free action boundaries, including a controlled failure.
 31. Scroll dashboard and single-message views. The floating top button appears
     only away from the top and both bulk bars remain synchronized.
+32. Use a synthetic AI response containing a heading, emphasis, nested and task
+    lists, a table, a quote, code, a web link, raw HTML, a `javascript:` link,
+    and a Markdown image. Action results, AI Chat, assistant reply history, and
+    the saved result must share readable formatting. Raw HTML stays visible
+    text, the executable link is not clickable, and the image is represented as
+    a link without a remote request. Operator messages and the editable reply
+    draft must retain their exact literal text.
 
-The single-message popup must show version 3.1.3. The dashboard uses unread
+The single-message popup must show version 3.2.0. The dashboard uses unread
 status only as its candidate filter; analysis performed outside the dashboard
 does not automatically create a dashboard score record.

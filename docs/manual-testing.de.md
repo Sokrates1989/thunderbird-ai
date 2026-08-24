@@ -103,7 +103,15 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     inhaltsfreie Aktionsgrenzen einschließlich kontrolliertem Fehler zeigen.
 31. Dashboard und Einzelmail-Ansicht scrollen. Der Nach-oben-Button erscheint
     nur unterhalb des Anfangs; beide Bulk-Leisten bleiben synchron.
+32. Eine synthetische AI-Antwort mit Überschrift, Hervorhebung, verschachtelter
+    Liste, Aufgabenliste, Tabelle, Zitat, Code, Weblink, rohem HTML,
+    `javascript:`-Link und Markdown-Bild verwenden. Aktionsergebnisse, AI Chat,
+    AI-Antwortverlauf und das gespeicherte Ergebnis müssen dieselbe gut lesbare
+    Formatierung zeigen. Rohes HTML bleibt sichtbarer Text, der ausführbare Link
+    ist nicht anklickbar und das Bild erscheint als Link ohne externen Abruf.
+    Nutzernachrichten und der bearbeitbare Antwortentwurf behalten exakt ihren
+    unveränderten Text.
 
-Das Einzelmail-Popup muss Version 3.1.3 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.2.0 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status nur als Kandidatenfilter; Analysen außerhalb des Dashboards
 erzeugen nicht automatisch einen Dashboard-Score.

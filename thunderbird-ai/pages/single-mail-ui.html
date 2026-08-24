@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="scroll-to-top.css">
     <link rel="stylesheet" href="single-mail-ui.css">
     <link rel="stylesheet" href="reply-composer.css">
+    <link rel="stylesheet" href="markdown-content.css">
 </head>
 <body>
     <div class="container">
@@ -62,7 +63,7 @@
         <!-- Results Area -->
         <div class="results-area" id="resultsArea">
             <div class="results-title" id="resultsTitle" data-i18n="resultsDefault"></div>
-            <div class="results-content" id="resultsContent"></div>
+            <div class="results-content markdown-content" id="resultsContent"></div>
             <div class="results-actions" id="resultsActions"></div>
         </div>
 
@@ -111,6 +112,8 @@
     <script src="MailboxActionService.js"></script>
     <script src="PdfArchiverIntegrationService.js"></script>
     <script src="ScrollToTopComponent.js"></script>
+    <script src="MarkdownInlineRenderer.js"></script>
+    <script src="MarkdownRenderer.js"></script>
     
     <!-- Load UI components (flattened paths) -->
     <script src="HeaderComponent.js"></script>

@@ -80,8 +80,12 @@ const ChatComponent = class {
 
     appendMessage(role, content) {
         const message = document.createElement('div');
-        message.className = `chat-message ${role}`;
-        message.textContent = content;
+        message.className = `chat-message ${role}${role === 'assistant' ? ' markdown-content' : ''}`;
+        if (role === 'assistant') {
+            MarkdownRenderer.renderInto(message, content);
+        } else {
+            message.textContent = content;
+        }
         this.elements.messages.appendChild(message);
         this.elements.messages.scrollTop = this.elements.messages.scrollHeight;
     }

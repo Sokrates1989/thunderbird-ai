@@ -61,6 +61,11 @@ function loadReplyUi({
     const logs = [];
     const storageState = { ...stored };
     const context = createContext({
+        MarkdownRenderer: {
+            renderInto(element, content) {
+                element.textContent = content;
+            }
+        },
         browser: {
             i18n: { getUILanguage: () => 'de-DE' },
             compose: { addAttachment, beginReply, getComposeDetails, setComposeDetails },
@@ -146,7 +151,7 @@ test('explicit language selection changes text and every static page key resolve
         path.join(repositoryRoot, 'thunderbird-ai/install-defaults.json'),
         'utf8'
     ));
-    assert.deepEqual(defaults, { language: 'auto', version: '3.1.3' });
+    assert.deepEqual(defaults, { language: 'auto', version: '3.2.0' });
 });
 
 test('reply composer keeps final actions outside its scrolling content', () => {

@@ -16,7 +16,10 @@ const ResultsComponent = class {
     showResults(result) {
         this.currentResult = result;
         this.elements.title.textContent = result?.title || I18n.t('resultsDefault');
-        this.elements.content.textContent = result?.content || I18n.t('noResults');
+        MarkdownRenderer.renderInto(
+            this.elements.content,
+            result?.content || I18n.t('noResults')
+        );
         this.createActionButtons(result?.actions || []);
         this.container.style.display = 'block';
     }

@@ -304,9 +304,15 @@ const ReplyComposerComponent = class {
 
     appendMessage(role, content) {
         const message = document.createElement('div');
-        message.className = `reply-composer-message ${role}`;
+        message.className = `reply-composer-message ${role}${role === 'assistant'
+            ? ' markdown-content'
+            : ''}`;
         message.setAttribute('aria-label', I18n.t(role === 'assistant' ? 'replyAssistantLabel' : 'replyOperatorLabel'));
-        message.textContent = content;
+        if (role === 'assistant') {
+            MarkdownRenderer.renderInto(message, content);
+        } else {
+            message.textContent = content;
+        }
         this.elements.messages.appendChild(message);
         this.elements.messages.scrollTop = this.elements.messages.scrollHeight;
     }

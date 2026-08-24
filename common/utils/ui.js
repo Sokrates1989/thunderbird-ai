@@ -138,39 +138,6 @@ const UIUtils = {
     },
 
     /**
-     * Format summary text with HTML
-     * 
-     * Converts plain text with markdown-like formatting to HTML.
-     * Supports bold, italic, line breaks, and emoji formatting.
-     * 
-     * @param {string} text - Text to format
-     * @returns {string} Formatted HTML string
-     * 
-     * @example
-     * const html = UIUtils.formatSummaryText('**Important** email from *John* 📧');
-     * // Returns: '<strong>Important</strong> email from <em>John</em> <span class="emoji">📧</span>'
-     */
-    formatSummaryText(text) {
-        return text
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/\n/g, '<br>')
-            .replace(/•/g, '&bull;')
-            .replace(/📧|📝|⚠️|❓|😊|😟|😐/g, (match) => {
-                const emojiMap = {
-                    '📧': '<span class="emoji">📧</span>',
-                    '📝': '<span class="emoji">📝</span>',
-                    '⚠️': '<span class="emoji warning">⚠️</span>',
-                    '❓': '<span class="emoji">❓</span>',
-                    '😊': '<span class="emoji positive">😊</span>',
-                    '😟': '<span class="emoji negative">😟</span>',
-                    '😐': '<span class="emoji neutral">😐</span>'
-                };
-                return emojiMap[match] || match;
-            });
-    },
-
-    /**
      * Escape HTML entities
      * 
      * Safely escapes HTML special characters to prevent XSS attacks.

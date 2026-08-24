@@ -22,17 +22,18 @@ individual instructions for OpenAI, Claude (Anthropic), Mistral, DeepSeek, and
 custom endpoints. The [AI provider test matrix](docs/ai-provider-testing.md)
 separates automated protocol coverage from real-provider acceptance.
 
-## Release 3.1.3 scope
+## Release 3.2.0 scope
 
-Release 3.1.3 makes English the default documentation language and provides a
-complete German counterpart for every maintained Markdown document. Root and
-nested documentation links remain in the selected language. Provider behavior,
-the DeepSeek response fix from 3.1.1, and the automatic native release pipeline
-remain unchanged.
+Release 3.2.0 renders AI-generated Markdown consistently in action results,
+AI Chat, reply-refinement history, and explicitly saved results. The shared
+renderer supports headings, emphasis, links, nested and task lists, tables,
+quotes, and code while treating raw HTML as text, rejecting executable links,
+and never loading remote images. Editable reply drafts and operator-authored
+messages remain literal text so copying and sending preserve their exact value.
 
 ## Features
 
-- Summaries based on the decoded MIME message body.
+- Summaries based on the decoded MIME message body, with safe Markdown formatting.
 - Interactive reply editor with AI refinement, direct editing, native
   Thunderbird reply handoff, Reply All, quoting, and attachment options.
 - Importance, spam, and risk scoring with editable percentages and separate
@@ -154,7 +155,7 @@ other local credential store. See the full [privacy policy](PRIVACY.md).
 
 ## Install on Windows
 
-1. Download and run `Thunderbird-AI-Setup-3.1.3-win-x64.exe`.
+1. Download and run `Thunderbird-AI-Setup-3.2.0-win-x64.exe`.
 2. Select **Deutsch** or **English** and accept the GNU General Public License.
 3. Save drafts and approve the controlled restart. Setup never force-terminates
    Thunderbird.
@@ -169,7 +170,7 @@ is not Authenticode-signed and can trigger SmartScreen.
 ## Install on macOS
 
 1. Start Thunderbird once so a profile exists.
-2. Open `Thunderbird-AI-Setup-3.1.3-macos.pkg`.
+2. Open `Thunderbird-AI-Setup-3.2.0-macos.pkg`.
 3. Accept the GPL, save drafts, and allow a normal Thunderbird quit.
 4. Setup opens Thunderbird after installation. Accept any one-time activation
    or permission prompt.
@@ -209,8 +210,8 @@ On macOS:
 Current artifacts:
 
 - `thunderbird-ai.xpi`
-- `artifacts/Thunderbird-AI-Setup-3.1.3-win-x64.exe`
-- `artifacts/Thunderbird-AI-Setup-3.1.3-macos.pkg`
+- `artifacts/Thunderbird-AI-Setup-3.2.0-win-x64.exe`
+- `artifacts/Thunderbird-AI-Setup-3.2.0-macos.pkg`
 
 Build the Thunderbird Add-ons reviewer source only from tracked files:
 
