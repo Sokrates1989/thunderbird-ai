@@ -1,7 +1,7 @@
 ; Builds a per-user Windows setup around the verified Thunderbird AI XPI.
 
 #ifndef AppVersion
-  #define AppVersion "3.3.1"
+  #define AppVersion "3.3.2"
 #endif
 
 #define AppName "AI Mail Assistant for Thunderbird"
@@ -62,11 +62,13 @@ Name: "german"; MessagesFile: "compiler:Languages\German.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [CustomMessages]
-german.ThunderbirdClosePrompt=Thunderbird wird gerade ausgeführt.%n%nSpeichern Sie zuerst offene Entwürfe. Der Installer fordert Thunderbird anschließend zum normalen Beenden auf und wartet bis zu 60 Sekunden. Thunderbird wird niemals erzwungen beendet.%n%nJetzt fortfahren?
+german.ThunderbirdClosePrompt=Thunderbird wird gerade ausgeführt.%n%nSpeichern Sie zuerst offene Entwürfe. Der Installer schließt Thunderbird nun automatisch auf normalem Weg und wartet bei Bedarf bis zu 60 Sekunden. Nach der Installation wird Thunderbird standardmäßig wieder gestartet.%n%nJetzt fortfahren?
+german.ThunderbirdCloseUninstallPrompt=Thunderbird wird gerade ausgeführt.%n%nSpeichern Sie zuerst offene Entwürfe. Der Deinstaller schließt Thunderbird nun automatisch auf normalem Weg und wartet bei Bedarf bis zu 60 Sekunden. Nach der Deinstallation wird Thunderbird nicht automatisch neu gestartet.%n%nJetzt fortfahren?
 german.ThunderbirdCloseFailed=Thunderbird konnte nicht sicher beendet werden. Speichern Sie offene Entwürfe, schließen Sie Thunderbird manuell und starten Sie den Installer erneut.
 german.LaunchThunderbird=Thunderbird jetzt starten
 german.ProfileInstallFailed=Die Erweiterung konnte nicht in das Thunderbird-Profil kopiert werden: %1
-english.ThunderbirdClosePrompt=Thunderbird is currently running.%n%nSave any open drafts first. Setup will then request a normal shutdown and wait for up to 60 seconds. Thunderbird is never force-terminated.%n%nContinue now?
+english.ThunderbirdClosePrompt=Thunderbird is currently running.%n%nSave any open drafts first. Setup will now close Thunderbird automatically through its normal shutdown and wait for up to 60 seconds if needed. After installation, Thunderbird is restarted by default.%n%nContinue now?
+english.ThunderbirdCloseUninstallPrompt=Thunderbird is currently running.%n%nSave any open drafts first. Uninstall will now close Thunderbird automatically through its normal shutdown and wait for up to 60 seconds if needed. Thunderbird is not restarted automatically after uninstallation.%n%nContinue now?
 english.ThunderbirdCloseFailed=Thunderbird could not be closed safely. Save any open drafts, close Thunderbird manually, and run Setup again.
 english.LaunchThunderbird=Start Thunderbird now
 english.ProfileInstallFailed=The extension could not be copied into the Thunderbird profile: %1
@@ -267,7 +269,7 @@ begin
 #ifndef TestMode
   if ThunderbirdIsRunning then
   begin
-    if MsgBox(CustomMessage('ThunderbirdClosePrompt'), mbConfirmation,
+    if MsgBox(CustomMessage('ThunderbirdCloseUninstallPrompt'), mbConfirmation,
         MB_YESNO) <> IDYES then
     begin
       Result := False;

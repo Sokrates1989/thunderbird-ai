@@ -2,7 +2,7 @@
 
 > [English version](ATN_SOURCE_BUILD.md)
 
-Dieses Quellarchiv gehört zu AI Mail Assistant for Thunderbird 3.3.1. Es
+Dieses Quellarchiv gehört zu AI Mail Assistant for Thunderbird 3.3.2. Es
 enthält den vollständigen menschenlesbaren Quellcode der eingereichten XPI. Das
 Add-on minimiert oder verschleiert keinen Code und lädt keinen entfernten Code
 herunter oder führt ihn aus.
@@ -26,23 +26,23 @@ Vom Stamm des Quellarchivs:
 
 ```bash
 mkdir -p artifacts
-./build-addon.sh --output artifacts/thunderbird-ai-3.3.1.xpi
+./build-addon.sh --output artifacts/thunderbird-ai-3.3.2.xpi
 ```
 
 Der Build flacht die eingecheckten Verzeichnisse `thunderbird-ai/` und
 `common/` in das XPI-Stammverzeichnis ab, kopiert die englischen und deutschen
 Sprachkataloge, ergänzt die GPL-Lizenz und erzeugt `install-defaults.json` für
-Version 3.3.1.
+Version 3.3.2.
 
 ## Validieren
 
 ```bash
 npm test
-unzip -t artifacts/thunderbird-ai-3.3.1.xpi
-unzip -p artifacts/thunderbird-ai-3.3.1.xpi manifest.json
+unzip -t artifacts/thunderbird-ai-3.3.2.xpi
+unzip -p artifacts/thunderbird-ai-3.3.2.xpi manifest.json
 ```
 
-Das gepackte Manifest muss Version `3.3.1`, die Erweiterungs-ID
+Das gepackte Manifest muss Version `3.3.2`, die Erweiterungs-ID
 `thunderbird-ai@felicitas-wisdom.com`, Thunderbird 128.0 oder neuer sowie die
 Berechtigung `sensitiveDataUpload` melden.
 

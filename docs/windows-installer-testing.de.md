@@ -3,7 +3,7 @@
 > [English version](windows-installer-testing.md)
 
 Das primäre Windows-Artefakt heißt
-`Thunderbird-AI-Setup-3.3.1-win-x64.exe`. Es installiert das Add-on nur für den
+`Thunderbird-AI-Setup-3.3.2-win-x64.exe`. Es installiert das Add-on nur für den
 aktuellen Benutzer und benötigt keine Administratorrechte.
 
 ## Automatisierter Isolationstest
@@ -26,7 +26,10 @@ beendet oder gestartet.
 ## Manueller Abnahmetest
 
 1. Offene Entwürfe speichern und den Installer ohne Administratorrechte starten.
-2. Im Sprachdialog **Deutsch** wählen, die GPL-Lizenzseite bestätigen und die Erklärung zum kontrollierten Thunderbird-Neustart bestätigen. Ohne Lizenzbestätigung darf Setup nicht fortfahren.
+2. Im Sprachdialog **Deutsch** wählen, die GPL-Lizenzseite bestätigen und prüfen,
+   dass der Hinweis das normale automatische Beenden sowie den standardmäßigen
+   Neustart nach der Installation erklärt. Ohne Lizenzbestätigung darf Setup
+   nicht fortfahren.
 3. Prüfen, dass Thunderbird normal beendet und anschließend wieder gestartet
    wird. Der Installer darf den Prozess niemals erzwingen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung des seitlich
@@ -36,7 +39,7 @@ beendet oder gestartet.
 6. In den Einstellungen OpenAI, Claude, Mistral, DeepSeek und den individuellen
    Endpunkt auswählen; OpenAI muss der Standard sein. Mit einem verfügbaren
    Testschlüssel eine E-Mail öffnen, die Zusammenfassung ausführen und den
-   API-Test aufrufen. Im Einzelmail-Popup muss **Version 3.3.1** stehen und die
+   API-Test aufrufen. Im Einzelmail-Popup muss **Version 3.3.2** stehen und die
    Oberfläche muss deutsch sein.
 7. In den Einstellungen **English** wählen und speichern. Popup, Antworteditor und Hilfe müssen anschließend englisch erscheinen; nach einem Thunderbird-Neustart muss die Auswahl erhalten bleiben.
 8. Den Installer erneut auf Englisch ausführen und kontrollieren, dass das Update ohne

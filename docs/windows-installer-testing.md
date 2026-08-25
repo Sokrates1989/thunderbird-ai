@@ -3,7 +3,7 @@
 > [Deutsche Version](windows-installer-testing.de.md)
 
 The primary Windows artifact is
-`Thunderbird-AI-Setup-3.3.1-win-x64.exe`. It installs only for the current user
+`Thunderbird-AI-Setup-3.3.2-win-x64.exe`. It installs only for the current user
 and requires no administrator privileges.
 
 ## Automated isolation test
@@ -24,8 +24,9 @@ not quit or launch Thunderbird.
 ## Manual acceptance test
 
 1. Save open drafts and start the installer without administrator rights.
-2. Select **Deutsch**, accept the GPL, and confirm the controlled Thunderbird
-   restart explanation. Setup must not continue without license acceptance.
+2. Select **Deutsch**, accept the GPL, and confirm that the prompt says setup
+   will close Thunderbird normally and restart it by default after installation.
+   Setup must not continue without license acceptance.
 3. Thunderbird must quit normally and restart afterwards. Setup must never
    force-terminate it.
 4. Accept any one-time prompt enabling the side-loaded add-on and its message
@@ -33,7 +34,7 @@ not quit or launch Thunderbird.
 5. Confirm the add-on appears and existing API settings remain present.
 6. Select OpenAI, Claude, Mistral, DeepSeek, and the custom endpoint in settings;
    OpenAI must be the default. With an available key, summarise an email and run
-   the API test. The popup must show **Version 3.3.1** and German UI.
+   the API test. The popup must show **Version 3.3.2** and German UI.
 7. Select **English**, save, and confirm popup, reply editor, and help switch to
    English and retain the choice after restart.
 8. Run the English installer again and confirm an in-place update.

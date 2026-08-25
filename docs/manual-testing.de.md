@@ -132,6 +132,6 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     ihre SHA-256-Prüfsummen müssen gleich sein. Lokale Test-Builds bleiben
     absichtlich unsigniert.
 
-Das Einzelmail-Popup muss Version 3.3.1 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.3.2 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status nur als Kandidatenfilter; Analysen außerhalb des Dashboards
 erzeugen nicht automatisch einen Dashboard-Score.

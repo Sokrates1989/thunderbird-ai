@@ -7,6 +7,7 @@ const signatureVerifier = readFileSync('installer/windows/verify-authenticode.ps
 const shellAttributes = readFileSync('.gitattributes', 'utf8');
 const addonBuilder = readFileSync('build-addon.sh', 'utf8');
 const sourceArchiveBuilder = readFileSync('scripts/build-atn-source.sh', 'utf8');
+const windowsSetup = readFileSync('installer/windows/setup.iss', 'utf8');
 
 test('release workflow is restricted to the official main branch and new versions', () => {
     assert.match(workflow, /branches:\s*\n\s*- main/u);
@@ -97,4 +98,25 @@ test('Windows reviewer builds retain LF scripts and bridge WSL to Windows Node',
         assert.match(builder, /command -v node\.exe/u);
         assert.match(builder, /command -v wslpath/u);
     }
+});
+
+test('Windows setup explains its automatic normal shutdown and default restart', () => {
+    assert.match(windowsSetup, /Installer schließt Thunderbird nun automatisch auf normalem Weg/u);
+    assert.match(windowsSetup, /Nach der Installation wird Thunderbird standardmäßig wieder gestartet/u);
+    assert.match(windowsSetup, /Setup will now close Thunderbird automatically through its normal shutdown/u);
+    assert.match(windowsSetup, /After installation, Thunderbird is restarted by default/u);
+    assert.match(windowsSetup, /Deinstaller schließt Thunderbird nun automatisch auf normalem Weg/u);
+    assert.match(windowsSetup, /Nach der Deinstallation wird Thunderbird nicht automatisch neu gestartet/u);
+    assert.match(windowsSetup, /Uninstall will now close Thunderbird automatically through its normal shutdown/u);
+    assert.match(windowsSetup, /Thunderbird is not restarted automatically after uninstallation/u);
+    assert.match(
+        windowsSetup,
+        /function PrepareToInstall[\s\S]*?CustomMessage\('ThunderbirdClosePrompt'\)/u
+    );
+    assert.match(
+        windowsSetup,
+        /function InitializeUninstall[\s\S]*?CustomMessage\('ThunderbirdCloseUninstallPrompt'\)/u
+    );
+    assert.doesNotMatch(windowsSetup, /Thunderbird wird niemals erzwungen beendet/u);
+    assert.doesNotMatch(windowsSetup, /Thunderbird is never force-terminated/u);
 });
