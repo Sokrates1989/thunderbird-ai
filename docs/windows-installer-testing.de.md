@@ -3,7 +3,7 @@
 > [English version](windows-installer-testing.md)
 
 Das primäre Windows-Artefakt heißt
-`Thunderbird-AI-Setup-3.3.0-win-x64.exe`. Es installiert das Add-on nur für den
+`Thunderbird-AI-Setup-3.3.1-win-x64.exe`. Es installiert das Add-on nur für den
 aktuellen Benutzer und benötigt keine Administratorrechte.
 
 ## Automatisierter Isolationstest
@@ -36,7 +36,7 @@ beendet oder gestartet.
 6. In den Einstellungen OpenAI, Claude, Mistral, DeepSeek und den individuellen
    Endpunkt auswählen; OpenAI muss der Standard sein. Mit einem verfügbaren
    Testschlüssel eine E-Mail öffnen, die Zusammenfassung ausführen und den
-   API-Test aufrufen. Im Einzelmail-Popup muss **Version 3.3.0** stehen und die
+   API-Test aufrufen. Im Einzelmail-Popup muss **Version 3.3.1** stehen und die
    Oberfläche muss deutsch sein.
 7. In den Einstellungen **English** wählen und speichern. Popup, Antworteditor und Hilfe müssen anschließend englisch erscheinen; nach einem Thunderbird-Neustart muss die Auswahl erhalten bleiben.
 8. Den Installer erneut auf Englisch ausführen und kontrollieren, dass das Update ohne
@@ -46,5 +46,11 @@ beendet oder gestartet.
    Thunderbird-Neustart prüfen, dass das Add-on entfernt wurde.
 
 Der aktuelle Test-Build ist nicht Authenticode-signiert und kann deshalb eine
-SmartScreen-Warnung auslösen. Vor einem öffentlichen Release sollte der
-Installer signiert und seine SHA-256-Prüfsumme veröffentlicht werden.
+SmartScreen-Warnung auslösen. Ein öffentlicher Release-Installer muss vor dem
+Upload die Herausgeber- und Zeitstempelprüfung der geschützten Pipeline
+bestehen. Beim heruntergeladenen öffentlichen Release muss
+`Get-AuthenticodeSignature` den Status `Valid`, den erwarteten Herausgeber und
+ein Zeitstempelzertifikat zeigen. Details stehen unter
+[Windows-Codesignatur und SmartScreen](windows-code-signing.de.md). Eine
+Signatur verbessert das Vertrauen erheblich, garantiert bei einem neuen
+Herausgeber aber nicht sofortige SmartScreen-Reputation.

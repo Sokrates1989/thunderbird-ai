@@ -4,7 +4,7 @@
 
 Dieses Dokument enthält direkt verwendbare Listing- und Reviewer-Informationen
 für die erste öffentliche Einreichung von AI Mail Assistant for Thunderbird
-3.3.0. Bei Änderungen an Anbietern oder Datenkategorien muss es mit
+3.3.1. Bei Änderungen an Anbietern oder Datenkategorien muss es mit
 `PRIVACY.de.md` synchron bleiben.
 
 Offizielle Referenzen:
@@ -17,7 +17,7 @@ Offizielle Referenzen:
 
 - Name: `AI Mail Assistant for Thunderbird`
 - Erweiterungs-ID: `thunderbird-ai@felicitas-wisdom.com`
-- Version: `3.3.0`
+- Version: `3.3.1`
 - Minimales Thunderbird: `128.0`
 - Empfohlene Hauptkategorie: `Message and News Reading`
 - Empfohlene Nebenkategorie, falls verfügbar: `Message Composition`
@@ -102,6 +102,44 @@ Den vollständigen aktuellen Inhalt von `PRIVACY.de.md` in das Datenschutzfeld
 von Thunderbird Add-ons kopieren, nicht nur verlinken. Die Listing-Beschreibung
 enthält bereits die kurze Datenerfassungszusammenfassung.
 
+## Ablauf der ersten Listung
+
+Thunderbird Add-ons (ATN) verteilt und signiert die XPI. Der Windows- oder
+macOS-Installer wird dort nicht verteilt; für dieses Add-on bleibt er eine
+optionale GitHub-Alternative. Die Einreichung ist unter Windows, macOS oder
+Linux möglich. Der abschließende Funktionstest muss jedoch in einem
+Wegwerf-Thunderbird-Profil auf jeder beworbenen Plattform erfolgen.
+
+1. Die aktuelle manuelle Checkliste ausschließlich mit synthetischen Mails
+   abschließen. Dauerhafte Erweiterungs-ID, Version, minimale
+   Thunderbird-Version, Berechtigungsdialoge, deutsche/englische Oberfläche und
+   Datenschutzhinweise prüfen.
+2. Versionierte XPI und Reviewer-Quellarchiv vom offiziellen Release-Workflow
+   erzeugen lassen. Die vollständige GitHub-Veröffentlichung sowie Signatur und
+   Zeitstempel des Windows-Installers prüfen; den Installer nicht bei ATN
+   hochladen.
+3. Im Thunderbird-Add-ons-Entwicklerbereich anmelden, eine neue **gelistete**
+   Erweiterung einreichen, die aktuelle Vertriebsvereinbarung bestätigen und
+   `artifacts/thunderbird-ai-3.3.1.xpi` hochladen.
+4. Identität, deutsche/englische Beschreibung, Kategorien, Lizenz, Homepage und
+   Support aus diesem Blatt übernehmen. Den vollständigen aktuellen Text aus
+   `PRIVACY.de.md` in das ATN-Datenschutzfeld kopieren, nicht nur verlinken.
+5. Die vier Screenshots der folgenden Checkliste mit synthetischen Daten
+   hochladen. Keine Kontoadressen, Nachrichteninhalte oder Zugangsdaten zeigen.
+6. `artifacts/thunderbird-ai-3.3.1-atn-source.zip` und die Build-Anleitung aus
+   `ATN_SOURCE_BUILD.de.md` anhängen, auch wenn diese XPI keinen minifizierten
+   oder gebündelten Drittcode enthält.
+7. Die folgenden Funktionstests und einen temporären, niedrig limitierten
+   Reviewer-API-Schlüssel ausschließlich in das private technische
+   Reviewer-/Whiteboard-Feld eintragen. Der Schlüssel gehört weder ins Listing
+   noch ins Quellarchiv.
+8. Einreichen, die Konto-E-Mail beobachten und zeitnah antworten; nach aktueller
+   Richtlinie kann eine unbeantwortete Rückfrage nach zehn Tagen zur Ablehnung
+   führen.
+9. Nach Freigabe einmal aus dem öffentlichen Listing in ein sauberes Profil
+   installieren, Update-Identität und Kernaktionen prüfen und den temporären
+   Schlüssel widerrufen.
+
 ## Berechtigungserklärungen
 
 | Berechtigung | Begründung |
@@ -127,8 +165,8 @@ enthält bereits die kurze Datenerfassungszusammenfassung.
 
 ## Reviewer-Hinweise
 
-1. `artifacts/thunderbird-ai-3.3.0.xpi` als Erweiterung hochladen.
-2. `artifacts/thunderbird-ai-3.3.0-atn-source.zip` als Quellcode anhängen.
+1. `artifacts/thunderbird-ai-3.3.1.xpi` als Erweiterung hochladen.
+2. `artifacts/thunderbird-ai-3.3.1-atn-source.zip` als Quellcode anhängen.
 3. Das Quellarchiv enthält `ATN_SOURCE_BUILD.de.md` mit einem netzwerkfreien
    XPI-Build.
 4. Thunderbird 128 oder neuer mit synthetischem Konto und Nachrichten verwenden.

@@ -3,7 +3,7 @@
 > [Deutsche Version](windows-installer-testing.de.md)
 
 The primary Windows artifact is
-`Thunderbird-AI-Setup-3.3.0-win-x64.exe`. It installs only for the current user
+`Thunderbird-AI-Setup-3.3.1-win-x64.exe`. It installs only for the current user
 and requires no administrator privileges.
 
 ## Automated isolation test
@@ -33,7 +33,7 @@ not quit or launch Thunderbird.
 5. Confirm the add-on appears and existing API settings remain present.
 6. Select OpenAI, Claude, Mistral, DeepSeek, and the custom endpoint in settings;
    OpenAI must be the default. With an available key, summarise an email and run
-   the API test. The popup must show **Version 3.3.0** and German UI.
+   the API test. The popup must show **Version 3.3.1** and German UI.
 7. Select **English**, save, and confirm popup, reply editor, and help switch to
    English and retain the choice after restart.
 8. Run the English installer again and confirm an in-place update.
@@ -46,4 +46,9 @@ not quit or launch Thunderbird.
     confirm the add-on is removed.
 
 The test build is not Authenticode-signed and can trigger SmartScreen. A public
-installer should be signed and published with its SHA-256 checksum.
+release installer must pass the protected pipeline's publisher and timestamp
+checks before upload. Verify the downloaded public release with
+`Get-AuthenticodeSignature`; require `Status: Valid`, the expected publisher,
+and a timestamp certificate. See [Windows code signing and
+SmartScreen](windows-code-signing.md). Signing substantially improves trust but
+does not guarantee immediate SmartScreen reputation for a new publisher.

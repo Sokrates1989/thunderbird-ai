@@ -3,7 +3,7 @@
 > [Deutsche Version](atn-submission.de.md)
 
 This document contains copy-ready listing and reviewer information for the
-first public submission of AI Mail Assistant for Thunderbird 3.3.0. Keep the
+first public submission of AI Mail Assistant for Thunderbird 3.3.1. Keep the
 listing synchronized with `PRIVACY.md` whenever providers or data categories
 change.
 
@@ -17,7 +17,7 @@ Official references:
 
 - Name: `AI Mail Assistant for Thunderbird`
 - Extension ID: `thunderbird-ai@felicitas-wisdom.com`
-- Version: `3.3.0`
+- Version: `3.3.1`
 - Minimum Thunderbird: `128.0`
 - Recommended primary category: `Message and News Reading`
 - Recommended secondary category, if available: `Message Composition`
@@ -118,6 +118,40 @@ Paste the complete current contents of `PRIVACY.md` into the Thunderbird
 Add-ons privacy-policy field. Do not submit only a link. The listing description
 above already contains the required short data-collection summary.
 
+## First-listing operator sequence
+
+Thunderbird Add-ons (ATN) distributes and signs the XPI. It does not distribute
+the Windows or macOS installer; those remain optional GitHub alternatives for
+this add-on. The submission can be completed from Windows, macOS, or Linux, but
+perform the final functional check in a disposable Thunderbird profile on every
+advertised platform.
+
+1. Complete the current manual checklist with synthetic mail. Confirm the
+   permanent extension ID, version, minimum Thunderbird version, permission
+   prompts, English/German UI, and privacy disclosures.
+2. Let the official release workflow produce the versioned XPI and reviewer
+   source archive. Confirm the GitHub release is complete and its Windows
+   installer is signed and timestamped; do not upload that installer to ATN.
+3. Sign in to the Thunderbird Add-ons Developer Hub, start a new **listed**
+   extension submission, accept the current distribution agreement, and upload
+   `artifacts/thunderbird-ai-3.3.1.xpi`.
+4. Copy the listing identity, English/German descriptions, categories, license,
+   homepage, and support values from this sheet. Paste the complete current
+   `PRIVACY.md` text into ATN's privacy-policy field rather than supplying only
+   a link.
+5. Upload the four synthetic-data screenshots from the checklist below. Do not
+   expose account addresses, message content, or provider credentials.
+6. Attach `artifacts/thunderbird-ai-3.3.1-atn-source.zip` and the build
+   instructions from `ATN_SOURCE_BUILD.md`, even though this XPI does not contain
+   minified or bundled third-party code.
+7. Put the functional test notes below and a temporary low-limit reviewer API
+   key only in ATN's reviewer-only technical-details/Whiteboard field. Never put
+   the key in the public listing or source archive.
+8. Submit for review, monitor the account email, and answer reviewer questions
+   promptly; the current policy can reject an unanswered request after ten days.
+9. After approval, install once from the public listing in a clean profile,
+   verify update identity and core actions, then revoke the temporary key.
+
 ## Permission explanations
 
 | Permission | Why it is required |
@@ -143,8 +177,8 @@ above already contains the required short data-collection summary.
 
 ## Reviewer notes
 
-1. Upload `artifacts/thunderbird-ai-3.3.0.xpi` as the listed extension.
-2. Attach `artifacts/thunderbird-ai-3.3.0-atn-source.zip` as source code.
+1. Upload `artifacts/thunderbird-ai-3.3.1.xpi` as the listed extension.
+2. Attach `artifacts/thunderbird-ai-3.3.1-atn-source.zip` as source code.
 3. The source archive contains `ATN_SOURCE_BUILD.md` with a no-network XPI build.
 4. Test on Thunderbird 128 or newer with a synthetic email account and synthetic
    messages only.

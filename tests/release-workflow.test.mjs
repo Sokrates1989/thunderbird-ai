@@ -3,6 +3,10 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 const workflow = readFileSync('.github/workflows/release.yml', 'utf8');
+const signatureVerifier = readFileSync('installer/windows/verify-authenticode.ps1', 'utf8');
+const shellAttributes = readFileSync('.gitattributes', 'utf8');
+const addonBuilder = readFileSync('build-addon.sh', 'utf8');
+const sourceArchiveBuilder = readFileSync('scripts/build-atn-source.sh', 'utf8');
 
 test('release workflow is restricted to the official main branch and new versions', () => {
     assert.match(workflow, /branches:\s*\n\s*- main/u);
@@ -48,5 +52,49 @@ test('official GitHub actions are pinned to full commit hashes', () => {
     assert.ok(actionReferences.length >= 4);
     for (const reference of actionReferences) {
         assert.match(reference[1], /^[a-f0-9]{40}$/u);
+    }
+});
+
+test('Windows publication requires protected OIDC Authenticode signing', () => {
+    assert.match(workflow, /environment: windows-code-signing/u);
+    assert.match(workflow, /id-token: write/u);
+    assert.match(
+        workflow,
+        /uses: azure\/login@f5d393ae46f8fde4be8b75f32e3fc50e654ad0ca/u
+    );
+    assert.match(
+        workflow,
+        /uses: azure\/artifact-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82/u
+    );
+    for (const secretName of [
+        'AZURE_CLIENT_ID',
+        'AZURE_TENANT_ID',
+        'AZURE_SUBSCRIPTION_ID',
+        'AZURE_ARTIFACT_SIGNING_ENDPOINT',
+        'AZURE_ARTIFACT_SIGNING_ACCOUNT',
+        'AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE',
+        'WINDOWS_SIGNING_SUBJECT'
+    ]) {
+        assert.match(workflow, new RegExp(`secrets\\.${secretName}`, 'u'));
+    }
+    assert.match(workflow, /timestamp-rfc3161: http:\/\/timestamp\.acs\.microsoft\.com/u);
+    assert.match(workflow, /verify-authenticode\.ps1/u);
+    assert.ok(
+        workflow.indexOf('verify-authenticode.ps1') < workflow.indexOf('Upload Windows installers')
+    );
+});
+
+test('Authenticode verifier fails closed on identity or timestamp mismatch', () => {
+    assert.ok(signatureVerifier.includes('SignatureStatus]::Valid'));
+    assert.match(signatureVerifier, /SignerCertificate/u);
+    assert.match(signatureVerifier, /ExpectedPublisher/u);
+    assert.match(signatureVerifier, /TimeStamperCertificate/u);
+});
+
+test('Windows reviewer builds retain LF scripts and bridge WSL to Windows Node', () => {
+    assert.match(shellAttributes, /^\*\.sh text eol=lf$/mu);
+    for (const builder of [addonBuilder, sourceArchiveBuilder]) {
+        assert.match(builder, /command -v node\.exe/u);
+        assert.match(builder, /command -v wslpath/u);
     }
 });

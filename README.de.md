@@ -23,13 +23,13 @@ individuelle Endpunkte. Die
 Protokolle automatisiert und welche Anbieter bereits mit einer echten API
 geprüft wurden.
 
-## Umfang von Release 3.3.0
+## Umfang von Release 3.3.1
 
-Release 3.3.0 öffnet AI Chat in einem großzügigen dauerhaften Thunderbird-Tab
-und stellt Nachrichten mit Avataren als unterschiedliche Nutzer- und
-Assistenten-Sprechblasen dar. Enter sendet, Umschalt+Enter fügt einen
-Zeilenumbruch ein und während der Antwort erscheint eine animierte
-Assistenten-Sprechblase. Die Hugging-Face-Korrektur aus 3.2.2 bleibt enthalten.
+Release 3.3.1 macht Authenticode-Signatur und RFC-3161-Zeitstempelprüfung zu
+einem Pflicht-Gate für öffentliche Windows-Releases. GitHub Actions verwendet
+Microsoft Artifact Signing mit kurzlebiger OIDC-Anmeldung und veröffentlicht
+keinen unsignierten Windows-Installer. Der in 3.3.0 eingeführte erweiterte
+konversationelle AI Chat bleibt enthalten.
 
 ## Funktionen
 
@@ -121,20 +121,20 @@ Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speic
 
 ## Installation unter Windows
 
-1. `Thunderbird-AI-Setup-3.3.0-win-x64.exe` herunterladen und starten.
+1. `Thunderbird-AI-Setup-3.3.1-win-x64.exe` herunterladen und starten.
 2. Im Setup **Deutsch** oder **English** wählen und die GNU General Public License bestätigen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
 3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart zustimmen. Der Installer beendet Thunderbird niemals erzwungen.
 4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung und zu den Berechtigungen zum Ändern, Verschieben und Löschen von Nachrichten bestätigen.
 5. Unter **Einstellungen** den AI-Anbieter auswählen, dessen API-Schlüssel eintragen, die aufgabenspezifischen Modelle prüfen, die Verbindung testen und speichern. Die Oberflächensprache kann dort jederzeit unabhängig von der Thunderbird-Sprache geändert werden.
 
-Der benutzerbezogene Installer benötigt keine Administratorrechte. Eine neue Setup-Datei aktualisiert die vorhandene Version; eine Deinstallation ist nicht nötig. Die feste Add-on-ID erhält die Einstellungen. Der aktuelle Test-Installer ist nicht Authenticode-signiert und kann deshalb eine SmartScreen-Warnung auslösen.
+Der benutzerbezogene Installer benötigt keine Administratorrechte. Eine neue Setup-Datei aktualisiert die vorhandene Version; eine Deinstallation ist nicht nötig. Die feste Add-on-ID erhält die Einstellungen. Öffentliche Release-Installer müssen das [Windows-Codesignatur-Gate](docs/windows-code-signing.de.md) bestehen. Lokale Test-Installer bleiben unsigniert und können deshalb eine SmartScreen-Warnung auslösen.
 
 Version 1.5.1 korrigiert die in 1.3.0 bis 1.5.0 fehlerhaft gepackten Lokalisierungsordner. Diese älteren Installer sollten nicht mehr verteilt werden.
 
 ## Installation unter macOS
 
 1. Thunderbird mindestens einmal starten, damit ein Profil angelegt ist.
-2. `Thunderbird-AI-Setup-3.3.0-macos.pkg` öffnen.
+2. `Thunderbird-AI-Setup-3.3.1-macos.pkg` öffnen.
 3. Die GNU General Public License bestätigen, offene Thunderbird-Entwürfe speichern und die Installation fortsetzen. Das macOS-Installationsprogramm fordert Thunderbird zum normalen Beenden auf und beendet es niemals erzwungen.
 4. Nach erfolgreicher Installation öffnet das Setup Thunderbird automatisch. Eine mögliche einmalige Rückfrage zur Aktivierung und zu den Berechtigungen zum Ändern, Verschieben und Löschen von Nachrichten bestätigen.
 5. Unter **Einstellungen** den AI-Anbieter auswählen, dessen API-Schlüssel eintragen, die aufgabenspezifischen Modelle prüfen, die Verbindung testen und speichern.
@@ -165,8 +165,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-set
 Build-Artefakte:
 
 - `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-3.3.0-win-x64.exe`
-- `artifacts/Thunderbird-AI-Setup-3.3.0-macos.pkg`
+- `artifacts\Thunderbird-AI-Setup-3.3.1-win-x64.exe`
+- `artifacts/Thunderbird-AI-Setup-3.3.1-macos.pkg`
 
 Unter macOS werden XPI und Installer vom Repository-Stamm aus gebaut und isoliert geprüft:
 
@@ -185,7 +185,9 @@ erfassten Dateien gebaut:
 
 Build-Anleitung, direkt nutzbare Listing-Texte, Berechtigungserklärungen und
 Reviewer-Testschritte stehen in [ATN_SOURCE_BUILD.de.md](ATN_SOURCE_BUILD.de.md) und im
-[Thunderbird-Add-ons-Einreichungsblatt](docs/atn-submission.de.md).
+[Thunderbird-Add-ons-Einreichungsblatt](docs/atn-submission.de.md). Die einmalige
+Azure-, OIDC- und geschützte GitHub-Umgebungskonfiguration steht in der
+[Windows-Codesignatur-Anleitung](docs/windows-code-signing.de.md).
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
@@ -198,7 +200,8 @@ werden alle Tests und Builds ausgeführt:
 
 - Ubuntu baut und testet das XPI sowie das Reviewer-Quellarchiv.
 - Ein nativer macOS-Runner baut und prüft das `.pkg`.
-- Ein nativer Windows-Runner baut und prüft das Inno-Setup-`.exe`.
+- Ein nativer Windows-Runner baut und prüft das Inno-Setup-`.exe`, signiert es
+  per Microsoft Artifact Signing und prüft Herausgeber sowie Zeitstempel.
 - Erst nach allen erfolgreichen Jobs werden der Tag `v<Version>`, die als
   **Latest** markierte GitHub Release, versionierte Dateien, stabile
   Download-Aliase und SHA-256-Prüfsummen gemeinsam veröffentlicht.
@@ -258,7 +261,7 @@ Pull Requests und Forks veröffentlichen nichts.
 42. Nach mehreren Dashboard-Aktionen den Tab wechseln und das globale Toolbar-Symbol mindestens dreimal erneut verwenden. Ein hängender Thunderbird-Tabaufruf muss nach einem begrenzten Zeitlimit freigegeben werden, sodass der nächste Klick ohne Thunderbird-Neustart erneut versucht. Bei einem endgültigen Fehler muss eine lokalisierte Benachrichtigung mit Diagnosecode erscheinen. Unter **Einstellungen → AI Assistant öffnen → Support-Diagnose** müssen Add-on-/Thunderbird-Version, letzter Dashboard-Start und die letzten Hintergrund-/UI-Aktivitäten ohne E-Mail-Inhalte sichtbar und kopierbar sein. Ein absichtlich provozierter Fehler muss als fehlgeschlagener oder kontrolliert fehlgeschlagener Vorgang erscheinen.
 43. Im Dashboard mehrere Nachrichten auswählen und bis unter die letzte angezeigte Nachricht scrollen. Dort muss dieselbe Bulk-Aktionsleiste wie oberhalb der Nachrichten erscheinen; Auswahlzahl, Aktivierungszustand und Aktionen müssen in beiden Leisten synchron bleiben. Danach Dashboard und Einzelmail-Ansicht nach unten scrollen: Rechts unten muss jeweils ein kleiner runder Pfeil erscheinen, der die sichtbare Scrollfläche nach oben bewegt und am Anfang wieder verschwindet.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 3.3.0** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 3.3.1** stehen. Das Dashboard verwendet den Ungelesen-Status als Kandidatenfilter. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 Die Einstellungen enthalten eine **Support- und Speicherdiagnose**. Sie zeigt Hintergrundstart, Abhängigkeitsstatus, Laufzeiten und eine inhaltsfreie Prüfung lokaler Einstellungsdaten. API-Schlüssel werden ausschließlich als „vorhanden/nicht vorhanden“ gemeldet. Kann der Hintergrunddienst nicht starten, werden vorhandene Einstellungen lokal und schreibgeschützt dargestellt; Speichern und Zurücksetzen bleiben bis zu einem erfolgreichen Start deaktiviert.
 

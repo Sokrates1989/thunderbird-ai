@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
 # Builds the source archive submitted to Thunderbird Add-ons reviewers.
+# Runs on Linux/macOS and on Windows through WSL; .gitattributes keeps LF endings.
 #
 set -euo pipefail
 
@@ -8,21 +9,36 @@ readonly SCRIPT_DIRECTORY="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 readonly REPOSITORY_ROOT="$(cd -- "${SCRIPT_DIRECTORY}/.." && pwd)"
 readonly MANIFEST_PATH="${REPOSITORY_ROOT}/thunderbird-ai/manifest.json"
 
-for command_name in git node zip unzip; do
+for command_name in git zip unzip; do
     command -v "${command_name}" >/dev/null 2>&1 || {
         printf 'Required command not found: %s\n' "${command_name}" >&2
         exit 1
     }
 done
 
-version="$(node -e '
+node_executable="$(command -v node 2>/dev/null || true)"
+manifest_argument="${MANIFEST_PATH}"
+if [[ -z "${node_executable}" ]]; then
+    node_executable="$(command -v node.exe 2>/dev/null || true)"
+    [[ -n "${node_executable}" ]] || {
+        printf 'Required command not found: node or node.exe\n' >&2
+        exit 1
+    }
+    if command -v wslpath >/dev/null 2>&1; then
+        manifest_argument="$(wslpath -w "${MANIFEST_PATH}")"
+    elif command -v cygpath >/dev/null 2>&1; then
+        manifest_argument="$(cygpath -w "${MANIFEST_PATH}")"
+    fi
+fi
+
+version="$("${node_executable}" -e '
 const fs = require("node:fs");
 const manifest = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
 if (!/^\d+\.\d+\.\d+$/.test(String(manifest.version))) {
   throw new Error("Manifest version is not semantic.");
 }
 process.stdout.write(manifest.version);
-' "${MANIFEST_PATH}")"
+' "${manifest_argument}")"
 artifact_directory="${REPOSITORY_ROOT}/artifacts"
 output_path="${1:-${artifact_directory}/thunderbird-ai-${version}-atn-source.zip}"
 if [[ "${output_path}" != /* ]]; then
@@ -62,4 +78,7 @@ rm -f -- "${output_path}"
     find . -type f -print | sed 's#^\./##' | LC_ALL=C sort | zip -X -q "${output_path}" -@
 )
 unzip -tq "${output_path}" >/dev/null
-printf 'Created %s (%s bytes).\n' "${output_path}" "$(stat -f '%z' "${output_path}" 2>/dev/null || stat -c '%s' "${output_path}")"
+if ! output_size="$(stat -c '%s' "${output_path}" 2>/dev/null)"; then
+    output_size="$(stat -f '%z' "${output_path}")"
+fi
+printf 'Created %s (%s bytes).\n' "${output_path}" "${output_size}"

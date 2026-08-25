@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Builds the flattened Thunderbird AI XPI on Linux or macOS.
+# Builds the flattened Thunderbird AI XPI on Linux/macOS or Windows through WSL.
 #
 set -euo pipefail
 
@@ -46,20 +46,34 @@ case "${installer_language}" in
         ;;
 esac
 
-for command_name in node zip unzip; do
+for command_name in zip unzip; do
     command -v "${command_name}" >/dev/null 2>&1 || {
         printf 'Required command not found: %s\n' "${command_name}" >&2
         exit 1
     }
 done
 
+node_executable="$(command -v node 2>/dev/null || true)"
+manifest_argument="${REPOSITORY_ROOT}/thunderbird-ai/manifest.json"
+if [[ -z "${node_executable}" ]]; then
+    node_executable="$(command -v node.exe 2>/dev/null || true)"
+    [[ -n "${node_executable}" ]] || {
+        printf 'Required command not found: node or node.exe\n' >&2
+        exit 1
+    }
+    if command -v wslpath >/dev/null 2>&1; then
+        manifest_argument="$(wslpath -w "${manifest_argument}")"
+    elif command -v cygpath >/dev/null 2>&1; then
+        manifest_argument="$(cygpath -w "${manifest_argument}")"
+    fi
+fi
+
 if [[ "${output_path}" != /* ]]; then
     output_path="$(pwd)/${output_path}"
 fi
 mkdir -p -- "$(dirname -- "${output_path}")"
 
-manifest_path="${REPOSITORY_ROOT}/thunderbird-ai/manifest.json"
-manifest_metadata="$(node -e '
+manifest_metadata="$("${node_executable}" -e '
 const fs = require("node:fs");
 const manifest = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
 const version = String(manifest.version || "");
@@ -71,7 +85,7 @@ if (extensionId !== "thunderbird-ai@felicitas-wisdom.com") {
     throw new Error(`Unexpected extension ID ${JSON.stringify(extensionId)}.`);
 }
 process.stdout.write(`${version}\n${extensionId}`);
-' "${manifest_path}")"
+' "${manifest_argument}")"
 version="$(printf '%s\n' "${manifest_metadata}" | sed -n '1p')"
 extension_id="$(printf '%s\n' "${manifest_metadata}" | sed -n '2p')"
 
@@ -110,11 +124,8 @@ done
 
 cp -R -- "${REPOSITORY_ROOT}/thunderbird-ai/_locales" "${stage_directory}/_locales"
 cp -- "${REPOSITORY_ROOT}/LICENSE" "${stage_directory}/LICENSE"
-node -e '
-const fs = require("node:fs");
-const output = `${JSON.stringify({ language: process.argv[2], version: process.argv[3] }, null, 2)}\n`;
-fs.writeFileSync(process.argv[1], output, "utf8");
-' "${stage_directory}/install-defaults.json" "${installer_language}" "${version}"
+printf '{\n  "language": "%s",\n  "version": "%s"\n}\n' \
+    "${installer_language}" "${version}" > "${stage_directory}/install-defaults.json"
 
 rm -f -- "${output_path}"
 (
@@ -139,7 +150,7 @@ for required_entry in \
     fi
 done
 
-unzip -p "${output_path}" manifest.json | node -e '
+unzip -p "${output_path}" manifest.json | "${node_executable}" -e '
 let input = "";
 process.stdin.setEncoding("utf8");
 process.stdin.on("data", chunk => { input += chunk; });
@@ -152,4 +163,7 @@ process.stdin.on("end", () => {
 });
 ' "${version}" "${extension_id}"
 
-printf 'Created %s (%s bytes).\n' "${output_path}" "$(stat -f '%z' "${output_path}" 2>/dev/null || stat -c '%s' "${output_path}")"
+if ! output_size="$(stat -c '%s' "${output_path}" 2>/dev/null)"; then
+    output_size="$(stat -f '%z' "${output_path}")"
+fi
+printf 'Created %s (%s bytes).\n' "${output_path}" "${output_size}"

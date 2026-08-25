@@ -22,13 +22,13 @@ individual instructions for OpenAI, Claude (Anthropic), Mistral, DeepSeek, and
 custom endpoints. The [AI provider test matrix](docs/ai-provider-testing.md)
 separates automated protocol coverage from real-provider acceptance.
 
-## Release 3.3.0 scope
+## Release 3.3.1 scope
 
-Release 3.3.0 opens AI Chat in a roomy durable Thunderbird tab and presents
-messages as distinct user and assistant bubbles with avatars. Enter sends,
-Shift+Enter inserts a line break, and an animated assistant bubble appears while
-the response is generated. The Hugging Face reasoning-model connection-test fix
-from 3.2.2 remains included.
+Release 3.3.1 makes Authenticode signing and RFC 3161 timestamp verification a
+mandatory gate for public Windows releases. GitHub Actions uses Microsoft
+Artifact Signing through short-lived OIDC authentication and publishes no
+unsigned Windows installer. The expanded conversational AI Chat introduced in
+3.3.0 remains included.
 
 ## Features
 
@@ -154,7 +154,7 @@ other local credential store. See the full [privacy policy](PRIVACY.md).
 
 ## Install on Windows
 
-1. Download and run `Thunderbird-AI-Setup-3.3.0-win-x64.exe`.
+1. Download and run `Thunderbird-AI-Setup-3.3.1-win-x64.exe`.
 2. Select **Deutsch** or **English** and accept the GNU General Public License.
 3. Save drafts and approve the controlled restart. Setup never force-terminates
    Thunderbird.
@@ -163,13 +163,14 @@ other local credential store. See the full [privacy policy](PRIVACY.md).
    the connection, and save.
 
 The per-user installer needs no administrator rights and updates in place while
-preserving settings through the stable extension ID. The current test installer
-is not Authenticode-signed and can trigger SmartScreen.
+preserving settings through the stable extension ID. Public release installers
+must pass the [Windows code-signing gate](docs/windows-code-signing.md). Local
+test installers remain unsigned and can trigger SmartScreen.
 
 ## Install on macOS
 
 1. Start Thunderbird once so a profile exists.
-2. Open `Thunderbird-AI-Setup-3.3.0-macos.pkg`.
+2. Open `Thunderbird-AI-Setup-3.3.1-macos.pkg`.
 3. Accept the GPL, save drafts, and allow a normal Thunderbird quit.
 4. Setup opens Thunderbird after installation. Accept any one-time activation
    or permission prompt.
@@ -209,8 +210,8 @@ On macOS:
 Current artifacts:
 
 - `thunderbird-ai.xpi`
-- `artifacts/Thunderbird-AI-Setup-3.3.0-win-x64.exe`
-- `artifacts/Thunderbird-AI-Setup-3.3.0-macos.pkg`
+- `artifacts/Thunderbird-AI-Setup-3.3.1-win-x64.exe`
+- `artifacts/Thunderbird-AI-Setup-3.3.1-macos.pkg`
 
 Build the Thunderbird Add-ons reviewer source only from tracked files:
 
@@ -220,15 +221,19 @@ Build the Thunderbird Add-ons reviewer source only from tracked files:
 
 See the [reviewer build guide](ATN_SOURCE_BUILD.md),
 [Thunderbird Add-ons submission sheet](docs/atn-submission.md), and
-[complete manual test checklist](docs/manual-testing.md).
+[complete manual test checklist](docs/manual-testing.md). The one-time Azure,
+OIDC, and protected-environment setup is in the
+[Windows code-signing guide](docs/windows-code-signing.md).
 
 ## Automatic Windows and macOS release
 
 A push to `main` in the official repository starts the
 [release workflow](.github/workflows/release.yml). If the manifest version has
 no release, native Ubuntu, macOS, and Windows jobs test and build the XPI,
-reviewer source, `.pkg`, and `.exe`. Publication occurs only after the complete
-artifact set, stable aliases, and checksums pass.
+reviewer source, `.pkg`, and `.exe`. The Windows job additionally requires a
+valid timestamped Authenticode signature from the configured publisher.
+Publication occurs only after the complete artifact set, signed Windows stable
+alias, and checksums pass.
 
 No cross-build or GitHub UI step is needed after the one-time Actions setup.
 The repository must allow the final job's scoped `contents: write` permission.

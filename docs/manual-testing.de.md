@@ -126,7 +126,12 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     einfügen. Bis zur Markdown-formatierten Antwort muss eine Assistentenblase
     wiederholt ein bis vier Punkte anzeigen und anschließend an Ort und Stelle
     durch die Antwort ersetzt werden.
+36. Bei einem offiziellen GitHub-Windows-Release für versionierten Installer
+    und stabilen Alias `Get-AuthenticodeSignature` ausführen. Beide müssen
+    `Valid`, den konfigurierten Herausgeber und ein Zeitstempelzertifikat melden;
+    ihre SHA-256-Prüfsummen müssen gleich sein. Lokale Test-Builds bleiben
+    absichtlich unsigniert.
 
-Das Einzelmail-Popup muss Version 3.3.0 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.3.1 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status nur als Kandidatenfilter; Analysen außerhalb des Dashboards
 erzeugen nicht automatisch einen Dashboard-Score.

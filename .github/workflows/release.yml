@@ -132,6 +132,10 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.release_needed == 'true'
     runs-on: windows-latest
+    environment: windows-code-signing
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Check out release source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -155,6 +159,44 @@ jobs:
       - name: Build release installer
         shell: powershell
         run: powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\build-setup.ps1 -SkipAddonBuild
+
+      - name: Authenticate to Azure with GitHub OIDC
+        uses: azure/login@f5d393ae46f8fde4be8b75f32e3fc50e654ad0ca # v3.0.1
+        env:
+          AZURE_CORE_OUTPUT: none
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Authenticode-sign and timestamp the release installer
+        uses: azure/artifact-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82 # v2.0.0
+        with:
+          endpoint: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE }}
+          files: ${{ github.workspace }}\artifacts\Thunderbird-AI-Setup-${{ needs.prepare.outputs.version }}-win-x64.exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+          description: AI Mail Assistant for Thunderbird
+          description-url: https://github.com/Sokrates1989/thunderbird-ai
+
+      - name: Verify signature and create the byte-identical stable alias
+        shell: powershell
+        env:
+          EXPECTED_PUBLISHER: ${{ secrets.WINDOWS_SIGNING_SUBJECT }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          $versioned = Join-Path $env:GITHUB_WORKSPACE "artifacts\Thunderbird-AI-Setup-$env:VERSION-win-x64.exe"
+          $stable = Join-Path $env:GITHUB_WORKSPACE 'artifacts\Thunderbird-AI-Setup-win-x64.exe'
+          & .\installer\windows\verify-authenticode.ps1 -Path $versioned -ExpectedPublisher $env:EXPECTED_PUBLISHER
+          Copy-Item -LiteralPath $versioned -Destination $stable -Force
+          & .\installer\windows\verify-authenticode.ps1 -Path @($versioned, $stable) -ExpectedPublisher $env:EXPECTED_PUBLISHER
+          if ((Get-FileHash -Algorithm SHA256 -LiteralPath $versioned).Hash -ne
+              (Get-FileHash -Algorithm SHA256 -LiteralPath $stable).Hash) {
+              throw 'The stable Windows installer alias is not byte-identical.'
+          }
 
       - name: Upload Windows installers
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
