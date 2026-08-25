@@ -2,7 +2,7 @@
 
 const CONFIG = {
     ADDON_NAME: 'AI Mail Assistant for Thunderbird',
-    ADDON_VERSION: '3.3.3',
+    ADDON_VERSION: '3.3.4',
     ADDON_ID: 'thunderbird-ai@felicitas-wisdom.com',
 
     AI: {
@@ -308,6 +308,7 @@ const CONFIG = {
         GET_SCORE_ARCHIVE: 'getScoreArchive',
         UPDATE_SCORE_ARCHIVE: 'updateScoreArchive',
         REMOVE_SCORE_ARCHIVE: 'removeScoreArchive',
+        SET_LAUNCH_MODE: 'setLaunchMode',
         SET_DASHBOARD_OPEN_MODE: 'setDashboardOpenMode'
     },
 

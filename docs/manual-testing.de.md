@@ -98,7 +98,9 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     begrenzte OpenAI-USD-Schätzung ohne Schlüssel anzeigen.
 28. Overlay-/Tab-Vorgaben unabhängig testen, einschließlich Fünfter-Öffnung-
     Hinweis, Vollbildübernahme, Später-Zyklus, dauerhafter Ablehnung und Fokus
-    eines vorhandenen Dashboard-Tabs.
+    eines vorhandenen Dashboard-Tabs. Beide Auswahlen zur Öffnungsart ohne den
+    globalen Speichern-Knopf ändern, ein Installer-Update ausführen und danach
+    prüfen, dass beide Werte ausgewählt bleiben.
 29. Bei geöffnetem Dashboard-Tab aktualisieren. Der erste Start ersetzt alte
     AI-Tabs durch genau einen frischen Tab, ohne normale Thunderbird-Tabs zu
     schließen. Eine hängende Tab-Aktion muss zeitlich begrenzt sein.
@@ -137,6 +139,6 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     ihre SHA-256-Prüfsummen müssen gleich sein. Lokale Test-Builds bleiben
     absichtlich unsigniert.
 
-Das Einzelmail-Popup muss Version 3.3.3 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.3.4 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status nur als Kandidatenfilter; Analysen außerhalb des Dashboards
 erzeugen nicht automatisch einen Dashboard-Score.

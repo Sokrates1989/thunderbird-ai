@@ -30,12 +30,40 @@ const DashboardLaunchSettingsComponent = class {
             </div>`;
         this.elements.mode = document.getElementById('dashboardOpenMode');
         this.elements.singleMailMode = document.getElementById('singleMailOpenMode');
-        this.elements.mode.addEventListener('change', event => {
-            this.settingsManager.notifySettingChanged('dashboardOpenMode', event.target.value);
+        this.elements.mode.addEventListener('change', () => {
+            void this.persistMode('dashboardOpenMode', this.elements.mode);
         });
-        this.elements.singleMailMode.addEventListener('change', event => {
-            this.settingsManager.notifySettingChanged('singleMailOpenMode', event.target.value);
+        this.elements.singleMailMode.addEventListener('change', () => {
+            void this.persistMode('singleMailOpenMode', this.elements.singleMailMode);
         });
+    }
+
+    /** Save a launch selector immediately and restore its last value when persistence fails. */
+    async persistMode(setting, element) {
+        const previousMode = globalThis.LaunchModeService.normalizeMode(
+            this.settingsManager.currentSettings[setting]
+        );
+        const selectedMode = globalThis.LaunchModeService.normalizeMode(element.value);
+        element.disabled = true;
+        try {
+            const result = await this.settingsManager.sendToBackground(
+                CONFIG.ACTIONS.SET_LAUNCH_MODE,
+                { setting, mode: selectedMode }
+            );
+            if (!result?.success) {
+                throw new Error('LAUNCH_MODE_SAVE_FAILED');
+            }
+            this.settingsManager.notifySettingChanged(setting, selectedMode);
+            this.settingsManager.showStatus(I18n.t('settingsSaved'), 'success');
+            return true;
+        } catch (error) {
+            console.error('Could not save launch mode:', error);
+            element.value = previousMode;
+            this.settingsManager.showStatus(I18n.t('settingsSaveFailed'), 'error');
+            return false;
+        } finally {
+            element.disabled = false;
+        }
     }
 
     getCurrentValues() {

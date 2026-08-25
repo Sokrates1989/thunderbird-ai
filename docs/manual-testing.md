@@ -97,7 +97,9 @@ Thunderbird behavior that mocks cannot prove.
     limited OpenAI USD estimate without exposing keys.
 28. Test overlay/tab preferences independently. Exercise the fifth-open and
     repeated-fullscreen adoption prompts, Later cycles, permanent dismissal,
-    and focus of an existing dashboard tab.
+    and focus of an existing dashboard tab. Change both launch-mode selectors
+    without using the global Save button, run an installer update, and confirm
+    both choices remain selected afterward.
 29. Update while a dashboard tab is open. The first launch must replace stale AI
     dashboard tabs with exactly one fresh tab without closing normal Thunderbird
     tabs. A stalled tab action must time out and allow a later retry.
@@ -131,6 +133,6 @@ Thunderbird behavior that mocks cannot prove.
     configured publisher, and a timestamp certificate; their SHA-256 hashes
     must be identical. Local test builds are intentionally unsigned.
 
-The single-message popup must show version 3.3.3. The dashboard uses unread
+The single-message popup must show version 3.3.4. The dashboard uses unread
 status only as its candidate filter; analysis performed outside the dashboard
 does not automatically create a dashboard score record.

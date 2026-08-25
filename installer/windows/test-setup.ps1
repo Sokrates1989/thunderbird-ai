@@ -162,6 +162,10 @@ $profileExtensionDirectory = Join-Path $testRoot 'Profiles\fixture.default\exten
 New-Item -ItemType Directory -Path $profileExtensionDirectory -Force | Out-Null
 $profileExtension = Join-Path $profileExtensionDirectory "$extensionId.xpi"
 [System.IO.File]::WriteAllText($profileExtension, 'old fixture', [System.Text.Encoding]::UTF8)
+$profileStorageDirectory = Join-Path $testRoot 'Profiles\fixture.default\storage\default\existing-extension'
+New-Item -ItemType Directory -Path $profileStorageDirectory -Force | Out-Null
+$profileStorageSentinel = Join-Path $profileStorageDirectory 'settings-sentinel'
+[System.IO.File]::WriteAllText($profileStorageSentinel, 'preserve me', [System.Text.Encoding]::UTF8)
 
 try {
     $installer = & (Join-Path $PSScriptRoot 'build-setup.ps1') -TestMode
@@ -182,6 +186,9 @@ try {
         (Get-FileHash -LiteralPath $profileExtension -Algorithm SHA256).Hash) {
         throw 'The existing-profile XPI was not updated from the installer payload.'
     }
+    if ((Get-Content -LiteralPath $profileStorageSentinel -Raw) -ne 'preserve me') {
+        throw 'The installer changed existing Thunderbird profile storage.'
+    }
 
     $staleExtension = Join-Path $installDirectory 'thunderbird-ai-1.2.0.xpi'
     [System.IO.File]::WriteAllText($staleExtension, 'stale fixture', [System.Text.Encoding]::UTF8)
@@ -194,6 +201,9 @@ try {
     if ((Get-FileHash -LiteralPath $installedExtension -Algorithm SHA256).Hash -ne
         (Get-FileHash -LiteralPath $profileExtension -Algorithm SHA256).Hash) {
         throw 'Running setup as an update changed the installed/profile XPI parity.'
+    }
+    if ((Get-Content -LiteralPath $profileStorageSentinel -Raw) -ne 'preserve me') {
+        throw 'Running setup as an update changed existing Thunderbird profile storage.'
     }
 
     $extensionRegistry = "$testRegistrySubKey\Thunderbird\Extensions"
@@ -214,6 +224,9 @@ try {
     )
     if (Test-Path -LiteralPath $profileExtension) {
         throw 'The isolated uninstaller left the profile XPI behind.'
+    }
+    if ((Get-Content -LiteralPath $profileStorageSentinel -Raw) -ne 'preserve me') {
+        throw 'The isolated uninstaller changed existing Thunderbird profile storage.'
     }
     foreach ($view in $registryViews) {
         if (Test-RegistryKeyInView -SubKey $testRegistrySubKey -View $view) {

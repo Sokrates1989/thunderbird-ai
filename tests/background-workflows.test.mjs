@@ -718,6 +718,37 @@ test('API statistics count recovered physical attempts without inventing retries
     assert.equal(ai.apiAttemptCount({}), 1);
 });
 
+test('settings persist both launch modes through the restricted runtime action', async () => {
+    const { ai, config, storageState } = await loadBackground({
+        initialStorage: {
+            dashboardOpenMode: 'overlay',
+            singleMailOpenMode: 'overlay'
+        }
+    });
+
+    const dashboardResponse = await ai.handleMessage({
+        action: config.ACTIONS.SET_LAUNCH_MODE,
+        setting: 'dashboardOpenMode',
+        mode: 'tab'
+    });
+    const singleMailResponse = await ai.handleMessage({
+        action: config.ACTIONS.SET_LAUNCH_MODE,
+        setting: 'singleMailOpenMode',
+        mode: 'tab'
+    });
+    const invalidResponse = await ai.handleMessage({
+        action: config.ACTIONS.SET_LAUNCH_MODE,
+        setting: 'openaiApiKey',
+        mode: 'tab'
+    });
+
+    assert.equal(dashboardResponse.success, true);
+    assert.equal(singleMailResponse.success, true);
+    assert.equal(invalidResponse.success, false);
+    assert.equal(storageState.dashboardOpenMode, 'tab');
+    assert.equal(storageState.singleMailOpenMode, 'tab');
+});
+
 test('global toolbar uses its compact localized name without changing other identities', () => {
     const manifest = JSON.parse(fs.readFileSync(
         path.join(repositoryRoot, 'thunderbird-ai/manifest.json'),
@@ -761,7 +792,7 @@ test('packaged UI sources contain no unfinished actions or retired models', () =
     assert.match(source, /messages\.getFull/u);
     assert.ok(manifest.permissions.includes('clipboardWrite'));
     assert.ok(manifest.permissions.includes('sensitiveDataUpload'));
-    assert.equal(manifest.version, '3.3.3');
+    assert.equal(manifest.version, '3.3.4');
     assert.equal(manifest.compose_action, undefined);
     assert.ok(
         manifest.background.scripts.indexOf('RuntimeDiagnosticService.js')

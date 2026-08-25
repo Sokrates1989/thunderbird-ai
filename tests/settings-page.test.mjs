@@ -137,6 +137,9 @@ test('settings expose independent persisted launch preferences for both entry po
     assert.match(launchSettings, /id="dashboardOpenMode"/u);
     assert.match(launchSettings, /id="singleMailOpenMode"/u);
     assert.match(launchSettings, /singleMailOpenMode:\s*globalThis\.LaunchModeService\.normalizeMode/u);
+    assert.match(launchSettings, /CONFIG\.ACTIONS\.SET_LAUNCH_MODE/u);
+    assert.match(launchSettings, /persistMode\('dashboardOpenMode'/u);
+    assert.match(launchSettings, /persistMode\('singleMailOpenMode'/u);
     assert.match(supportDiagnostics, /GET_BACKGROUND_HEALTH/u);
     assert.match(supportDiagnostics, /loadBackgroundHealth\(\)/u);
     assert.match(supportDiagnostics, /auditStorage\(\)/u);
@@ -144,6 +147,46 @@ test('settings expose independent persisted launch preferences for both entry po
     assert.doesNotMatch(supportDiagnostics, /openaiApiKey:\s*stored/u);
     assert.match(supportDiagnostics, /navigator\.clipboard\.writeText/u);
     assert.match(settingsStyles, /\.support-health\.failed\s*\{/u);
+});
+
+test('launch mode selectors save immediately and roll back a failed write', async () => {
+    const context = createContext({ console: { error() {} } });
+    loadScript(context, 'thunderbird-ai/config/locale-en.js');
+    loadScript(context, 'thunderbird-ai/config/constants.js');
+    loadScript(context, 'thunderbird-ai/components/shared/LaunchModeService.js');
+    loadScript(
+        context,
+        'thunderbird-ai/components/settings/DashboardLaunchSettingsComponent.js'
+    );
+    const requests = [];
+    const changes = [];
+    const statuses = [];
+    const settingsManager = {
+        currentSettings: { dashboardOpenMode: 'overlay', singleMailOpenMode: 'tab' },
+        sendToBackground: async (action, data) => {
+            requests.push({ action, data });
+            return { success: requests.length === 1 };
+        },
+        notifySettingChanged: (setting, mode) => changes.push({ setting, mode }),
+        showStatus: (message, type) => statuses.push({ message, type })
+    };
+    const component = Object.create(context.DashboardLaunchSettingsComponent.prototype);
+    component.settingsManager = settingsManager;
+    const dashboardSelect = { value: 'tab', disabled: false };
+    const singleMailSelect = { value: 'overlay', disabled: false };
+
+    assert.equal(await component.persistMode('dashboardOpenMode', dashboardSelect), true);
+    assert.equal(requests[0].action, context.CONFIG.ACTIONS.SET_LAUNCH_MODE);
+    assert.equal(requests[0].data.setting, 'dashboardOpenMode');
+    assert.equal(requests[0].data.mode, 'tab');
+    assert.deepEqual(changes, [{ setting: 'dashboardOpenMode', mode: 'tab' }]);
+    assert.equal(dashboardSelect.disabled, false);
+    assert.equal(statuses[0].type, 'success');
+
+    assert.equal(await component.persistMode('singleMailOpenMode', singleMailSelect), false);
+    assert.equal(singleMailSelect.value, 'tab');
+    assert.equal(singleMailSelect.disabled, false);
+    assert.equal(statuses[1].type, 'error');
 });
 
 test('settings protect persisted values when the background cannot initialize', () => {

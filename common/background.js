@@ -306,6 +306,8 @@ class ThunderbirdAI {
                     };
                 case CONFIG.ACTIONS.SAVE_SETTINGS:
                     return this.saveSettings(request);
+                case CONFIG.ACTIONS.SET_LAUNCH_MODE:
+                    return this.setLaunchMode(request.setting, request.mode);
                 case CONFIG.ACTIONS.SET_DASHBOARD_OPEN_MODE:
                     return this.setDashboardOpenMode(request.mode);
                 default:
@@ -333,17 +335,29 @@ class ThunderbirdAI {
         return { success };
     }
 
-    async setDashboardOpenMode(mode) {
-        const launchService = this.dashboardLaunchService();
-        const normalizedMode = launchService.normalizeMode(mode);
+    /** Persist one allowlisted launch preference without modifying unrelated settings. */
+    async setLaunchMode(setting, mode) {
+        const storageKey = {
+            dashboardOpenMode: CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE,
+            singleMailOpenMode: CONFIG.STORAGE_KEYS.SINGLE_MAIL_OPEN_MODE
+        }[setting];
+        if (!storageKey) {
+            return { success: false };
+        }
+        const normalizedMode = globalThis.LaunchModeService.normalizeMode(mode);
         const success = await StorageManager.set(
-            CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE,
+            storageKey,
             normalizedMode
         );
-        if (success) {
-            await launchService.prepareToolbarRouter();
+        if (success && setting === 'dashboardOpenMode') {
+            await this.dashboardLaunchService().prepareToolbarRouter();
         }
-        return { success, data: { mode: normalizedMode } };
+        return { success, data: { setting, mode: normalizedMode } };
+    }
+
+    /** Preserve the existing dashboard-adoption message contract. */
+    async setDashboardOpenMode(mode) {
+        return this.setLaunchMode('dashboardOpenMode', mode);
     }
 
     async runEmailAction(task, messageId, options = {}) {
