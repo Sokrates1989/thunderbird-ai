@@ -115,7 +115,13 @@ Thunderbird behavior that mocks cannot prove.
 34. Configure Hugging Face Inference Providers as documented with
     `openai/gpt-oss-120b:cheapest` and run the API connection test using only
     synthetic input. It must return success instead of an empty-output error.
+35. Open AI Chat from the single-message popup. It must open or focus an
+    expanded Thunderbird tab. Confirm user and assistant messages use opposite
+    bubble alignment and distinct avatars. Enter must send, Shift+Enter must
+    insert a line break, and a cycling one-to-four-dot assistant bubble must
+    remain visible until it is replaced in place by the Markdown-formatted
+    answer.
 
-The single-message popup must show version 3.2.2. The dashboard uses unread
+The single-message popup must show version 3.3.0. The dashboard uses unread
 status only as its candidate filter; analysis performed outside the dashboard
 does not automatically create a dashboard score record.

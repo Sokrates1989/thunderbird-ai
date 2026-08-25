@@ -52,7 +52,7 @@ const SingleMailManager = class {
             if (parameters.get('reply') === '1') {
                 await this.openReplyComposer();
             } else if (parameters.get('chat') === '1') {
-                this.openChat();
+                await this.openChat();
             } else if (parameters.get('summarize') === '1') {
                 await this.executeAIAction('SUMMARIZE_EMAIL');
             }
@@ -180,10 +180,24 @@ const SingleMailManager = class {
         }
     }
 
-    openChat() {
+    /** Open chat in a roomy durable tab, with an in-page fallback for launch failures. */
+    async openChat() {
         if (this.emailId === undefined || this.emailId === null) {
             this.showError(I18n.t('messageNotFound'));
             return;
+        }
+        const parameters = new URLSearchParams(window.location.search);
+        if (parameters.get('chat') !== '1') {
+            try {
+                await SingleMailWorkspaceService.openExpanded(
+                    this.emailId,
+                    'chat',
+                    'single-mail-action'
+                );
+                return;
+            } catch (error) {
+                this.log(`Could not open chat workspace tab: ${error.message}`, 'warning');
+            }
         }
         this.components.chat.open();
     }

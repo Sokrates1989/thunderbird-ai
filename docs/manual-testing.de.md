@@ -119,7 +119,14 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     `openai/gpt-oss-120b:cheapest` einrichten und den API-Verbindungstest nur
     mit synthetischen Eingaben ausführen. Er muss erfolgreich sein und darf
     keinen Fehler wegen leerer Ausgabe melden.
+35. AI Chat im Einzelmail-Popup öffnen. Der Chat muss einen erweiterten
+    Thunderbird-Tab öffnen oder fokussieren. Nutzer- und Assistentennachrichten
+    müssen entgegengesetzt ausgerichtete Sprechblasen und unterschiedliche
+    Avatare haben. Enter muss senden, Umschalt+Enter einen Zeilenumbruch
+    einfügen. Bis zur Markdown-formatierten Antwort muss eine Assistentenblase
+    wiederholt ein bis vier Punkte anzeigen und anschließend an Ort und Stelle
+    durch die Antwort ersetzt werden.
 
-Das Einzelmail-Popup muss Version 3.2.2 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.3.0 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status nur als Kandidatenfilter; Analysen außerhalb des Dashboards
 erzeugen nicht automatisch einen Dashboard-Score.
