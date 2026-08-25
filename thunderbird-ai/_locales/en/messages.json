@@ -1,5 +1,6 @@
 {
   "extensionName": { "message": "AI Mail Assistant for Thunderbird" },
+  "dashboardActionTitle": { "message": "AI Mail Assistant" },
   "actionTitle": { "message": "AI Assistant" },
   "extensionDescription": { "message": "AI-powered email assistant for summarizing, replying, categorizing, and managing messages." }
 }

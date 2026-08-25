@@ -4,7 +4,7 @@
 
 Dieses Dokument enthält direkt verwendbare Listing- und Reviewer-Informationen
 für die erste öffentliche Einreichung von AI Mail Assistant for Thunderbird
-3.2.0. Bei Änderungen an Anbietern oder Datenkategorien muss es mit
+3.2.1. Bei Änderungen an Anbietern oder Datenkategorien muss es mit
 `PRIVACY.de.md` synchron bleiben.
 
 Offizielle Referenzen:
@@ -17,7 +17,7 @@ Offizielle Referenzen:
 
 - Name: `AI Mail Assistant for Thunderbird`
 - Erweiterungs-ID: `thunderbird-ai@felicitas-wisdom.com`
-- Version: `3.2.0`
+- Version: `3.2.1`
 - Minimales Thunderbird: `128.0`
 - Empfohlene Hauptkategorie: `Message and News Reading`
 - Empfohlene Nebenkategorie, falls verfügbar: `Message Composition`
@@ -127,8 +127,8 @@ enthält bereits die kurze Datenerfassungszusammenfassung.
 
 ## Reviewer-Hinweise
 
-1. `artifacts/thunderbird-ai-3.2.0.xpi` als Erweiterung hochladen.
-2. `artifacts/thunderbird-ai-3.2.0-atn-source.zip` als Quellcode anhängen.
+1. `artifacts/thunderbird-ai-3.2.1.xpi` als Erweiterung hochladen.
+2. `artifacts/thunderbird-ai-3.2.1-atn-source.zip` als Quellcode anhängen.
 3. Das Quellarchiv enthält `ATN_SOURCE_BUILD.de.md` mit einem netzwerkfreien
    XPI-Build.
 4. Thunderbird 128 oder neuer mit synthetischem Konto und Nachrichten verwenden.

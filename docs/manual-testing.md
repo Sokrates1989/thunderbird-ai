@@ -109,7 +109,10 @@ Thunderbird behavior that mocks cannot prove.
     text, the executable link is not clickable, and the image is represented as
     a link without a remote request. Operator messages and the editable reply
     draft must retain their exact literal text.
+33. Confirm the main dashboard toolbar action is named **AI Mail Assistant**.
+    The message-specific action remains **AI Assistant**, while Thunderbird's
+    add-on manager continues to show **AI Mail Assistant for Thunderbird**.
 
-The single-message popup must show version 3.2.0. The dashboard uses unread
+The single-message popup must show version 3.2.1. The dashboard uses unread
 status only as its candidate filter; analysis performed outside the dashboard
 does not automatically create a dashboard score record.

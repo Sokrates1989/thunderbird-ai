@@ -718,6 +718,27 @@ test('API statistics count recovered physical attempts without inventing retries
     assert.equal(ai.apiAttemptCount({}), 1);
 });
 
+test('global toolbar uses its compact localized name without changing other identities', () => {
+    const manifest = JSON.parse(fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/manifest.json'),
+        'utf8'
+    ));
+    const locales = ['en', 'de'].map(language => JSON.parse(fs.readFileSync(
+        path.join(repositoryRoot, `thunderbird-ai/_locales/${language}/messages.json`),
+        'utf8'
+    )));
+
+    assert.equal(manifest.name, '__MSG_extensionName__');
+    assert.equal(manifest.action.default_title, '__MSG_dashboardActionTitle__');
+    assert.equal(manifest.message_display_action.default_title, '__MSG_actionTitle__');
+    assert.deepEqual(Object.keys(locales[0]).sort(), Object.keys(locales[1]).sort());
+    for (const locale of locales) {
+        assert.equal(locale.extensionName.message, 'AI Mail Assistant for Thunderbird');
+        assert.equal(locale.dashboardActionTitle.message, 'AI Mail Assistant');
+        assert.equal(locale.actionTitle.message, 'AI Assistant');
+    }
+});
+
 test('packaged UI sources contain no unfinished actions or retired models', () => {
     const sourceRoots = ['common', 'thunderbird-ai'];
     const files = sourceRoots.flatMap(root => {
@@ -740,7 +761,7 @@ test('packaged UI sources contain no unfinished actions or retired models', () =
     assert.match(source, /messages\.getFull/u);
     assert.ok(manifest.permissions.includes('clipboardWrite'));
     assert.ok(manifest.permissions.includes('sensitiveDataUpload'));
-    assert.equal(manifest.version, '3.2.0');
+    assert.equal(manifest.version, '3.2.1');
     assert.equal(manifest.compose_action, undefined);
     assert.ok(
         manifest.background.scripts.indexOf('RuntimeDiagnosticService.js')

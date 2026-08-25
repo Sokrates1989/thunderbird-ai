@@ -111,7 +111,11 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     ist nicht anklickbar und das Bild erscheint als Link ohne externen Abruf.
     Nutzernachrichten und der bearbeitbare Antwortentwurf behalten exakt ihren
     unveränderten Text.
+33. Prüfen, dass die globale Dashboard-Aktion in der Toolbar **AI Mail
+    Assistant** heißt. Die nachrichtenbezogene Aktion bleibt **AI Assistant**;
+    Thunderbird zeigt in der Add-on-Verwaltung weiterhin **AI Mail Assistant
+    for Thunderbird** an.
 
-Das Einzelmail-Popup muss Version 3.2.0 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.2.1 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status nur als Kandidatenfilter; Analysen außerhalb des Dashboards
 erzeugen nicht automatisch einen Dashboard-Score.
