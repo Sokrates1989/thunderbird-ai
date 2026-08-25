@@ -93,6 +93,7 @@ globalThis.LOCALE_MESSAGES.de = Object.freeze({
     apiKeyRequiredPlaceholder: 'Für diesen Anbieter erforderlich',
     apiKeyOptionalPlaceholder: 'Für diesen Endpunkt optional',
     providerConfigurationIncomplete: 'Der ausgewählte AI-Anbieter ist nicht vollständig konfiguriert.',
+    providerNotConfiguredSummary: '⚠ Noch nicht konfiguriert',
     providerEndpointInvalid: 'Geben Sie eine gültige API-Endpunkt-URL ein.',
     providerEndpointInsecure: 'Individuelle API-Endpunkte müssen HTTPS verwenden. Reines HTTP ist nur für localhost erlaubt.',
     providerModelMissing: 'Geben Sie eine Modell-ID ein oder wählen Sie ein Modell des integrierten Anbieters.',

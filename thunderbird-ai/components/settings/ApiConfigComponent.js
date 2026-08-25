@@ -34,51 +34,62 @@ const ApiConfigComponent = class {
             </div>
         `).join('');
         this.container.innerHTML = `
-            <h2>${I18n.t('apiConfigTitle')}</h2>
-            <div class="setting-group">
-                <label for="aiProvider">${I18n.t('providerLabel')}</label>
-                <select id="aiProvider">${providerOptions}</select>
-                <div class="help-text" id="providerHelp"></div>
-            </div>
+            <details class="settings-collapsible">
+                <summary class="settings-collapsible-summary">
+                    <span class="settings-collapsible-title">${I18n.t('apiConfigTitle')}</span>
+                    <span id="providerConfigurationSummary"
+                        class="settings-summary-status pending" role="status"></span>
+                </summary>
+                <div class="settings-collapsible-content">
+                    <div class="setting-group">
+                        <label for="aiProvider">${I18n.t('providerLabel')}</label>
+                        <select id="aiProvider">${providerOptions}</select>
+                        <div class="help-text" id="providerHelp"></div>
+                    </div>
 
-            <div class="provider-connection-grid">
-                <div class="setting-group provider-endpoint-setting">
-                    <label for="providerEndpoint">${I18n.t('providerEndpointLabel')}</label>
-                    <input id="providerEndpoint" type="url" spellcheck="false" />
-                    <div class="help-text">${I18n.t('providerEndpointHelp')}</div>
-                </div>
-                <div class="setting-group custom-provider-setting">
-                    <label for="providerProtocol">${I18n.t('providerProtocolLabel')}</label>
-                    <select id="providerProtocol">${protocolOptions}</select>
-                </div>
-                <div class="setting-group custom-provider-setting">
-                    <label for="providerAuthMode">${I18n.t('providerAuthLabel')}</label>
-                    <select id="providerAuthMode">${authOptions}</select>
-                </div>
-                <div class="setting-group custom-provider-setting">
-                    <label for="providerDefaultModel">${I18n.t('providerDefaultModelLabel')}</label>
-                    <input id="providerDefaultModel" type="text" autocomplete="off" />
-                    <div class="help-text">${I18n.t('providerDefaultModelHelp')}</div>
-                </div>
-            </div>
+                    <div class="provider-connection-grid">
+                        <div class="setting-group provider-endpoint-setting">
+                            <label for="providerEndpoint">${I18n.t('providerEndpointLabel')}</label>
+                            <input id="providerEndpoint" type="url" spellcheck="false" />
+                            <div class="help-text">${I18n.t('providerEndpointHelp')}</div>
+                        </div>
+                        <div class="setting-group custom-provider-setting">
+                            <label for="providerProtocol">${I18n.t('providerProtocolLabel')}</label>
+                            <select id="providerProtocol">${protocolOptions}</select>
+                        </div>
+                        <div class="setting-group custom-provider-setting">
+                            <label for="providerAuthMode">${I18n.t('providerAuthLabel')}</label>
+                            <select id="providerAuthMode">${authOptions}</select>
+                        </div>
+                        <div class="setting-group custom-provider-setting">
+                            <label for="providerDefaultModel">${I18n.t('providerDefaultModelLabel')}</label>
+                            <input id="providerDefaultModel" type="text" autocomplete="off" />
+                            <div class="help-text">${I18n.t('providerDefaultModelHelp')}</div>
+                        </div>
+                    </div>
 
-            <div class="setting-group">
-                <label for="providerApiKey">${I18n.t('apiKeyLabel')}</label>
-                <input type="password" id="providerApiKey" autocomplete="off" />
-                <div class="help-text">
-                    <span id="apiKeyHelp"></span>
-                    <a id="providerApiKeyLink" target="_blank" rel="noopener noreferrer"></a>
-                </div>
-            </div>
+                    <div class="setting-group">
+                        <label for="providerApiKey">${I18n.t('apiKeyLabel')}</label>
+                        <input type="password" id="providerApiKey" autocomplete="off" />
+                        <div class="help-text">
+                            <span id="apiKeyHelp"></span>
+                            <a id="providerApiKeyLink" target="_blank" rel="noopener noreferrer"></a>
+                        </div>
+                    </div>
 
-            <div class="setting-group">
-                <label>${I18n.t('modelRoutingTitle')}</label>
-                <div class="help-text" id="modelRoutingHelp">${I18n.t('modelRoutingHelp')}</div>
-                <datalist id="providerModelPresets"></datalist>
-                <div class="model-task-grid" aria-describedby="modelRoutingHelp">${taskInputs}</div>
-            </div>
+                    <div class="setting-group">
+                        <label>${I18n.t('modelRoutingTitle')}</label>
+                        <div class="help-text" id="modelRoutingHelp">${I18n.t('modelRoutingHelp')}</div>
+                        <datalist id="providerModelPresets"></datalist>
+                        <div class="model-task-grid" aria-describedby="modelRoutingHelp">${taskInputs}</div>
+                    </div>
+                </div>
+            </details>
         `;
 
+        this.elements.configurationSummary = document.getElementById(
+            'providerConfigurationSummary'
+        );
         this.elements.providerSelect = document.getElementById('aiProvider');
         this.elements.providerHelp = document.getElementById('providerHelp');
         this.elements.endpointInput = document.getElementById('providerEndpoint');
@@ -214,6 +225,17 @@ const ApiConfigComponent = class {
         ));
         this.elements.endpointInput.classList.toggle('invalid', !endpointValid);
         this.elements.endpointInput.classList.toggle('valid', endpointValid);
+        this.renderConfigurationSummary(configuration);
+    }
+
+    /** Keep the collapsed header useful without exposing credentials or endpoint details. */
+    renderConfigurationSummary(configuration) {
+        const configured = globalThis.AIProviderService.isConfigured(configuration);
+        this.elements.configurationSummary.textContent = configured
+            ? globalThis.AIProviderService.providerLabel(configuration.provider)
+            : I18n.t('providerNotConfiguredSummary');
+        this.elements.configurationSummary.className =
+            `settings-summary-status ${configured ? 'configured' : 'error'}`;
     }
 
     getActiveProviderConfiguration(capture = true) {

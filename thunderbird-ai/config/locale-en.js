@@ -93,6 +93,7 @@ globalThis.LOCALE_MESSAGES.en = Object.freeze({
     apiKeyRequiredPlaceholder: 'Required for this provider',
     apiKeyOptionalPlaceholder: 'Optional for this endpoint',
     providerConfigurationIncomplete: 'The selected AI provider is not fully configured.',
+    providerNotConfiguredSummary: '⚠ Not configured yet',
     providerEndpointInvalid: 'Enter a valid API endpoint URL.',
     providerEndpointInsecure: 'Custom API endpoints must use HTTPS. Plain HTTP is allowed only for localhost.',
     providerModelMissing: 'Enter a model ID or choose a built-in provider model.',

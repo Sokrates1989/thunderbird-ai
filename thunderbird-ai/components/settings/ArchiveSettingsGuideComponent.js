@@ -15,27 +15,33 @@ const ArchiveSettingsGuideComponent = class {
     /** Build the guide without implying that protected Thunderbird settings can be deep-linked. */
     createUI() {
         this.container.innerHTML = `
-            <h2>${I18n.t('archiveSettingsTitle')}</h2>
-            <p class="archive-settings-introduction">${I18n.t('archiveSettingsIntroduction')}</p>
-            <div class="archive-settings-path">
-                <strong>${I18n.t('archiveSettingsPathLabel')}</strong>
-                <span>${I18n.t('archiveSettingsPath')}</span>
-            </div>
-            <p class="help-text">${I18n.t('archiveSettingsProtectedNote')}</p>
-            <div class="archive-settings-actions">
-                <button type="button" id="archiveSettingsRefresh" class="btn secondary">
-                    <span aria-hidden="true">🔍</span>
-                    <span>${I18n.t('archiveSettingsRefresh')}</span>
-                </button>
-                <button type="button" id="archiveSettingsHelp" class="btn">
-                    <span aria-hidden="true">↗</span>
-                    <span>${I18n.t('archiveSettingsOpenHelp')}</span>
-                </button>
-            </div>
-            <div id="archiveSettingsFeedback" class="archive-settings-feedback" role="status" aria-live="polite"></div>
-            <div id="archiveSettingsResults" class="archive-settings-results" aria-live="polite">
-                <p class="archive-settings-placeholder">${I18n.t('archiveSettingsNotChecked')}</p>
-            </div>
+            <details class="settings-collapsible">
+                <summary class="settings-collapsible-summary">
+                    <span class="settings-collapsible-title">${I18n.t('archiveSettingsTitle')}</span>
+                </summary>
+                <div class="settings-collapsible-content">
+                    <p class="archive-settings-introduction">${I18n.t('archiveSettingsIntroduction')}</p>
+                    <div class="archive-settings-path">
+                        <strong>${I18n.t('archiveSettingsPathLabel')}</strong>
+                        <span>${I18n.t('archiveSettingsPath')}</span>
+                    </div>
+                    <p class="help-text">${I18n.t('archiveSettingsProtectedNote')}</p>
+                    <div class="archive-settings-actions">
+                        <button type="button" id="archiveSettingsRefresh" class="btn secondary">
+                            <span aria-hidden="true">🔍</span>
+                            <span>${I18n.t('archiveSettingsRefresh')}</span>
+                        </button>
+                        <button type="button" id="archiveSettingsHelp" class="btn">
+                            <span aria-hidden="true">↗</span>
+                            <span>${I18n.t('archiveSettingsOpenHelp')}</span>
+                        </button>
+                    </div>
+                    <div id="archiveSettingsFeedback" class="archive-settings-feedback" role="status" aria-live="polite"></div>
+                    <div id="archiveSettingsResults" class="archive-settings-results" aria-live="polite">
+                        <p class="archive-settings-placeholder">${I18n.t('archiveSettingsNotChecked')}</p>
+                    </div>
+                </div>
+            </details>
         `;
 
         this.elements.refresh = document.getElementById('archiveSettingsRefresh');

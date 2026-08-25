@@ -22,14 +22,13 @@ individual instructions for OpenAI, Claude (Anthropic), Mistral, DeepSeek, and
 custom endpoints. The [AI provider test matrix](docs/ai-provider-testing.md)
 separates automated protocol coverage from real-provider acceptance.
 
-## Release 3.3.2 scope
+## Release 3.3.3 scope
 
-Release 3.3.2 corrects the Windows installer's restart prompt: after approval,
-setup closes Thunderbird automatically through its normal shutdown and restarts
-it by default after installation. Thunderbird still gets up to 60 seconds to
-handle open-draft prompts and is never force-terminated. The Authenticode and
-RFC 3161 signing gate introduced in 3.3.1 remains mandatory for public Windows
-releases.
+Release 3.3.3 reduces settings-page clutter. Provider and Thunderbird archive
+configuration start collapsed, the provider header shows either the configured
+provider or a visible missing-configuration warning, and the support diagnostic
+moves to the final settings position with its technical report closed. The
+accurate Windows restart prompt introduced in 3.3.2 remains included.
 
 ## Features
 
@@ -155,7 +154,7 @@ other local credential store. See the full [privacy policy](PRIVACY.md).
 
 ## Install on Windows
 
-1. Download and run `Thunderbird-AI-Setup-3.3.2-win-x64.exe`.
+1. Download and run `Thunderbird-AI-Setup-3.3.3-win-x64.exe`.
 2. Select **Deutsch** or **English** and accept the GNU General Public License.
 3. Save drafts and approve the controlled restart. Setup closes Thunderbird
    normally and restarts it by default after installation; the final restart
@@ -172,7 +171,7 @@ test installers remain unsigned and can trigger SmartScreen.
 ## Install on macOS
 
 1. Start Thunderbird once so a profile exists.
-2. Open `Thunderbird-AI-Setup-3.3.2-macos.pkg`.
+2. Open `Thunderbird-AI-Setup-3.3.3-macos.pkg`.
 3. Accept the GPL, save drafts, and allow a normal Thunderbird quit.
 4. Setup opens Thunderbird after installation. Accept any one-time activation
    or permission prompt.
@@ -212,8 +211,8 @@ On macOS:
 Current artifacts:
 
 - `thunderbird-ai.xpi`
-- `artifacts/Thunderbird-AI-Setup-3.3.2-win-x64.exe`
-- `artifacts/Thunderbird-AI-Setup-3.3.2-macos.pkg`
+- `artifacts/Thunderbird-AI-Setup-3.3.3-win-x64.exe`
+- `artifacts/Thunderbird-AI-Setup-3.3.3-macos.pkg`
 
 Build the Thunderbird Add-ons reviewer source only from tracked files:
 

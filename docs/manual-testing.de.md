@@ -77,7 +77,10 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
 22. Den [Anbieter-Abnahmetest](api-keys/README.de.md#einheitlicher-anbietertest)
     für jeden verfügbaren Anbieter ausführen. Integrierte URLs bleiben
     schreibgeschützt; Anbieterprofile getrennt; ein individueller Host fordert
-    nur seine exakte Berechtigung an.
+    nur seine exakte Berechtigung an. Beim ersten Öffnen der Einstellungen
+    müssen Anbieter- und Thunderbird-Archivkonfiguration eingeklappt sein. Die
+    Anbieterzusammenfassung zeigt den konfigurierten Anbieter oder bei
+    unvollständiger Pflichtkonfiguration einen roten Warnhinweis.
 23. Newsletter-/Bulk-Signale und Absenderhäufigkeit testen; eine ausdrückliche
     Korrektur als erwünschter Absender muss die lokale Spam-Untergrenze schlagen.
 24. Einen temporären Anbieterfehler auslösen. Die UI bleibt während begrenzter
@@ -101,6 +104,8 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     schließen. Eine hängende Tab-Aktion muss zeitlich begrenzt sein.
 30. Support-Diagnosen müssen Add-on-/Thunderbird-Versionen und begrenzte,
     inhaltsfreie Aktionsgrenzen einschließlich kontrolliertem Fehler zeigen.
+    Der Supportbereich muss der letzte Einstellungsabschnitt sein und sein
+    technischer Bericht anfangs eingeklappt bleiben.
 31. Dashboard und Einzelmail-Ansicht scrollen. Der Nach-oben-Button erscheint
     nur unterhalb des Anfangs; beide Bulk-Leisten bleiben synchron.
 32. Eine synthetische AI-Antwort mit Überschrift, Hervorhebung, verschachtelter
@@ -132,6 +137,6 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     ihre SHA-256-Prüfsummen müssen gleich sein. Lokale Test-Builds bleiben
     absichtlich unsigniert.
 
-Das Einzelmail-Popup muss Version 3.3.2 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.3.3 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status nur als Kandidatenfilter; Analysen außerhalb des Dashboards
 erzeugen nicht automatisch einen Dashboard-Score.

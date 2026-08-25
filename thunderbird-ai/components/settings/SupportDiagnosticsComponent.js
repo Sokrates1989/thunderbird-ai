@@ -12,7 +12,7 @@ const SupportDiagnosticsComponent = class {
             <h2>🩺 ${I18n.t('supportDiagnosticsTitle')}</h2>
             <p class="help-text">${I18n.t('supportDiagnosticsHint')}</p>
             <div id="supportDiagnosticsHealth" class="support-health pending" role="status"></div>
-            <details class="support-diagnostics-details" open>
+            <details class="support-diagnostics-details">
                 <summary>${I18n.t('supportDiagnosticsDetailsTitle')}</summary>
                 <pre id="supportDiagnosticDetails" aria-live="polite"></pre>
             </details>

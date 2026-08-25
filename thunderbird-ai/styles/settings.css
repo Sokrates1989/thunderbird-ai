@@ -50,6 +50,54 @@ body {
     gap: 8px;
 }
 
+.settings-collapsible > .settings-collapsible-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.settings-collapsible > .settings-collapsible-summary::-webkit-details-marker {
+    display: none;
+}
+
+.settings-collapsible > .settings-collapsible-summary::before {
+    flex: 0 0 auto;
+    color: #52606d;
+    content: '▶';
+    font-size: 12px;
+}
+
+.settings-collapsible[open] > .settings-collapsible-summary::before {
+    content: '▼';
+}
+
+.settings-collapsible[open] > .settings-collapsible-summary {
+    margin-bottom: 20px;
+}
+
+.settings-collapsible-title {
+    color: #333;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.settings-summary-status {
+    margin-left: auto;
+    font-size: 13px;
+    font-weight: bold;
+    text-align: right;
+}
+
+.settings-summary-status.configured {
+    color: #166523;
+}
+
+.settings-summary-status.error {
+    color: #b42318;
+}
+
 .setting-group {
     margin-bottom: 20px;
 }
@@ -143,6 +191,17 @@ body {
 @media (max-width: 620px) {
     .launch-mode-settings {
         grid-template-columns: 1fr;
+    }
+
+    .settings-collapsible > .settings-collapsible-summary {
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .settings-summary-status {
+        width: 100%;
+        margin-left: 22px;
+        text-align: left;
     }
 }
 

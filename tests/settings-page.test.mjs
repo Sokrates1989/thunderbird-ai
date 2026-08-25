@@ -43,6 +43,60 @@ test('settings expose built-in and compatible custom AI provider controls', () =
     ]);
 });
 
+test('large settings sections start collapsed and summarize provider readiness', () => {
+    const settingsPage = source('thunderbird-ai/pages/settings.html');
+    const apiConfig = source('thunderbird-ai/components/settings/ApiConfigComponent.js');
+    const archiveSettings = source(
+        'thunderbird-ai/components/settings/ArchiveSettingsGuideComponent.js'
+    );
+    const supportDiagnostics = source(
+        'thunderbird-ai/components/settings/SupportDiagnosticsComponent.js'
+    );
+
+    assert.match(apiConfig, /<details class="settings-collapsible">/u);
+    assert.match(apiConfig, /id="providerConfigurationSummary"/u);
+    assert.doesNotMatch(apiConfig, /<details class="settings-collapsible" open>/u);
+    assert.match(archiveSettings, /<details class="settings-collapsible">/u);
+    assert.doesNotMatch(archiveSettings, /<details class="settings-collapsible" open>/u);
+    assert.match(supportDiagnostics, /<details class="support-diagnostics-details">/u);
+    assert.doesNotMatch(supportDiagnostics, /support-diagnostics-details" open/u);
+    assert.ok(
+        settingsPage.indexOf('id="support-diagnostics-section"')
+            > settingsPage.indexOf('id="score-archive-section"')
+    );
+});
+
+test('provider summary distinguishes a configured provider from a missing key', () => {
+    const context = createContext({
+        browser: { i18n: { getUILanguage: () => 'en-US' } }
+    });
+    loadScript(context, 'thunderbird-ai/config/locale-en.js');
+    loadScript(context, 'thunderbird-ai/config/constants.js');
+    loadScript(context, 'common/utils/ai-provider.js');
+    loadScript(context, 'thunderbird-ai/components/settings/ApiConfigComponent.js');
+    const component = Object.create(context.ApiConfigComponent.prototype);
+    component.elements = {
+        configurationSummary: { textContent: '', className: '' }
+    };
+
+    const missingKey = context.AIProviderService.normalizeConfiguration('openai', {
+        apiKey: ''
+    });
+    component.renderConfigurationSummary(missingKey);
+    assert.equal(component.elements.configurationSummary.textContent, '⚠ Not configured yet');
+    assert.equal(component.elements.configurationSummary.className, 'settings-summary-status error');
+
+    const configured = context.AIProviderService.normalizeConfiguration('openai', {
+        apiKey: 'test-key'
+    });
+    component.renderConfigurationSummary(configured);
+    assert.equal(component.elements.configurationSummary.textContent, 'OpenAI');
+    assert.equal(
+        component.elements.configurationSummary.className,
+        'settings-summary-status configured'
+    );
+});
+
 test('settings no longer load or expose retired automatic email analysis', () => {
     const settingsPage = source('thunderbird-ai/pages/settings.html');
     const settingsManager = source('thunderbird-ai/components/settings/SettingsManager.js');
