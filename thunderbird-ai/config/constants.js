@@ -2,7 +2,7 @@
 
 const CONFIG = {
     ADDON_NAME: 'AI Mail Assistant for Thunderbird',
-    ADDON_VERSION: '3.2.1',
+    ADDON_VERSION: '3.2.2',
     ADDON_ID: 'thunderbird-ai@felicitas-wisdom.com',
 
     AI: {
@@ -135,7 +135,7 @@ const CONFIG = {
             bulkTriage: { model: 'gpt-5.6-luna', modelRole: 'fast', effort: 'low', verbosity: 'low', maxOutputTokens: 1200 },
             singleScore: { model: 'gpt-5.6-terra', modelRole: 'balanced', effort: 'low', verbosity: 'low', maxOutputTokens: 300 },
             improve: { model: 'gpt-5.6-terra', modelRole: 'balanced', effort: 'low', verbosity: 'medium', maxOutputTokens: 900 },
-            test: { model: 'gpt-5.6-luna', modelRole: 'fast', effort: 'none', verbosity: 'low', maxOutputTokens: 20 }
+            test: { model: 'gpt-5.6-luna', modelRole: 'fast', effort: 'none', verbosity: 'low', maxOutputTokens: 512 }
         },
         MODEL_SETTINGS: [
             { property: 'bulkModel', storageKey: 'bulkModel', labelKey: 'modelTaskBulk', tasks: ['bulkTriage'], defaultModel: 'gpt-5.6-luna' },

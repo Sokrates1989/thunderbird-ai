@@ -115,7 +115,11 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     Assistant** heißt. Die nachrichtenbezogene Aktion bleibt **AI Assistant**;
     Thunderbird zeigt in der Add-on-Verwaltung weiterhin **AI Mail Assistant
     for Thunderbird** an.
+34. Hugging Face Inference Providers wie dokumentiert mit
+    `openai/gpt-oss-120b:cheapest` einrichten und den API-Verbindungstest nur
+    mit synthetischen Eingaben ausführen. Er muss erfolgreich sein und darf
+    keinen Fehler wegen leerer Ausgabe melden.
 
-Das Einzelmail-Popup muss Version 3.2.1 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.2.2 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status nur als Kandidatenfilter; Analysen außerhalb des Dashboards
 erzeugen nicht automatisch einen Dashboard-Score.

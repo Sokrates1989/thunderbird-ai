@@ -135,6 +135,26 @@ test('custom endpoints support compatible protocols and request only their exact
     assert.equal(request.body.model, 'private-model');
 });
 
+test('connection tests leave enough output budget for reasoning-model answers', () => {
+    const { config, service } = loadProviderService();
+    const configuration = service.normalizeConfiguration('custom', {
+        baseUrl: 'https://router.huggingface.co/v1',
+        protocol: 'openai-chat',
+        authMode: 'bearer',
+        apiKey: 'hf-test-token',
+        defaultModel: 'openai/gpt-oss-120b:cheapest'
+    });
+    const request = service.createRequest(
+        configuration,
+        service.resolveModel(configuration, 'test'),
+        config.AI.TASK_PROFILES.test,
+        payload
+    );
+
+    assert.equal(request.endpoint, 'https://router.huggingface.co/v1/chat/completions');
+    assert.equal(request.body.max_tokens, 512);
+});
+
 test('custom endpoints reject insecure remote HTTP while allowing loopback development', () => {
     const { service } = loadProviderService();
     const insecure = service.normalizeConfiguration('custom', {

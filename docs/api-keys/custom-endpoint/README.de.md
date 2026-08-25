@@ -107,7 +107,7 @@ try {
     $body = @{
         model = 'openai/gpt-oss-120b:cheapest'
         messages = @(@{ role = 'user'; content = 'Reply with OK only.' })
-        max_tokens = 32
+        max_tokens = 512
     } | ConvertTo-Json -Depth 5
 
     $response = Invoke-RestMethod `
@@ -124,7 +124,11 @@ try {
 }
 ```
 
-Der letzte Befehl sollte eine kurze Antwort wie `OK` ausgeben. Danach in
+Der letzte Befehl sollte eine kurze Antwort wie `OK` ausgeben. `gpt-oss` ist ein
+Reasoning-Modell. Ein sehr kleines Ausgabelimit kann deshalb aufgebraucht sein,
+bevor die sichtbare Antwort beginnt. Hugging Face kann dann HTTP 200 mit leerem
+`message.content` zurückgeben; für diesen Diagnosetest 512
+Ausgabetokens verwenden. Danach in
 Thunderbird **API-Verbindung testen** auswählen, ausschließlich
 `https://router.huggingface.co/*` freigeben, speichern und mit einer
 synthetischen E-Mail fortfahren.
@@ -158,8 +162,11 @@ erreichbar bleibt.
 - **Hugging-Face-Anbieter nicht verfügbar:** Ein aktuell im Playground
   angebotenes Modell auswählen, die Routing-Regel ändern oder einen anderen
   aufgeführten Anbieter festlegen.
-- **Kein Text:** Das ausgewählte Protokoll passt nicht zum Antwortformat des
-  Dienstes oder der Dienst liefert keinen kompatiblen Textblock.
+- **Kein Text:** Das ausgewählte Protokoll passt möglicherweise nicht zum
+  Antwortformat. Bei einem Reasoning-Modell kann außerdem das Ausgabelimit
+  verbraucht sein, bevor die sichtbare Antwort beginnt. Version 3.2.2 und neuer
+  reserviert 512 Tokens für den Verbindungstest; in älteren Versionen für diese
+  Prüfung ein aktuell verfügbares Chat-Modell ohne Reasoning verwenden.
 - **Modell nicht gefunden:** Die Modell-ID muss exakt der Kennung des Endpunkts
   entsprechen; **Automatisch** kann ohne Anbieter-Vorgaben keine unbekannte
   Modell-ID erraten.

@@ -112,7 +112,10 @@ Thunderbird behavior that mocks cannot prove.
 33. Confirm the main dashboard toolbar action is named **AI Mail Assistant**.
     The message-specific action remains **AI Assistant**, while Thunderbird's
     add-on manager continues to show **AI Mail Assistant for Thunderbird**.
+34. Configure Hugging Face Inference Providers as documented with
+    `openai/gpt-oss-120b:cheapest` and run the API connection test using only
+    synthetic input. It must return success instead of an empty-output error.
 
-The single-message popup must show version 3.2.1. The dashboard uses unread
+The single-message popup must show version 3.2.2. The dashboard uses unread
 status only as its candidate filter; analysis performed outside the dashboard
 does not automatically create a dashboard score record.
