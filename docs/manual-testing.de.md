@@ -136,7 +136,11 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     Avatare haben. Enter muss senden, Umschalt+Enter einen Zeilenumbruch
     einfügen. Bis zur Markdown-formatierten Antwort muss eine Assistentenblase
     wiederholt ein bis vier Punkte anzeigen und anschließend an Ort und Stelle
-    durch die Antwort ersetzt werden.
+    durch die Antwort ersetzt werden. Den Chat schließen und erneut öffnen; die
+    Unterhaltung muss erhalten bleiben. **Neuen Chat starten** muss eine Bestätigung
+    verlangen, beim Abbrechen alles bewahren und nach Bestätigung sichtbare
+    Sprechblasen sowie folgenden API-Kontext gemeinsam leeren. Ohne Unterhaltung
+    und während einer ausstehenden Antwort muss die Aktion deaktiviert sein.
 36. Bei einem offiziellen GitHub-Windows-Release für versionierten Installer
     und stabilen Alias `Get-AuthenticodeSignature` ausführen. Beide müssen
     `Valid`, den konfigurierten Herausgeber und ein Zeitstempelzertifikat melden;
@@ -164,6 +168,6 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     und Kontenüberschrift müssen dieselben sichtbaren und vollständigen Anzahlen
     vergleichen, zum Beispiel **Angezeigt: 4 von 15**.
 
-Das Einzelmail-Popup muss Version 3.5.3 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.5.4 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status nur als Kandidatenfilter; Analysen außerhalb des Dashboards
 erzeugen nicht automatisch einen Dashboard-Score.

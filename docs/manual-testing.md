@@ -131,7 +131,10 @@ Thunderbird behavior that mocks cannot prove.
     bubble alignment and distinct avatars. Enter must send, Shift+Enter must
     insert a line break, and a cycling one-to-four-dot assistant bubble must
     remain visible until it is replaced in place by the Markdown-formatted
-    answer.
+    answer. Close and reopen the chat and confirm that the conversation remains.
+    **Start new chat** must require confirmation, preserve the conversation when
+    cancelled, and clear both visible bubbles and subsequent API context when
+    confirmed. It must be disabled for an empty chat and while an answer is pending.
 36. For an official GitHub Windows release, run `Get-AuthenticodeSignature` on
     both the versioned installer and stable alias. Both must report `Valid`, the
     configured publisher, and a timestamp certificate; their SHA-256 hashes
@@ -155,6 +158,6 @@ Thunderbird behavior that mocks cannot prove.
     snapshot. Both the result-status row and account heading must compare the same
     visible and source totals, for example **Shown: 4 of 15**.
 
-The single-message popup must show version 3.5.3. The dashboard uses unread
+The single-message popup must show version 3.5.4. The dashboard uses unread
 status only as its candidate filter; analysis performed outside the dashboard
 does not automatically create a dashboard score record.

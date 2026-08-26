@@ -100,9 +100,11 @@ function loadChatComponent(sendToBackground = async () => ({
     const manager = { emailId: 42, sendToBackground };
     const component = new context.ChatComponent(manager);
     component.elements = {
+        overlay: new TestElement(),
         input: new TestElement(),
         messages: new TestElement(),
-        send: new TestElement()
+        send: new TestElement(),
+        restart: new TestElement()
     };
     return { component, intervalCallbacks };
 }
@@ -139,6 +141,7 @@ test('pending assistant bubble animates in place and becomes the Markdown answer
     assert.equal(component.elements.messages.children.length, 2);
     assert.equal(component.elements.input.disabled, true);
     assert.equal(component.elements.send.disabled, true);
+    assert.equal(component.elements.restart.disabled, true);
 
     const [userRow, assistantRow] = component.elements.messages.children;
     assert.match(userRow.className, /user/u);
@@ -176,11 +179,53 @@ test('pending assistant bubble animates in place and becomes the Markdown answer
     );
     assert.equal(component.elements.input.disabled, false);
     assert.equal(component.elements.send.disabled, false);
+    assert.equal(component.elements.restart.disabled, false);
     assert.equal(intervalCallbacks.size, 0);
     assert.deepEqual(Array.from(component.history, entry => ({ ...entry })), [
         { role: 'user', content: 'Warum geht es in dieser E-Mail?' },
         { role: 'assistant', content: '**Antwort**' }
     ]);
+});
+
+test('reopening preserves chat until a confirmed restart clears the conversation', () => {
+    const { component } = loadChatComponent();
+    component.history = [
+        { role: 'user', content: 'Was ist offen?' },
+        { role: 'assistant', content: 'Drei Entscheidungen.' }
+    ];
+    component.appendMessage('user', 'Was ist offen?');
+    component.appendMessage('assistant', 'Drei Entscheidungen.');
+    component.elements.input.value = 'Nicht gesendeter Entwurf';
+    const confirmations = [];
+    let confirmed = false;
+    component.confirm = message => {
+        confirmations.push(message);
+        return confirmed;
+    };
+
+    component.close();
+    component.open();
+
+    assert.equal(component.elements.overlay.hidden, false);
+    assert.equal(component.history.length, 2);
+    assert.equal(component.elements.messages.children.length, 2);
+
+    component.restartChat();
+
+    assert.equal(component.history.length, 2);
+    assert.equal(component.elements.messages.children.length, 2);
+    assert.equal(component.elements.input.value, 'Nicht gesendeter Entwurf');
+
+    confirmed = true;
+    component.restartChat();
+
+    assert.equal(confirmations.length, 2);
+    assert.equal(confirmations[0], 'Möchten Sie einen neuen Chat beginnen? Der bisherige Chatverlauf wird gelöscht.');
+    assert.equal(component.history.length, 0);
+    assert.equal(component.elements.messages.children.length, 0);
+    assert.equal(component.elements.input.value, '');
+    assert.equal(component.elements.restart.disabled, true);
+    assert.equal(component.elements.input.focusCount, 2);
 });
 
 test('chat opens in an expanded tab and keeps a responsive roomy bubble layout', () => {
@@ -203,7 +248,9 @@ test('chat opens in an expanded tab and keeps a responsive roomy bubble layout',
     );
     assert.match(componentSource, /className = 'chat-avatar'/u);
     assert.match(componentSource, /className = 'chat-progress'/u);
+    assert.match(componentSource, /class="chat-restart"/u);
     assert.match(styles, /\.chat-dialog\s*\{[^}]*width:\s*min\(760px, 100%\)/su);
+    assert.match(styles, /\.chat-header-actions\s*\{[^}]*display:\s*flex/su);
     assert.match(styles, /\.chat-message-row\.user\s*\{[^}]*row-reverse/su);
     assert.match(styles, /@media \(max-width: 560px\), \(max-height: 520px\)/u);
 });

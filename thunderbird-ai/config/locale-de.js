@@ -271,6 +271,8 @@ globalThis.LOCALE_MESSAGES.de = Object.freeze({
     similarTitle: 'Ähnliche E-Mails',
     chatTitle: 'AI Chat zur E-Mail',
     chatClose: 'Chat schließen',
+    chatRestart: 'Neuen Chat starten',
+    chatRestartConfirm: 'Möchten Sie einen neuen Chat beginnen? Der bisherige Chatverlauf wird gelöscht.',
     chatPlaceholder: 'Frage zu dieser E-Mail… (Enter sendet, Umschalt+Enter fügt eine neue Zeile ein)',
     chatSend: 'Senden',
     chatUserMessageLabel: 'Ihre Nachricht',

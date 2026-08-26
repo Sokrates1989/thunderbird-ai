@@ -271,6 +271,8 @@ globalThis.LOCALE_MESSAGES.en = Object.freeze({
     similarTitle: 'Similar emails',
     chatTitle: 'AI chat about this email',
     chatClose: 'Close chat',
+    chatRestart: 'Start new chat',
+    chatRestartConfirm: 'Start a new chat? The current chat history will be deleted.',
     chatPlaceholder: 'Ask about this email… (Enter to send, Shift+Enter for a new line)',
     chatSend: 'Send',
     chatUserMessageLabel: 'Your message',

@@ -6,6 +6,7 @@ const ChatComponent = class {
         this.elements = {};
         this.isSending = false;
         this.progressTimer = null;
+        this.confirm = message => window.confirm(message);
     }
 
     initialize() {
@@ -16,7 +17,13 @@ const ChatComponent = class {
             <section class="chat-dialog" role="dialog" aria-modal="true" aria-labelledby="chatTitle">
                 <div class="chat-header">
                     <h2 id="chatTitle">${I18n.t('chatTitle')}</h2>
-                    <button type="button" class="chat-close" aria-label="${I18n.t('chatClose')}">×</button>
+                    <div class="chat-header-actions">
+                        <button type="button" class="chat-restart" disabled>
+                            <span aria-hidden="true">↻</span>
+                            <span>${I18n.t('chatRestart')}</span>
+                        </button>
+                        <button type="button" class="chat-close" aria-label="${I18n.t('chatClose')}">×</button>
+                    </div>
                 </div>
                 <div class="chat-messages" aria-live="polite"></div>
                 <div class="chat-composer">
@@ -30,9 +37,11 @@ const ChatComponent = class {
             messages: overlay.querySelector('.chat-messages'),
             input: overlay.querySelector('.chat-input'),
             send: overlay.querySelector('.chat-send'),
+            restart: overlay.querySelector('.chat-restart'),
             close: overlay.querySelector('.chat-close')
         };
         this.elements.close.addEventListener('click', () => this.close());
+        this.elements.restart.addEventListener('click', () => this.restartChat());
         this.elements.send.addEventListener('click', () => this.send());
         this.elements.input.addEventListener('keydown', event => this.handleInputKeydown(event));
     }
@@ -55,6 +64,32 @@ const ChatComponent = class {
         this.elements.overlay.hidden = true;
     }
 
+    /** Preserve revisitable history unless the operator explicitly confirms a fresh chat. */
+    restartChat() {
+        if (this.isSending || !this.hasConversation()) {
+            return;
+        }
+        if (!this.confirm(I18n.t('chatRestartConfirm'))) {
+            return;
+        }
+        this.stopProgress();
+        this.history = [];
+        this.elements.messages.replaceChildren();
+        this.elements.input.value = '';
+        this.updateRestartAvailability();
+        this.elements.input.focus();
+    }
+
+    hasConversation() {
+        return this.history.length > 0 || this.elements.messages.children.length > 0;
+    }
+
+    updateRestartAvailability() {
+        if (this.elements.restart) {
+            this.elements.restart.disabled = this.isSending || !this.hasConversation();
+        }
+    }
+
     async send() {
         const query = this.elements.input.value.trim();
         if (!query || this.isSending) {
@@ -65,6 +100,7 @@ const ChatComponent = class {
         this.isSending = true;
         this.elements.input.disabled = true;
         this.elements.send.disabled = true;
+        this.updateRestartAvailability();
         const pendingMessage = this.appendPendingMessage();
 
         try {
@@ -92,6 +128,7 @@ const ChatComponent = class {
             this.isSending = false;
             this.elements.input.disabled = false;
             this.elements.send.disabled = false;
+            this.updateRestartAvailability();
             this.elements.input.focus();
         }
     }
@@ -123,6 +160,7 @@ const ChatComponent = class {
         } else {
             message.bubble.textContent = content;
         }
+        this.updateRestartAvailability();
         this.scrollToLatestMessage();
         return message;
     }
@@ -144,6 +182,7 @@ const ChatComponent = class {
             dotCount = dotCount === 4 ? 1 : dotCount + 1;
             indicator.textContent = '.'.repeat(dotCount);
         }, 350);
+        this.updateRestartAvailability();
         this.scrollToLatestMessage();
         return message;
     }
