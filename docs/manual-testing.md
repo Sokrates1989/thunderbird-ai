@@ -80,7 +80,10 @@ Thunderbird behavior that mocks cannot prove.
     profiles remain separate; a custom host requests only its exact permission.
     On first opening Settings, provider and Thunderbird archive configuration
     must be collapsed. The provider summary must show the configured provider or
-    a red warning when its required configuration is incomplete.
+    a red warning when its required configuration is incomplete. For every
+    provider, open the API-key help button and verify the three localized steps,
+    official credential link, provider-specific full guide, all-provider guide,
+    keyboard focus, Escape close, and modal backdrop.
 23. Test newsletter/bulk signals and sender frequency, then confirm an explicit
     wanted-sender correction overrides the local spam floor.
 24. Trigger one temporary provider failure. The UI remains loading across
@@ -134,6 +137,6 @@ Thunderbird behavior that mocks cannot prove.
     configured publisher, and a timestamp certificate; their SHA-256 hashes
     must be identical. Local test builds are intentionally unsigned.
 
-The single-message popup must show version 3.3.5. The dashboard uses unread
+The single-message popup must show version 3.4.0. The dashboard uses unread
 status only as its candidate filter; analysis performed outside the dashboard
 does not automatically create a dashboard score record.

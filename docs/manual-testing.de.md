@@ -80,7 +80,11 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     nur seine exakte Berechtigung an. Beim ersten Öffnen der Einstellungen
     müssen Anbieter- und Thunderbird-Archivkonfiguration eingeklappt sein. Die
     Anbieterzusammenfassung zeigt den konfigurierten Anbieter oder bei
-    unvollständiger Pflichtkonfiguration einen roten Warnhinweis.
+    unvollständiger Pflichtkonfiguration einen roten Warnhinweis. Für jeden
+    Anbieter die API-Schlüssel-Hilfe öffnen und drei lokalisierte Schritte,
+    offiziellen Zugangslink, anbieterspezifische Vollanleitung,
+    Anbieterübersicht, Tastaturfokus, Schließen per Escape und modalen
+    Hintergrund prüfen.
 23. Newsletter-/Bulk-Signale und Absenderhäufigkeit testen; eine ausdrückliche
     Korrektur als erwünschter Absender muss die lokale Spam-Untergrenze schlagen.
 24. Einen temporären Anbieterfehler auslösen. Die UI bleibt während begrenzter
@@ -139,6 +143,6 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     ihre SHA-256-Prüfsummen müssen gleich sein. Lokale Test-Builds bleiben
     absichtlich unsigniert.
 
-Das Einzelmail-Popup muss Version 3.3.5 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.4.0 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status nur als Kandidatenfilter; Analysen außerhalb des Dashboards
 erzeugen nicht automatisch einen Dashboard-Score.

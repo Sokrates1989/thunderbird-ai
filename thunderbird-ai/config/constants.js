@@ -2,7 +2,7 @@
 
 const CONFIG = {
     ADDON_NAME: 'AI Mail Assistant for Thunderbird',
-    ADDON_VERSION: '3.3.5',
+    ADDON_VERSION: '3.4.0',
     ADDON_ID: 'thunderbird-ai@felicitas-wisdom.com',
 
     AI: {
@@ -10,6 +10,12 @@ const CONFIG = {
         PROVIDERS: {
             openai: {
                 labelKey: 'providerOpenAI',
+                guidePath: 'openai',
+                tutorialLinkKey: 'providerTutorialOpenAIKeys',
+                tutorialStepKeys: [
+                    'providerTutorialOpenAIAccount',
+                    'providerTutorialPasteAndTest'
+                ],
                 protocol: 'openai-responses',
                 authMode: 'bearer',
                 baseUrl: 'https://api.openai.com/v1',
@@ -24,6 +30,12 @@ const CONFIG = {
             },
             anthropic: {
                 labelKey: 'providerAnthropic',
+                guidePath: 'claude-anthropic',
+                tutorialLinkKey: 'providerTutorialAnthropicKeys',
+                tutorialStepKeys: [
+                    'providerTutorialAnthropicAccount',
+                    'providerTutorialPasteAndTest'
+                ],
                 protocol: 'anthropic-messages',
                 authMode: 'x-api-key',
                 baseUrl: 'https://api.anthropic.com/v1',
@@ -42,6 +54,12 @@ const CONFIG = {
             },
             mistral: {
                 labelKey: 'providerMistral',
+                guidePath: 'mistral',
+                tutorialLinkKey: 'providerTutorialMistralKeys',
+                tutorialStepKeys: [
+                    'providerTutorialMistralAccount',
+                    'providerTutorialPasteAndTest'
+                ],
                 protocol: 'openai-chat',
                 authMode: 'bearer',
                 baseUrl: 'https://api.mistral.ai/v1',
@@ -60,6 +78,12 @@ const CONFIG = {
             },
             deepseek: {
                 labelKey: 'providerDeepSeek',
+                guidePath: 'deepseek',
+                tutorialLinkKey: 'providerTutorialDeepSeekKeys',
+                tutorialStepKeys: [
+                    'providerTutorialDeepSeekAccount',
+                    'providerTutorialPasteAndTest'
+                ],
                 protocol: 'openai-chat',
                 authMode: 'bearer',
                 baseUrl: 'https://api.deepseek.com',
@@ -74,6 +98,13 @@ const CONFIG = {
             },
             custom: {
                 labelKey: 'providerCustom',
+                guidePath: 'custom-endpoint',
+                tutorialUrl: 'https://huggingface.co/settings/tokens',
+                tutorialLinkKey: 'providerTutorialCustomExample',
+                tutorialStepKeys: [
+                    'providerTutorialCustomDetails',
+                    'providerTutorialCustomTest'
+                ],
                 protocol: 'openai-chat',
                 authMode: 'bearer',
                 baseUrl: '',

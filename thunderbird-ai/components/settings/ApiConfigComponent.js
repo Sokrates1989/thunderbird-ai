@@ -45,6 +45,11 @@ const ApiConfigComponent = class {
                         <label for="aiProvider">${I18n.t('providerLabel')}</label>
                         <select id="aiProvider">${providerOptions}</select>
                         <div class="help-text" id="providerHelp"></div>
+                        <button type="button" id="providerTutorialButton"
+                            class="btn provider-tutorial-button">
+                            <span aria-hidden="true">?</span>
+                            <span id="providerTutorialButtonLabel"></span>
+                        </button>
                     </div>
 
                     <div class="provider-connection-grid">
@@ -85,6 +90,26 @@ const ApiConfigComponent = class {
                     </div>
                 </div>
             </details>
+
+            <dialog id="providerTutorialDialog" class="provider-tutorial-dialog"
+                aria-labelledby="providerTutorialTitle">
+                <div class="provider-tutorial-panel">
+                    <header class="provider-tutorial-header">
+                        <h2 id="providerTutorialTitle"></h2>
+                        <button type="button" id="providerTutorialClose"
+                            class="provider-tutorial-close" aria-label="${I18n.t('close')}">×</button>
+                    </header>
+                    <ol id="providerTutorialChecklist" class="provider-tutorial-checklist"></ol>
+                    <aside class="provider-tutorial-documentation"
+                        aria-label="${I18n.t('providerTutorialDocumentationTitle')}">
+                        <strong>${I18n.t('providerTutorialDocumentationTitle')}</strong>
+                        <a id="providerTutorialFullGuide" target="_blank"
+                            rel="noopener noreferrer"></a>
+                        <a id="providerTutorialAllGuides" target="_blank"
+                            rel="noopener noreferrer"></a>
+                    </aside>
+                </div>
+            </dialog>
         `;
 
         this.elements.configurationSummary = document.getElementById(
@@ -92,6 +117,22 @@ const ApiConfigComponent = class {
         );
         this.elements.providerSelect = document.getElementById('aiProvider');
         this.elements.providerHelp = document.getElementById('providerHelp');
+        this.elements.tutorialButton = document.getElementById('providerTutorialButton');
+        this.elements.tutorialButtonLabel = document.getElementById(
+            'providerTutorialButtonLabel'
+        );
+        this.elements.tutorialDialog = document.getElementById('providerTutorialDialog');
+        this.elements.tutorialTitle = document.getElementById('providerTutorialTitle');
+        this.elements.tutorialChecklist = document.getElementById(
+            'providerTutorialChecklist'
+        );
+        this.elements.tutorialFullGuide = document.getElementById(
+            'providerTutorialFullGuide'
+        );
+        this.elements.tutorialAllGuides = document.getElementById(
+            'providerTutorialAllGuides'
+        );
+        this.elements.tutorialClose = document.getElementById('providerTutorialClose');
         this.elements.endpointInput = document.getElementById('providerEndpoint');
         this.elements.protocolSelect = document.getElementById('providerProtocol');
         this.elements.authModeSelect = document.getElementById('providerAuthMode');
@@ -107,6 +148,17 @@ const ApiConfigComponent = class {
     }
 
     attachEventListeners() {
+        this.elements.tutorialButton.addEventListener('click', () => {
+            this.openProviderTutorial();
+        });
+        this.elements.tutorialClose.addEventListener('click', () => {
+            this.elements.tutorialDialog.close();
+        });
+        this.elements.tutorialDialog.addEventListener('click', event => {
+            if (event.target === this.elements.tutorialDialog) {
+                this.elements.tutorialDialog.close();
+            }
+        });
         this.elements.providerSelect.addEventListener('change', event => {
             this.captureActiveConfiguration();
             this.activeProvider = globalThis.AIProviderService.normalizeProviderId(
@@ -183,6 +235,10 @@ const ApiConfigComponent = class {
             deepseek: 'providerHelpDeepSeek',
             custom: 'providerHelpCustom'
         }[this.activeProvider]);
+        this.elements.tutorialButtonLabel.textContent = I18n.t(
+            custom ? 'providerTutorialCustomButton' : 'providerTutorialButton',
+            { provider: I18n.t(definition.labelKey) }
+        );
         this.elements.apiKeyHelp.textContent = I18n.t('apiKeyHelp', {
             provider: I18n.t(definition.labelKey)
         });
@@ -201,6 +257,53 @@ const ApiConfigComponent = class {
                 configuration.taskModels[task] || 'auto';
         }
         this.validateVisibleConfiguration();
+    }
+
+    /** Resolve provider-specific and overview guides in the active UI language. */
+    providerGuideUrls(providerId = this.activeProvider, language = I18n.getLanguage()) {
+        const provider = globalThis.AIProviderService.normalizeProviderId(providerId);
+        const guidePath = CONFIG.AI.PROVIDERS[provider].guidePath;
+        const languageSuffix = language === 'de' ? '.de' : '';
+        const baseUrl = 'https://github.com/Sokrates1989/thunderbird-ai/blob/main/docs/api-keys';
+        return {
+            provider: `${baseUrl}/${guidePath}/README${languageSuffix}.md`,
+            allProviders: `${baseUrl}/README${languageSuffix}.md`
+        };
+    }
+
+    /** Build the selected provider's short checklist and open it as a modal guide. */
+    openProviderTutorial() {
+        const definition = CONFIG.AI.PROVIDERS[this.activeProvider];
+        const providerLabel = I18n.t(definition.labelKey);
+        const startUrl = definition.tutorialUrl || definition.apiKeyUrl;
+        const guideUrls = this.providerGuideUrls();
+        this.elements.tutorialTitle.textContent = I18n.t('providerTutorialTitle', {
+            provider: providerLabel
+        });
+        this.elements.tutorialChecklist.replaceChildren();
+
+        const linkItem = document.createElement('li');
+        const startLink = document.createElement('a');
+        startLink.href = startUrl;
+        startLink.target = '_blank';
+        startLink.rel = 'noopener noreferrer';
+        startLink.textContent = I18n.t(definition.tutorialLinkKey);
+        linkItem.append(startLink);
+        this.elements.tutorialChecklist.append(linkItem);
+
+        for (const stepKey of definition.tutorialStepKeys) {
+            const item = document.createElement('li');
+            item.textContent = I18n.t(stepKey);
+            this.elements.tutorialChecklist.append(item);
+        }
+
+        this.elements.tutorialFullGuide.href = guideUrls.provider;
+        this.elements.tutorialFullGuide.textContent = I18n.t('providerTutorialFullGuide');
+        this.elements.tutorialAllGuides.href = guideUrls.allProviders;
+        this.elements.tutorialAllGuides.textContent = I18n.t(
+            'providerTutorialAllGuides'
+        );
+        this.elements.tutorialDialog.showModal();
     }
 
     renderModelPresets(presets) {

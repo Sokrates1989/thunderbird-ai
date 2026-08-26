@@ -97,6 +97,130 @@ test('provider summary distinguishes a configured provider from a missing key', 
     );
 });
 
+test('provider API-key tutorial covers every provider in English and German', () => {
+    const context = createContext({
+        browser: { i18n: { getUILanguage: () => 'en-US' } }
+    });
+    loadScript(context, 'thunderbird-ai/config/locale-de.js');
+    loadScript(context, 'thunderbird-ai/config/locale-en.js');
+    loadScript(context, 'thunderbird-ai/config/constants.js');
+    loadScript(context, 'common/utils/ai-provider.js');
+    loadScript(context, 'thunderbird-ai/components/settings/ApiConfigComponent.js');
+    const component = Object.create(context.ApiConfigComponent.prototype);
+
+    for (const [providerId, definition] of Object.entries(context.CONFIG.AI.PROVIDERS)) {
+        assert.ok(definition.guidePath, `${providerId} needs a guide path`);
+        assert.ok(
+            definition.tutorialUrl || definition.apiKeyUrl,
+            `${providerId} needs a tutorial start URL`
+        );
+        for (const key of [definition.tutorialLinkKey, ...definition.tutorialStepKeys]) {
+            assert.ok(context.LOCALE_MESSAGES.en[key], `Missing English key ${key}`);
+            assert.ok(context.LOCALE_MESSAGES.de[key], `Missing German key ${key}`);
+        }
+        assert.equal(
+            fs.existsSync(path.join(
+                repositoryRoot,
+                'docs',
+                'api-keys',
+                definition.guidePath,
+                'README.md'
+            )),
+            true
+        );
+        assert.equal(
+            fs.existsSync(path.join(
+                repositoryRoot,
+                'docs',
+                'api-keys',
+                definition.guidePath,
+                'README.de.md'
+            )),
+            true
+        );
+
+        const english = component.providerGuideUrls(providerId, 'en');
+        const german = component.providerGuideUrls(providerId, 'de');
+        assert.match(english.provider, new RegExp(`/${definition.guidePath}/README\\.md$`, 'u'));
+        assert.match(german.provider, new RegExp(`/${definition.guidePath}/README\\.de\\.md$`, 'u'));
+        assert.match(english.allProviders, /docs\/api-keys\/README\.md$/u);
+        assert.match(german.allProviders, /docs\/api-keys\/README\.de\.md$/u);
+    }
+});
+
+test('provider API-key tutorial opens a safe localized three-step dialog', () => {
+    class FakeNode {
+        constructor(tagName) {
+            this.tagName = tagName;
+            this.children = [];
+            this.textContent = '';
+        }
+
+        append(...children) {
+            this.children.push(...children);
+        }
+
+        replaceChildren(...children) {
+            this.children = [...children];
+        }
+    }
+
+    const context = createContext({
+        browser: { i18n: { getUILanguage: () => 'de-DE' } },
+        document: { createElement: tagName => new FakeNode(tagName) }
+    });
+    loadScript(context, 'thunderbird-ai/config/locale-de.js');
+    loadScript(context, 'thunderbird-ai/config/locale-en.js');
+    loadScript(context, 'thunderbird-ai/config/constants.js');
+    loadScript(context, 'common/utils/ai-provider.js');
+    loadScript(context, 'thunderbird-ai/components/settings/ApiConfigComponent.js');
+    const component = Object.create(context.ApiConfigComponent.prototype);
+    const checklist = new FakeNode('ol');
+    const dialog = { opened: false, showModal() { this.opened = true; } };
+    component.activeProvider = 'anthropic';
+    component.elements = {
+        tutorialTitle: new FakeNode('h2'),
+        tutorialChecklist: checklist,
+        tutorialFullGuide: new FakeNode('a'),
+        tutorialAllGuides: new FakeNode('a'),
+        tutorialDialog: dialog
+    };
+
+    component.openProviderTutorial();
+
+    assert.equal(component.elements.tutorialTitle.textContent, 'Claude (Anthropic) einrichten');
+    assert.equal(checklist.children.length, 3);
+    assert.equal(
+        checklist.children[0].children[0].href,
+        'https://platform.claude.com/settings/keys'
+    );
+    assert.equal(checklist.children[0].children[0].target, '_blank');
+    assert.equal(checklist.children[0].children[0].rel, 'noopener noreferrer');
+    assert.match(checklist.children[1].textContent, /API-Guthaben/u);
+    assert.match(checklist.children[2].textContent, /API-Verbindung/u);
+    assert.match(component.elements.tutorialFullGuide.href, /README\.de\.md$/u);
+    assert.equal(
+        component.elements.tutorialAllGuides.href,
+        'https://github.com/Sokrates1989/thunderbird-ai/blob/main/docs/api-keys/README.de.md'
+    );
+    assert.equal(dialog.opened, true);
+});
+
+test('provider tutorial uses a distinct accessible help-button and documentation callout', () => {
+    const component = source('thunderbird-ai/components/settings/ApiConfigComponent.js');
+    const styles = source('thunderbird-ai/styles/settings.css');
+
+    assert.match(component, /id="providerTutorialButton"/u);
+    assert.match(component, /<dialog id="providerTutorialDialog"/u);
+    assert.match(component, /aria-labelledby="providerTutorialTitle"/u);
+    assert.match(component, /aria-label="\$\{I18n\.t\('close'\)\}"/u);
+    assert.match(component, /startLink\.textContent = I18n\.t/u);
+    assert.match(component, /tutorialDialog\.showModal\(\)/u);
+    assert.match(styles, /\.provider-tutorial-documentation\s*\{[^}]*border-left:/su);
+    assert.match(styles, /\.provider-tutorial-dialog::backdrop/u);
+    assert.match(styles, /:focus-visible/u);
+});
+
 test('settings no longer load or expose retired automatic email analysis', () => {
     const settingsPage = source('thunderbird-ai/pages/settings.html');
     const settingsManager = source('thunderbird-ai/components/settings/SettingsManager.js');
