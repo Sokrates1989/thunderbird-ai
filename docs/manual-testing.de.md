@@ -159,8 +159,11 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
 38. **Ansicht** einklappen und zwischen getrennter sowie kombinierter Kontenansicht
     und mehreren Sortierungen wechseln. Die Ergebnisstatuszeile muss nach den
     Anzahlen die aktuelle Ansicht nennen und die genaue lokalisierte Sortierung
-    hervorgehoben anzeigen.
+    hervorgehoben anzeigen. Einen Absenderfilter anwenden, durch den weniger
+    Nachrichten sichtbar sind als im ungelesenen Ausgangsbestand. Ergebnisstatus
+    und Kontenüberschrift müssen dieselben sichtbaren und vollständigen Anzahlen
+    vergleichen, zum Beispiel **Angezeigt: 4 von 15**.
 
-Das Einzelmail-Popup muss Version 3.5.2 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.5.3 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status nur als Kandidatenfilter; Analysen außerhalb des Dashboards
 erzeugen nicht automatisch einen Dashboard-Score.

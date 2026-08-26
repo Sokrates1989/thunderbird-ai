@@ -384,8 +384,10 @@ test('a recent installer run gives actionable recovery advice when no unread mai
     const statuses = [];
     manager.recentInstallEvent = true;
     manager.sourceAccounts = [{ accountId: 'personal' }];
-    manager.accounts = [{ matchingCount: 0, messages: [] }];
-    manager.allMessages = () => [];
+    manager.accounts = [{ sourceCount: 0, matchingCount: 0, messages: [] }];
+    manager.summaryComponent = {
+        viewCounts: () => ({ shown: 0, total: 0 })
+    };
     manager.setStatus = (messageText, type) => statuses.push([messageText, type]);
 
     manager.showLoadedStatus();
@@ -393,7 +395,32 @@ test('a recent installer run gives actionable recovery advice when no unread mai
     assert.deepEqual(statuses, [['dashboardNoUnreadAfterInstall:{}', 'warning']]);
 });
 
-test('loaded status summarizes the durable view and emphasizes its sorting choice', () => {
+test('dashboard forwards visible and complete unread counts from one shared contract', () => {
+    const DashboardManager = loadDashboardManager({});
+    const manager = Object.create(DashboardManager.prototype);
+    const account = {
+        sourceCount: 15,
+        matchingCount: 4,
+        messages: Array.from({ length: 4 }, (_value, index) => ({ id: index + 1 }))
+    };
+    let loadedStatus = null;
+    manager.recentInstallEvent = false;
+    manager.sourceAccounts = Array.from({ length: 9 }, (_value, index) => ({ accountId: index }));
+    manager.accounts = [account];
+    manager.summaryComponent = {
+        viewCounts: accounts => ({
+            shown: accounts[0].messages.length,
+            total: accounts[0].sourceCount
+        }),
+        showLoadedStatus: status => { loadedStatus = status; }
+    };
+
+    manager.showLoadedStatus();
+
+    assert.deepEqual({ ...loadedStatus }, { accounts: 9, shown: 4, total: 15 });
+});
+
+test('loaded status counts visible rows against the complete unread source snapshot', () => {
     const appended = [];
     const SummaryComponent = loadDashboardSummaryComponent({
         createElement: tagName => ({ tagName: tagName.toUpperCase(), className: '', textContent: '' })
@@ -412,11 +439,23 @@ test('loaded status summarizes the durable view and emphasizes its sorting choic
         setStatus: message => { elements.status.textContent = message; }
     });
 
-    summary.showLoadedStatus({ accounts: 9, messages: 4, matches: 4 });
+    const account = {
+        sourceCount: 15,
+        matchingCount: 4,
+        messages: Array.from({ length: 4 }, (_value, index) => ({ id: index + 1 }))
+    };
+
+    assert.deepEqual({ ...summary.viewCounts([account]) }, { shown: 4, total: 15 });
+    assert.equal(
+        summary.shownCount(account),
+        'dashboardShownCount:{"shown":4,"total":15}'
+    );
+
+    summary.showLoadedStatus({ accounts: 9, shown: 4, total: 15 });
 
     assert.equal(
         elements.status.textContent,
-        'dashboardLoaded:{"accounts":9,"messages":4,"matches":4}'
+        'dashboardLoaded:{"accounts":9,"shown":4,"total":15}'
     );
     assert.deepEqual(appended.slice(0, 2), [
         ' · ',

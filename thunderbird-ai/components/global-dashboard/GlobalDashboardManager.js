@@ -517,21 +517,16 @@ const GlobalDashboardManager = class {
         this.showLoadedStatus();
     }
 
-    /** Report both the bounded visible count and the full matching count. */
+    /** Report both the bounded visible count and the complete unread source count. */
     showLoadedStatus() {
-        const messageCount = this.allMessages().length;
-        const matchingCount = this.accounts.reduce(
-            (total, account) => total + (account.matchingCount || 0),
-            0
-        );
-        if (matchingCount === 0 && this.recentInstallEvent) {
+        const counts = this.summaryComponent.viewCounts(this.accounts);
+        if (counts.total === 0 && this.recentInstallEvent) {
             this.setStatus(I18n.t('dashboardNoUnreadAfterInstall'), 'warning');
             return;
         }
         this.summaryComponent.showLoadedStatus({
             accounts: this.sourceAccounts.length,
-            messages: messageCount,
-            matches: matchingCount
+            ...counts
         });
     }
 
@@ -558,10 +553,11 @@ const GlobalDashboardManager = class {
         const section = document.createElement('section');
         section.className = 'dashboard-account';
         const heading = this.textElement('h2', 'dashboard-account-name', account.accountName);
-        const count = this.textElement('span', 'dashboard-account-count', I18n.t('dashboardShownCount', {
-            shown: account.messages.length,
-            matches: account.matchingCount || 0
-        }));
+        const count = this.textElement(
+            'span',
+            'dashboard-account-count',
+            this.summaryComponent.shownCount(account)
+        );
         const header = document.createElement('div');
         header.className = 'dashboard-account-header';
         header.append(heading, count);

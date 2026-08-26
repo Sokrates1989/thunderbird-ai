@@ -78,10 +78,29 @@ const DashboardSummaryComponent = class {
         this.elements.resetFilters.disabled = busy || count === 0;
     }
 
+    /** Count rendered rows against the complete unread source snapshot. */
+    viewCounts(accounts) {
+        return accounts.reduce((counts, account) => {
+            const messages = account.messages || [];
+            const sourceCount = Number.isFinite(account.sourceCount)
+                ? account.sourceCount
+                : messages.length;
+            counts.shown += messages.length;
+            counts.total += sourceCount;
+            return counts;
+        }, { shown: 0, total: 0 });
+    }
+
+    /** Format one account's visible and complete unread counts from the same contract. */
+    shownCount(account) {
+        const { shown, total } = this.viewCounts([account]);
+        return I18n.t('dashboardShownCount', { shown, total });
+    }
+
     /** Render loaded counts followed by the durable view and emphasized sort choice. */
-    showLoadedStatus({ accounts, messages, matches }) {
+    showLoadedStatus({ accounts, shown, total }) {
         const state = this.getState();
-        this.setStatus(I18n.t('dashboardLoaded', { accounts, messages, matches }));
+        this.setStatus(I18n.t('dashboardLoaded', { accounts, shown, total }));
         const viewKey = state.viewMode === 'combined'
             ? 'dashboardViewSummaryCombined'
             : 'dashboardViewSummaryAccount';

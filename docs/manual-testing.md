@@ -151,7 +151,10 @@ Thunderbird behavior that mocks cannot prove.
 38. Collapse **View** and change between account-separated and combined layouts
     plus several sort orders. The result-status row must state the current layout
     and show the exact localized sort label in emphasized text after the counts.
+    Apply a sender filter that leaves fewer visible messages than the unread source
+    snapshot. Both the result-status row and account heading must compare the same
+    visible and source totals, for example **Shown: 4 of 15**.
 
-The single-message popup must show version 3.5.2. The dashboard uses unread
+The single-message popup must show version 3.5.3. The dashboard uses unread
 status only as its candidate filter; analysis performed outside the dashboard
 does not automatically create a dashboard score record.
