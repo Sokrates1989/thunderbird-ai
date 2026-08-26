@@ -19,6 +19,7 @@ const DashboardSenderFilterComponent = class {
         this.selectedSenderKeys = selectedSenderKeys === null
             ? null
             : new Set(selectedSenderKeys);
+        const selectedCount = this.selectionCount();
         const totalCount = this.availableSenders.length;
         this.elements.summary.textContent = this.selectedSenderKeys === null
             ? I18n.t('dashboardSenderAllSummary', { count: totalCount })
@@ -33,7 +34,6 @@ const DashboardSenderFilterComponent = class {
     /** Rebuild the searchable dropdown while retaining the current query. */
     renderOptions() {
         this.elements.options.replaceChildren();
-        const selectedCount = this.selectionCount();
         const totalCount = this.availableSenders.length;
         if (!totalCount) {
             this.elements.options.appendChild(this.textElement(

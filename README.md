@@ -22,12 +22,12 @@ individual instructions for OpenAI, Claude (Anthropic), Mistral, DeepSeek, and
 custom endpoints. The [AI provider test matrix](docs/ai-provider-testing.md)
 separates automated protocol coverage from real-provider acceptance.
 
-## Release 3.4.1 scope
+## Release 3.4.2 scope
 
-Release 3.4.1 uses a familiar circled information icon for the provider
-API-key tutorial button. The short English or German setup checklist introduced
-in 3.4.0 remains available for every provider, with official credential and
-language-matched documentation links.
+Release 3.4.2 restores dashboard startup after the searchable sender-selection
+update. An explicit sender selection now renders its count without raising a
+JavaScript error, so unread messages and the sender dropdown load normally.
+The filtered **All** selection behavior introduced in 3.3.5 remains unchanged.
 
 ## Features
 
@@ -153,7 +153,7 @@ other local credential store. See the full [privacy policy](PRIVACY.md).
 
 ## Install on Windows
 
-1. Download and run `Thunderbird-AI-Setup-3.4.1-win-x64.exe`.
+1. Download and run `Thunderbird-AI-Setup-3.4.2-win-x64.exe`.
 2. Select **Deutsch** or **English** and accept the GNU General Public License.
 3. Save drafts and approve the controlled restart. Setup closes Thunderbird
    normally and restarts it by default after installation; the final restart
@@ -170,7 +170,7 @@ test installers remain unsigned and can trigger SmartScreen.
 ## Install on macOS
 
 1. Start Thunderbird once so a profile exists.
-2. Open `Thunderbird-AI-Setup-3.4.1-macos.pkg`.
+2. Open `Thunderbird-AI-Setup-3.4.2-macos.pkg`.
 3. Accept the GPL, save drafts, and allow a normal Thunderbird quit.
 4. Setup opens Thunderbird after installation. Accept any one-time activation
    or permission prompt.
@@ -210,8 +210,8 @@ On macOS:
 Current artifacts:
 
 - `thunderbird-ai.xpi`
-- `artifacts/Thunderbird-AI-Setup-3.4.1-win-x64.exe`
-- `artifacts/Thunderbird-AI-Setup-3.4.1-macos.pkg`
+- `artifacts/Thunderbird-AI-Setup-3.4.2-win-x64.exe`
+- `artifacts/Thunderbird-AI-Setup-3.4.2-macos.pkg`
 
 Build the Thunderbird Add-ons reviewer source only from tracked files:
 

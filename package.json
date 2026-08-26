@@ -1,6 +1,6 @@
 {
   "name": "thunderbird-ai-assistant",
-  "version": "3.4.1",
+  "version": "3.4.2",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {

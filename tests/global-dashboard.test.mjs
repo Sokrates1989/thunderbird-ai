@@ -112,7 +112,12 @@ function loadViewPreferences(initial = {}) {
 }
 
 function loadSenderFilterComponent() {
-    const context = createContext({ I18n: { getLanguage: () => 'en' } });
+    const context = createContext({
+        I18n: {
+            getLanguage: () => 'en',
+            t: (key, replacements = {}) => `${key}:${JSON.stringify(replacements)}`
+        }
+    });
     loadScript(context, 'thunderbird-ai/components/global-dashboard/DashboardSenderFilterComponent.js');
     return context.DashboardSenderFilterComponent;
 }
@@ -1146,6 +1151,36 @@ test('sender search filters only visible options and preserves selections across
         'ada <ada@example.test>',
         'bob <bob@example.test>'
     ]);
+});
+
+test('sender filter renders an explicit selection without aborting dashboard startup', () => {
+    const SenderFilter = loadSenderFilterComponent();
+    const summary = { textContent: '' };
+    const component = new SenderFilter({
+        details: null,
+        summary,
+        options: null,
+        onSelectionChanged: async () => {},
+        onError: () => {}
+    });
+    let optionsRendered = false;
+    component.renderOptions = () => {
+        optionsRendered = true;
+    };
+
+    component.render(
+        [
+            { key: 'ada@example.test', label: 'Ada <ada@example.test>' },
+            { key: 'bob@example.test', label: 'Bob <bob@example.test>' }
+        ],
+        new Set(['ada@example.test'])
+    );
+
+    assert.equal(
+        summary.textContent,
+        'dashboardSenderSelectedSummary:{"selected":1,"count":2}'
+    );
+    assert.equal(optionsRendered, true);
 });
 
 test('sender select-all changes only filtered matches and preserves hidden selections', () => {
