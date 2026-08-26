@@ -15,8 +15,8 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
    Kandidatengrenze, Herkunftskonten und Auswahl müssen korrekt bleiben.
 3. Alle Datums-, Beteiligten-, Absender-, Mengen-, Score- und Analysestatus-
    Filter sowie Sortierungen einschließlich kontenübergreifender Scores testen.
-4. Die Absendersuche muss nicht sichtbare Auswahlen behalten; Datumsgrenzen sind
-   einschließlich.
+4. Die Absendersuche muss nicht sichtbare Auswahlen behalten; **Alle** darf nur
+   sichtbare Treffer aus- oder abwählen. Datumsgrenzen sind einschließlich.
 5. Lokale Vorschauen aktivieren, die globale Zeilenzahl ändern und prüfen, dass
    nur der sichtbare begrenzte Nachrichtenausschnitt Inhalte lädt.
 
@@ -139,6 +139,6 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     ihre SHA-256-Prüfsummen müssen gleich sein. Lokale Test-Builds bleiben
     absichtlich unsigniert.
 
-Das Einzelmail-Popup muss Version 3.3.4 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.3.5 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status nur als Kandidatenfilter; Analysen außerhalb des Dashboards
 erzeugen nicht automatisch einen Dashboard-Score.

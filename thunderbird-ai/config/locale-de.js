@@ -399,7 +399,7 @@ globalThis.LOCALE_MESSAGES.de = Object.freeze({
     dashboardDateFrom: 'Datum von',
     dashboardDateTo: 'Datum bis',
     dashboardSenderFilter: 'Absender auswählen',
-    dashboardAllSenders: 'Alle Absender',
+    dashboardAllSenders: 'Alle',
     dashboardSenderSearchLabel: 'Absender durchsuchen',
     dashboardSenderSearchPlaceholder: 'Nach Absender oder E-Mail-Adresse suchen…',
     dashboardSenderSearchEmpty: 'Keine Absender entsprechen dieser Suche.',

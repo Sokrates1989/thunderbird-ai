@@ -15,8 +15,9 @@ Thunderbird behavior that mocks cannot prove.
    candidate limit, originating account labels, and persistent selection.
 3. Test all date, participant, sender, count, score, and analysed-state filters
    and sorts, including global cross-account score sorting.
-4. Confirm sender search preserves selections outside the current search result
-   and date boundaries are inclusive.
+4. Confirm sender search preserves selections outside the current search result,
+   **All** selects or clears only visible matches, and date boundaries are
+   inclusive.
 5. Enable local previews, change the global line count, and confirm only the
    visible limited message slice loads content.
 
@@ -133,6 +134,6 @@ Thunderbird behavior that mocks cannot prove.
     configured publisher, and a timestamp certificate; their SHA-256 hashes
     must be identical. Local test builds are intentionally unsigned.
 
-The single-message popup must show version 3.3.4. The dashboard uses unread
+The single-message popup must show version 3.3.5. The dashboard uses unread
 status only as its candidate filter; analysis performed outside the dashboard
 does not automatically create a dashboard score record.

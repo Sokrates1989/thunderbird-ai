@@ -3,7 +3,7 @@
 > [Deutsche Version](macos-installer-testing.de.md)
 
 The primary macOS artifact is
-`Thunderbird-AI-Setup-3.3.4-macos.pkg`. It uses only the current-user macOS
+`Thunderbird-AI-Setup-3.3.5-macos.pkg`. It uses only the current-user macOS
 installation domain and requires no administrator privileges.
 
 ## Automated isolation test
@@ -25,7 +25,7 @@ statically.
 
 1. Start Thunderbird at least once, then open an email and an unsaved test
    draft.
-2. Open `artifacts/Thunderbird-AI-Setup-3.3.4-macos.pkg`, read and accept the GPL,
+2. Open `artifacts/Thunderbird-AI-Setup-3.3.5-macos.pkg`, read and accept the GPL,
    and confirm the localized current-user and safe-quit guidance. No
    administrator prompt may appear.
 3. Continue while Thunderbird is open. macOS must request a normal quit. Save
@@ -36,7 +36,7 @@ statically.
    end with refresh re-enabled; loading must not remain indefinitely.
 5. Select OpenAI, Claude, Mistral, DeepSeek, and the custom endpoint in settings;
    OpenAI must be the default. With an available test key, summarise an email
-   and run the API test. The single-message popup must show **Version 3.3.4**.
+   and run the API test. The single-message popup must show **Version 3.3.5**.
 6. Save a different UI language and confirm it survives a Thunderbird restart.
 7. Run the installer again. It must update without prior removal and preserve
    API keys and settings.

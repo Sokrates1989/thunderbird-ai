@@ -19,7 +19,6 @@ const DashboardSenderFilterComponent = class {
         this.selectedSenderKeys = selectedSenderKeys === null
             ? null
             : new Set(selectedSenderKeys);
-        const selectedCount = this.selectionCount();
         const totalCount = this.availableSenders.length;
         this.elements.summary.textContent = this.selectedSenderKeys === null
             ? I18n.t('dashboardSenderAllSummary', { count: totalCount })
@@ -47,16 +46,18 @@ const DashboardSenderFilterComponent = class {
 
         const list = document.createElement('div');
         list.className = 'dashboard-sender-list';
-        const search = this.searchField(() => this.renderSenderList(list));
+        const search = this.searchField(() => {
+            this.renderSenderList(list);
+            this.updateAllToggle(all.input);
+        });
         const all = this.checkboxLabel(I18n.t('dashboardAllSenders'));
-        all.input.checked = selectedCount === totalCount;
-        all.input.indeterminate = selectedCount > 0 && selectedCount < totalCount;
         all.input.addEventListener('change', () => {
-            this.emitSelection(all.input.checked ? null : new Set());
+            this.emitSelection(this.selectionForFiltered(all.input.checked));
         });
         all.label.classList.add('dashboard-sender-all');
         this.elements.options.append(search.label, all.label, list);
         this.renderSenderList(list);
+        this.updateAllToggle(all.input);
     }
 
     /** Render only matching senders; selection still belongs to the full sender set. */
@@ -91,6 +92,33 @@ const DashboardSenderFilterComponent = class {
         return this.availableSenders.filter(sender => (
             `${sender.label} ${sender.key}`.toLocaleLowerCase(I18n.getLanguage()).includes(normalized)
         ));
+    }
+
+    /** Select or clear only the senders visible under the current search query. */
+    selectionForFiltered(checked) {
+        const availableKeys = this.availableSenders.map(sender => sender.key);
+        const selected = this.selectedSenderKeys === null
+            ? new Set(availableKeys)
+            : new Set(this.selectedSenderKeys);
+        for (const sender of this.filteredSenders()) {
+            if (checked) {
+                selected.add(sender.key);
+            } else {
+                selected.delete(sender.key);
+            }
+        }
+        return availableKeys.every(key => selected.has(key)) ? null : selected;
+    }
+
+    /** Reflect selection state for the currently visible sender subset. */
+    updateAllToggle(input) {
+        const visible = this.filteredSenders();
+        const selectedCount = visible.filter(sender => (
+            this.selectedSenderKeys === null || this.selectedSenderKeys.has(sender.key)
+        )).length;
+        input.checked = visible.length > 0 && selectedCount === visible.length;
+        input.indeterminate = selectedCount > 0 && selectedCount < visible.length;
+        input.disabled = this.busy || visible.length === 0;
     }
 
     searchField(onInput) {

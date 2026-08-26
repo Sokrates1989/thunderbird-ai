@@ -313,8 +313,12 @@ body {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     gap: 7px;
-    align-items: start;
+    align-items: center;
     overflow-wrap: anywhere;
+}
+
+.dashboard-sender-options input[type="checkbox"] {
+    margin: 0;
 }
 
 .dashboard-sender-options .dashboard-sender-search {

@@ -399,7 +399,7 @@ globalThis.LOCALE_MESSAGES.en = Object.freeze({
     dashboardDateFrom: 'Date from',
     dashboardDateTo: 'Date to',
     dashboardSenderFilter: 'Select senders',
-    dashboardAllSenders: 'All senders',
+    dashboardAllSenders: 'All',
     dashboardSenderSearchLabel: 'Search senders',
     dashboardSenderSearchPlaceholder: 'Search by sender or email address…',
     dashboardSenderSearchEmpty: 'No senders match this search.',

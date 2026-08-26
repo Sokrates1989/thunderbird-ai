@@ -1148,6 +1148,108 @@ test('sender search filters only visible options and preserves selections across
     ]);
 });
 
+test('sender select-all changes only filtered matches and preserves hidden selections', () => {
+    const SenderFilter = loadSenderFilterComponent();
+    const component = new SenderFilter({
+        details: null,
+        summary: null,
+        options: null,
+        onSelectionChanged: async () => {},
+        onError: () => {}
+    });
+    component.availableSenders = [
+        { key: 'ada@example.test', label: 'Ada <ada@example.test>' },
+        { key: 'bob@example.test', label: 'Bob <bob@example.test>' },
+        { key: 'shop@example.com', label: 'Shop <shop@example.com>' },
+        { key: 'news@example.com', label: 'News <news@example.com>' }
+    ];
+    component.selectedSenderKeys = new Set(['ada@example.test']);
+    component.searchQuery = 'example.com';
+
+    const selectedMatches = component.selectionForFiltered(true);
+    component.selectedSenderKeys = selectedMatches;
+    const clearedMatches = component.selectionForFiltered(false);
+
+    assert.deepEqual([...selectedMatches].sort(), [
+        'ada@example.test',
+        'news@example.com',
+        'shop@example.com'
+    ]);
+    assert.deepEqual([...clearedMatches], ['ada@example.test']);
+});
+
+test('sender select-all collapses to the all-senders sentinel only when everything is selected', () => {
+    const SenderFilter = loadSenderFilterComponent();
+    const component = new SenderFilter({
+        details: null,
+        summary: null,
+        options: null,
+        onSelectionChanged: async () => {},
+        onError: () => {}
+    });
+    component.availableSenders = [
+        { key: 'ada@example.test', label: 'Ada <ada@example.test>' },
+        { key: 'shop@example.com', label: 'Shop <shop@example.com>' }
+    ];
+    component.selectedSenderKeys = new Set(['ada@example.test']);
+    component.searchQuery = 'example.com';
+
+    assert.equal(component.selectionForFiltered(true), null);
+});
+
+test('sender select-all state follows the filtered subset and disables empty searches', () => {
+    const SenderFilter = loadSenderFilterComponent();
+    const component = new SenderFilter({
+        details: null,
+        summary: null,
+        options: null,
+        onSelectionChanged: async () => {},
+        onError: () => {}
+    });
+    component.availableSenders = [
+        { key: 'shop@example.com', label: 'Shop <shop@example.com>' },
+        { key: 'news@example.com', label: 'News <news@example.com>' },
+        { key: 'ada@example.test', label: 'Ada <ada@example.test>' }
+    ];
+    component.selectedSenderKeys = new Set(['shop@example.com']);
+    component.searchQuery = 'example.com';
+    const input = {};
+
+    component.updateAllToggle(input);
+    assert.equal(input.checked, false);
+    assert.equal(input.indeterminate, true);
+    assert.equal(input.disabled, false);
+
+    component.searchQuery = 'no matching sender';
+    component.updateAllToggle(input);
+    assert.equal(input.checked, false);
+    assert.equal(input.indeterminate, false);
+    assert.equal(input.disabled, true);
+});
+
+test('sender filter uses a concise bilingual all label and aligns checkbox rows', () => {
+    const english = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/config/locale-en.js'),
+        'utf8'
+    );
+    const german = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/config/locale-de.js'),
+        'utf8'
+    );
+    const styles = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/styles/global-dashboard.css'),
+        'utf8'
+    );
+
+    assert.match(english, /dashboardAllSenders:\s*'All'/u);
+    assert.match(german, /dashboardAllSenders:\s*'Alle'/u);
+    assert.match(styles, /\.dashboard-sender-options label\s*\{[^}]*align-items:\s*center;/su);
+    assert.match(
+        styles,
+        /\.dashboard-sender-options input\[type="checkbox"\]\s*\{[^}]*margin:\s*0;/su
+    );
+});
+
 test('an interrupted continuation is aborted and isolated to its account', async () => {
     const accounts = [
         account('broken', 'Broken', 'imap', { id: 'root-broken', subFolders: [inbox('broken-inbox')] })
