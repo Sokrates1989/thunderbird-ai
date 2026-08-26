@@ -406,6 +406,7 @@ const GlobalDashboardManager = class {
         const count = this.activeFilterCount();
         this.elements.activeFilters.textContent = I18n.t('dashboardActiveFilters', { count });
         this.elements.filterStatus.dataset.active = String(count > 0);
+        this.elements.filterStatus.hidden = count === 0;
         this.elements.resetFilters.disabled = this.busy || count === 0;
     }
 

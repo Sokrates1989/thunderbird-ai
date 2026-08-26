@@ -178,6 +178,10 @@ body {
     color: #30404d;
 }
 
+.dashboard-filter-status[hidden] {
+    display: none;
+}
+
 .dashboard-filter-status[data-active="true"] {
     border-color: #d99b28;
     background: #fff7e3;

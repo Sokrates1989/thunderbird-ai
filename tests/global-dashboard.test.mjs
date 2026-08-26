@@ -923,7 +923,7 @@ test('dashboard counts active filter groups and resets every narrowing control t
     assert.equal(viewApplied, true);
 });
 
-test('dashboard filter indicator stays visible and disables reset when no filters are active', () => {
+test('dashboard filter indicator is visible only while narrowing filters are active', () => {
     const DashboardManager = loadDashboardManager({});
     const manager = Object.create(DashboardManager.prototype);
     manager.busy = false;
@@ -936,13 +936,14 @@ test('dashboard filter indicator stays visible and disables reset when no filter
     manager.riskMinimum = 0;
     manager.elements = {
         activeFilters: { textContent: '' },
-        filterStatus: { dataset: {} },
+        filterStatus: { dataset: {}, hidden: true },
         resetFilters: { disabled: true }
     };
 
     manager.updateFilterStatus();
     assert.equal(manager.elements.activeFilters.textContent, 'dashboardActiveFilters:{"count":2}');
     assert.equal(manager.elements.filterStatus.dataset.active, 'true');
+    assert.equal(manager.elements.filterStatus.hidden, false);
     assert.equal(manager.elements.resetFilters.disabled, false);
 
     manager.selectedSenderKeys = null;
@@ -950,6 +951,7 @@ test('dashboard filter indicator stays visible and disables reset when no filter
     manager.updateFilterStatus();
     assert.equal(manager.elements.activeFilters.textContent, 'dashboardActiveFilters:{"count":0}');
     assert.equal(manager.elements.filterStatus.dataset.active, 'false');
+    assert.equal(manager.elements.filterStatus.hidden, true);
     assert.equal(manager.elements.resetFilters.disabled, true);
 });
 
@@ -1985,7 +1987,10 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.match(dashboard, /id="dashboardDateFrom"[^>]*type="date"|type="date"[^>]*id="dashboardDateFrom"/u);
     assert.match(dashboard, /id="dashboardDateTo"[^>]*type="date"|type="date"[^>]*id="dashboardDateTo"/u);
     assert.match(dashboard, /id="dashboardSenderFilter"/u);
-    assert.match(dashboard, /id="dashboardFilterStatus"[^>]*data-active="false"/u);
+    assert.match(
+        dashboard,
+        /id="dashboardStatus"[\s\S]*?id="dashboardFilterStatus"[^>]*data-active="false"[^>]*hidden/u
+    );
     assert.match(dashboard, /id="dashboardActiveFilters"[^>]*role="status"/u);
     assert.match(dashboard, /id="dashboardResetFilters"[\s\S]*?data-i18n="dashboardResetFilters"/u);
     assert.match(dashboardStyles, /\.dashboard-filter-status\[data-active="true"\]/u);

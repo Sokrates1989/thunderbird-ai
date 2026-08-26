@@ -27,14 +27,6 @@
             <button type="button" id="dashboardRefresh" data-i18n="dashboardRefresh"></button>
             <button type="button" id="dashboardSettings" data-i18n="dashboardSettings"></button>
         </div>
-        <div id="dashboardFilterStatus" class="dashboard-filter-status" data-active="false">
-            <div class="dashboard-filter-status-copy">
-                <strong id="dashboardActiveFilters" role="status" aria-live="polite"></strong>
-                <span data-i18n="dashboardFilterSessionHint"></span>
-            </div>
-            <button type="button" id="dashboardResetFilters"
-                    data-i18n="dashboardResetFilters" disabled></button>
-        </div>
         <details id="dashboardDisplayOptions" class="dashboard-display-options" open>
             <summary id="dashboardDisplayOptionsHeading" class="dashboard-display-options-summary">
                 <span data-i18n="dashboardDisplayOptions"></span>
@@ -149,6 +141,14 @@
             </div>
         </details>
         <p id="dashboardStatus" class="dashboard-status" role="status" aria-live="polite"></p>
+        <div id="dashboardFilterStatus" class="dashboard-filter-status" data-active="false" hidden>
+            <div class="dashboard-filter-status-copy">
+                <strong id="dashboardActiveFilters" role="status" aria-live="polite"></strong>
+                <span data-i18n="dashboardFilterSessionHint"></span>
+            </div>
+            <button type="button" id="dashboardResetFilters"
+                    data-i18n="dashboardResetFilters" disabled></button>
+        </div>
         <div id="dashboardLoadingIndicator" class="dashboard-loading" role="status" aria-live="polite" hidden>
             <span class="dashboard-spinner" aria-hidden="true"></span>
             <span id="dashboardLoadingText"></span>
