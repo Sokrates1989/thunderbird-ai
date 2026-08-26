@@ -211,12 +211,18 @@ test('provider tutorial uses a distinct accessible help-button and documentation
     const styles = source('thunderbird-ai/styles/settings.css');
 
     assert.match(component, /id="providerTutorialButton"/u);
+    assert.match(
+        component,
+        /class="provider-tutorial-info-icon" aria-hidden="true">i<\/span>/u
+    );
+    assert.doesNotMatch(component, /aria-hidden="true">\?<\/span>/u);
     assert.match(component, /<dialog id="providerTutorialDialog"/u);
     assert.match(component, /aria-labelledby="providerTutorialTitle"/u);
     assert.match(component, /aria-label="\$\{I18n\.t\('close'\)\}"/u);
     assert.match(component, /startLink\.textContent = I18n\.t/u);
     assert.match(component, /tutorialDialog\.showModal\(\)/u);
     assert.match(styles, /\.provider-tutorial-documentation\s*\{[^}]*border-left:/su);
+    assert.match(styles, /\.provider-tutorial-info-icon\s*\{[^}]*border-radius:\s*50%;/su);
     assert.match(styles, /\.provider-tutorial-dialog::backdrop/u);
     assert.match(styles, /:focus-visible/u);
 });

@@ -3,7 +3,7 @@
 > [English version](windows-installer-testing.md)
 
 Das primäre Windows-Artefakt heißt
-`Thunderbird-AI-Setup-3.4.0-win-x64.exe`. Es installiert das Add-on nur für den
+`Thunderbird-AI-Setup-3.4.1-win-x64.exe`. Es installiert das Add-on nur für den
 aktuellen Benutzer und benötigt keine Administratorrechte.
 
 ## Automatisierter Isolationstest
@@ -39,7 +39,7 @@ beendet oder gestartet.
 6. In den Einstellungen OpenAI, Claude, Mistral, DeepSeek und den individuellen
    Endpunkt auswählen; OpenAI muss der Standard sein. Mit einem verfügbaren
    Testschlüssel eine E-Mail öffnen, die Zusammenfassung ausführen und den
-   API-Test aufrufen. Im Einzelmail-Popup muss **Version 3.4.0** stehen und die
+   API-Test aufrufen. Im Einzelmail-Popup muss **Version 3.4.1** stehen und die
    Oberfläche muss deutsch sein.
 7. In den Einstellungen **English** wählen und speichern. Popup, Antworteditor und Hilfe müssen anschließend englisch erscheinen; nach einem Thunderbird-Neustart muss die Auswahl erhalten bleiben.
 8. Beide Auswahlen zur Öffnungsart ohne den globalen Speichern-Knopf auf **Tab**

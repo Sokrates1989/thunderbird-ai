@@ -47,7 +47,7 @@ const ApiConfigComponent = class {
                         <div class="help-text" id="providerHelp"></div>
                         <button type="button" id="providerTutorialButton"
                             class="btn provider-tutorial-button">
-                            <span aria-hidden="true">?</span>
+                            <span class="provider-tutorial-info-icon" aria-hidden="true">i</span>
                             <span id="providerTutorialButtonLabel"></span>
                         </button>
                     </div>

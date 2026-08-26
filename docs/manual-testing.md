@@ -137,6 +137,6 @@ Thunderbird behavior that mocks cannot prove.
     configured publisher, and a timestamp certificate; their SHA-256 hashes
     must be identical. Local test builds are intentionally unsigned.
 
-The single-message popup must show version 3.4.0. The dashboard uses unread
+The single-message popup must show version 3.4.1. The dashboard uses unread
 status only as its candidate filter; analysis performed outside the dashboard
 does not automatically create a dashboard score record.

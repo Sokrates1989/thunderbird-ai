@@ -189,6 +189,22 @@ body {
     background: #d8effc;
 }
 
+.provider-tutorial-info-icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+    font-family: Georgia, serif;
+    font-size: 11px;
+    font-style: italic;
+    font-weight: bold;
+    line-height: 1;
+}
+
 .provider-tutorial-button:focus-visible,
 .provider-tutorial-close:focus-visible,
 .provider-tutorial-dialog a:focus-visible {
