@@ -203,6 +203,16 @@ body {
     font-size: 11px;
 }
 
+.dashboard-filter-status-copy .dashboard-active-filter-summary {
+    color: inherit;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.dashboard-sort-summary-value {
+    font-weight: 600;
+}
+
 .dashboard-filter-status button {
     flex: 0 0 auto;
     padding: 7px 10px;

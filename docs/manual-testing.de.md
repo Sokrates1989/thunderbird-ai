@@ -144,10 +144,11 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     absichtlich unsigniert.
 37. Im Dashboard einen Absenderfilter, einen Datumszeitraum, einen AI-Statusfilter
     und Mindestwerte aktivieren. Unterhalb der Ergebnisstatuszeile muss eine
-    Anzeige erscheinen, den Datumszeitraum als eine Filtergruppe zählen und
-    **Filter zurücksetzen** muss
-    alle Eingrenzungen löschen, ohne Darstellung, Sortierung, Nachrichtenlimit,
-    Vorschau oder ein-/ausgeklappte Bereiche zu verändern. Innerhalb derselben
+    Anzeige erscheinen, den Datumszeitraum als eine Filtergruppe zählen und nur
+    die aktive Absenderanzahl, Datumswerte, AI-Auswertung und Mindestwerte ungleich
+    null zusammenfassen. **Filter zurücksetzen** muss alle Eingrenzungen löschen,
+    ohne Darstellung, Sortierung, Nachrichtenlimit, Vorschau oder
+    ein-/ausgeklappte Bereiche zu verändern. Innerhalb derselben
     Thunderbird-Sitzung müssen die Filter Aktualisierungen sowie den Wechsel
     zwischen Overlay und Tab überstehen. Nach einem vollständigen
     Thunderbird-Neustart muss die Anzeige verschwinden, während diese dauerhaften
@@ -155,7 +156,11 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     ausgeblendet bleiben. Ein Update von einer älteren Version muss deren zuvor
     dauerhaft gespeicherte
     Filterwerte ignorieren und entfernen.
+38. **Ansicht** einklappen und zwischen getrennter sowie kombinierter Kontenansicht
+    und mehreren Sortierungen wechseln. Die Ergebnisstatuszeile muss nach den
+    Anzahlen die aktuelle Ansicht nennen und die genaue lokalisierte Sortierung
+    hervorgehoben anzeigen.
 
-Das Einzelmail-Popup muss Version 3.5.1 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.5.2 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status nur als Kandidatenfilter; Analysen außerhalb des Dashboards
 erzeugen nicht automatisch einen Dashboard-Score.

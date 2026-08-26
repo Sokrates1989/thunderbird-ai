@@ -262,6 +262,21 @@ function loadDashboardManager(
     return context.GlobalDashboardManager;
 }
 
+function loadDashboardSummaryComponent(document = {}) {
+    const context = createContext({
+        document,
+        I18n: {
+            getLanguage: () => 'en',
+            t: (key, replacements = {}) => `${key}:${JSON.stringify(replacements)}`
+        }
+    });
+    loadScript(
+        context,
+        'thunderbird-ai/components/global-dashboard/DashboardSummaryComponent.js'
+    );
+    return context.DashboardSummaryComponent;
+}
+
 function loadDeleteComponent(services = {}) {
     const elements = {
         dashboardConfirmationDialog: {
@@ -376,6 +391,40 @@ test('a recent installer run gives actionable recovery advice when no unread mai
     manager.showLoadedStatus();
 
     assert.deepEqual(statuses, [['dashboardNoUnreadAfterInstall:{}', 'warning']]);
+});
+
+test('loaded status summarizes the durable view and emphasizes its sorting choice', () => {
+    const appended = [];
+    const SummaryComponent = loadDashboardSummaryComponent({
+        createElement: tagName => ({ tagName: tagName.toUpperCase(), className: '', textContent: '' })
+    });
+    const state = { viewMode: 'combined', sortOrder: 'importance-desc' };
+    const elements = {
+        status: {
+            textContent: '',
+            dataset: {},
+            append: (...values) => appended.push(...values)
+        }
+    };
+    const summary = new SummaryComponent({
+        elements,
+        getState: () => state,
+        setStatus: message => { elements.status.textContent = message; }
+    });
+
+    summary.showLoadedStatus({ accounts: 9, messages: 4, matches: 4 });
+
+    assert.equal(
+        elements.status.textContent,
+        'dashboardLoaded:{"accounts":9,"messages":4,"matches":4}'
+    );
+    assert.deepEqual(appended.slice(0, 2), [
+        ' · ',
+        'dashboardViewSummaryCombined:{} · dashboardSortingSummary:{} '
+    ]);
+    assert.equal(appended[2].tagName, 'EM');
+    assert.equal(appended[2].className, 'dashboard-sort-summary-value');
+    assert.equal(appended[2].textContent, 'dashboardSortImportanceDescending:{}');
 });
 
 test('global dashboard reads every unread-header page for each Inbox', async () => {
@@ -903,7 +952,6 @@ test('dashboard counts active filter groups and resets every narrowing control t
     manager.savePreferences = async () => { preferencesSaved = true; };
     manager.applyCurrentView = async () => { viewApplied = true; };
 
-    assert.equal(manager.activeFilterCount(), 5);
     await manager.resetFilters();
 
     assert.equal(manager.dateFrom, '');
@@ -914,7 +962,6 @@ test('dashboard counts active filter groups and resets every narrowing control t
     assert.equal(manager.spamMinimum, 0);
     assert.equal(manager.riskMinimum, 0);
     assert.equal(manager.elements.senderFilterDetails.open, false);
-    assert.equal(manager.activeFilterCount(), 0);
     assert.equal(clearedSearch, true);
     assert.equal(clearedValidity, true);
     assert.equal(controlsApplied, true);
@@ -924,35 +971,75 @@ test('dashboard counts active filter groups and resets every narrowing control t
 });
 
 test('dashboard filter indicator is visible only while narrowing filters are active', () => {
-    const DashboardManager = loadDashboardManager({});
-    const manager = Object.create(DashboardManager.prototype);
-    manager.busy = false;
-    manager.dateFrom = '';
-    manager.dateTo = '';
-    manager.selectedSenderKeys = new Set(['ada@example.test']);
-    manager.aiStatusFilter = 'all';
-    manager.importanceMinimum = 0;
-    manager.spamMinimum = 52;
-    manager.riskMinimum = 0;
-    manager.elements = {
+    const SummaryComponent = loadDashboardSummaryComponent();
+    const state = {
+        dateFrom: '',
+        dateTo: '',
+        selectedSenderKeys: new Set(['ada@example.test']),
+        aiStatusFilter: 'all',
+        importanceMinimum: 0,
+        spamMinimum: 52,
+        riskMinimum: 0
+    };
+    const elements = {
         activeFilters: { textContent: '' },
+        activeFilterSummary: { textContent: '' },
         filterStatus: { dataset: {}, hidden: true },
         resetFilters: { disabled: true }
     };
+    const summary = new SummaryComponent({
+        elements,
+        getState: () => state,
+        setStatus() {}
+    });
 
-    manager.updateFilterStatus();
-    assert.equal(manager.elements.activeFilters.textContent, 'dashboardActiveFilters:{"count":2}');
-    assert.equal(manager.elements.filterStatus.dataset.active, 'true');
-    assert.equal(manager.elements.filterStatus.hidden, false);
-    assert.equal(manager.elements.resetFilters.disabled, false);
+    summary.updateFilterStatus(false);
+    assert.equal(elements.activeFilters.textContent, 'dashboardActiveFilters:{"count":2}');
+    assert.equal(
+        elements.activeFilterSummary.textContent,
+        'dashboardFilterSummarySenders:{"count":1} · dashboardFilterSummarySpam:{"value":52}'
+    );
+    assert.equal(elements.filterStatus.dataset.active, 'true');
+    assert.equal(elements.filterStatus.hidden, false);
+    assert.equal(elements.resetFilters.disabled, false);
 
-    manager.selectedSenderKeys = null;
-    manager.spamMinimum = 0;
-    manager.updateFilterStatus();
-    assert.equal(manager.elements.activeFilters.textContent, 'dashboardActiveFilters:{"count":0}');
-    assert.equal(manager.elements.filterStatus.dataset.active, 'false');
-    assert.equal(manager.elements.filterStatus.hidden, true);
-    assert.equal(manager.elements.resetFilters.disabled, true);
+    state.selectedSenderKeys = null;
+    state.spamMinimum = 0;
+    summary.updateFilterStatus(false);
+    assert.equal(elements.activeFilters.textContent, 'dashboardActiveFilters:{"count":0}');
+    assert.equal(elements.activeFilterSummary.textContent, '');
+    assert.equal(elements.filterStatus.dataset.active, 'false');
+    assert.equal(elements.filterStatus.hidden, true);
+    assert.equal(elements.resetFilters.disabled, true);
+});
+
+test('dashboard filter summary reports only active values with localized dates and AI state', () => {
+    const SummaryComponent = loadDashboardSummaryComponent();
+    const state = {
+        dateFrom: '2026-08-01',
+        dateTo: '2026-08-26',
+        selectedSenderKeys: new Set(['ada@example.test', 'grace@example.test']),
+        aiStatusFilter: 'analyzed',
+        importanceMinimum: 20,
+        spamMinimum: 0,
+        riskMinimum: 75
+    };
+    const summary = new SummaryComponent({
+        elements: {},
+        getState: () => state,
+        setStatus() {}
+    });
+    summary.filterDateFormatter = {
+        format: date => `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`
+    };
+
+    assert.deepEqual([...summary.activeFilterSummaries()], [
+        'dashboardFilterSummaryDateRange:{"from":"1.8.2026","to":"26.8.2026"}',
+        'dashboardFilterSummarySenders:{"count":2}',
+        'dashboardFilterSummaryAIStatus:{"status":"dashboardAIStatusAnalyzed:{}"}',
+        'dashboardFilterSummaryImportance:{"value":20}',
+        'dashboardFilterSummaryRisk:{"value":75}'
+    ]);
 });
 
 test('dashboard AI scores persist without mail content and direct actions open shared workspaces', async () => {
@@ -1992,6 +2079,8 @@ test('manifest routes both toolbar actions through the wake-safe background serv
         /id="dashboardStatus"[\s\S]*?id="dashboardFilterStatus"[^>]*data-active="false"[^>]*hidden/u
     );
     assert.match(dashboard, /id="dashboardActiveFilters"[^>]*role="status"/u);
+    assert.match(dashboard, /id="dashboardActiveFilterSummary"/u);
+    assert.match(dashboard, /DashboardSummaryComponent\.js[\s\S]*GlobalDashboardManager\.js/u);
     assert.match(dashboard, /id="dashboardResetFilters"[\s\S]*?data-i18n="dashboardResetFilters"/u);
     assert.match(dashboardStyles, /\.dashboard-filter-status\[data-active="true"\]/u);
     assert.match(dashboard, /id="dashboardAIStatusFilter"/u);

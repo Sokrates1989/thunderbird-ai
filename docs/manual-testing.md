@@ -138,16 +138,20 @@ Thunderbird behavior that mocks cannot prove.
     must be identical. Local test builds are intentionally unsigned.
 37. In the dashboard, activate a sender filter, a date range, an AI-status
     filter, and minimum score values. A counter beneath the result-status row
-    must appear, count the date range as one filter group, and **Reset filters**
-    must clear every
-    narrowing value without changing layout, sorting, message limit, preview,
-    or collapsed-section preferences. Filters must survive refresh and switching
+    must appear, count the date range as one filter group, and summarize only
+    the active sender count, dates, AI status, and non-zero score thresholds.
+    **Reset filters** must clear every narrowing value without changing layout,
+    sorting, message limit, preview, or collapsed-section preferences. Filters
+    must survive refresh and switching
     between overlay and tab during the same Thunderbird session. After a full
     Thunderbird restart, the counter must disappear while those durable display
     preferences remain. It must also stay hidden whenever no filter is active.
     An update from an earlier release must ignore
     and remove its formerly persistent filter values.
+38. Collapse **View** and change between account-separated and combined layouts
+    plus several sort orders. The result-status row must state the current layout
+    and show the exact localized sort label in emphasized text after the counts.
 
-The single-message popup must show version 3.5.1. The dashboard uses unread
+The single-message popup must show version 3.5.2. The dashboard uses unread
 status only as its candidate filter; analysis performed outside the dashboard
 does not automatically create a dashboard score record.
