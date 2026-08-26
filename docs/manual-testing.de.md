@@ -142,7 +142,18 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     `Valid`, den konfigurierten Herausgeber und ein Zeitstempelzertifikat melden;
     ihre SHA-256-Prüfsummen müssen gleich sein. Lokale Test-Builds bleiben
     absichtlich unsigniert.
+37. Im Dashboard einen Absenderfilter, einen Datumszeitraum, einen AI-Statusfilter
+    und Mindestwerte aktivieren. Die ständig sichtbare Anzeige muss den
+    Datumszeitraum als eine Filtergruppe zählen und **Filter zurücksetzen** muss
+    alle Eingrenzungen löschen, ohne Darstellung, Sortierung, Nachrichtenlimit,
+    Vorschau oder ein-/ausgeklappte Bereiche zu verändern. Innerhalb derselben
+    Thunderbird-Sitzung müssen die Filter Aktualisierungen sowie den Wechsel
+    zwischen Overlay und Tab überstehen. Nach einem vollständigen
+    Thunderbird-Neustart muss die Anzeige wieder null aktive Filter melden,
+    während diese dauerhaften Ansichtseinstellungen erhalten bleiben. Ein
+    Update von einer älteren Version muss deren zuvor dauerhaft gespeicherte
+    Filterwerte ignorieren und entfernen.
 
-Das Einzelmail-Popup muss Version 3.4.2 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.5.0 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status nur als Kandidatenfilter; Analysen außerhalb des Dashboards
 erzeugen nicht automatisch einen Dashboard-Score.

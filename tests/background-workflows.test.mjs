@@ -792,7 +792,7 @@ test('packaged UI sources contain no unfinished actions or retired models', () =
     assert.match(source, /messages\.getFull/u);
     assert.ok(manifest.permissions.includes('clipboardWrite'));
     assert.ok(manifest.permissions.includes('sensitiveDataUpload'));
-    assert.equal(manifest.version, '3.4.2');
+    assert.equal(manifest.version, '3.5.0');
     assert.equal(manifest.compose_action, undefined);
     assert.ok(
         manifest.background.scripts.indexOf('RuntimeDiagnosticService.js')

@@ -10,6 +10,9 @@ const GlobalDashboardManager = class {
             refresh: document.getElementById('dashboardRefresh'),
             settings: document.getElementById('dashboardSettings'),
             expandView: document.getElementById('dashboardExpandView'),
+            filterStatus: document.getElementById('dashboardFilterStatus'),
+            activeFilters: document.getElementById('dashboardActiveFilters'),
+            resetFilters: document.getElementById('dashboardResetFilters'),
             displayOptions: document.getElementById('dashboardDisplayOptions'),
             showPreview: document.getElementById('dashboardShowPreview'),
             previewLines: document.getElementById('dashboardPreviewLines'),
@@ -194,6 +197,9 @@ const GlobalDashboardManager = class {
         this.elements.settings.addEventListener('click', () => {
             browser.runtime.openOptionsPage().catch(error => this.showUnexpectedError(error));
         });
+        this.elements.resetFilters.addEventListener('click', () => {
+            this.resetFilters().catch(error => this.showUnexpectedError(error));
+        });
         this.elements.expandView.addEventListener('click', () => {
             this.openExpandedView().catch(error => this.showUnexpectedError(error));
         });
@@ -290,6 +296,7 @@ const GlobalDashboardManager = class {
         this.elements.spamMinimum.value = String(this.spamMinimum);
         this.elements.riskMinimum.value = String(this.riskMinimum);
         this.elements.previewLines.disabled = !this.previewEnabled;
+        this.updateFilterStatus();
     }
 
     /** Persist an explicit operator change without rebuilding the mailbox list. */
@@ -376,9 +383,48 @@ const GlobalDashboardManager = class {
         await this.applyCurrentView();
     }
 
+    /** Clear a prior invalid-range message before applying or resetting dates. */
     clearDateValidity() {
         this.elements.dateFrom.setCustomValidity('');
         this.elements.dateTo.setCustomValidity('');
+    }
+
+    /** Count active narrowing groups without treating durable sort or layout as filters. */
+    activeFilterCount() {
+        return [
+            Boolean(this.dateFrom || this.dateTo),
+            this.selectedSenderKeys !== null,
+            this.aiStatusFilter !== 'all',
+            this.importanceMinimum > 0,
+            this.spamMinimum > 0,
+            this.riskMinimum > 0
+        ].filter(Boolean).length;
+    }
+
+    /** Keep the always-visible filter warning and reset affordance synchronized. */
+    updateFilterStatus() {
+        const count = this.activeFilterCount();
+        this.elements.activeFilters.textContent = I18n.t('dashboardActiveFilters', { count });
+        this.elements.filterStatus.dataset.active = String(count > 0);
+        this.elements.resetFilters.disabled = this.busy || count === 0;
+    }
+
+    /** Clear every narrowing filter while preserving durable display preferences. */
+    async resetFilters() {
+        this.dateFrom = '';
+        this.dateTo = '';
+        this.selectedSenderKeys = null;
+        this.aiStatusFilter = 'all';
+        this.importanceMinimum = 0;
+        this.spamMinimum = 0;
+        this.riskMinimum = 0;
+        this.clearDateValidity();
+        this.senderFilterComponent.clearSearch();
+        this.elements.senderFilterDetails.open = false;
+        this.applyPreferenceControls();
+        this.renderSenderOptions();
+        await this.savePreferences();
+        await this.applyCurrentView();
     }
 
     /** Reload every unread header page, then apply the persisted local view. */
@@ -590,6 +636,7 @@ const GlobalDashboardManager = class {
     async handleSenderSelectionChange(selection) {
         this.selectedSenderKeys = selection;
         this.renderSenderOptions();
+        this.updateFilterStatus();
         await this.savePreferences();
         await this.applyCurrentView();
     }
@@ -918,6 +965,7 @@ const GlobalDashboardManager = class {
         this.elements.importanceMinimum.disabled = busy;
         this.elements.spamMinimum.disabled = busy;
         this.elements.riskMinimum.disabled = busy;
+        this.updateFilterStatus();
         this.senderFilterComponent.setBusy(busy);
         this.elements.loadingIndicator.hidden = !busy;
         if (message) {

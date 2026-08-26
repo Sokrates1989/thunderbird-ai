@@ -1,8 +1,9 @@
-/** Loads, normalizes, and persists the complete global dashboard view state. */
+/** Separates durable dashboard layout choices from session-only narrowing filters. */
 const DashboardViewPreferences = {
-    /** Restore every dashboard preference from untrusted extension storage. */
+    /** Restore durable display preferences and the current Thunderbird-session filters. */
     async load() {
         const keys = CONFIG.STORAGE_KEYS;
+        const filterKeys = this.filterStorageKeys(keys);
         const [stored, sessionStored] = await Promise.all([
             browser.storage.local.get([
                 keys.DASHBOARD_DISPLAY_OPTIONS_EXPANDED,
@@ -11,18 +12,15 @@ const DashboardViewPreferences = {
                 keys.DASHBOARD_CONTEXT_MENU_STYLE,
                 keys.DASHBOARD_SORT_ORDER,
                 keys.DASHBOARD_VIEW_MODE,
-                keys.DASHBOARD_MESSAGE_LIMIT,
-                keys.DASHBOARD_DATE_FROM,
-                keys.DASHBOARD_DATE_TO,
-                keys.DASHBOARD_SENDER_FILTER,
-                keys.DASHBOARD_AI_STATUS_FILTER,
-                keys.DASHBOARD_IMPORTANCE_MINIMUM,
-                keys.DASHBOARD_SPAM_MINIMUM,
-                keys.DASHBOARD_RISK_MINIMUM
+                keys.DASHBOARD_MESSAGE_LIMIT
             ]),
-            browser.storage.session.get(keys.DASHBOARD_SELECTED_MESSAGES)
+            browser.storage.session.get([
+                ...filterKeys,
+                keys.DASHBOARD_SELECTED_MESSAGES
+            ])
         ]);
-        const senderFilter = stored[keys.DASHBOARD_SENDER_FILTER];
+        await this.removeLegacyLocalFilters(filterKeys);
+        const senderFilter = sessionStored[keys.DASHBOARD_SENDER_FILTER];
         return {
             displayOptionsExpanded: stored[keys.DASHBOARD_DISPLAY_OPTIONS_EXPANDED] !== false,
             previewEnabled: stored[keys.DASHBOARD_SHOW_PREVIEW] === true,
@@ -33,20 +31,20 @@ const DashboardViewPreferences = {
             sortOrder: GlobalMailViewService.normalizeSortOrder(stored[keys.DASHBOARD_SORT_ORDER]),
             viewMode: GlobalMailViewService.normalizeViewMode(stored[keys.DASHBOARD_VIEW_MODE]),
             messageLimit: GlobalMailViewService.normalizeLimit(stored[keys.DASHBOARD_MESSAGE_LIMIT]),
-            dateFrom: GlobalMailViewService.normalizeDate(stored[keys.DASHBOARD_DATE_FROM]),
-            dateTo: GlobalMailViewService.normalizeDate(stored[keys.DASHBOARD_DATE_TO]),
+            dateFrom: GlobalMailViewService.normalizeDate(sessionStored[keys.DASHBOARD_DATE_FROM]),
+            dateTo: GlobalMailViewService.normalizeDate(sessionStored[keys.DASHBOARD_DATE_TO]),
             selectedSenderKeys: Array.isArray(senderFilter) ? new Set(senderFilter) : null,
             aiStatusFilter: GlobalMailViewService.normalizeAIStatusFilter(
-                stored[keys.DASHBOARD_AI_STATUS_FILTER]
+                sessionStored[keys.DASHBOARD_AI_STATUS_FILTER]
             ),
             importanceMinimum: GlobalMailViewService.normalizePercentage(
-                stored[keys.DASHBOARD_IMPORTANCE_MINIMUM]
+                sessionStored[keys.DASHBOARD_IMPORTANCE_MINIMUM]
             ),
             spamMinimum: GlobalMailViewService.normalizePercentage(
-                stored[keys.DASHBOARD_SPAM_MINIMUM]
+                sessionStored[keys.DASHBOARD_SPAM_MINIMUM]
             ),
             riskMinimum: GlobalMailViewService.normalizePercentage(
-                stored[keys.DASHBOARD_RISK_MINIMUM]
+                sessionStored[keys.DASHBOARD_RISK_MINIMUM]
             ),
             selectedMessageIds: this.normalizeSelectedMessageIds(
                 sessionStored[keys.DASHBOARD_SELECTED_MESSAGES]
@@ -54,28 +52,54 @@ const DashboardViewPreferences = {
         };
     },
 
-    /** Persist only view preferences; mailbox content and AI scores have separate owners. */
+    /** Persist layout locally and keep narrowing state only for this Thunderbird session. */
     async save(state) {
         const keys = CONFIG.STORAGE_KEYS;
-        await browser.storage.local.set({
-            [keys.DASHBOARD_DISPLAY_OPTIONS_EXPANDED]: state.displayOptionsExpanded,
-            [keys.DASHBOARD_SHOW_PREVIEW]: state.previewEnabled,
-            [keys.DASHBOARD_PREVIEW_LINES]: state.previewLineCount,
-            [keys.DASHBOARD_CONTEXT_MENU_STYLE]: state.contextMenuStyle,
-            [keys.DASHBOARD_SORT_ORDER]: state.sortOrder,
-            [keys.DASHBOARD_VIEW_MODE]: state.viewMode,
-            [keys.DASHBOARD_MESSAGE_LIMIT]: state.messageLimit,
-            [keys.DASHBOARD_DATE_FROM]: state.dateFrom,
-            [keys.DASHBOARD_DATE_TO]: state.dateTo,
-            [keys.DASHBOARD_AI_STATUS_FILTER]: state.aiStatusFilter,
-            [keys.DASHBOARD_IMPORTANCE_MINIMUM]: state.importanceMinimum,
-            [keys.DASHBOARD_SPAM_MINIMUM]: state.spamMinimum,
-            [keys.DASHBOARD_RISK_MINIMUM]: state.riskMinimum,
-            [keys.DASHBOARD_SENDER_FILTER]: state.selectedSenderKeys === null
-                ? null
-                : [...state.selectedSenderKeys]
-        });
-        await this.saveSelection(state.selectedMessageIds);
+        await Promise.all([
+            browser.storage.local.set({
+                [keys.DASHBOARD_DISPLAY_OPTIONS_EXPANDED]: state.displayOptionsExpanded,
+                [keys.DASHBOARD_SHOW_PREVIEW]: state.previewEnabled,
+                [keys.DASHBOARD_PREVIEW_LINES]: state.previewLineCount,
+                [keys.DASHBOARD_CONTEXT_MENU_STYLE]: state.contextMenuStyle,
+                [keys.DASHBOARD_SORT_ORDER]: state.sortOrder,
+                [keys.DASHBOARD_VIEW_MODE]: state.viewMode,
+                [keys.DASHBOARD_MESSAGE_LIMIT]: state.messageLimit
+            }),
+            browser.storage.session.set({
+                [keys.DASHBOARD_DATE_FROM]: state.dateFrom,
+                [keys.DASHBOARD_DATE_TO]: state.dateTo,
+                [keys.DASHBOARD_AI_STATUS_FILTER]: state.aiStatusFilter,
+                [keys.DASHBOARD_IMPORTANCE_MINIMUM]: state.importanceMinimum,
+                [keys.DASHBOARD_SPAM_MINIMUM]: state.spamMinimum,
+                [keys.DASHBOARD_RISK_MINIMUM]: state.riskMinimum,
+                [keys.DASHBOARD_SENDER_FILTER]: state.selectedSenderKeys === null
+                    ? null
+                    : [...state.selectedSenderKeys],
+                [keys.DASHBOARD_SELECTED_MESSAGES]: [...state.selectedMessageIds]
+            })
+        ]);
+    },
+
+    /** Return every narrowing key that must never outlive a Thunderbird session. */
+    filterStorageKeys(keys) {
+        return [
+            keys.DASHBOARD_DATE_FROM,
+            keys.DASHBOARD_DATE_TO,
+            keys.DASHBOARD_SENDER_FILTER,
+            keys.DASHBOARD_AI_STATUS_FILTER,
+            keys.DASHBOARD_IMPORTANCE_MINIMUM,
+            keys.DASHBOARD_SPAM_MINIMUM,
+            keys.DASHBOARD_RISK_MINIMUM
+        ];
+    },
+
+    /** Remove filters written by earlier releases without blocking safe session defaults. */
+    async removeLegacyLocalFilters(filterKeys) {
+        try {
+            await browser.storage.local.remove(filterKeys);
+        } catch (error) {
+            console.warn('Could not remove legacy persistent dashboard filters:', error);
+        }
     },
 
     /** Persist transient selection so popup closure cannot discard operator work. */

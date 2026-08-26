@@ -3,7 +3,7 @@
 > [Deutsche Version](atn-submission.de.md)
 
 This document contains copy-ready listing and reviewer information for the
-first public submission of AI Mail Assistant for Thunderbird 3.4.2. Keep the
+first public submission of AI Mail Assistant for Thunderbird 3.5.0. Keep the
 listing synchronized with `PRIVACY.md` whenever providers or data categories
 change.
 
@@ -17,7 +17,7 @@ Official references:
 
 - Name: `AI Mail Assistant for Thunderbird`
 - Extension ID: `thunderbird-ai@felicitas-wisdom.com`
-- Version: `3.4.2`
+- Version: `3.5.0`
 - Minimum Thunderbird: `128.0`
 - Recommended primary category: `Message and News Reading`
 - Recommended secondary category, if available: `Message Composition`
@@ -133,14 +133,14 @@ advertised platform.
    macOS installers are outside the ATN submission and must not be uploaded.
 3. Sign in to the Thunderbird Add-ons Developer Hub, start a new **listed**
    extension submission, accept the current distribution agreement, and upload
-   `artifacts/thunderbird-ai-3.4.2.xpi`.
+   `artifacts/thunderbird-ai-3.5.0.xpi`.
 4. Copy the listing identity, English/German descriptions, categories, license,
    homepage, and support values from this sheet. Paste the complete current
    `PRIVACY.md` text into ATN's privacy-policy field rather than supplying only
    a link.
 5. Upload the four synthetic-data screenshots from the checklist below. Do not
    expose account addresses, message content, or provider credentials.
-6. Attach `artifacts/thunderbird-ai-3.4.2-atn-source.zip` and the build
+6. Attach `artifacts/thunderbird-ai-3.5.0-atn-source.zip` and the build
    instructions from `ATN_SOURCE_BUILD.md`, even though this XPI does not contain
    minified or bundled third-party code.
 7. Put the functional test notes below and a temporary low-limit reviewer API
@@ -176,8 +176,8 @@ advertised platform.
 
 ## Reviewer notes
 
-1. Upload `artifacts/thunderbird-ai-3.4.2.xpi` as the listed extension.
-2. Attach `artifacts/thunderbird-ai-3.4.2-atn-source.zip` as source code.
+1. Upload `artifacts/thunderbird-ai-3.5.0.xpi` as the listed extension.
+2. Attach `artifacts/thunderbird-ai-3.5.0-atn-source.zip` as source code.
 3. The source archive contains `ATN_SOURCE_BUILD.md` with a no-network XPI build.
 4. Test on Thunderbird 128 or newer with a synthetic email account and synthetic
    messages only.

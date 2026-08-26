@@ -136,7 +136,16 @@ Thunderbird behavior that mocks cannot prove.
     both the versioned installer and stable alias. Both must report `Valid`, the
     configured publisher, and a timestamp certificate; their SHA-256 hashes
     must be identical. Local test builds are intentionally unsigned.
+37. In the dashboard, activate a sender filter, a date range, an AI-status
+    filter, and minimum score values. The always-visible counter must count the
+    date range as one filter group and **Reset filters** must clear every
+    narrowing value without changing layout, sorting, message limit, preview,
+    or collapsed-section preferences. Filters must survive refresh and switching
+    between overlay and tab during the same Thunderbird session. After a full
+    Thunderbird restart, the counter must return to zero while those durable
+    display preferences remain. An update from an earlier release must ignore
+    and remove its formerly persistent filter values.
 
-The single-message popup must show version 3.4.2. The dashboard uses unread
+The single-message popup must show version 3.5.0. The dashboard uses unread
 status only as its candidate filter; analysis performed outside the dashboard
 does not automatically create a dashboard score record.

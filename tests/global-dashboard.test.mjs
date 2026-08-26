@@ -83,9 +83,9 @@ function loadViewService() {
     return context.GlobalMailViewService;
 }
 
-function loadViewPreferences(initial = {}) {
-    const storage = { ...initial };
-    const sessionStorage = { ...initial };
+function loadViewPreferences({ local = {}, session = {} } = {}) {
+    const storage = { ...local };
+    const sessionStorage = { ...session };
     const context = createContext({
         browser: {
             i18n: { getUILanguage: () => 'en-US' },
@@ -94,10 +94,19 @@ function loadViewPreferences(initial = {}) {
                     get: async keys => Object.fromEntries(
                         keys.filter(key => Object.hasOwn(storage, key)).map(key => [key, storage[key]])
                     ),
-                    set: async values => Object.assign(storage, values)
+                    set: async values => Object.assign(storage, values),
+                    remove: async keys => {
+                        for (const key of keys) {
+                            delete storage[key];
+                        }
+                    }
                 },
                 session: {
-                    get: async key => ({ [key]: sessionStorage[key] }),
+                    get: async keys => Object.fromEntries(
+                        (Array.isArray(keys) ? keys : [keys])
+                            .filter(key => Object.hasOwn(sessionStorage, key))
+                            .map(key => [key, sessionStorage[key]])
+                    ),
                     set: async values => Object.assign(sessionStorage, values)
                 }
             }
@@ -670,19 +679,31 @@ test('explicit global AI sorts flatten scored messages across account boundaries
     );
 });
 
-test('dashboard grouping mode is normalized and persisted independently', async () => {
-    const { context, preferences, storage } = loadViewPreferences({
-        dashboardViewMode: 'combined',
-        dashboardDisplayOptionsExpanded: false,
-        dashboardRiskMinimum: 63,
-        dashboardContextMenuStyle: 'submenus'
+test('dashboard layout persists locally while narrowing filters remain session-only', async () => {
+    const { context, preferences, storage, sessionStorage } = loadViewPreferences({
+        local: {
+            dashboardViewMode: 'combined',
+            dashboardDisplayOptionsExpanded: false,
+            dashboardContextMenuStyle: 'submenus',
+            dashboardRiskMinimum: 99,
+            dashboardSenderFilter: ['legacy@example.test']
+        },
+        session: {
+            dashboardDateFrom: '2026-08-01',
+            dashboardSenderFilter: ['session@example.test'],
+            dashboardRiskMinimum: 63
+        }
     });
 
     const loaded = await preferences.load();
     assert.equal(loaded.viewMode, 'combined');
     assert.equal(loaded.displayOptionsExpanded, false);
+    assert.equal(loaded.dateFrom, '2026-08-01');
+    assert.deepEqual([...loaded.selectedSenderKeys], ['session@example.test']);
     assert.equal(loaded.riskMinimum, 63);
     assert.equal(loaded.contextMenuStyle, 'submenus');
+    assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_RISK_MINIMUM], undefined);
+    assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_SENDER_FILTER], undefined);
     loaded.viewMode = 'account';
     loaded.displayOptionsExpanded = true;
     loaded.riskMinimum = 71;
@@ -691,10 +712,19 @@ test('dashboard grouping mode is normalized and persisted independently', async 
 
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_VIEW_MODE], 'account');
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_DISPLAY_OPTIONS_EXPANDED], true);
-    assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_RISK_MINIMUM], 71);
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_CONTEXT_MENU_STYLE], 'headings');
+    assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_RISK_MINIMUM], undefined);
+    assert.equal(sessionStorage[context.CONFIG.STORAGE_KEYS.DASHBOARD_RISK_MINIMUM], 71);
     assert.equal(context.GlobalMailViewService.normalizeViewMode('invalid'), 'account');
     assert.equal(preferences.normalizeContextMenuStyle('invalid'), 'headings');
+
+    const restarted = loadViewPreferences({ local: storage });
+    const afterRestart = await restarted.preferences.load();
+    assert.equal(afterRestart.viewMode, 'account');
+    assert.equal(afterRestart.displayOptionsExpanded, true);
+    assert.equal(afterRestart.dateFrom, '');
+    assert.equal(afterRestart.selectedSenderKeys, null);
+    assert.equal(afterRestart.riskMinimum, 0);
 });
 
 test('message actions swap first-time analysis for correction and context-only re-analysis', () => {
@@ -796,7 +826,7 @@ test('message context menu defaults to direct headings and removes hidden action
 
 test('dashboard selection survives popup closure and is stored without message content', async () => {
     const { context, preferences, sessionStorage } = loadViewPreferences({
-        dashboardSelectedMessages: [7, '8', null, { id: 9 }]
+        session: { dashboardSelectedMessages: [7, '8', null, { id: 9 }] }
     });
 
     const loaded = await preferences.load();
@@ -845,6 +875,82 @@ test('dashboard view panel defaults open and persists only explicit toggle chang
 
     assert.equal(manager.displayOptionsExpanded, false);
     assert.equal(saveCount, 1);
+});
+
+test('dashboard counts active filter groups and resets every narrowing control together', async () => {
+    const DashboardManager = loadDashboardManager({});
+    const manager = Object.create(DashboardManager.prototype);
+    manager.dateFrom = '2026-08-01';
+    manager.dateTo = '2026-08-26';
+    manager.selectedSenderKeys = new Set(['ada@example.test']);
+    manager.aiStatusFilter = 'analyzed';
+    manager.importanceMinimum = 20;
+    manager.spamMinimum = 0;
+    manager.riskMinimum = 50;
+    manager.elements = { senderFilterDetails: { open: true } };
+    let clearedSearch = false;
+    let clearedValidity = false;
+    let controlsApplied = false;
+    let senderOptionsRendered = false;
+    let preferencesSaved = false;
+    let viewApplied = false;
+    manager.senderFilterComponent = {
+        clearSearch() { clearedSearch = true; }
+    };
+    manager.clearDateValidity = () => { clearedValidity = true; };
+    manager.applyPreferenceControls = () => { controlsApplied = true; };
+    manager.renderSenderOptions = () => { senderOptionsRendered = true; };
+    manager.savePreferences = async () => { preferencesSaved = true; };
+    manager.applyCurrentView = async () => { viewApplied = true; };
+
+    assert.equal(manager.activeFilterCount(), 5);
+    await manager.resetFilters();
+
+    assert.equal(manager.dateFrom, '');
+    assert.equal(manager.dateTo, '');
+    assert.equal(manager.selectedSenderKeys, null);
+    assert.equal(manager.aiStatusFilter, 'all');
+    assert.equal(manager.importanceMinimum, 0);
+    assert.equal(manager.spamMinimum, 0);
+    assert.equal(manager.riskMinimum, 0);
+    assert.equal(manager.elements.senderFilterDetails.open, false);
+    assert.equal(manager.activeFilterCount(), 0);
+    assert.equal(clearedSearch, true);
+    assert.equal(clearedValidity, true);
+    assert.equal(controlsApplied, true);
+    assert.equal(senderOptionsRendered, true);
+    assert.equal(preferencesSaved, true);
+    assert.equal(viewApplied, true);
+});
+
+test('dashboard filter indicator stays visible and disables reset when no filters are active', () => {
+    const DashboardManager = loadDashboardManager({});
+    const manager = Object.create(DashboardManager.prototype);
+    manager.busy = false;
+    manager.dateFrom = '';
+    manager.dateTo = '';
+    manager.selectedSenderKeys = new Set(['ada@example.test']);
+    manager.aiStatusFilter = 'all';
+    manager.importanceMinimum = 0;
+    manager.spamMinimum = 52;
+    manager.riskMinimum = 0;
+    manager.elements = {
+        activeFilters: { textContent: '' },
+        filterStatus: { dataset: {} },
+        resetFilters: { disabled: true }
+    };
+
+    manager.updateFilterStatus();
+    assert.equal(manager.elements.activeFilters.textContent, 'dashboardActiveFilters:{"count":2}');
+    assert.equal(manager.elements.filterStatus.dataset.active, 'true');
+    assert.equal(manager.elements.resetFilters.disabled, false);
+
+    manager.selectedSenderKeys = null;
+    manager.spamMinimum = 0;
+    manager.updateFilterStatus();
+    assert.equal(manager.elements.activeFilters.textContent, 'dashboardActiveFilters:{"count":0}');
+    assert.equal(manager.elements.filterStatus.dataset.active, 'false');
+    assert.equal(manager.elements.resetFilters.disabled, true);
 });
 
 test('dashboard AI scores persist without mail content and direct actions open shared workspaces', async () => {
@@ -1879,6 +1985,10 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.match(dashboard, /id="dashboardDateFrom"[^>]*type="date"|type="date"[^>]*id="dashboardDateFrom"/u);
     assert.match(dashboard, /id="dashboardDateTo"[^>]*type="date"|type="date"[^>]*id="dashboardDateTo"/u);
     assert.match(dashboard, /id="dashboardSenderFilter"/u);
+    assert.match(dashboard, /id="dashboardFilterStatus"[^>]*data-active="false"/u);
+    assert.match(dashboard, /id="dashboardActiveFilters"[^>]*role="status"/u);
+    assert.match(dashboard, /id="dashboardResetFilters"[\s\S]*?data-i18n="dashboardResetFilters"/u);
+    assert.match(dashboardStyles, /\.dashboard-filter-status\[data-active="true"\]/u);
     assert.match(dashboard, /id="dashboardAIStatusFilter"/u);
     assert.match(dashboard, /id="dashboardImportanceMinimum"/u);
     assert.match(dashboard, /id="dashboardSpamMinimum"/u);

@@ -166,6 +166,60 @@ body {
     background: #66717a;
 }
 
+.dashboard-filter-status {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 11px;
+    border: 1px solid #c6d3dc;
+    border-radius: 7px;
+    background: #eef4f8;
+    color: #30404d;
+}
+
+.dashboard-filter-status[data-active="true"] {
+    border-color: #d99b28;
+    background: #fff7e3;
+    color: #714800;
+}
+
+.dashboard-filter-status-copy {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+}
+
+.dashboard-filter-status-copy strong {
+    font-size: 13px;
+}
+
+.dashboard-filter-status-copy span {
+    color: #66717a;
+    font-size: 11px;
+}
+
+.dashboard-filter-status button {
+    flex: 0 0 auto;
+    padding: 7px 10px;
+    border: 0;
+    border-radius: 5px;
+    background: #087cc1;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 650;
+}
+
+.dashboard-filter-status button:disabled {
+    cursor: default;
+    opacity: 0.5;
+}
+
+.dashboard-filter-status button:focus-visible {
+    outline: 3px solid #4c9ed9;
+    outline-offset: 2px;
+}
+
 .dashboard-actions button:disabled,
 .dashboard-bulk-actions button:disabled,
 .dashboard-message-action:disabled {
@@ -1264,6 +1318,15 @@ body.dashboard-expanded-view {
 }
 
 @media (max-width: 640px) {
+    .dashboard-filter-status {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .dashboard-filter-status button {
+        width: 100%;
+    }
+
     .dashboard-pdf-archiver-dialog form {
         padding: 22px 20px 20px;
     }
@@ -1358,6 +1421,22 @@ body.dashboard-expanded-view {
     .dashboard-bulk-actions {
         background: #292a2d;
         border-color: #4a4d51;
+    }
+
+    .dashboard-filter-status {
+        border-color: #52636f;
+        background: #26343d;
+        color: #d7e8f3;
+    }
+
+    .dashboard-filter-status[data-active="true"] {
+        border-color: #a87318;
+        background: #3a301d;
+        color: #ffd993;
+    }
+
+    .dashboard-filter-status-copy span {
+        color: #bdc1c6;
     }
 
     .dashboard-option-group {

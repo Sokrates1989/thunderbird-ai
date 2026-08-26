@@ -66,7 +66,7 @@ const GlobalMailViewService = {
         return this.normalizeSortOrder(sortOrder).replace('-global-', '-');
     },
 
-    /** Resolve unknown persisted AI filters to the inclusive default. */
+    /** Resolve unknown session-stored AI filters to the inclusive default. */
     normalizeAIStatusFilter(value) {
         return this.AI_STATUS_FILTERS.has(value) ? value : 'all';
     },

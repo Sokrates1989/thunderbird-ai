@@ -140,6 +140,11 @@ const DashboardSenderFilterComponent = class {
         return { label, input };
     }
 
+    /** Clear the transient sender search when the dashboard resets all filters. */
+    clearSearch() {
+        this.searchQuery = '';
+    }
+
     /** Disable interaction while headers or previews are being refreshed. */
     setBusy(busy) {
         this.busy = busy;
