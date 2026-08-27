@@ -158,6 +158,6 @@ Thunderbird behavior that mocks cannot prove.
     snapshot. Both the result-status row and account heading must compare the same
     visible and source totals, for example **Shown: 4 of 15**.
 
-The single-message popup must show version 3.5.4. The dashboard uses unread
+The single-message popup must show version 3.5.5. The dashboard uses unread
 status only as its candidate filter; analysis performed outside the dashboard
 does not automatically create a dashboard score record.

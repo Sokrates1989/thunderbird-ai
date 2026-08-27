@@ -23,7 +23,23 @@ const QuickActionsComponent = class {
             button.className = `button ${definition.className || ''}`;
             button.title = definition.description;
             button.dataset.action = definition.action;
-            button.innerHTML = `<span class="icon">${definition.icon}</span><span class="text">${definition.text}</span>${definition.shortcut ? `<span class="shortcut">${definition.shortcut}</span>` : ''}`;
+            const icon = SafeDom.create('span', {
+                className: 'icon',
+                text: definition.icon,
+                attributes: { 'aria-hidden': 'true' }
+            });
+            const text = SafeDom.create('span', {
+                className: 'text',
+                text: definition.text
+            });
+            const children = [icon, text];
+            if (definition.shortcut) {
+                children.push(SafeDom.create('span', {
+                    className: 'shortcut',
+                    text: definition.shortcut
+                }));
+            }
+            button.replaceChildren(...children);
             button.addEventListener('click', event => this.handleButtonClick(event));
             this.container.appendChild(button);
             this.buttons[definition.id] = button;

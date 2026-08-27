@@ -8,34 +8,57 @@ const DashboardLaunchSettingsComponent = class {
     }
 
     initialize() {
-        this.container.innerHTML = `
-            <h2>⛶ ${I18n.t('dashboardLaunchSettingsTitle')}</h2>
-            <div class="launch-mode-settings">
-                <div class="setting-group launch-mode-setting">
-                    <label for="dashboardOpenMode">${I18n.t('dashboardLaunchSettingsLabel')}</label>
-                    <select id="dashboardOpenMode">
-                        <option value="overlay">${I18n.t('dashboardLaunchModeOverlay')}</option>
-                        <option value="tab">${I18n.t('dashboardLaunchModeTab')}</option>
-                    </select>
-                    <div class="help-text">${I18n.t('dashboardLaunchSettingsHint')}</div>
-                </div>
-                <div class="setting-group launch-mode-setting">
-                    <label for="singleMailOpenMode">${I18n.t('singleMailLaunchSettingsLabel')}</label>
-                    <select id="singleMailOpenMode">
-                        <option value="overlay">${I18n.t('dashboardLaunchModeOverlay')}</option>
-                        <option value="tab">${I18n.t('dashboardLaunchModeTab')}</option>
-                    </select>
-                    <div class="help-text">${I18n.t('singleMailLaunchSettingsHint')}</div>
-                </div>
-            </div>`;
-        this.elements.mode = document.getElementById('dashboardOpenMode');
-        this.elements.singleMailMode = document.getElementById('singleMailOpenMode');
+        const heading = SafeDom.create('h2', {
+            text: `⛶ ${I18n.t('dashboardLaunchSettingsTitle')}`
+        });
+        const settings = SafeDom.create('div', { className: 'launch-mode-settings' });
+        const dashboard = this.createModeSetting(
+            'dashboardOpenMode',
+            'dashboardLaunchSettingsLabel',
+            'dashboardLaunchSettingsHint'
+        );
+        const singleMail = this.createModeSetting(
+            'singleMailOpenMode',
+            'singleMailLaunchSettingsLabel',
+            'singleMailLaunchSettingsHint'
+        );
+        this.elements.mode = dashboard.select;
+        this.elements.singleMailMode = singleMail.select;
+        settings.append(dashboard.group, singleMail.group);
+        this.container.replaceChildren(heading, settings);
         this.elements.mode.addEventListener('change', () => {
             void this.persistMode('dashboardOpenMode', this.elements.mode);
         });
         this.elements.singleMailMode.addEventListener('change', () => {
             void this.persistMode('singleMailOpenMode', this.elements.singleMailMode);
         });
+    }
+
+    /** Create one launch-mode selector with the shared overlay and tab choices. */
+    createModeSetting(id, labelKey, hintKey) {
+        const group = SafeDom.create('div', {
+            className: 'setting-group launch-mode-setting'
+        });
+        const label = SafeDom.create('label', {
+            text: I18n.t(labelKey),
+            attributes: { for: id }
+        });
+        const select = SafeDom.create('select', { id });
+        for (const [value, key] of [
+            ['overlay', 'dashboardLaunchModeOverlay'],
+            ['tab', 'dashboardLaunchModeTab']
+        ]) {
+            select.appendChild(SafeDom.create('option', {
+                text: I18n.t(key),
+                properties: { value }
+            }));
+        }
+        const help = SafeDom.create('div', {
+            className: 'help-text',
+            text: I18n.t(hintKey)
+        });
+        group.append(label, select, help);
+        return { group, select };
     }
 
     /** Save a launch selector immediately and restore its last value when persistence fails. */

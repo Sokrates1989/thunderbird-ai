@@ -42,7 +42,7 @@ const AdvancedActionsComponent = class {
             button.id = definition.id;
             button.className = 'button';
             button.dataset.action = definition.action;
-            button.innerHTML = `<span class="icon">${definition.icon}</span><span class="text">${I18n.t(definition.textKey)}</span>`;
+            SafeDom.setIconLabel(button, definition.icon, I18n.t(definition.textKey));
             button.addEventListener('click', event => this.handleButtonClick(event));
             this.container.appendChild(button);
             this.buttons[definition.id] = button;

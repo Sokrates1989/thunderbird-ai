@@ -22,12 +22,14 @@ individual instructions for OpenAI, Claude (Anthropic), Mistral, DeepSeek, and
 custom endpoints. The [AI provider test matrix](docs/ai-provider-testing.md)
 separates automated protocol coverage from real-provider acceptance.
 
-## Release 3.5.4 scope
+## Release 3.5.5 scope
 
-Release 3.5.4 keeps message-scoped AI conversations available when the chat is
-closed and reopened while adding an explicit, confirmed **Start new chat** action.
-The action clears both visible bubbles and API conversation history and remains
-disabled while no conversation exists or an answer is being generated.
+Release 3.5.5 replaces UI assembly through HTML assignment with explicit DOM
+construction. Localized labels, provider metadata, diagnostics, and other
+dynamic values are now always inserted as literal text, while AI Markdown
+continues through the existing allowlisted renderer. A regression test scans the
+extension for unsafe HTML-assignment sinks. The visible layout and workflows are
+unchanged.
 
 The collapsed dashboard view also remains understandable at a glance.
 The message-result row now states whether accounts are separated or combined and
@@ -162,7 +164,7 @@ other local credential store. See the full [privacy policy](PRIVACY.md).
 
 ## Install on Windows
 
-1. Download and run `Thunderbird-AI-Setup-3.5.4-win-x64.exe`.
+1. Download and run `Thunderbird-AI-Setup-3.5.5-win-x64.exe`.
 2. Select **Deutsch** or **English** and accept the GNU General Public License.
 3. Save drafts and approve the controlled restart. Setup closes Thunderbird
    normally and restarts it by default after installation; the final restart
@@ -179,7 +181,7 @@ test installers remain unsigned and can trigger SmartScreen.
 ## Install on macOS
 
 1. Start Thunderbird once so a profile exists.
-2. Open `Thunderbird-AI-Setup-3.5.4-macos.pkg`.
+2. Open `Thunderbird-AI-Setup-3.5.5-macos.pkg`.
 3. Accept the GPL, save drafts, and allow a normal Thunderbird quit.
 4. Setup opens Thunderbird after installation. Accept any one-time activation
    or permission prompt.
@@ -219,8 +221,8 @@ On macOS:
 Current artifacts:
 
 - `thunderbird-ai.xpi`
-- `artifacts/Thunderbird-AI-Setup-3.5.4-win-x64.exe`
-- `artifacts/Thunderbird-AI-Setup-3.5.4-macos.pkg`
+- `artifacts/Thunderbird-AI-Setup-3.5.5-win-x64.exe`
+- `artifacts/Thunderbird-AI-Setup-3.5.5-macos.pkg`
 
 Build the Thunderbird Add-ons reviewer source only from tracked files:
 

@@ -21,49 +21,129 @@ const ReplyComposerComponent = class {
         const overlay = document.createElement('div');
         overlay.className = 'reply-composer-overlay';
         overlay.hidden = true;
-        overlay.innerHTML = `
-            <section class="reply-composer-dialog" role="dialog" aria-modal="true" aria-labelledby="replyComposerTitle">
-                <div class="reply-composer-header">
-                    <h2 id="replyComposerTitle">${I18n.t('replyComposerTitle')}</h2>
-                    <button type="button" class="reply-composer-close" aria-label="${I18n.t('replyComposerClose')}">×</button>
-                </div>
-                <div class="reply-composer-scroll">
-                    <div class="reply-composer-messages" aria-live="polite"></div>
-                    <label class="reply-composer-label" for="replyComposerDraft">${I18n.t('replyDraftLabel')}</label>
-                    <textarea id="replyComposerDraft" class="reply-composer-draft" rows="9" maxlength="${CONFIG.AI.MAX_REPLY_DRAFT_CHARACTERS}" placeholder="${I18n.t('replyDraftPlaceholder')}"></textarea>
-                    <label class="reply-composer-label" for="replyComposerInstruction">${I18n.t('replyRefinementLabel')}</label>
-                    <textarea id="replyComposerInstruction" class="reply-composer-instruction" rows="3" maxlength="${CONFIG.AI.MAX_REPLY_INSTRUCTION_CHARACTERS}" placeholder="${I18n.t('replyRefinementPlaceholder')}"></textarea>
-                    <div class="reply-composer-refine-row">
-                        <small>${I18n.t('replyRefineShortcut')}</small>
-                        <button type="button" class="reply-composer-refine">${I18n.t('replyRefine')}</button>
-                    </div>
-                    <p class="reply-composer-status" role="status" aria-live="polite"></p>
-                    <fieldset class="reply-composer-options">
-                        <legend>${I18n.t('replyOptionsHeading')}</legend>
-                        <label><input type="checkbox" class="reply-include-original" checked> ${I18n.t('replyIncludeOriginal')}</label>
-                        <label><input type="checkbox" class="reply-to-all" checked> ${I18n.t('replyToAll')}</label>
-                        <label><input type="checkbox" class="reply-include-attachments"> ${I18n.t('replyIncludeAttachments')}</label>
-                    </fieldset>
-                </div>
-                <div class="reply-composer-actions">
-                    <button type="button" class="reply-composer-copy">${I18n.t('replyCopy')}</button>
-                    <button type="button" class="reply-composer-prepare">${I18n.t('replyPrepare')}</button>
-                </div>
-            </section>`;
+        const title = SafeDom.create('h2', {
+            id: 'replyComposerTitle',
+            text: I18n.t('replyComposerTitle')
+        });
+        const close = SafeDom.create('button', {
+            className: 'reply-composer-close',
+            text: '×',
+            properties: { type: 'button' },
+            attributes: { 'aria-label': I18n.t('replyComposerClose') }
+        });
+        const header = SafeDom.create('div', { className: 'reply-composer-header' }, [
+            title,
+            close
+        ]);
+        const messages = SafeDom.create('div', {
+            className: 'reply-composer-messages',
+            attributes: { 'aria-live': 'polite' }
+        });
+        const draft = SafeDom.create('textarea', {
+            id: 'replyComposerDraft',
+            className: 'reply-composer-draft',
+            properties: {
+                rows: 9,
+                maxLength: CONFIG.AI.MAX_REPLY_DRAFT_CHARACTERS,
+                placeholder: I18n.t('replyDraftPlaceholder')
+            }
+        });
+        const instruction = SafeDom.create('textarea', {
+            id: 'replyComposerInstruction',
+            className: 'reply-composer-instruction',
+            properties: {
+                rows: 3,
+                maxLength: CONFIG.AI.MAX_REPLY_INSTRUCTION_CHARACTERS,
+                placeholder: I18n.t('replyRefinementPlaceholder')
+            }
+        });
+        const refine = SafeDom.create('button', {
+            className: 'reply-composer-refine',
+            text: I18n.t('replyRefine'),
+            properties: { type: 'button' }
+        });
+        const refineRow = SafeDom.create('div', {
+            className: 'reply-composer-refine-row'
+        }, [
+            SafeDom.create('small', { text: I18n.t('replyRefineShortcut') }),
+            refine
+        ]);
+        const status = SafeDom.create('p', {
+            className: 'reply-composer-status',
+            attributes: { role: 'status', 'aria-live': 'polite' }
+        });
+        const includeOriginal = this.createReplyOption(
+            'reply-include-original',
+            'replyIncludeOriginal',
+            true
+        );
+        const replyToAll = this.createReplyOption('reply-to-all', 'replyToAll', true);
+        const includeAttachments = this.createReplyOption(
+            'reply-include-attachments',
+            'replyIncludeAttachments',
+            false
+        );
+        const options = SafeDom.create('fieldset', { className: 'reply-composer-options' }, [
+            SafeDom.create('legend', { text: I18n.t('replyOptionsHeading') }),
+            includeOriginal.label,
+            replyToAll.label,
+            includeAttachments.label
+        ]);
+        const scroll = SafeDom.create('div', { className: 'reply-composer-scroll' }, [
+            messages,
+            SafeDom.create('label', {
+                className: 'reply-composer-label',
+                text: I18n.t('replyDraftLabel'),
+                attributes: { for: 'replyComposerDraft' }
+            }),
+            draft,
+            SafeDom.create('label', {
+                className: 'reply-composer-label',
+                text: I18n.t('replyRefinementLabel'),
+                attributes: { for: 'replyComposerInstruction' }
+            }),
+            instruction,
+            refineRow,
+            status,
+            options
+        ]);
+        const copy = SafeDom.create('button', {
+            className: 'reply-composer-copy',
+            text: I18n.t('replyCopy'),
+            properties: { type: 'button' }
+        });
+        const prepare = SafeDom.create('button', {
+            className: 'reply-composer-prepare',
+            text: I18n.t('replyPrepare'),
+            properties: { type: 'button' }
+        });
+        const actions = SafeDom.create('div', { className: 'reply-composer-actions' }, [
+            copy,
+            prepare
+        ]);
+        const dialog = SafeDom.create('section', {
+            className: 'reply-composer-dialog',
+            attributes: {
+                role: 'dialog',
+                'aria-modal': 'true',
+                'aria-labelledby': 'replyComposerTitle'
+            }
+        }, [header, scroll, actions]);
+        overlay.appendChild(dialog);
         document.body.appendChild(overlay);
         this.elements = {
             overlay,
-            messages: overlay.querySelector('.reply-composer-messages'),
-            draft: overlay.querySelector('.reply-composer-draft'),
-            instruction: overlay.querySelector('.reply-composer-instruction'),
-            refine: overlay.querySelector('.reply-composer-refine'),
-            prepare: overlay.querySelector('.reply-composer-prepare'),
-            copy: overlay.querySelector('.reply-composer-copy'),
-            close: overlay.querySelector('.reply-composer-close'),
-            status: overlay.querySelector('.reply-composer-status'),
-            includeOriginal: overlay.querySelector('.reply-include-original'),
-            replyToAll: overlay.querySelector('.reply-to-all'),
-            includeAttachments: overlay.querySelector('.reply-include-attachments')
+            messages,
+            draft,
+            instruction,
+            refine,
+            prepare,
+            copy,
+            close,
+            status,
+            includeOriginal: includeOriginal.input,
+            replyToAll: replyToAll.input,
+            includeAttachments: includeAttachments.input
         };
         this.elements.close.addEventListener('click', () => this.close());
         this.elements.refine.addEventListener('click', () => {
@@ -89,6 +169,19 @@ const ReplyComposerComponent = class {
             });
         }
         document.addEventListener('keydown', this.keydownHandler);
+    }
+
+    /** Create one checkbox option with a literal localized label. */
+    createReplyOption(className, labelKey, checked) {
+        const input = SafeDom.create('input', {
+            className,
+            properties: { type: 'checkbox', checked }
+        });
+        const label = SafeDom.create('label', {}, [
+            input,
+            SafeDom.create('span', { text: I18n.t(labelKey) })
+        ]);
+        return { input, label };
     }
 
     /** Open a fresh session and fetch its initial reply without using the generic result panel. */

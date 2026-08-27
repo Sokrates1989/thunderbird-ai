@@ -54,24 +54,29 @@ const EmailDetailsComponent = class {
      * this.createUI();
      */
     createUI() {
-        this.container.innerHTML = `
-            <div class="info-row">
-                <span class="info-label">${I18n.t('emailFromLabel')}:</span>
-                <span class="info-value" id="emailFrom">-</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">${I18n.t('emailDateLabel')}:</span>
-                <span class="info-value" id="emailDate">-</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">${I18n.t('emailSizeLabel')}:</span>
-                <span class="info-value" id="emailSize">-</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">${I18n.t('emailStatusLabel')}:</span>
-                <span class="info-value" id="emailStatus">-</span>
-            </div>
-        `;
+        this.container.replaceChildren(
+            this.createInfoRow('emailFromLabel', 'emailFrom'),
+            this.createInfoRow('emailDateLabel', 'emailDate'),
+            this.createInfoRow('emailSizeLabel', 'emailSize'),
+            this.createInfoRow('emailStatusLabel', 'emailStatus')
+        );
+    }
+
+    /** Create one labeled email metadata row with a safe literal placeholder. */
+    createInfoRow(labelKey, valueId) {
+        const row = SafeDom.create('div', { className: 'info-row' });
+        row.append(
+            SafeDom.create('span', {
+                className: 'info-label',
+                text: `${I18n.t(labelKey)}:`
+            }),
+            SafeDom.create('span', {
+                id: valueId,
+                className: 'info-value',
+                text: '-'
+            })
+        );
+        return row;
     }
 
     /**

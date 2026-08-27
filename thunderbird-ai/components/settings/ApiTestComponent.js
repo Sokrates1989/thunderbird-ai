@@ -60,20 +60,24 @@ const ApiTestComponent = class {
      * this.createUI();
      */
     createUI() {
-        this.container.innerHTML = `
-            <h2>${I18n.t('apiTestTitle')}</h2>
-            <div class="test-section">
-                <button id="testApiBtn" class="test-btn">
-                    <span class="icon">🔍</span>
-                    ${I18n.t('apiTestButton')}
-                </button>
-                <div id="testResult" class="test-result"></div>
-            </div>
-        `;
-
-        // Store element references
-        this.elements.testApiBtn = document.getElementById('testApiBtn');
-        this.elements.testResult = document.getElementById('testResult');
+        const heading = SafeDom.create('h2', { text: I18n.t('apiTestTitle') });
+        const section = SafeDom.create('div', { className: 'test-section' });
+        this.elements.testApiBtn = SafeDom.create('button', {
+            id: 'testApiBtn',
+            className: 'test-btn'
+        });
+        SafeDom.setIconLabel(
+            this.elements.testApiBtn,
+            '🔍',
+            I18n.t('apiTestButton'),
+            'test-button-label'
+        );
+        this.elements.testResult = SafeDom.create('div', {
+            id: 'testResult',
+            className: 'test-result'
+        });
+        section.append(this.elements.testApiBtn, this.elements.testResult);
+        this.container.replaceChildren(heading, section);
     }
 
     /**
@@ -120,7 +124,12 @@ const ApiTestComponent = class {
 
             // Show loading state
             this.elements.testApiBtn.disabled = true;
-            this.elements.testApiBtn.innerHTML = `<span class="icon">⏳</span> ${I18n.t('apiTesting')}`;
+            SafeDom.setIconLabel(
+                this.elements.testApiBtn,
+                '⏳',
+                I18n.t('apiTesting'),
+                'test-button-label'
+            );
 
             // Test the connection
             const result = await this.settingsManager.sendToBackground(CONFIG.ACTIONS.TEST_API, {
@@ -143,7 +152,12 @@ const ApiTestComponent = class {
         } finally {
             // Reset button state
             this.elements.testApiBtn.disabled = false;
-            this.elements.testApiBtn.innerHTML = `<span class="icon">🔍</span> ${I18n.t('apiTestButton')}`;
+            SafeDom.setIconLabel(
+                this.elements.testApiBtn,
+                '🔍',
+                I18n.t('apiTestButton'),
+                'test-button-label'
+            );
         }
     }
 

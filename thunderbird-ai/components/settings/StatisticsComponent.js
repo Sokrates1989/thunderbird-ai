@@ -70,49 +70,77 @@ const StatisticsComponent = class {
      * this.createUI();
      */
     createUI() {
-        this.container.innerHTML = `
-            <div class="stats-header">
-                <h2>${I18n.t('statisticsTitle')}</h2>
-                <button id="refreshStatsBtn" class="refresh-btn">
-                    <span class="icon">🔄</span>
-                    ${I18n.t('refresh')}
-                </button>
-            </div>
-            <div class="stats">
-                <div class="stat-item">
-                    <span class="stat-label">${I18n.t('emailsAnalyzedLabel')}:</span>
-                    <span class="stat-value" id="emailsAnalyzed">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">${I18n.t('apiCallsLabel')}:</span>
-                    <span class="stat-value" id="apiCalls">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">${I18n.t('lastUsedLabel')}:</span>
-                    <span class="stat-value" id="lastUsed">${I18n.t('never')}</span>
-                </div>
-                <div class="stat-item estimated-cost">
-                    <span class="stat-label">${I18n.t('estimatedApiCostLabel')}:</span>
-                    <span class="stat-value" id="estimatedApiCost">${this.formatEstimatedCost(0)}</span>
-                </div>
-            </div>
-            <p class="usage-cost-help">
-                ${I18n.t('estimatedApiCostHelp', {
+        const header = SafeDom.create('div', { className: 'stats-header' });
+        this.elements.refreshStatsBtn = SafeDom.create('button', {
+            id: 'refreshStatsBtn',
+            className: 'refresh-btn'
+        });
+        SafeDom.setIconLabel(
+            this.elements.refreshStatsBtn,
+            '🔄',
+            I18n.t('refresh'),
+            'refresh-label'
+        );
+        header.append(
+            SafeDom.create('h2', { text: I18n.t('statisticsTitle') }),
+            this.elements.refreshStatsBtn
+        );
+
+        const stats = SafeDom.create('div', { className: 'stats' });
+        const definitions = [
+            ['emailsAnalyzedLabel', 'emailsAnalyzed', '0', ''],
+            ['apiCallsLabel', 'apiCalls', '0', ''],
+            ['lastUsedLabel', 'lastUsed', I18n.t('never'), ''],
+            [
+                'estimatedApiCostLabel',
+                'estimatedApiCost',
+                this.formatEstimatedCost(0),
+                'estimated-cost'
+            ]
+        ];
+        for (const [labelKey, id, value, extraClass] of definitions) {
+            const item = this.createStatItem(labelKey, id, value, extraClass);
+            stats.appendChild(item.row);
+            this.elements[id] = item.value;
+        }
+
+        const costHelp = SafeDom.create('p', { className: 'usage-cost-help' }, [
+            SafeDom.create('span', {
+                text: `${I18n.t('estimatedApiCostHelp', {
                     version: CONFIG.ADDON_VERSION,
                     date: this.formatPricingDate()
-                })}
-                <a href="https://developers.openai.com/api/docs/models/compare" target="_blank" rel="noopener noreferrer">
-                    ${I18n.t('apiPricingLink')}
-                </a>
-            </p>
-        `;
+                })} `
+            }),
+            SafeDom.create('a', {
+                text: I18n.t('apiPricingLink'),
+                attributes: {
+                    href: 'https://developers.openai.com/api/docs/models/compare',
+                    target: '_blank',
+                    rel: 'noopener noreferrer'
+                }
+            })
+        ]);
+        this.container.replaceChildren(header, stats, costHelp);
+    }
 
-        // Store element references
-        this.elements.refreshStatsBtn = document.getElementById('refreshStatsBtn');
-        this.elements.emailsAnalyzed = document.getElementById('emailsAnalyzed');
-        this.elements.apiCalls = document.getElementById('apiCalls');
-        this.elements.lastUsed = document.getElementById('lastUsed');
-        this.elements.estimatedApiCost = document.getElementById('estimatedApiCost');
+    /** Create one statistics row and return its mutable value element. */
+    createStatItem(labelKey, id, initialValue, extraClass) {
+        const row = SafeDom.create('div', {
+            className: `stat-item${extraClass ? ` ${extraClass}` : ''}`
+        });
+        const value = SafeDom.create('span', {
+            id,
+            className: 'stat-value',
+            text: initialValue
+        });
+        row.append(
+            SafeDom.create('span', {
+                className: 'stat-label',
+                text: `${I18n.t(labelKey)}:`
+            }),
+            value
+        );
+        return { row, value };
     }
 
     /**
@@ -160,7 +188,12 @@ const StatisticsComponent = class {
     async refreshStatistics() {
         try {
             this.elements.refreshStatsBtn.disabled = true;
-            this.elements.refreshStatsBtn.innerHTML = `<span class="icon">⏳</span> ${I18n.t('refreshing')}`;
+            SafeDom.setIconLabel(
+                this.elements.refreshStatsBtn,
+                '⏳',
+                I18n.t('refreshing'),
+                'refresh-label'
+            );
             
             await this.loadStatistics();
             
@@ -171,7 +204,12 @@ const StatisticsComponent = class {
             this.settingsManager.showStatus(I18n.t('statisticsUpdateFailed'), 'error');
         } finally {
             this.elements.refreshStatsBtn.disabled = false;
-            this.elements.refreshStatsBtn.innerHTML = `<span class="icon">🔄</span> ${I18n.t('refresh')}`;
+            SafeDom.setIconLabel(
+                this.elements.refreshStatsBtn,
+                '🔄',
+                I18n.t('refresh'),
+                'refresh-label'
+            );
         }
     }
 

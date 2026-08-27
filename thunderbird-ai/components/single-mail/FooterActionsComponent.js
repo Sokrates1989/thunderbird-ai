@@ -16,7 +16,7 @@ const FooterActionsComponent = class {
             const button = document.createElement('button');
             button.type = 'button';
             button.className = `footer-btn ${definition.className || ''}`;
-            button.innerHTML = `<span class="icon">${definition.icon}</span><span class="text">${I18n.t(definition.textKey)}</span>`;
+            SafeDom.setIconLabel(button, definition.icon, I18n.t(definition.textKey));
             button.addEventListener('click', () => this.executeAction(definition.action));
             this.container.appendChild(button);
         }

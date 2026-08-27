@@ -8,28 +8,48 @@ const SupportDiagnosticsComponent = class {
     }
 
     initialize() {
-        this.container.innerHTML = `
-            <h2>🩺 ${I18n.t('supportDiagnosticsTitle')}</h2>
-            <p class="help-text">${I18n.t('supportDiagnosticsHint')}</p>
-            <div id="supportDiagnosticsHealth" class="support-health pending" role="status"></div>
-            <details class="support-diagnostics-details">
-                <summary>${I18n.t('supportDiagnosticsDetailsTitle')}</summary>
-                <pre id="supportDiagnosticDetails" aria-live="polite"></pre>
-            </details>
-            <div class="support-diagnostic-actions">
-                <button type="button" id="supportDiagnosticRefresh" class="btn secondary">
-                    ↻ ${I18n.t('dashboardLaunchDiagnosticsRefresh')}
-                </button>
-                <button type="button" id="supportDiagnosticCopy" class="btn secondary">
-                    📋 ${I18n.t('dashboardLaunchDiagnosticsCopy')}
-                </button>
-            </div>`;
         this.elements = {
-            health: document.getElementById('supportDiagnosticsHealth'),
-            details: document.getElementById('supportDiagnosticDetails'),
-            refresh: document.getElementById('supportDiagnosticRefresh'),
-            copy: document.getElementById('supportDiagnosticCopy')
+            health: SafeDom.create('div', {
+                id: 'supportDiagnosticsHealth',
+                className: 'support-health pending',
+                attributes: { role: 'status' }
+            }),
+            details: SafeDom.create('pre', {
+                id: 'supportDiagnosticDetails',
+                attributes: { 'aria-live': 'polite' }
+            }),
+            refresh: SafeDom.create('button', {
+                id: 'supportDiagnosticRefresh',
+                className: 'btn secondary',
+                text: `↻ ${I18n.t('dashboardLaunchDiagnosticsRefresh')}`,
+                properties: { type: 'button' }
+            }),
+            copy: SafeDom.create('button', {
+                id: 'supportDiagnosticCopy',
+                className: 'btn secondary',
+                text: `📋 ${I18n.t('dashboardLaunchDiagnosticsCopy')}`,
+                properties: { type: 'button' }
+            })
         };
+        const details = SafeDom.create('details', {
+            className: 'support-diagnostics-details'
+        }, [
+            SafeDom.create('summary', { text: I18n.t('supportDiagnosticsDetailsTitle') }),
+            this.elements.details
+        ]);
+        const actions = SafeDom.create('div', {
+            className: 'support-diagnostic-actions'
+        }, [this.elements.refresh, this.elements.copy]);
+        this.container.replaceChildren(
+            SafeDom.create('h2', { text: `🩺 ${I18n.t('supportDiagnosticsTitle')}` }),
+            SafeDom.create('p', {
+                className: 'help-text',
+                text: I18n.t('supportDiagnosticsHint')
+            }),
+            this.elements.health,
+            details,
+            actions
+        );
         this.elements.refresh.addEventListener('click', () => void this.refresh());
         this.elements.copy.addEventListener('click', () => void this.copy());
         void this.refresh();

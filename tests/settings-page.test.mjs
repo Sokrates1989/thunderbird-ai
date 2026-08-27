@@ -16,7 +16,8 @@ test('model selectors are compact self-contained cards instead of detached grid 
     assert.match(styles, /\.model-task-setting\s*\{[^}]*gap:\s*6px;[^}]*border:/su);
     assert.match(styles, /\.model-task-setting label\s*\{[^}]*margin:\s*0;/su);
     assert.doesNotMatch(styles, /\.model-task-setting label\s*\{[^}]*min-height:/su);
-    assert.match(apiConfig, /class="model-task-grid" aria-describedby="modelRoutingHelp"/u);
+    assert.match(apiConfig, /className: 'model-task-grid'/u);
+    assert.match(apiConfig, /'aria-describedby': 'modelRoutingHelp'/u);
 });
 
 test('settings expose built-in and compatible custom AI provider controls', () => {
@@ -25,9 +26,9 @@ test('settings expose built-in and compatible custom AI provider controls', () =
     const manifest = JSON.parse(source('thunderbird-ai/manifest.json'));
 
     assert.match(settingsPage, /ai-provider\.js/u);
-    assert.match(apiConfig, /id="aiProvider"/u);
-    assert.match(apiConfig, /id="providerEndpoint"/u);
-    assert.match(apiConfig, /id="providerProtocol"/u);
+    assert.match(apiConfig, /id: 'aiProvider'/u);
+    assert.match(apiConfig, /id: 'providerEndpoint'/u);
+    assert.match(apiConfig, /id: 'providerProtocol'/u);
     assert.match(apiConfig, /ensureEndpointPermission\(\)/u);
     assert.match(apiConfig, /browser\.permissions\.request/u);
     assert.deepEqual(manifest.host_permissions, [
@@ -53,13 +54,13 @@ test('large settings sections start collapsed and summarize provider readiness',
         'thunderbird-ai/components/settings/SupportDiagnosticsComponent.js'
     );
 
-    assert.match(apiConfig, /<details class="settings-collapsible">/u);
-    assert.match(apiConfig, /id="providerConfigurationSummary"/u);
-    assert.doesNotMatch(apiConfig, /<details class="settings-collapsible" open>/u);
-    assert.match(archiveSettings, /<details class="settings-collapsible">/u);
-    assert.doesNotMatch(archiveSettings, /<details class="settings-collapsible" open>/u);
-    assert.match(supportDiagnostics, /<details class="support-diagnostics-details">/u);
-    assert.doesNotMatch(supportDiagnostics, /support-diagnostics-details" open/u);
+    assert.match(apiConfig, /SafeDom\.create\('details', \{ className: 'settings-collapsible' \}\)/u);
+    assert.match(apiConfig, /id: 'providerConfigurationSummary'/u);
+    assert.doesNotMatch(apiConfig, /properties:\s*\{[^}]*open:/u);
+    assert.match(archiveSettings, /SafeDom\.create\('details', \{ className: 'settings-collapsible' \}\)/u);
+    assert.doesNotMatch(archiveSettings, /properties:\s*\{[^}]*open:/u);
+    assert.match(supportDiagnostics, /SafeDom\.create\('details', \{[\s\S]*className: 'support-diagnostics-details'/u);
+    assert.doesNotMatch(supportDiagnostics, /properties:\s*\{[^}]*open:/u);
     assert.ok(
         settingsPage.indexOf('id="support-diagnostics-section"')
             > settingsPage.indexOf('id="score-archive-section"')
@@ -210,15 +211,15 @@ test('provider tutorial uses a distinct accessible help-button and documentation
     const component = source('thunderbird-ai/components/settings/ApiConfigComponent.js');
     const styles = source('thunderbird-ai/styles/settings.css');
 
-    assert.match(component, /id="providerTutorialButton"/u);
+    assert.match(component, /id: 'providerTutorialButton'/u);
     assert.match(
         component,
-        /class="provider-tutorial-info-icon" aria-hidden="true">i<\/span>/u
+        /className: 'provider-tutorial-info-icon',[\s\S]*text: 'i',[\s\S]*'aria-hidden': 'true'/u
     );
-    assert.doesNotMatch(component, /aria-hidden="true">\?<\/span>/u);
-    assert.match(component, /<dialog id="providerTutorialDialog"/u);
-    assert.match(component, /aria-labelledby="providerTutorialTitle"/u);
-    assert.match(component, /aria-label="\$\{I18n\.t\('close'\)\}"/u);
+    assert.doesNotMatch(component, /text: '\?'/u);
+    assert.match(component, /SafeDom\.create\('dialog'/u);
+    assert.match(component, /'aria-labelledby': 'providerTutorialTitle'/u);
+    assert.match(component, /'aria-label': I18n\.t\('close'\)/u);
     assert.match(component, /startLink\.textContent = I18n\.t/u);
     assert.match(component, /tutorialDialog\.showModal\(\)/u);
     assert.match(styles, /\.provider-tutorial-documentation\s*\{[^}]*border-left:/su);
@@ -262,10 +263,10 @@ test('settings expose independent persisted launch preferences for both entry po
     assert.match(settingsManager, /new DashboardLaunchSettingsComponent\(this\)/u);
     assert.match(settingsManager, /new SupportDiagnosticsComponent\(this\)/u);
     assert.match(settingsManager, /dashboardLaunch\.getCurrentValues\(\)/u);
-    assert.match(launchSettings, /value="overlay"/u);
-    assert.match(launchSettings, /value="tab"/u);
-    assert.match(launchSettings, /id="dashboardOpenMode"/u);
-    assert.match(launchSettings, /id="singleMailOpenMode"/u);
+    assert.match(launchSettings, /\['overlay', 'dashboardLaunchModeOverlay'\]/u);
+    assert.match(launchSettings, /\['tab', 'dashboardLaunchModeTab'\]/u);
+    assert.match(launchSettings, /'dashboardOpenMode'/u);
+    assert.match(launchSettings, /'singleMailOpenMode'/u);
     assert.match(launchSettings, /singleMailOpenMode:\s*globalThis\.LaunchModeService\.normalizeMode/u);
     assert.match(launchSettings, /CONFIG\.ACTIONS\.SET_LAUNCH_MODE/u);
     assert.match(launchSettings, /persistMode\('dashboardOpenMode'/u);
@@ -369,7 +370,7 @@ test('support storage audit reports API-key presence without exposing the key', 
 
 test('usage statistics disclose and format the token-based USD estimate', () => {
     const statistics = source('thunderbird-ai/components/settings/StatisticsComponent.js');
-    assert.match(statistics, /id="estimatedApiCost"/u);
+    assert.match(statistics, /'estimatedApiCost'/u);
     assert.match(statistics, /PRICING_SNAPSHOT_DATE/u);
     assert.match(statistics, /developers\.openai\.com\/api\/docs\/models\/compare/u);
 

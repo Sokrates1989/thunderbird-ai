@@ -14,40 +14,76 @@ const ArchiveSettingsGuideComponent = class {
 
     /** Build the guide without implying that protected Thunderbird settings can be deep-linked. */
     createUI() {
-        this.container.innerHTML = `
-            <details class="settings-collapsible">
-                <summary class="settings-collapsible-summary">
-                    <span class="settings-collapsible-title">${I18n.t('archiveSettingsTitle')}</span>
-                </summary>
-                <div class="settings-collapsible-content">
-                    <p class="archive-settings-introduction">${I18n.t('archiveSettingsIntroduction')}</p>
-                    <div class="archive-settings-path">
-                        <strong>${I18n.t('archiveSettingsPathLabel')}</strong>
-                        <span>${I18n.t('archiveSettingsPath')}</span>
-                    </div>
-                    <p class="help-text">${I18n.t('archiveSettingsProtectedNote')}</p>
-                    <div class="archive-settings-actions">
-                        <button type="button" id="archiveSettingsRefresh" class="btn secondary">
-                            <span aria-hidden="true">🔍</span>
-                            <span>${I18n.t('archiveSettingsRefresh')}</span>
-                        </button>
-                        <button type="button" id="archiveSettingsHelp" class="btn">
-                            <span aria-hidden="true">↗</span>
-                            <span>${I18n.t('archiveSettingsOpenHelp')}</span>
-                        </button>
-                    </div>
-                    <div id="archiveSettingsFeedback" class="archive-settings-feedback" role="status" aria-live="polite"></div>
-                    <div id="archiveSettingsResults" class="archive-settings-results" aria-live="polite">
-                        <p class="archive-settings-placeholder">${I18n.t('archiveSettingsNotChecked')}</p>
-                    </div>
-                </div>
-            </details>
-        `;
-
-        this.elements.refresh = document.getElementById('archiveSettingsRefresh');
-        this.elements.help = document.getElementById('archiveSettingsHelp');
-        this.elements.feedback = document.getElementById('archiveSettingsFeedback');
-        this.elements.results = document.getElementById('archiveSettingsResults');
+        const details = SafeDom.create('details', { className: 'settings-collapsible' });
+        const summary = SafeDom.create('summary', {
+            className: 'settings-collapsible-summary'
+        }, [SafeDom.create('span', {
+            className: 'settings-collapsible-title',
+            text: I18n.t('archiveSettingsTitle')
+        })]);
+        const content = SafeDom.create('div', {
+            className: 'settings-collapsible-content'
+        });
+        const path = SafeDom.create('div', { className: 'archive-settings-path' }, [
+            SafeDom.create('strong', { text: I18n.t('archiveSettingsPathLabel') }),
+            SafeDom.create('span', { text: I18n.t('archiveSettingsPath') })
+        ]);
+        const actions = SafeDom.create('div', { className: 'archive-settings-actions' });
+        this.elements.refresh = SafeDom.create('button', {
+            id: 'archiveSettingsRefresh',
+            className: 'btn secondary',
+            properties: { type: 'button' }
+        }, [
+            SafeDom.create('span', {
+                text: '🔍',
+                attributes: { 'aria-hidden': 'true' }
+            }),
+            SafeDom.create('span', { text: I18n.t('archiveSettingsRefresh') })
+        ]);
+        this.elements.help = SafeDom.create('button', {
+            id: 'archiveSettingsHelp',
+            className: 'btn',
+            properties: { type: 'button' }
+        }, [
+            SafeDom.create('span', {
+                text: '↗',
+                attributes: { 'aria-hidden': 'true' }
+            }),
+            SafeDom.create('span', { text: I18n.t('archiveSettingsOpenHelp') })
+        ]);
+        actions.append(this.elements.refresh, this.elements.help);
+        this.elements.feedback = SafeDom.create('div', {
+            id: 'archiveSettingsFeedback',
+            className: 'archive-settings-feedback',
+            attributes: { role: 'status', 'aria-live': 'polite' }
+        });
+        this.elements.results = SafeDom.create('div', {
+            id: 'archiveSettingsResults',
+            className: 'archive-settings-results',
+            attributes: { 'aria-live': 'polite' }
+        }, [this.textElement(
+            'p',
+            'archive-settings-placeholder',
+            I18n.t('archiveSettingsNotChecked')
+        )]);
+        content.append(
+            this.textElement(
+                'p',
+                'archive-settings-introduction',
+                I18n.t('archiveSettingsIntroduction')
+            ),
+            path,
+            this.textElement(
+                'p',
+                'help-text',
+                I18n.t('archiveSettingsProtectedNote')
+            ),
+            actions,
+            this.elements.feedback,
+            this.elements.results
+        );
+        details.append(summary, content);
+        this.container.replaceChildren(details);
     }
 
     attachEventListeners() {

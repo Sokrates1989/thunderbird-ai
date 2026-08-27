@@ -248,7 +248,8 @@ test('chat opens in an expanded tab and keeps a responsive roomy bubble layout',
     );
     assert.match(componentSource, /className = 'chat-avatar'/u);
     assert.match(componentSource, /className = 'chat-progress'/u);
-    assert.match(componentSource, /class="chat-restart"/u);
+    assert.match(componentSource, /className: 'chat-restart'/u);
+    assert.match(componentSource, /SafeDom\.create\('section'/u);
     assert.match(styles, /\.chat-dialog\s*\{[^}]*width:\s*min\(760px, 100%\)/su);
     assert.match(styles, /\.chat-header-actions\s*\{[^}]*display:\s*flex/su);
     assert.match(styles, /\.chat-message-row\.user\s*\{[^}]*row-reverse/su);

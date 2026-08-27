@@ -168,6 +168,6 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     und Kontenüberschrift müssen dieselben sichtbaren und vollständigen Anzahlen
     vergleichen, zum Beispiel **Angezeigt: 4 von 15**.
 
-Das Einzelmail-Popup muss Version 3.5.4 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.5.5 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status nur als Kandidatenfilter; Analysen außerhalb des Dashboards
 erzeugen nicht automatisch einen Dashboard-Score.

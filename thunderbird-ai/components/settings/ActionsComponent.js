@@ -62,16 +62,26 @@ const ActionsComponent = class {
      * this.createUI();
      */
     createUI() {
-        this.container.innerHTML = `
-            <button id="saveBtn" class="btn primary">💾 ${I18n.t('saveSettings')}</button>
-            <button id="resetBtn" class="btn secondary">🔄 ${I18n.t('resetSettings')}</button>
-            <button id="closeBtn" class="btn">❌ ${I18n.t('close')}</button>
-        `;
-
-        // Store element references
-        this.elements.saveBtn = document.getElementById('saveBtn');
-        this.elements.resetBtn = document.getElementById('resetBtn');
-        this.elements.closeBtn = document.getElementById('closeBtn');
+        this.elements.saveBtn = SafeDom.create('button', {
+            id: 'saveBtn',
+            className: 'btn primary',
+            text: `💾 ${I18n.t('saveSettings')}`
+        });
+        this.elements.resetBtn = SafeDom.create('button', {
+            id: 'resetBtn',
+            className: 'btn secondary',
+            text: `🔄 ${I18n.t('resetSettings')}`
+        });
+        this.elements.closeBtn = SafeDom.create('button', {
+            id: 'closeBtn',
+            className: 'btn',
+            text: `❌ ${I18n.t('close')}`
+        });
+        this.container.replaceChildren(
+            this.elements.saveBtn,
+            this.elements.resetBtn,
+            this.elements.closeBtn
+        );
     }
 
     /**
@@ -130,7 +140,7 @@ const ActionsComponent = class {
 
             // Show loading state
             this.elements.saveBtn.disabled = true;
-            this.elements.saveBtn.innerHTML = `⏳ ${I18n.t('saving')}`;
+            this.elements.saveBtn.textContent = `⏳ ${I18n.t('saving')}`;
 
             // Save settings
             const result = await this.settingsManager.sendToBackground(CONFIG.ACTIONS.SAVE_SETTINGS, settings);
@@ -156,7 +166,7 @@ const ActionsComponent = class {
         } finally {
             // Reset button state
             this.elements.saveBtn.disabled = !this.persistenceAvailable;
-            this.elements.saveBtn.innerHTML = `💾 ${I18n.t('saveSettings')}`;
+            this.elements.saveBtn.textContent = `💾 ${I18n.t('saveSettings')}`;
         }
     }
 
@@ -183,7 +193,7 @@ const ActionsComponent = class {
             try {
                 // Show loading state
                 this.elements.resetBtn.disabled = true;
-                this.elements.resetBtn.innerHTML = `⏳ ${I18n.t('resetting')}`;
+                this.elements.resetBtn.textContent = `⏳ ${I18n.t('resetting')}`;
 
                 // Reset all components
                 this.settingsManager.resetAllComponents();
@@ -212,7 +222,7 @@ const ActionsComponent = class {
             } finally {
                 // Reset button state
                 this.elements.resetBtn.disabled = !this.persistenceAvailable;
-                this.elements.resetBtn.innerHTML = `🔄 ${I18n.t('resetSettings')}`;
+                this.elements.resetBtn.textContent = `🔄 ${I18n.t('resetSettings')}`;
             }
         }
     }

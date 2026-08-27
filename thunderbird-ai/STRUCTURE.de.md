@@ -40,7 +40,10 @@ Skripte eindeutige Dateinamen und globale Bindungen statt ES-Modulimporten.
   Übergabe an die feste PDF-Archiver-ID; PDF-Daten bleiben im Begleit-Add-on.
 - Nachrichten-, Kontextmenü-, Vorschau-, Bulk- und Nach-oben-Komponenten besitzen
   jeweils nur ihre UI-Grenze und teilen eine einzige Aktionsbeschreibung.
-- `MarkdownRenderer.js`, `MarkdownInlineRenderer.js` und `markdown-content.css` formatieren nicht
+- `SafeDom.js` baut dynamische Einstellungen und Einzelmail-UI aus ausdrücklichen
+  DOM-Knoten auf; übersetzte Beschriftungen und Laufzeit-Metadaten werden als
+  reiner Text statt als HTML eingefügt. `MarkdownRenderer.js`,
+  `MarkdownInlineRenderer.js` und `markdown-content.css` formatieren nicht
   vertrauenswürdige AI-Ausgaben in Aktionsergebnissen, Chat, Antwortverlauf und
   gespeicherten Ergebnissen ohne rohes HTML, ausführbare Links oder externe
   Bildabrufe. Bearbeitbare Entwürfe und Nutzernachrichten bleiben reiner Text.

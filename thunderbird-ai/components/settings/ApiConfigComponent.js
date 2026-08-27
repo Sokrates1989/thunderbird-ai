@@ -14,137 +14,245 @@ const ApiConfigComponent = class {
 
     /** Build the provider form once; dynamic values are assigned through DOM properties. */
     createUI() {
-        const providerOptions = Object.entries(CONFIG.AI.PROVIDERS)
-            .map(([providerId, definition]) => (
-                `<option value="${providerId}">${I18n.t(definition.labelKey)}</option>`
-            ))
-            .join('');
-        const protocolOptions = CONFIG.AI.PROTOCOLS
-            .map(item => `<option value="${item.value}">${I18n.t(item.labelKey)}</option>`)
-            .join('');
-        const authOptions = CONFIG.AI.AUTH_MODES
-            .map(item => `<option value="${item.value}">${I18n.t(item.labelKey)}</option>`)
-            .join('');
-        const taskInputs = CONFIG.AI.MODEL_SETTINGS.map(definition => `
-            <div class="model-task-setting">
-                <label for="${definition.property}">${I18n.t(definition.labelKey)}</label>
-                <input id="${definition.property}" type="text"
-                    data-model-property="${definition.property}"
-                    list="providerModelPresets" autocomplete="off" />
-            </div>
-        `).join('');
-        this.container.innerHTML = `
-            <details class="settings-collapsible">
-                <summary class="settings-collapsible-summary">
-                    <span class="settings-collapsible-title">${I18n.t('apiConfigTitle')}</span>
-                    <span id="providerConfigurationSummary"
-                        class="settings-summary-status pending" role="status"></span>
-                </summary>
-                <div class="settings-collapsible-content">
-                    <div class="setting-group">
-                        <label for="aiProvider">${I18n.t('providerLabel')}</label>
-                        <select id="aiProvider">${providerOptions}</select>
-                        <div class="help-text" id="providerHelp"></div>
-                        <button type="button" id="providerTutorialButton"
-                            class="btn provider-tutorial-button">
-                            <span class="provider-tutorial-info-icon" aria-hidden="true">i</span>
-                            <span id="providerTutorialButtonLabel"></span>
-                        </button>
-                    </div>
+        const details = SafeDom.create('details', { className: 'settings-collapsible' });
+        this.elements.configurationSummary = SafeDom.create('span', {
+            id: 'providerConfigurationSummary',
+            className: 'settings-summary-status pending',
+            attributes: { role: 'status' }
+        });
+        const summary = SafeDom.create('summary', {
+            className: 'settings-collapsible-summary'
+        }, [
+            SafeDom.create('span', {
+                className: 'settings-collapsible-title',
+                text: I18n.t('apiConfigTitle')
+            }),
+            this.elements.configurationSummary
+        ]);
+        const content = SafeDom.create('div', {
+            className: 'settings-collapsible-content'
+        });
 
-                    <div class="provider-connection-grid">
-                        <div class="setting-group provider-endpoint-setting">
-                            <label for="providerEndpoint">${I18n.t('providerEndpointLabel')}</label>
-                            <input id="providerEndpoint" type="url" spellcheck="false" />
-                            <div class="help-text">${I18n.t('providerEndpointHelp')}</div>
-                        </div>
-                        <div class="setting-group custom-provider-setting">
-                            <label for="providerProtocol">${I18n.t('providerProtocolLabel')}</label>
-                            <select id="providerProtocol">${protocolOptions}</select>
-                        </div>
-                        <div class="setting-group custom-provider-setting">
-                            <label for="providerAuthMode">${I18n.t('providerAuthLabel')}</label>
-                            <select id="providerAuthMode">${authOptions}</select>
-                        </div>
-                        <div class="setting-group custom-provider-setting">
-                            <label for="providerDefaultModel">${I18n.t('providerDefaultModelLabel')}</label>
-                            <input id="providerDefaultModel" type="text" autocomplete="off" />
-                            <div class="help-text">${I18n.t('providerDefaultModelHelp')}</div>
-                        </div>
-                    </div>
+        this.elements.providerSelect = SafeDom.create('select', { id: 'aiProvider' });
+        this.appendOptions(
+            this.elements.providerSelect,
+            Object.entries(CONFIG.AI.PROVIDERS).map(([value, definition]) => ({
+                value,
+                label: I18n.t(definition.labelKey)
+            }))
+        );
+        this.elements.providerHelp = SafeDom.create('div', {
+            id: 'providerHelp',
+            className: 'help-text'
+        });
+        this.elements.tutorialButtonLabel = SafeDom.create('span', {
+            id: 'providerTutorialButtonLabel'
+        });
+        this.elements.tutorialButton = SafeDom.create('button', {
+            id: 'providerTutorialButton',
+            className: 'btn provider-tutorial-button',
+            properties: { type: 'button' }
+        }, [
+            SafeDom.create('span', {
+                className: 'provider-tutorial-info-icon',
+                text: 'i',
+                attributes: { 'aria-hidden': 'true' }
+            }),
+            this.elements.tutorialButtonLabel
+        ]);
+        const providerGroup = this.createSettingGroup(
+            'providerLabel',
+            'aiProvider',
+            [
+                this.elements.providerSelect,
+                this.elements.providerHelp,
+                this.elements.tutorialButton
+            ]
+        );
 
-                    <div class="setting-group">
-                        <label for="providerApiKey">${I18n.t('apiKeyLabel')}</label>
-                        <input type="password" id="providerApiKey" autocomplete="off" />
-                        <div class="help-text">
-                            <span id="apiKeyHelp"></span>
-                            <a id="providerApiKeyLink" target="_blank" rel="noopener noreferrer"></a>
-                        </div>
-                    </div>
+        this.elements.endpointInput = SafeDom.create('input', {
+            id: 'providerEndpoint',
+            attributes: { type: 'url', spellcheck: 'false' }
+        });
+        this.elements.protocolSelect = SafeDom.create('select', { id: 'providerProtocol' });
+        this.appendOptions(
+            this.elements.protocolSelect,
+            CONFIG.AI.PROTOCOLS.map(item => ({
+                value: item.value,
+                label: I18n.t(item.labelKey)
+            }))
+        );
+        this.elements.authModeSelect = SafeDom.create('select', { id: 'providerAuthMode' });
+        this.appendOptions(
+            this.elements.authModeSelect,
+            CONFIG.AI.AUTH_MODES.map(item => ({
+                value: item.value,
+                label: I18n.t(item.labelKey)
+            }))
+        );
+        this.elements.defaultModelInput = SafeDom.create('input', {
+            id: 'providerDefaultModel',
+            attributes: { type: 'text', autocomplete: 'off' }
+        });
+        const connectionGrid = SafeDom.create('div', {
+            className: 'provider-connection-grid'
+        }, [
+            this.createSettingGroup('providerEndpointLabel', 'providerEndpoint', [
+                this.elements.endpointInput,
+                SafeDom.create('div', {
+                    className: 'help-text',
+                    text: I18n.t('providerEndpointHelp')
+                })
+            ], 'provider-endpoint-setting'),
+            this.createSettingGroup('providerProtocolLabel', 'providerProtocol', [
+                this.elements.protocolSelect
+            ], 'custom-provider-setting'),
+            this.createSettingGroup('providerAuthLabel', 'providerAuthMode', [
+                this.elements.authModeSelect
+            ], 'custom-provider-setting'),
+            this.createSettingGroup('providerDefaultModelLabel', 'providerDefaultModel', [
+                this.elements.defaultModelInput,
+                SafeDom.create('div', {
+                    className: 'help-text',
+                    text: I18n.t('providerDefaultModelHelp')
+                })
+            ], 'custom-provider-setting')
+        ]);
 
-                    <div class="setting-group">
-                        <label>${I18n.t('modelRoutingTitle')}</label>
-                        <div class="help-text" id="modelRoutingHelp">${I18n.t('modelRoutingHelp')}</div>
-                        <datalist id="providerModelPresets"></datalist>
-                        <div class="model-task-grid" aria-describedby="modelRoutingHelp">${taskInputs}</div>
-                    </div>
-                </div>
-            </details>
+        this.elements.apiKeyInput = SafeDom.create('input', {
+            id: 'providerApiKey',
+            attributes: { type: 'password', autocomplete: 'off' }
+        });
+        this.elements.apiKeyHelp = SafeDom.create('span', { id: 'apiKeyHelp' });
+        this.elements.apiKeyLink = SafeDom.create('a', {
+            id: 'providerApiKeyLink',
+            attributes: { target: '_blank', rel: 'noopener noreferrer' }
+        });
+        const apiKeyHelp = SafeDom.create('div', { className: 'help-text' }, [
+            this.elements.apiKeyHelp,
+            this.elements.apiKeyLink
+        ]);
+        const apiKeyGroup = this.createSettingGroup('apiKeyLabel', 'providerApiKey', [
+            this.elements.apiKeyInput,
+            apiKeyHelp
+        ]);
 
-            <dialog id="providerTutorialDialog" class="provider-tutorial-dialog"
-                aria-labelledby="providerTutorialTitle">
-                <div class="provider-tutorial-panel">
-                    <header class="provider-tutorial-header">
-                        <h2 id="providerTutorialTitle"></h2>
-                        <button type="button" id="providerTutorialClose"
-                            class="provider-tutorial-close" aria-label="${I18n.t('close')}">×</button>
-                    </header>
-                    <ol id="providerTutorialChecklist" class="provider-tutorial-checklist"></ol>
-                    <aside class="provider-tutorial-documentation"
-                        aria-label="${I18n.t('providerTutorialDocumentationTitle')}">
-                        <strong>${I18n.t('providerTutorialDocumentationTitle')}</strong>
-                        <a id="providerTutorialFullGuide" target="_blank"
-                            rel="noopener noreferrer"></a>
-                        <a id="providerTutorialAllGuides" target="_blank"
-                            rel="noopener noreferrer"></a>
-                    </aside>
-                </div>
-            </dialog>
-        `;
+        this.elements.modelPresets = SafeDom.create('datalist', {
+            id: 'providerModelPresets'
+        });
+        this.elements.modelInputs = {};
+        const modelGrid = SafeDom.create('div', {
+            className: 'model-task-grid',
+            attributes: { 'aria-describedby': 'modelRoutingHelp' }
+        });
+        for (const definition of CONFIG.AI.MODEL_SETTINGS) {
+            const input = SafeDom.create('input', {
+                id: definition.property,
+                attributes: {
+                    type: 'text',
+                    list: 'providerModelPresets',
+                    autocomplete: 'off'
+                },
+                dataset: { modelProperty: definition.property }
+            });
+            this.elements.modelInputs[definition.property] = input;
+            modelGrid.appendChild(SafeDom.create('div', {
+                className: 'model-task-setting'
+            }, [
+                SafeDom.create('label', {
+                    text: I18n.t(definition.labelKey),
+                    attributes: { for: definition.property }
+                }),
+                input
+            ]));
+        }
+        const modelGroup = SafeDom.create('div', { className: 'setting-group' }, [
+            SafeDom.create('label', { text: I18n.t('modelRoutingTitle') }),
+            SafeDom.create('div', {
+                id: 'modelRoutingHelp',
+                className: 'help-text',
+                text: I18n.t('modelRoutingHelp')
+            }),
+            this.elements.modelPresets,
+            modelGrid
+        ]);
 
-        this.elements.configurationSummary = document.getElementById(
-            'providerConfigurationSummary'
-        );
-        this.elements.providerSelect = document.getElementById('aiProvider');
-        this.elements.providerHelp = document.getElementById('providerHelp');
-        this.elements.tutorialButton = document.getElementById('providerTutorialButton');
-        this.elements.tutorialButtonLabel = document.getElementById(
-            'providerTutorialButtonLabel'
-        );
-        this.elements.tutorialDialog = document.getElementById('providerTutorialDialog');
-        this.elements.tutorialTitle = document.getElementById('providerTutorialTitle');
-        this.elements.tutorialChecklist = document.getElementById(
-            'providerTutorialChecklist'
-        );
-        this.elements.tutorialFullGuide = document.getElementById(
-            'providerTutorialFullGuide'
-        );
-        this.elements.tutorialAllGuides = document.getElementById(
-            'providerTutorialAllGuides'
-        );
-        this.elements.tutorialClose = document.getElementById('providerTutorialClose');
-        this.elements.endpointInput = document.getElementById('providerEndpoint');
-        this.elements.protocolSelect = document.getElementById('providerProtocol');
-        this.elements.authModeSelect = document.getElementById('providerAuthMode');
-        this.elements.defaultModelInput = document.getElementById('providerDefaultModel');
-        this.elements.apiKeyInput = document.getElementById('providerApiKey');
-        this.elements.apiKeyHelp = document.getElementById('apiKeyHelp');
-        this.elements.apiKeyLink = document.getElementById('providerApiKeyLink');
-        this.elements.modelPresets = document.getElementById('providerModelPresets');
-        this.elements.modelInputs = Object.fromEntries(
-            [...this.container.querySelectorAll('[data-model-property]')]
-                .map(input => [input.dataset.modelProperty, input])
-        );
+        content.append(providerGroup, connectionGrid, apiKeyGroup, modelGroup);
+        details.append(summary, content);
+        this.elements.tutorialDialog = this.createTutorialDialog();
+        this.container.replaceChildren(details, this.elements.tutorialDialog);
+    }
+
+    /** Create a standard labeled provider setting group. */
+    createSettingGroup(labelKey, controlId, children, extraClass = '') {
+        return SafeDom.create('div', {
+            className: `setting-group${extraClass ? ` ${extraClass}` : ''}`
+        }, [
+            SafeDom.create('label', {
+                text: I18n.t(labelKey),
+                attributes: { for: controlId }
+            }),
+            ...children
+        ]);
+    }
+
+    /** Append literal option labels without parsing provider configuration as markup. */
+    appendOptions(select, options) {
+        for (const option of options) {
+            select.appendChild(SafeDom.create('option', {
+                text: option.label,
+                properties: { value: option.value }
+            }));
+        }
+    }
+
+    /** Create the provider tutorial dialog while retaining direct element references. */
+    createTutorialDialog() {
+        this.elements.tutorialTitle = SafeDom.create('h2', { id: 'providerTutorialTitle' });
+        this.elements.tutorialClose = SafeDom.create('button', {
+            id: 'providerTutorialClose',
+            className: 'provider-tutorial-close',
+            text: '×',
+            properties: { type: 'button' },
+            attributes: { 'aria-label': I18n.t('close') }
+        });
+        this.elements.tutorialChecklist = SafeDom.create('ol', {
+            id: 'providerTutorialChecklist',
+            className: 'provider-tutorial-checklist'
+        });
+        this.elements.tutorialFullGuide = SafeDom.create('a', {
+            id: 'providerTutorialFullGuide',
+            attributes: { target: '_blank', rel: 'noopener noreferrer' }
+        });
+        this.elements.tutorialAllGuides = SafeDom.create('a', {
+            id: 'providerTutorialAllGuides',
+            attributes: { target: '_blank', rel: 'noopener noreferrer' }
+        });
+        const header = SafeDom.create('header', {
+            className: 'provider-tutorial-header'
+        }, [this.elements.tutorialTitle, this.elements.tutorialClose]);
+        const documentation = SafeDom.create('aside', {
+            className: 'provider-tutorial-documentation',
+            attributes: {
+                'aria-label': I18n.t('providerTutorialDocumentationTitle')
+            }
+        }, [
+            SafeDom.create('strong', {
+                text: I18n.t('providerTutorialDocumentationTitle')
+            }),
+            this.elements.tutorialFullGuide,
+            this.elements.tutorialAllGuides
+        ]);
+        const panel = SafeDom.create('div', { className: 'provider-tutorial-panel' }, [
+            header,
+            this.elements.tutorialChecklist,
+            documentation
+        ]);
+        return SafeDom.create('dialog', {
+            id: 'providerTutorialDialog',
+            className: 'provider-tutorial-dialog',
+            attributes: { 'aria-labelledby': 'providerTutorialTitle' }
+        }, [panel]);
     }
 
     attachEventListeners() {
@@ -239,9 +347,9 @@ const ApiConfigComponent = class {
             custom ? 'providerTutorialCustomButton' : 'providerTutorialButton',
             { provider: I18n.t(definition.labelKey) }
         );
-        this.elements.apiKeyHelp.textContent = I18n.t('apiKeyHelp', {
+        this.elements.apiKeyHelp.textContent = `${I18n.t('apiKeyHelp', {
             provider: I18n.t(definition.labelKey)
-        });
+        })} `;
         this.elements.apiKeyLink.hidden = !definition.apiKeyUrl;
         this.elements.apiKeyLink.href = definition.apiKeyUrl || '#';
         this.elements.apiKeyLink.textContent = I18n.t('apiKeyLink', {

@@ -13,32 +13,67 @@ const ChatComponent = class {
         const overlay = document.createElement('div');
         overlay.className = 'chat-overlay';
         overlay.hidden = true;
-        overlay.innerHTML = `
-            <section class="chat-dialog" role="dialog" aria-modal="true" aria-labelledby="chatTitle">
-                <div class="chat-header">
-                    <h2 id="chatTitle">${I18n.t('chatTitle')}</h2>
-                    <div class="chat-header-actions">
-                        <button type="button" class="chat-restart" disabled>
-                            <span aria-hidden="true">↻</span>
-                            <span>${I18n.t('chatRestart')}</span>
-                        </button>
-                        <button type="button" class="chat-close" aria-label="${I18n.t('chatClose')}">×</button>
-                    </div>
-                </div>
-                <div class="chat-messages" aria-live="polite"></div>
-                <div class="chat-composer">
-                    <textarea class="chat-input" rows="2" placeholder="${I18n.t('chatPlaceholder')}"></textarea>
-                    <button type="button" class="chat-send">${I18n.t('chatSend')}</button>
-                </div>
-            </section>`;
+        const title = SafeDom.create('h2', {
+            id: 'chatTitle',
+            text: I18n.t('chatTitle')
+        });
+        const restart = SafeDom.create('button', {
+            className: 'chat-restart',
+            properties: { type: 'button', disabled: true }
+        }, [
+            SafeDom.create('span', {
+                text: '↻',
+                attributes: { 'aria-hidden': 'true' }
+            }),
+            SafeDom.create('span', { text: I18n.t('chatRestart') })
+        ]);
+        const close = SafeDom.create('button', {
+            className: 'chat-close',
+            text: '×',
+            properties: { type: 'button' },
+            attributes: { 'aria-label': I18n.t('chatClose') }
+        });
+        const headerActions = SafeDom.create('div', {
+            className: 'chat-header-actions'
+        }, [restart, close]);
+        const header = SafeDom.create('div', { className: 'chat-header' }, [
+            title,
+            headerActions
+        ]);
+        const messages = SafeDom.create('div', {
+            className: 'chat-messages',
+            attributes: { 'aria-live': 'polite' }
+        });
+        const input = SafeDom.create('textarea', {
+            className: 'chat-input',
+            properties: { rows: 2, placeholder: I18n.t('chatPlaceholder') }
+        });
+        const send = SafeDom.create('button', {
+            className: 'chat-send',
+            text: I18n.t('chatSend'),
+            properties: { type: 'button' }
+        });
+        const composer = SafeDom.create('div', { className: 'chat-composer' }, [
+            input,
+            send
+        ]);
+        const dialog = SafeDom.create('section', {
+            className: 'chat-dialog',
+            attributes: {
+                role: 'dialog',
+                'aria-modal': 'true',
+                'aria-labelledby': 'chatTitle'
+            }
+        }, [header, messages, composer]);
+        overlay.appendChild(dialog);
         document.body.appendChild(overlay);
         this.elements = {
             overlay,
-            messages: overlay.querySelector('.chat-messages'),
-            input: overlay.querySelector('.chat-input'),
-            send: overlay.querySelector('.chat-send'),
-            restart: overlay.querySelector('.chat-restart'),
-            close: overlay.querySelector('.chat-close')
+            messages,
+            input,
+            send,
+            restart,
+            close
         };
         this.elements.close.addEventListener('click', () => this.close());
         this.elements.restart.addEventListener('click', () => this.restartChat());

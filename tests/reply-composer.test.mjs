@@ -151,7 +151,7 @@ test('explicit language selection changes text and every static page key resolve
         path.join(repositoryRoot, 'thunderbird-ai/install-defaults.json'),
         'utf8'
     ));
-    assert.deepEqual(defaults, { language: 'auto', version: '3.5.4' });
+    assert.deepEqual(defaults, { language: 'auto', version: '3.5.5' });
 });
 
 test('reply composer keeps final actions outside its scrolling content', () => {
@@ -167,10 +167,15 @@ test('reply composer keeps final actions outside its scrolling content', () => {
         'utf8'
     );
 
-    assert.match(
-        componentSource,
-        /class="reply-composer-scroll">[\s\S]*<\/div>\s*<div class="reply-composer-actions">/u
+    const scrollDeclaration = componentSource.indexOf(
+        "const scroll = SafeDom.create('div', { className: 'reply-composer-scroll' }"
     );
+    const actionsDeclaration = componentSource.indexOf(
+        "const actions = SafeDom.create('div', { className: 'reply-composer-actions' }"
+    );
+    assert.ok(scrollDeclaration >= 0);
+    assert.ok(actionsDeclaration > scrollDeclaration);
+    assert.match(componentSource, /\[header, scroll, actions\]/u);
     assert.match(styles, /\.reply-composer-scroll\s*\{[\s\S]*?flex:\s*1 1 auto;/u);
     assert.match(styles, /\.reply-composer-scroll\s*\{[\s\S]*?overflow-y:\s*auto;/u);
     assert.match(styles, /\.reply-composer-actions\s*\{[\s\S]*?flex:\s*0 0 auto;/u);
