@@ -23,6 +23,7 @@ test('release workflow builds and tests every supported native artifact', () => 
     assert.match(workflow, /runs-on: macos-latest/u);
     assert.match(workflow, /runs-on: windows-latest/u);
     assert.match(workflow, /npm test/u);
+    assert.match(workflow, /npm run lint:atn/u);
     assert.match(workflow, /\.\/installer\/macos\/test-setup\.sh/u);
     assert.match(workflow, /windows\\test-setup\.ps1/u);
     assert.match(workflow, /windows\\build-setup\.ps1 -SkipAddonBuild/u);

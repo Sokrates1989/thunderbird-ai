@@ -1,0 +1,43 @@
+{
+  "linterVersion": "10.10.0",
+  "reviewedThunderbirdCompatibility": {
+    "MANIFEST_PERMISSIONS": {
+      "accountsRead": 1,
+      "compose": 1,
+      "messagesDelete": 1,
+      "messagesMove": 1,
+      "messagesRead": 1,
+      "messagesUpdate": 1,
+      "sensitiveDataUpload": 1
+    },
+    "UNSUPPORTED_API": {
+      "accounts.list is not supported": 2,
+      "compose.addAttachment is not supported": 1,
+      "compose.beginReply is not supported": 3,
+      "compose.getComposeDetails is not supported": 1,
+      "compose.setComposeDetails is not supported": 2,
+      "folders.getFolderCapabilities is not supported": 1,
+      "identities.getDefault is not supported": 2,
+      "identities.list is not supported": 2,
+      "messageDisplay.getDisplayedMessages is not supported": 3,
+      "messageDisplay.open is not supported": 2,
+      "messageDisplayAction.onClicked is not supported": 1,
+      "messages.abortList is not supported": 6,
+      "messages.archive is not supported": 1,
+      "messages.continueList is not supported": 3,
+      "messages.delete is not supported": 1,
+      "messages.get is not supported": 5,
+      "messages.getAttachmentFile is not supported": 1,
+      "messages.getFull is not supported": 3,
+      "messages.listAttachments is not supported": 1,
+      "messages.query is not supported": 3,
+      "messages.update is not supported": 3,
+      "windows.openDefaultBrowser is not supported": 2
+    }
+  },
+  "localFirefoxOnly": {
+    "MISSING_DATA_COLLECTION_PERMISSIONS": {
+      "The \"data_collection_permissions\" property is missing.": 1
+    }
+  }
+}

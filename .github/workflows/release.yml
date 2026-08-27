@@ -88,6 +88,9 @@ jobs:
           cp -p "artifacts/thunderbird-ai-${VERSION}.xpi" artifacts/thunderbird-ai.xpi
           ./scripts/build-atn-source.sh
 
+      - name: Reject new ATN validation findings
+        run: npm run lint:atn -- "artifacts/thunderbird-ai-${{ needs.prepare.outputs.version }}.xpi"
+
       - name: Upload XPI and reviewer source
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

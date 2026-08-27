@@ -174,6 +174,28 @@ advertised platform.
 | Optional `https://*/*` | Declare the bounded capability needed for custom HTTPS endpoints; the add-on requests only the exact configured host when the user saves or tests it. |
 | Optional `http://localhost/*`, `http://127.0.0.1/*` | Permit an explicitly configured loopback development endpoint; non-loopback plain HTTP is rejected. |
 
+## Validator warning classification
+
+The Thunderbird Add-ons upload currently reports 56 reviewed compatibility
+warnings: seven `MANIFEST_PERMISSIONS` warnings for Thunderbird-only
+permissions and 49 `UNSUPPORTED_API` warnings for Thunderbird MailExtension
+APIs. These calls and permissions provide the documented mail, account,
+compose, folder, message-display, and external-browser behavior; removing or
+hiding them would break functionality or make the source harder to review.
+
+Before uploading an XPI, run the pinned local guard from the repository root:
+
+```text
+npm run lint:atn
+```
+
+The command requires the current versioned XPI in `artifacts/`. It fails for
+errors, notices, unsafe-code findings, unreviewed warnings, changed warning
+counts, or mismatched package identity. The generic local Firefox linter emits
+one additional Firefox-only `MISSING_DATA_COLLECTION_PERMISSIONS` warning that
+the Thunderbird Add-ons report does not currently include; the guard reports
+that warning separately so it cannot be confused with the 56 ATN findings.
+
 ## Reviewer notes
 
 1. Upload `artifacts/thunderbird-ai-3.5.6.xpi` as the listed extension.
@@ -192,6 +214,9 @@ advertised platform.
    single-message analysis. Preview and similar-message search remain local.
 8. The add-on uses no Experiments, remote code, telemetry, advertising,
    maintainer-operated server, or native companion.
+9. The validator warnings are the reviewed Firefox-compatibility findings
+   described above; the local ATN guard rejects any finding outside that exact
+   baseline.
 
 Never place a real or long-lived API key in this repository, the source archive,
 the public listing, screenshots, or ordinary reviewer notes. Create a temporary

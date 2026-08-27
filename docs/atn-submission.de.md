@@ -162,6 +162,31 @@ Wegwerf-Thunderbird-Profil auf jeder beworbenen Plattform erfolgen.
 | Optional `https://*/*` | Nur den exakt konfigurierten individuellen HTTPS-Host nach Nutzeraktion anfordern. |
 | Optional `http://localhost/*`, `http://127.0.0.1/*` | Einen ausdrücklich konfigurierten Loopback-Entwicklungsdienst erlauben; anderes HTTP wird abgewiesen. |
 
+## Einordnung der Validator-Warnungen
+
+Der Upload bei Thunderbird Add-ons meldet derzeit 56 geprüfte
+Kompatibilitätswarnungen: sieben `MANIFEST_PERMISSIONS`-Warnungen für reine
+Thunderbird-Berechtigungen und 49 `UNSUPPORTED_API`-Warnungen für
+Thunderbird-MailExtension-APIs. Diese Aufrufe und Berechtigungen stellen die
+dokumentierten Mail-, Konto-, Verfassen-, Ordner-, Nachrichtenanzeige- und
+Browserfunktionen bereit. Sie zu entfernen oder vor der statischen Analyse zu
+verbergen würde Funktionen beschädigen oder den Review erschweren.
+
+Vor jedem XPI-Upload im Repository-Stamm den fest versionierten lokalen Wächter
+ausführen:
+
+```text
+npm run lint:atn
+```
+
+Der Befehl erwartet die aktuelle versionierte XPI unter `artifacts/`. Fehler,
+Hinweise, unsichere Code-Funde, nicht geprüfte Warnungen, veränderte
+Warnungsanzahlen oder eine abweichende Paketidentität führen zum Fehlschlag. Der
+allgemeine lokale Firefox-Linter meldet zusätzlich genau eine Firefox-spezifische
+Warnung `MISSING_DATA_COLLECTION_PERMISSIONS`, die im aktuellen
+Thunderbird-Add-ons-Bericht nicht enthalten ist. Der Wächter weist sie getrennt
+aus, damit sie nicht mit den 56 ATN-Funden verwechselt wird.
+
 ## Reviewer-Hinweise
 
 1. `artifacts/thunderbird-ai-3.5.6.xpi` als Erweiterung hochladen.
@@ -178,6 +203,9 @@ Wegwerf-Thunderbird-Profil auf jeder beworbenen Plattform erfolgen.
    Ähnlichkeitssuche bleiben lokal.
 8. Das Add-on nutzt keine Experiments, entfernten Code, Telemetrie, Werbung,
    Maintainer-Server oder native Begleitkomponente.
+9. Die Validator-Warnungen sind die oben beschriebenen, geprüften
+   Firefox-Kompatibilitätsfunde. Der lokale ATN-Wächter lehnt jeden Fund
+   außerhalb dieser exakten Baseline ab.
 
 Keine echten oder langlebigen Schlüssel in Repository, Quellarchiv, Listing,
 Screenshots oder normale Reviewer-Hinweise aufnehmen. Einen temporären
