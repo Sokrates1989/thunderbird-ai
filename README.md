@@ -7,6 +7,7 @@ email analysis, and inbox triage with a selectable AI provider.
 
 ## Downloads and releases
 
+- **[Install from Thunderbird Add-ons](https://addons.thunderbird.net/thunderbird/addon/ai-mail-assistant/)** (recommended for automatic add-on updates)
 - [Latest release](https://github.com/Sokrates1989/thunderbird-ai/releases/latest)
 - [Installer and version history](https://github.com/Sokrates1989/thunderbird-ai/releases)
 - [Latest XPI](https://github.com/Sokrates1989/thunderbird-ai/releases/latest/download/thunderbird-ai.xpi)
@@ -21,6 +22,43 @@ also retains versioned installers and checksums for a traceable history.
 individual instructions for OpenAI, Claude (Anthropic), Mistral, DeepSeek, and
 custom endpoints. The [AI provider test matrix](docs/ai-provider-testing.md)
 separates automated protocol coverage from real-provider acceptance.
+
+## Screenshots
+
+Each preview links to the original-resolution image.
+
+<table>
+  <tr>
+    <td width="50%">
+      <a href="docs/images/ai-mail-assistant-dashboard-de.png"><img src="docs/images/ai-mail-assistant-dashboard-de.png" alt="Inbox dashboard with sender and AI filters, importance sorting, AI scores, and grouped message actions"></a><br>
+      <sub>Inbox dashboard with filters, importance sorting, AI scores, and grouped actions.</sub>
+    </td>
+    <td width="50%">
+      <a href="docs/images/ai-mail-assistant-summary-de.png"><img src="docs/images/ai-mail-assistant-summary-de.png" alt="Single-message assistant showing a Markdown-formatted email summary"></a><br>
+      <sub>Single-message assistant with a readable Markdown-formatted summary.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <a href="docs/images/ai-mail-assistant-chat-de.png"><img src="docs/images/ai-mail-assistant-chat-de.png" alt="Email-scoped AI Chat with user and assistant messages"></a><br>
+      <sub>Email-scoped AI Chat with persistent conversation history.</sub>
+    </td>
+    <td width="50%">
+      <a href="docs/images/ai-mail-assistant-reply-refinement-de.png"><img src="docs/images/ai-mail-assistant-reply-refinement-de.png" alt="AI-generated reply draft with an editable refinement request"></a><br>
+      <sub>AI-generated reply draft with an editable refinement request.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <a href="docs/images/ai-mail-assistant-reply-result-de.png"><img src="docs/images/ai-mail-assistant-reply-result-de.png" alt="Updated AI reply draft ready to open in Thunderbird"></a><br>
+      <sub>Updated reply draft ready to open in Thunderbird.</sub>
+    </td>
+    <td width="50%">
+      <a href="docs/images/ai-mail-assistant-provider-help-de.png"><img src="docs/images/ai-mail-assistant-provider-help-de.png" alt="Built-in Claude API-key setup checklist"></a><br>
+      <sub>Built-in provider setup help with links to the complete documentation.</sub>
+    </td>
+  </tr>
+</table>
 
 ## Release 3.5.6 scope
 
@@ -160,6 +198,19 @@ removed when Thunderbird messages are deleted and can be managed in Settings.
 API keys and saved results live in the Thunderbird profile's local extension
 storage. Protect the operating-system account and Thunderbird profile like any
 other local credential store. See the full [privacy policy](PRIVACY.md).
+
+## Install from Thunderbird Add-ons (recommended)
+
+1. In Thunderbird, open **Menu → Add-ons and Themes**.
+2. Select **Extensions**, search for `AI Mail Assistant`, and choose **Install**.
+3. Review and accept the requested Thunderbird permissions.
+4. Open the add-on settings, select an AI provider, enter its API key, test the
+   connection, and save.
+
+This installs the reviewed XPI directly, without a Windows or macOS installer.
+Thunderbird manages approved store updates unless automatic add-on updates have
+been disabled. The same version is available on the
+[official Thunderbird Add-ons page](https://addons.thunderbird.net/thunderbird/addon/ai-mail-assistant/).
 
 ## Install on Windows
 

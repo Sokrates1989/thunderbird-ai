@@ -6,6 +6,7 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 
 ## Download und Veröffentlichungen
 
+- **[Über Thunderbird Add-ons installieren](https://addons.thunderbird.net/de/thunderbird/addon/ai-mail-assistant/)** (empfohlen für automatische Add-on-Updates)
 - [Aktuelle Veröffentlichung](https://github.com/Sokrates1989/thunderbird-ai/releases/latest)
 - [Installer- und Versionshistorie](https://github.com/Sokrates1989/thunderbird-ai/releases)
 - [Aktuelles XPI](https://github.com/Sokrates1989/thunderbird-ai/releases/latest/download/thunderbird-ai.xpi)
@@ -22,6 +23,43 @@ individuelle Endpunkte. Die
 [AI-Anbieter-Testmatrix](docs/ai-provider-testing.de.md) zeigt zusätzlich, welche
 Protokolle automatisiert und welche Anbieter bereits mit einer echten API
 geprüft wurden.
+
+## Screenshots
+
+Jede Vorschau öffnet beim Anklicken das Bild in seiner Originalauflösung.
+
+<table>
+  <tr>
+    <td width="50%">
+      <a href="docs/images/ai-mail-assistant-dashboard-de.png"><img src="docs/images/ai-mail-assistant-dashboard-de.png" alt="Posteingangsübersicht mit Absender- und AI-Filtern, Wichtigkeitssortierung, AI-Werten und gruppierten Nachrichtenaktionen"></a><br>
+      <sub>Posteingangsübersicht mit Filtern, Wichtigkeitssortierung, AI-Werten und gruppierten Aktionen.</sub>
+    </td>
+    <td width="50%">
+      <a href="docs/images/ai-mail-assistant-summary-de.png"><img src="docs/images/ai-mail-assistant-summary-de.png" alt="Einzelmail-Assistent mit Markdown-formatierter E-Mail-Zusammenfassung"></a><br>
+      <sub>Einzelmail-Assistent mit einer gut lesbaren Markdown-Zusammenfassung.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <a href="docs/images/ai-mail-assistant-chat-de.png"><img src="docs/images/ai-mail-assistant-chat-de.png" alt="E-Mail-bezogener AI Chat mit Nachrichten des Nutzers und des Assistenten"></a><br>
+      <sub>E-Mail-bezogener AI Chat mit erhaltenem Gesprächsverlauf.</sub>
+    </td>
+    <td width="50%">
+      <a href="docs/images/ai-mail-assistant-reply-refinement-de.png"><img src="docs/images/ai-mail-assistant-reply-refinement-de.png" alt="AI-generierter Antwortentwurf mit bearbeitbarem Änderungswunsch"></a><br>
+      <sub>AI-generierter Antwortentwurf mit bearbeitbarem Änderungswunsch.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <a href="docs/images/ai-mail-assistant-reply-result-de.png"><img src="docs/images/ai-mail-assistant-reply-result-de.png" alt="Aktualisierter AI-Antwortentwurf zum Öffnen in Thunderbird"></a><br>
+      <sub>Aktualisierter Antwortentwurf zum Öffnen in Thunderbird.</sub>
+    </td>
+    <td width="50%">
+      <a href="docs/images/ai-mail-assistant-provider-help-de.png"><img src="docs/images/ai-mail-assistant-provider-help-de.png" alt="Integrierte Checkliste zum Einrichten eines Claude-API-Schlüssels"></a><br>
+      <sub>Integrierte Anbieterhilfe mit Links zur vollständigen Dokumentation.</sub>
+    </td>
+  </tr>
+</table>
 
 ## Umfang von Release 3.5.6
 
@@ -128,6 +166,21 @@ Bei einem als temporär erkannten Fehler kann derselbe AI-Inhalt innerhalb einer
 Eine ausdrücklich gespeicherte Bewertung wird zusätzlich in einem separaten lokalen Lernarchiv gespeichert: höchstens 250 Datensätze mit einem auf 6.000 Zeichen begrenzten E-Mail-Auszug, Anhangnamen, ursprünglichen und korrigierten Werten sowie getrennten Kategorien und Freitextbegründungen für Wichtigkeit, Spam und Risiko. Normale Thunderbird-Löschvorgänge verändern dieses Archiv nicht. Bei einer späteren Einzel- oder Bulk-Auswertung werden höchstens fünf nach Absender und Betreff priorisierte Korrekturen als nicht vertrauenswürdige Kalibrierungsbeispiele an den ausgewählten Anbieter gesendet. Das ist kontextbezogenes Lernen durch Beispiele und kein dauerhaftes Modell-Fine-Tuning. Ältere Referenzen ohne Risikowert bleiben lesbar; ihr Risikofeld ist bis zur manuellen Bearbeitung leer. Unter **Einstellungen** lassen sich alle Referenzen einsehen, manuell neu bewerten und entfernen. Die Suche nach ähnlichen Nachrichten und die optionale Dashboard-Inhaltsvorschau laufen ausschließlich lokal. Eine automatische E-Mail-Analyse beim Öffnen findet nicht statt.
 
 Der API-Schlüssel und gespeicherte Ergebnisse liegen im lokalen Extension-Speicher des Thunderbird-Profils. Benutzer sollten ihr Thunderbird-Profil und Betriebssystemkonto deshalb wie andere lokale Zugangsdaten schützen.
+
+## Über Thunderbird Add-ons installieren (empfohlen)
+
+1. In Thunderbird **Menü → Add-ons und Themes** öffnen.
+2. **Erweiterungen** auswählen, nach `AI Mail Assistant` suchen und
+   **Installieren** wählen.
+3. Die angeforderten Thunderbird-Berechtigungen prüfen und akzeptieren.
+4. Die Add-on-Einstellungen öffnen, einen AI-Anbieter auswählen, dessen
+   API-Schlüssel eintragen, die Verbindung testen und speichern.
+
+Damit wird die geprüfte XPI direkt installiert; ein Windows- oder macOS-Installer
+ist nicht erforderlich. Thunderbird verwaltet freigegebene Store-Updates, sofern
+automatische Add-on-Updates nicht deaktiviert wurden. Dieselbe Version ist auf der
+[offiziellen Thunderbird-Add-ons-Seite](https://addons.thunderbird.net/de/thunderbird/addon/ai-mail-assistant/)
+verfügbar.
 
 ## Installation unter Windows
 
