@@ -148,6 +148,10 @@ body.single-mail-expanded-view {
     background: #2e7d32;
 }
 
+.button.mail-action.mark-unread {
+    background: #9a5d00;
+}
+
 .button.mail-action.archive,
 .button.mail-action.export-pdf {
     background: #526d82;
@@ -159,6 +163,10 @@ body.single-mail-expanded-view {
 
 .button.mail-action.mark-read:hover {
     background: #256629;
+}
+
+.button.mail-action.mark-unread:hover {
+    background: #774800;
 }
 
 .button.mail-action.archive:hover,

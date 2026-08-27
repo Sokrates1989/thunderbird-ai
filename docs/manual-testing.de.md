@@ -167,7 +167,13 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     Nachrichten sichtbar sind als im ungelesenen Ausgangsbestand. Ergebnisstatus
     und Kontenüberschrift müssen dieselben sichtbaren und vollständigen Anzahlen
     vergleichen, zum Beispiel **Angezeigt: 4 von 15**.
+39. Eine ungelesene Nachricht im Einzelmail-Arbeitsbereich öffnen. Die grüne
+    Aktion muss **Als gelesen markieren** heißen. Ausführen und prüfen, dass
+    Thunderbird die Nachricht als gelesen markiert, die Detailzeile **Gelesen**
+    zeigt und dieselbe Aktion bernsteinfarben **Als ungelesen markieren** heißt.
+    Erneut ausführen und prüfen, dass Thunderbird und Arbeitsbereich ohne erneutes
+    Öffnen zum ungelesenen Status zurückkehren.
 
-Das Einzelmail-Popup muss Version 3.5.5 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.5.6 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status nur als Kandidatenfilter; Analysen außerhalb des Dashboards
 erzeugen nicht automatisch einen Dashboard-Score.

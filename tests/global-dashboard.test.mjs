@@ -66,7 +66,12 @@ function loadService({
     loadScript(context, 'common/utils/retry.js');
     loadScript(context, 'thunderbird-ai/components/shared/MailboxActionService.js');
     loadScript(context, 'thunderbird-ai/components/global-dashboard/GlobalMailService.js');
-    return { aborted, service: context.GlobalMailService, storageState };
+    return {
+        aborted,
+        mailboxActionService: context.MailboxActionService,
+        service: context.GlobalMailService,
+        storageState
+    };
 }
 
 function loadViewService() {
@@ -1732,6 +1737,24 @@ test('mark as read updates each unique message and isolates partial failures', a
     ]);
     assert.deepEqual(Array.from(result.updatedIds), [7]);
     assert.deepEqual(Array.from(result.failedIds), [8]);
+});
+
+test('mark as unread updates each unique message with the inverse read state', async () => {
+    const calls = [];
+    const { mailboxActionService } = loadService({
+        updateMessage: async (messageId, properties) => {
+            calls.push([messageId, { ...properties }]);
+        }
+    });
+
+    const result = await mailboxActionService.markAsUnread([7, 7, 8, null]);
+
+    assert.deepEqual(calls, [
+        [7, { read: false }],
+        [8, { read: false }]
+    ]);
+    assert.deepEqual(Array.from(result.updatedIds), [7, 8]);
+    assert.deepEqual(Array.from(result.failedIds), []);
 });
 
 test('selected mark-as-read refreshes the unread view and reports partial success', async () => {

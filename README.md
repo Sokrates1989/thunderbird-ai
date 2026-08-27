@@ -22,14 +22,13 @@ individual instructions for OpenAI, Claude (Anthropic), Mistral, DeepSeek, and
 custom endpoints. The [AI provider test matrix](docs/ai-provider-testing.md)
 separates automated protocol coverage from real-provider acceptance.
 
-## Release 3.5.5 scope
+## Release 3.5.6 scope
 
-Release 3.5.5 replaces UI assembly through HTML assignment with explicit DOM
-construction. Localized labels, provider metadata, diagnostics, and other
-dynamic values are now always inserted as literal text, while AI Markdown
-continues through the existing allowlisted renderer. A regression test scans the
-extension for unsafe HTML-assignment sinks. The visible layout and workflows are
-unchanged.
+Release 3.5.6 makes the single-message read-state action reversible. An unread
+message shows the green **Mark as read** action; a read message instead shows an
+amber **Mark as unread** action. After either operation, Thunderbird's actual
+message state, the detail status, action label, icon, accessible description,
+and color update together without reopening the workspace.
 
 The collapsed dashboard view also remains understandable at a glance.
 The message-result row now states whether accounts are separated or combined and
@@ -164,7 +163,7 @@ other local credential store. See the full [privacy policy](PRIVACY.md).
 
 ## Install on Windows
 
-1. Download and run `Thunderbird-AI-Setup-3.5.5-win-x64.exe`.
+1. Download and run `Thunderbird-AI-Setup-3.5.6-win-x64.exe`.
 2. Select **Deutsch** or **English** and accept the GNU General Public License.
 3. Save drafts and approve the controlled restart. Setup closes Thunderbird
    normally and restarts it by default after installation; the final restart
@@ -181,7 +180,7 @@ test installers remain unsigned and can trigger SmartScreen.
 ## Install on macOS
 
 1. Start Thunderbird once so a profile exists.
-2. Open `Thunderbird-AI-Setup-3.5.5-macos.pkg`.
+2. Open `Thunderbird-AI-Setup-3.5.6-macos.pkg`.
 3. Accept the GPL, save drafts, and allow a normal Thunderbird quit.
 4. Setup opens Thunderbird after installation. Accept any one-time activation
    or permission prompt.
@@ -221,8 +220,8 @@ On macOS:
 Current artifacts:
 
 - `thunderbird-ai.xpi`
-- `artifacts/Thunderbird-AI-Setup-3.5.5-win-x64.exe`
-- `artifacts/Thunderbird-AI-Setup-3.5.5-macos.pkg`
+- `artifacts/Thunderbird-AI-Setup-3.5.6-win-x64.exe`
+- `artifacts/Thunderbird-AI-Setup-3.5.6-macos.pkg`
 
 Build the Thunderbird Add-ons reviewer source only from tracked files:
 

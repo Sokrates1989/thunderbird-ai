@@ -157,7 +157,12 @@ Thunderbird behavior that mocks cannot prove.
     Apply a sender filter that leaves fewer visible messages than the unread source
     snapshot. Both the result-status row and account heading must compare the same
     visible and source totals, for example **Shown: 4 of 15**.
+39. Open one unread message in the single-message workspace. The green action
+    must say **Mark as read**. Activate it and confirm that Thunderbird marks the
+    message as read, the detail row says **Read**, and the same action becomes
+    amber **Mark as unread**. Activate it again and confirm that Thunderbird and
+    the workspace both return to the unread state without reopening the window.
 
-The single-message popup must show version 3.5.5. The dashboard uses unread
+The single-message popup must show version 3.5.6. The dashboard uses unread
 status only as its candidate filter; analysis performed outside the dashboard
 does not automatically create a dashboard score record.

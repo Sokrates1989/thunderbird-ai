@@ -4,17 +4,19 @@ const MailActionsComponent = class {
         this.manager = manager;
         this.container = manager.elements.mailActionsGrid;
         this.buttons = {};
+        this.buttonIcons = {};
+        this.buttonLabels = {};
         this.enabled = true;
         this.busy = false;
         this.terminal = false;
         this.messageRead = false;
         this.actions = [
             {
-                id: 'markReadBtn',
+                id: 'readStatusBtn',
                 icon: '✓',
                 textKey: 'dashboardMarkReadOne',
                 descriptionKey: 'dashboardMarkReadMessage',
-                action: 'MARK_READ',
+                action: 'TOGGLE_READ',
                 className: 'mark-read'
             },
             {
@@ -52,15 +54,16 @@ const MailActionsComponent = class {
             button.id = definition.id;
             button.className = `button mail-action ${definition.className}`;
             button.dataset.action = definition.action;
-            button.append(
-                this.textElement('span', 'icon', definition.icon, true),
-                this.textElement('span', 'text', I18n.t(definition.textKey))
-            );
+            const icon = this.textElement('span', 'icon', definition.icon, true);
+            const label = this.textElement('span', 'text', I18n.t(definition.textKey));
+            button.append(icon, label);
             button.addEventListener('click', () => {
                 this.execute(definition).catch(error => this.showFailure(error));
             });
             this.container.appendChild(button);
             this.buttons[definition.id] = button;
+            this.buttonIcons[definition.id] = icon;
+            this.buttonLabels[definition.id] = label;
         }
         this.createDeleteDialog();
         this.createPdfDialog();
@@ -74,6 +77,10 @@ const MailActionsComponent = class {
         this.messageRead = message?.read === true;
         const subject = message?.subject || I18n.t('dashboardNoSubject');
         for (const definition of this.actions) {
+            if (definition.action === 'TOGGLE_READ') {
+                this.updateReadAction(subject);
+                continue;
+            }
             this.buttons[definition.id].title = I18n.t(definition.descriptionKey, { subject });
             this.buttons[definition.id].setAttribute(
                 'aria-label',
@@ -90,11 +97,14 @@ const MailActionsComponent = class {
         if (definition.action === 'TRASH' && !await this.confirmDelete()) {
             return;
         }
+        const diagnosticAction = definition.action === 'TOGGLE_READ'
+            ? (this.messageRead ? 'mark_unread' : 'mark_read')
+            : definition.action.toLowerCase();
         this.setBusy(true, definition.id);
         try {
-            await RuntimeDiagnosticService.run('single-mail', definition.action.toLowerCase(), async () => {
-                if (definition.action === 'MARK_READ') {
-                    await this.markAsRead();
+            await RuntimeDiagnosticService.run('single-mail', diagnosticAction, async () => {
+                if (definition.action === 'TOGGLE_READ') {
+                    await this.setReadStatus(!this.messageRead);
                 } else if (definition.action === 'EXPORT_PDF') {
                     await this.exportPdf();
                 } else if (definition.action === 'ARCHIVE') {
@@ -108,18 +118,58 @@ const MailActionsComponent = class {
         }
     }
 
-    async markAsRead() {
-        this.manager.updateStatus(I18n.t('dashboardMarkReadInProgress'));
-        const result = await MailboxActionService.markAsRead([this.manager.emailId]);
+    /** Update the read action's label, description, icon, and semantic color. */
+    updateReadAction(subject = this.message?.subject || I18n.t('dashboardNoSubject')) {
+        const presentation = this.messageRead
+            ? {
+                action: 'MARK_UNREAD',
+                className: 'mark-unread',
+                descriptionKey: 'dashboardMarkUnreadMessage',
+                icon: '✉',
+                textKey: 'dashboardMarkUnreadOne'
+            }
+            : {
+                action: 'MARK_READ',
+                className: 'mark-read',
+                descriptionKey: 'dashboardMarkReadMessage',
+                icon: '✓',
+                textKey: 'dashboardMarkReadOne'
+            };
+        const button = this.buttons.readStatusBtn;
+        button.classList.remove('mark-read', 'mark-unread');
+        button.classList.add(presentation.className);
+        button.dataset.action = presentation.action;
+        this.buttonIcons.readStatusBtn.textContent = presentation.icon;
+        this.buttonLabels.readStatusBtn.textContent = I18n.t(presentation.textKey);
+        const description = I18n.t(presentation.descriptionKey, { subject });
+        button.title = description;
+        button.setAttribute('aria-label', description);
+    }
+
+    /** Persist one read state and immediately synchronize the visible workspace. */
+    async setReadStatus(read) {
+        this.manager.updateStatus(I18n.t(
+            read ? 'dashboardMarkReadInProgress' : 'dashboardMarkUnreadInProgress'
+        ));
+        const operation = read ? 'markAsRead' : 'markAsUnread';
+        const result = await MailboxActionService[operation]([this.manager.emailId]);
         if (result.failedIds.length) {
-            throw new Error(I18n.t('dashboardMarkReadFailed'));
+            throw new Error(I18n.t(
+                read ? 'dashboardMarkReadFailed' : 'dashboardMarkUnreadFailed'
+            ));
         }
-        this.messageRead = true;
+        this.messageRead = read;
+        if (this.message) {
+            this.message.read = read;
+        }
         if (this.manager.emailData) {
-            this.manager.emailData.read = true;
+            this.manager.emailData.read = read;
         }
-        this.manager.components.emailDetails.updateField('status', 'read');
-        this.manager.updateStatus(I18n.t('dashboardMarkReadOneSuccess'), 'success');
+        this.manager.components.emailDetails.updateField('status', read ? 'read' : 'unread');
+        this.updateReadAction();
+        this.manager.updateStatus(I18n.t(
+            read ? 'dashboardMarkReadOneSuccess' : 'dashboardMarkUnreadOneSuccess'
+        ), 'success');
     }
 
     async archive() {
@@ -246,9 +296,8 @@ const MailActionsComponent = class {
     }
 
     applyButtonState() {
-        for (const [buttonId, button] of Object.entries(this.buttons)) {
-            button.disabled = !this.enabled || this.busy || this.terminal
-                || (buttonId === 'markReadBtn' && this.messageRead);
+        for (const button of Object.values(this.buttons)) {
+            button.disabled = !this.enabled || this.busy || this.terminal;
         }
     }
 
@@ -263,6 +312,8 @@ const MailActionsComponent = class {
         this.deleteDialog?.remove();
         this.pdfDialog?.remove();
         this.buttons = {};
+        this.buttonIcons = {};
+        this.buttonLabels = {};
     }
 };
 

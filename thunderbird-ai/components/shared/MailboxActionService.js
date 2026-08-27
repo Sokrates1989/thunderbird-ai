@@ -9,17 +9,27 @@ const MailboxActionService = {
             .filter(messageId => messageId !== undefined && messageId !== null);
     },
 
-    /** Mark messages as read while keeping an individual provider failure isolated. */
-    async markAsRead(messageIds) {
+    /** Set a read state while keeping an individual Thunderbird failure isolated. */
+    async setReadStatus(messageIds, read) {
         const uniqueIds = this.uniqueMessageIds(messageIds);
         const results = await Promise.allSettled(
-            uniqueIds.map(messageId => browser.messages.update(messageId, { read: true }))
+            uniqueIds.map(messageId => browser.messages.update(messageId, { read }))
         );
         return results.reduce((summary, result, index) => {
             const target = result.status === 'fulfilled' ? summary.updatedIds : summary.failedIds;
             target.push(uniqueIds[index]);
             return summary;
         }, { updatedIds: [], failedIds: [] });
+    },
+
+    /** Mark messages as read. */
+    async markAsRead(messageIds) {
+        return this.setReadStatus(messageIds, true);
+    },
+
+    /** Mark messages as unread. */
+    async markAsUnread(messageIds) {
+        return this.setReadStatus(messageIds, false);
     },
 
     /** Archive messages through Thunderbird so account-specific archive settings are honored. */

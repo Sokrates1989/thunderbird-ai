@@ -151,7 +151,7 @@ test('explicit language selection changes text and every static page key resolve
         path.join(repositoryRoot, 'thunderbird-ai/install-defaults.json'),
         'utf8'
     ));
-    assert.deepEqual(defaults, { language: 'auto', version: '3.5.5' });
+    assert.deepEqual(defaults, { language: 'auto', version: '3.5.6' });
 });
 
 test('reply composer keeps final actions outside its scrolling content', () => {
@@ -257,7 +257,7 @@ test('single-mail ordinary actions mirror dashboard capabilities and color seman
     );
 
     assert.deepEqual(Array.from(component.actions, action => action.action), [
-        'MARK_READ',
+        'TOGGLE_READ',
         'EXPORT_PDF',
         'ARCHIVE',
         'TRASH'
@@ -267,8 +267,72 @@ test('single-mail ordinary actions mirror dashboard capabilities and color seman
     assert.match(page, /MailboxActionService\.js/u);
     assert.match(page, /PdfArchiverIntegrationService\.js/u);
     assert.match(styles, /\.button\.mail-action\.mark-read\s*\{[^}]*#2e7d32/su);
+    assert.match(styles, /\.button\.mail-action\.mark-unread\s*\{[^}]*#9a5d00/su);
     assert.match(styles, /\.button\.mail-action\.archive,[\s\S]*#526d82/su);
     assert.match(styles, /\.button\.mail-action\.danger\s*\{[^}]*#b42318/su);
+});
+
+test('single-mail read action follows and toggles the current Thunderbird state', async () => {
+    const { context, manager, statusUpdates } = loadReplyUi();
+    context.I18n.language = 'de';
+    const updates = [];
+    context.MailboxActionService = {
+        markAsRead: async messageIds => {
+            updates.push(['read', ...messageIds]);
+            return { updatedIds: [...messageIds], failedIds: [] };
+        },
+        markAsUnread: async messageIds => {
+            updates.push(['unread', ...messageIds]);
+            return { updatedIds: [...messageIds], failedIds: [] };
+        }
+    };
+    const classes = new Set(['button', 'mail-action', 'mark-read']);
+    const button = {
+        attributes: {},
+        dataset: {},
+        classList: {
+            add: (...names) => names.forEach(name => classes.add(name)),
+            remove: (...names) => names.forEach(name => classes.delete(name))
+        },
+        setAttribute(name, value) {
+            this.attributes[name] = value;
+        }
+    };
+    const statusFields = [];
+    manager.emailData = { read: true };
+    manager.components = {
+        emailDetails: {
+            updateField: (field, value) => statusFields.push([field, value])
+        }
+    };
+    const component = new context.MailActionsComponent(manager);
+    component.message = { read: true, subject: 'Test message' };
+    component.messageRead = true;
+    component.buttons.readStatusBtn = button;
+    component.buttonIcons.readStatusBtn = { textContent: '' };
+    component.buttonLabels.readStatusBtn = { textContent: '' };
+
+    component.updateReadAction();
+    assert.equal(component.buttonLabels.readStatusBtn.textContent, 'Als ungelesen markieren');
+    assert.equal(button.dataset.action, 'MARK_UNREAD');
+    assert.equal(classes.has('mark-unread'), true);
+    assert.equal(classes.has('mark-read'), false);
+
+    await component.setReadStatus(false);
+    assert.deepEqual(updates[0], ['unread', 42]);
+    assert.equal(component.messageRead, false);
+    assert.equal(component.message.read, false);
+    assert.equal(manager.emailData.read, false);
+    assert.deepEqual(statusFields[0], ['status', 'unread']);
+    assert.equal(component.buttonLabels.readStatusBtn.textContent, 'Als gelesen markieren');
+    assert.equal(button.dataset.action, 'MARK_READ');
+    assert.equal(classes.has('mark-read'), true);
+
+    await component.setReadStatus(true);
+    assert.deepEqual(updates[1], ['read', 42]);
+    assert.equal(component.messageRead, true);
+    assert.deepEqual(statusFields[1], ['status', 'read']);
+    assert.equal(statusUpdates.at(-1).message, 'Die E-Mail wurde als gelesen markiert.');
 });
 
 test('single-mail footer opens or focuses the shared dashboard instead of duplicating AI Chat', async () => {
