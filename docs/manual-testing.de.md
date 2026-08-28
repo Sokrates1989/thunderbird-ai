@@ -17,6 +17,10 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
    Filter sowie Sortierungen einschließlich kontenübergreifender Scores testen.
 4. Die Absendersuche muss nicht sichtbare Auswahlen behalten; **Alle** darf nur
    sichtbare Treffer aus- oder abwählen. Datumsgrenzen sind einschließlich.
+   **Gelesene Nachrichten einbeziehen** aktivieren und prüfen, dass gelesene und
+   ungelesene Posteingangs-Mails neu geladen werden, gelesene Betreffe normale
+   Schrift verwenden und die bernsteinfarbene Aktion **Als ungelesen markieren**
+   anbieten. Danach deaktivieren und den ungelesenen Standardbestand prüfen.
 5. Lokale Vorschauen aktivieren, die globale Zeilenzahl ändern und prüfen, dass
    nur der sichtbare begrenzte Nachrichtenausschnitt Inhalte lädt.
 
@@ -45,7 +49,9 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     sichtbare Zeilen bis 20, `−` setzt zurück, das Vollbildsymbol öffnet die
     Originalmail im Tab und `×` entfernt nur diese Vorschau.
 13. Eine und mehrere Nachrichten als gelesen markieren. Erfolge verschwinden
-    aus der Ansicht; Einzelfehler dürfen andere Erfolge nicht zurücknehmen.
+    aus der ungelesenen Standardansicht; Einzelfehler dürfen andere Erfolge nicht
+    zurücknehmen. Bei einbezogenen gelesenen Nachrichten eine gelesene Zeile als
+    ungelesen markieren und die danach grüne Aktion **Als gelesen markieren** prüfen.
 
 ## Antwortablauf
 
@@ -164,7 +170,7 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     und mehreren Sortierungen wechseln. Die Ergebnisstatuszeile muss nach den
     Anzahlen die aktuelle Ansicht nennen und die genaue lokalisierte Sortierung
     hervorgehoben anzeigen. Einen Absenderfilter anwenden, durch den weniger
-    Nachrichten sichtbar sind als im ungelesenen Ausgangsbestand. Ergebnisstatus
+    Nachrichten sichtbar sind als im ausgewählten Ausgangsbestand. Ergebnisstatus
     und Kontenüberschrift müssen dieselben sichtbaren und vollständigen Anzahlen
     vergleichen, zum Beispiel **Angezeigt: 4 von 15**.
 39. Eine ungelesene Nachricht im Einzelmail-Arbeitsbereich öffnen. Die grüne
@@ -174,6 +180,8 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     Erneut ausführen und prüfen, dass Thunderbird und Arbeitsbereich ohne erneutes
     Öffnen zum ungelesenen Status zurückkehren.
 
-Das Einzelmail-Popup muss Version 3.5.6 anzeigen. Das Dashboard verwendet den
-Ungelesen-Status nur als Kandidatenfilter; Analysen außerhalb des Dashboards
-erzeugen nicht automatisch einen Dashboard-Score.
+Das Einzelmail-Popup muss Version 3.6.0 anzeigen. Das Dashboard verwendet den
+Ungelesen-Status als Standard-Kandidatenfilter; **Gelesene Nachrichten
+einbeziehen** erweitert den Bestand nur für die aktuelle Thunderbird-Sitzung.
+Analysen außerhalb des Dashboards erzeugen nicht automatisch einen
+Dashboard-Score.

@@ -24,6 +24,7 @@ const GlobalDashboardManager = class {
             limitHint: document.getElementById('dashboardLimitHint'),
             dateFrom: document.getElementById('dashboardDateFrom'),
             dateTo: document.getElementById('dashboardDateTo'),
+            includeRead: document.getElementById('dashboardIncludeRead'),
             aiStatusFilter: document.getElementById('dashboardAIStatusFilter'),
             importanceMinimum: document.getElementById('dashboardImportanceMinimum'),
             spamMinimum: document.getElementById('dashboardSpamMinimum'),
@@ -48,6 +49,7 @@ const GlobalDashboardManager = class {
         this.messageLimit = GlobalMailViewService.DEFAULT_LIMIT;
         this.dateFrom = '';
         this.dateTo = '';
+        this.includeRead = false;
         this.aiStatusFilter = 'all';
         this.importanceMinimum = 0;
         this.spamMinimum = 0;
@@ -153,6 +155,9 @@ const GlobalDashboardManager = class {
             onMarkRead: message => {
                 this.markOneAsRead(message).catch(error => this.showUnexpectedError(error));
             },
+            onMarkUnread: message => {
+                this.markOneAsUnread(message).catch(error => this.showUnexpectedError(error));
+            },
             onExportPdf: message => {
                 this.pdfArchiverComponent.openFor(message)
                     .catch(error => this.showPdfArchiverError(error));
@@ -217,6 +222,9 @@ const GlobalDashboardManager = class {
         });
         this.elements.previewLines.addEventListener('change', () => {
             this.handlePreviewLineChange().catch(error => this.showUnexpectedError(error));
+        });
+        this.elements.includeRead.addEventListener('change', () => {
+            this.handleIncludeReadChange().catch(error => this.showUnexpectedError(error));
         });
         for (const element of [
             this.elements.viewMode,
@@ -297,6 +305,7 @@ const GlobalDashboardManager = class {
         );
         this.elements.dateFrom.value = this.dateFrom;
         this.elements.dateTo.value = this.dateTo;
+        this.elements.includeRead.checked = this.includeRead;
         this.elements.aiStatusFilter.value = this.aiStatusFilter;
         this.elements.importanceMinimum.value = String(this.importanceMinimum);
         this.elements.spamMinimum.value = String(this.spamMinimum);
@@ -352,6 +361,18 @@ const GlobalDashboardManager = class {
         await this.savePreferences();
     }
 
+    /** Re-query Thunderbird when the operator broadens or narrows the read-state scope. */
+    async handleIncludeReadChange() {
+        const includeRead = this.elements.includeRead.checked === true;
+        if (includeRead === this.includeRead) {
+            return;
+        }
+        this.includeRead = includeRead;
+        this.applyPreferenceControls();
+        await this.savePreferences();
+        await this.refresh();
+    }
+
     /** Validate the query controls, persist them, and rebuild the visible slice. */
     async handleViewControlChange(changedElement = null) {
         const fromDate = GlobalMailViewService.normalizeDate(this.elements.dateFrom.value);
@@ -397,8 +418,10 @@ const GlobalDashboardManager = class {
 
     /** Clear every narrowing filter while preserving durable display preferences. */
     async resetFilters() {
+        const mailboxScopeChanged = this.includeRead;
         this.dateFrom = '';
         this.dateTo = '';
+        this.includeRead = false;
         this.selectedSenderKeys = null;
         this.aiStatusFilter = 'all';
         this.importanceMinimum = 0;
@@ -410,10 +433,14 @@ const GlobalDashboardManager = class {
         this.applyPreferenceControls();
         this.renderSenderOptions();
         await this.savePreferences();
-        await this.applyCurrentView();
+        if (mailboxScopeChanged) {
+            await this.refresh();
+        } else {
+            await this.applyCurrentView();
+        }
     }
 
-    /** Reload every unread header page, then apply the persisted local view. */
+    /** Reload the selected Inbox header scope, then apply the persisted local view. */
     async refresh() {
         if (this.refreshPromise) {
             return this.refreshPromise;
@@ -432,10 +459,11 @@ const GlobalDashboardManager = class {
 
     /** Execute one mailbox refresh while concurrent callers share its result. */
     async performRefresh() {
-        this.setBusy(true, I18n.t('dashboardLoading'));
+        this.setBusy(true, I18n.t(this.includeRead ? 'dashboardLoadingAll' : 'dashboardLoading'));
         try {
             const [sourceAccounts, aiResults] = await Promise.all([
-                GlobalMailService.listUnreadByAccount({
+                GlobalMailService.listByAccount({
+                    includeRead: this.includeRead,
                     onRetry: (_error, attempt) => {
                         this.setBusy(true, I18n.t('dashboardStartupRetrying', {
                             attempt: attempt + 1,
@@ -467,11 +495,12 @@ const GlobalDashboardManager = class {
             await this.persistSelection();
             this.elements.accounts.replaceChildren();
             this.renderSenderOptions();
-            this.setStatus(I18n.t(
-                this.recentInstallEvent
+            const loadFailedKey = this.includeRead
+                ? 'dashboardLoadFailedAll'
+                : this.recentInstallEvent
                     ? 'dashboardLoadFailedAfterInstall'
-                    : 'dashboardLoadFailed'
-            ), 'error');
+                    : 'dashboardLoadFailed';
+            this.setStatus(I18n.t(loadFailedKey), 'error');
         } finally {
             this.setBusy(false);
         }
@@ -517,10 +546,10 @@ const GlobalDashboardManager = class {
         this.showLoadedStatus();
     }
 
-    /** Report both the bounded visible count and the complete unread source count. */
+    /** Report both the bounded visible count and the complete source count. */
     showLoadedStatus() {
         const counts = this.summaryComponent.viewCounts(this.accounts);
-        if (counts.total === 0 && this.recentInstallEvent) {
+        if (counts.total === 0 && this.recentInstallEvent && !this.includeRead) {
             this.setStatus(I18n.t('dashboardNoUnreadAfterInstall'), 'warning');
             return;
         }
@@ -566,9 +595,17 @@ const GlobalDashboardManager = class {
         if (account.failed) {
             section.appendChild(this.textElement('p', 'dashboard-account-error', I18n.t('dashboardAccountFailed')));
         } else if (!account.sourceCount) {
-            section.appendChild(this.textElement('p', 'dashboard-empty', I18n.t('dashboardNoUnread')));
+            section.appendChild(this.textElement(
+                'p',
+                'dashboard-empty',
+                I18n.t(this.includeRead ? 'dashboardNoMessages' : 'dashboardNoUnread')
+            ));
         } else if (!account.messages.length) {
-            section.appendChild(this.textElement('p', 'dashboard-empty', I18n.t('dashboardNoMatches')));
+            section.appendChild(this.textElement(
+                'p',
+                'dashboard-empty',
+                I18n.t(this.includeRead ? 'dashboardNoMatchesAll' : 'dashboardNoMatches')
+            ));
         } else {
             const list = document.createElement('ol');
             list.className = 'dashboard-message-list';
@@ -673,6 +710,11 @@ const GlobalDashboardManager = class {
         await this.performMarkAsRead([message.id], 'dashboardMarkReadOneSuccess');
     }
 
+    /** Mark one included read message as unread without an unnecessary confirmation. */
+    async markOneAsUnread(message) {
+        await this.performReadState([message.id], false, 'dashboardMarkUnreadOneSuccess');
+    }
+
     /** Mark all selected visible messages as read in one fault-isolated operation. */
     async markSelectedAsRead() {
         const messageIds = [...this.selectedMessageIds];
@@ -684,12 +726,21 @@ const GlobalDashboardManager = class {
 
     /** Apply read state, refresh the unread view, and report complete or partial success. */
     async performMarkAsRead(messageIds, successKey) {
-        this.setBusy(true, I18n.t('dashboardMarkReadInProgress'));
+        await this.performReadState(messageIds, true, successKey);
+    }
+
+    /** Apply one read state, refresh the selected Inbox scope, and report the outcome. */
+    async performReadState(messageIds, read, successKey) {
+        this.setBusy(true, I18n.t(
+            read ? 'dashboardMarkReadInProgress' : 'dashboardMarkUnreadInProgress'
+        ));
         try {
             const result = await RuntimeDiagnosticService.run(
                 'dashboard',
-                'mark-read',
-                () => GlobalMailService.markAsRead(messageIds)
+                read ? 'mark-read' : 'mark-unread',
+                () => read
+                    ? GlobalMailService.markAsRead(messageIds)
+                    : GlobalMailService.markAsUnread(messageIds)
             );
             this.selectedMessageIds.clear();
             await this.persistSelection();
@@ -700,13 +751,17 @@ const GlobalDashboardManager = class {
                     failed: result.failedIds.length
                 }), 'warning');
             } else if (result.failedIds.length) {
-                this.setStatus(I18n.t('dashboardMarkReadFailed'), 'error');
+                this.setStatus(I18n.t(
+                    read ? 'dashboardMarkReadFailed' : 'dashboardMarkUnreadFailed'
+                ), 'error');
             } else {
                 this.setStatus(I18n.t(successKey, { count: result.updatedIds.length }), 'success');
             }
         } catch (error) {
-            console.error('Could not mark dashboard messages as read:', error);
-            this.setStatus(I18n.t('dashboardMarkReadFailed'), 'error');
+            console.error(`Could not mark dashboard messages as ${read ? 'read' : 'unread'}:`, error);
+            this.setStatus(I18n.t(
+                read ? 'dashboardMarkReadFailed' : 'dashboardMarkUnreadFailed'
+            ), 'error');
         } finally {
             this.setBusy(false);
         }
@@ -943,6 +998,7 @@ const GlobalDashboardManager = class {
             || GlobalMailViewService.combinesAccounts(this.viewMode, this.sortOrder);
         this.elements.dateFrom.disabled = busy;
         this.elements.dateTo.disabled = busy;
+        this.elements.includeRead.disabled = busy;
         this.elements.aiStatusFilter.disabled = busy;
         this.elements.importanceMinimum.disabled = busy;
         this.elements.spamMinimum.disabled = busy;

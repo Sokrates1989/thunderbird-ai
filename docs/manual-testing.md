@@ -17,7 +17,9 @@ Thunderbird behavior that mocks cannot prove.
    and sorts, including global cross-account score sorting.
 4. Confirm sender search preserves selections outside the current search result,
    **All** selects or clears only visible matches, and date boundaries are
-   inclusive.
+   inclusive. Enable **Include read messages** and confirm read and unread Inbox
+   mail is reloaded, read subjects use normal weight, and a read row offers the
+   amber **Mark as unread** action. Disable it and confirm unread-only returns.
 5. Enable local previews, change the global line count, and confirm only the
    visible limited message slice loads content.
 
@@ -46,7 +48,9 @@ Thunderbird behavior that mocks cannot prove.
     visible lines up to 20, `−` resets, the expand icon opens the original mail
     in a tab, and `×` removes only that preview.
 13. Mark one and several messages read. Successful messages disappear from the
-    unread view while partial failures are reported without rolling back success.
+    default unread view while partial failures are reported without rolling back
+    success. With read messages included, mark one read row unread and confirm it
+    remains visible with the green **Mark as read** action.
 
 ## Reply workflow
 
@@ -154,7 +158,7 @@ Thunderbird behavior that mocks cannot prove.
 38. Collapse **View** and change between account-separated and combined layouts
     plus several sort orders. The result-status row must state the current layout
     and show the exact localized sort label in emphasized text after the counts.
-    Apply a sender filter that leaves fewer visible messages than the unread source
+    Apply a sender filter that leaves fewer visible messages than the selected source
     snapshot. Both the result-status row and account heading must compare the same
     visible and source totals, for example **Shown: 4 of 15**.
 39. Open one unread message in the single-message workspace. The green action
@@ -163,6 +167,7 @@ Thunderbird behavior that mocks cannot prove.
     amber **Mark as unread**. Activate it again and confirm that Thunderbird and
     the workspace both return to the unread state without reopening the window.
 
-The single-message popup must show version 3.5.6. The dashboard uses unread
-status only as its candidate filter; analysis performed outside the dashboard
-does not automatically create a dashboard score record.
+The single-message popup must show version 3.6.0. The dashboard uses unread
+status as its default candidate filter; **Include read messages** broadens that
+scope only for the current Thunderbird session. Analysis performed outside the
+dashboard does not automatically create a dashboard score record.

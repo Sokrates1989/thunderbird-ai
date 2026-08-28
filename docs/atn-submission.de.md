@@ -3,8 +3,8 @@
 > [English version](atn-submission.md)
 
 Dieses Dokument enthält direkt verwendbare Listing- und Reviewer-Informationen
-für die erste öffentliche Einreichung von AI Mail Assistant for Thunderbird
-3.5.6. Bei Änderungen an Anbietern oder Datenkategorien muss es mit
+für die aktuelle Einreichung von AI Mail Assistant for Thunderbird 3.6.0. Bei
+Änderungen an Anbietern oder Datenkategorien muss es mit
 `PRIVACY.de.md` synchron bleiben.
 
 Offizielle Referenzen:
@@ -17,7 +17,7 @@ Offizielle Referenzen:
 
 - Name: `AI Mail Assistant for Thunderbird`
 - Erweiterungs-ID: `thunderbird-ai@felicitas-wisdom.com`
-- Version: `3.5.6`
+- Version: `3.6.0`
 - Minimales Thunderbird: `128.0`
 - Empfohlene Hauptkategorie: `Message and News Reading`
 - Empfohlene Nebenkategorie, falls verfügbar: `Message Composition`
@@ -102,11 +102,11 @@ Den vollständigen aktuellen Inhalt von `PRIVACY.de.md` in das Datenschutzfeld
 von Thunderbird Add-ons kopieren, nicht nur verlinken. Die Listing-Beschreibung
 enthält bereits die kurze Datenerfassungszusammenfassung.
 
-## Ablauf der ersten Listung
+## Ablauf einer Versionseinreichung
 
-Thunderbird Add-ons (ATN) verteilt und signiert die XPI. Der Windows- oder
-macOS-Installer wird dort nicht verteilt; für dieses Add-on bleibt er eine
-optionale GitHub-Alternative. Die Einreichung ist unter Windows, macOS oder
+Thunderbird Add-ons (ATN) verteilt und signiert die XPI. Neue Versionen dieses
+Add-ons werden nur über den Store verteilt und erzeugen keinen Windows- oder
+macOS-Installer. Die Einreichung ist unter Windows, macOS oder
 Linux möglich. Der abschließende Funktionstest muss jedoch in einem
 Wegwerf-Thunderbird-Profil auf jeder beworbenen Plattform erfolgen.
 
@@ -117,17 +117,19 @@ Wegwerf-Thunderbird-Profil auf jeder beworbenen Plattform erfolgen.
 2. Versionierte XPI und passendes Reviewer-Quellarchiv erzeugen. Windows- und
    macOS-Installer gehören nicht zur ATN-Einreichung und dürfen dort nicht
    hochgeladen werden.
-3. Im Thunderbird-Add-ons-Entwicklerbereich anmelden, eine neue **gelistete**
-   Erweiterung einreichen, die aktuelle Vertriebsvereinbarung bestätigen und
-   `artifacts/thunderbird-ai-3.5.6.xpi` hochladen.
-4. Identität, deutsche/englische Beschreibung, Kategorien, Lizenz, Homepage und
-   Support aus diesem Blatt übernehmen. Den vollständigen aktuellen Text aus
-   `PRIVACY.de.md` in das ATN-Datenschutzfeld kopieren, nicht nur verlinken.
-5. Die vier Screenshots der folgenden Checkliste mit synthetischen Daten
-   hochladen. Keine Kontoadressen, Nachrichteninhalte oder Zugangsdaten zeigen.
-6. `artifacts/thunderbird-ai-3.5.6-atn-source.zip` und die Build-Anleitung aus
-   `ATN_SOURCE_BUILD.de.md` anhängen, auch wenn diese XPI keinen minifizierten
-   oder gebündelten Drittcode enthält.
+3. Im Thunderbird-Add-ons-Entwicklerbereich **Meine Add-ons → AI Mail Assistant
+   → Neue Version hochladen** öffnen und
+   `artifacts/thunderbird-ai-3.6.0.xpi` hochladen.
+4. Die unten vorbereiteten Versionshinweise für 3.6.0 eintragen. Vorhandene
+   Listing-Identität, Kategorien, Lizenz, Screenshots und Datenschutzerklärung
+   müssen nur geändert werden, wenn sich das jeweilige Verhalten oder die
+   Offenlegung geändert hat.
+5. Screenshots mit synthetischen Daten prüfen und nur veraltete Ansichten
+   ersetzen. Keine Kontoadressen, Nachrichteninhalte oder Zugangsdaten zeigen.
+6. Die Quellcode-Frage mit **Ja** beantworten, weil der Build zwei Quellbäume im
+   XPI-Stamm zusammenführt. `artifacts/thunderbird-ai-3.6.0-atn-source.zip` und
+   die Build-Anleitung aus `ATN_SOURCE_BUILD.de.md` anhängen; der Quellcode
+   bleibt lesbar und enthält keinen minifizierten oder gebündelten Drittcode.
 7. Die folgenden Funktionstests und einen temporären, niedrig limitierten
    Reviewer-API-Schlüssel ausschließlich in das private technische
    Reviewer-/Whiteboard-Feld eintragen. Der Schlüssel gehört weder ins Listing
@@ -138,6 +140,15 @@ Wegwerf-Thunderbird-Profil auf jeder beworbenen Plattform erfolgen.
 9. Nach Freigabe einmal aus dem öffentlichen Listing in ein sauberes Profil
    installieren, Update-Identität und Kernaktionen prüfen und den temporären
    Schlüssel widerrufen.
+
+## Versionshinweise 3.6.0
+
+Ergänzt im Dashboard den optionalen Filter **Gelesene Nachrichten einbeziehen**.
+Standard bleibt ausschließlich ungelesen. Gelesene und ungelesene
+Posteingangs-Kopfzeilen werden erst geladen, nachdem der Benutzer die
+sitzungsgebundene Option aktiviert; gelesene Zeilen können wieder als ungelesen
+markiert werden. Außerdem lässt sich eine Nachricht wieder über freie Bereiche
+ihrer Dashboard-Kachel auswählen.
 
 ## Berechtigungserklärungen
 
@@ -189,8 +200,8 @@ aus, damit sie nicht mit den 56 ATN-Funden verwechselt wird.
 
 ## Reviewer-Hinweise
 
-1. `artifacts/thunderbird-ai-3.5.6.xpi` als Erweiterung hochladen.
-2. `artifacts/thunderbird-ai-3.5.6-atn-source.zip` als Quellcode anhängen.
+1. `artifacts/thunderbird-ai-3.6.0.xpi` als Update der gelisteten Erweiterung hochladen.
+2. `artifacts/thunderbird-ai-3.6.0-atn-source.zip` als Quellcode anhängen.
 3. Das Quellarchiv enthält `ATN_SOURCE_BUILD.de.md` mit einem netzwerkfreien
    XPI-Build.
 4. Thunderbird 128 oder neuer mit synthetischem Konto und Nachrichten verwenden.
@@ -199,8 +210,10 @@ aus, damit sie nicht mit den 56 ATN-Funden verwechselt wird.
    getrennte Anbieterprofile prüfen.
 6. Mit einer synthetischen Mail Zusammenfassung, Antwort und Chat prüfen. Das
    bloße Öffnen einer Mail darf keine Anfrage auslösen.
-7. Im Dashboard eine synthetische ungelesene Mail analysieren; Vorschau und
-   Ähnlichkeitssuche bleiben lokal.
+7. Im Dashboard eine synthetische ungelesene Mail analysieren. **Gelesene
+   Nachrichten einbeziehen** aktivieren, eine gelesene Mail prüfen und als
+   ungelesen markieren; danach zum ungelesenen Standard zurückkehren. Vorschau
+   und Ähnlichkeitssuche bleiben lokal.
 8. Das Add-on nutzt keine Experiments, entfernten Code, Telemetrie, Werbung,
    Maintainer-Server oder native Begleitkomponente.
 9. Die Validator-Warnungen sind die oben beschriebenen, geprüften

@@ -2,7 +2,7 @@
 
 const CONFIG = {
     ADDON_NAME: 'AI Mail Assistant for Thunderbird',
-    ADDON_VERSION: '3.5.7',
+    ADDON_VERSION: '3.6.0',
     ADDON_ID: 'thunderbird-ai@felicitas-wisdom.com',
 
     AI: {
@@ -275,6 +275,7 @@ const CONFIG = {
         DASHBOARD_MESSAGE_LIMIT: 'dashboardMessageLimit',
         DASHBOARD_DATE_FROM: 'dashboardDateFrom',
         DASHBOARD_DATE_TO: 'dashboardDateTo',
+        DASHBOARD_INCLUDE_READ: 'dashboardIncludeRead',
         DASHBOARD_SENDER_FILTER: 'dashboardSenderFilter',
         DASHBOARD_AI_STATUS_FILTER: 'dashboardAiStatusFilter',
         DASHBOARD_IMPORTANCE_MINIMUM: 'dashboardImportanceMinimum',

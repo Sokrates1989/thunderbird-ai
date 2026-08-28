@@ -330,6 +330,13 @@ body {
     grid-column: 1 / -1;
 }
 
+.dashboard-query-controls > .dashboard-include-read {
+    grid-column: 1 / -1;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 7px;
+}
+
 .dashboard-query-controls select,
 .dashboard-query-controls input {
     box-sizing: border-box;
@@ -340,6 +347,14 @@ body {
     border: 1px solid #9da7b0;
     border-radius: 4px;
     background: #fff;
+}
+
+.dashboard-query-controls .dashboard-include-read input {
+    width: auto;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
 }
 
 .dashboard-sender-filter {
@@ -1072,6 +1087,10 @@ body {
     background: #2e7d32;
 }
 
+.dashboard-message-action.mark-unread {
+    background: #9a5d00;
+}
+
 .dashboard-bulk-actions .dashboard-archive,
 .dashboard-message-action.archive,
 .dashboard-message-action.export-pdf {
@@ -1193,6 +1212,10 @@ body.dashboard-expanded-view {
     overflow-wrap: anywhere;
     font-size: 13px;
     font-weight: 650;
+}
+
+.dashboard-message.is-read .dashboard-message-subject {
+    font-weight: 450;
 }
 
 .dashboard-message-meta,

@@ -15,6 +15,7 @@ const DashboardMessageComponent = class {
         this.onHidePreview = options.onHidePreview;
         this.onOpenInTab = options.onOpenInTab;
         this.onMarkRead = options.onMarkRead;
+        this.onMarkUnread = options.onMarkUnread;
         this.onExportPdf = options.onExportPdf;
         this.onArchive = options.onArchive;
         this.onTrash = options.onTrash;
@@ -25,7 +26,7 @@ const DashboardMessageComponent = class {
     render(message, options) {
         const subject = message.subject || I18n.t('dashboardNoSubject');
         const item = document.createElement('li');
-        item.className = 'dashboard-message';
+        item.className = `dashboard-message${message.read === true ? ' is-read' : ''}`;
         const checkbox = this.selectionCheckbox(message, subject, options);
         const content = document.createElement('div');
         content.className = 'dashboard-message-content';
@@ -275,12 +276,19 @@ const DashboardMessageComponent = class {
                         () => this.onOpenInTab(message),
                         { icon: '↗', className: 'open-message' }
                     ),
-                    action(
-                        'dashboardMarkReadOne',
-                        'dashboardMarkReadMessage',
-                        () => this.onMarkRead(message),
-                        { icon: '✓', className: 'mark-read' }
-                    )
+                    message.read === true
+                        ? action(
+                            'dashboardMarkUnreadOne',
+                            'dashboardMarkUnreadMessage',
+                            () => this.onMarkUnread(message),
+                            { icon: '✉', className: 'mark-unread' }
+                        )
+                        : action(
+                            'dashboardMarkReadOne',
+                            'dashboardMarkReadMessage',
+                            () => this.onMarkRead(message),
+                            { icon: '✓', className: 'mark-read' }
+                        )
                 ]
             },
             {

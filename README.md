@@ -60,6 +60,14 @@ Each preview links to the original-resolution image.
   </tr>
 </table>
 
+## Release 3.6.0 scope
+
+Release 3.6.0 adds an opt-in **Include read messages** control to the dashboard's
+**Date range and senders** group. Unread-only remains the default. Enabling the
+control re-queries each Inbox for read and unread headers, retains the choice for
+the current Thunderbird session, and reports the broader source in the active
+filter summary. Read rows use normal-weight subjects and offer **Mark as unread**.
+
 ## Release 3.5.7 scope
 
 Release 3.5.7 restores the full-height selection surface for each dashboard
@@ -99,7 +107,8 @@ the complete unread source snapshot, such as `Shown: 4 of 15`.
 - Per-task model routing with automatic fast, balanced, and quality roles.
 - Local result storage, support diagnostics, usage counters, and an OpenAI-only
   token-based cost estimate with a disclosed price snapshot.
-- Global unread-inbox dashboard with complete header pagination, account or
+- Global Inbox dashboard with complete header pagination, unread-only defaults,
+  an optional session-bound read-message scope, account or
   combined latest-50 views, session-only sender/date/score filters, a prominent
   active-filter counter and reset action, durable sorting/layout preferences,
   bulk actions, and configurable local content previews.

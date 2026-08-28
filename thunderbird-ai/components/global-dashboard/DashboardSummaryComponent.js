@@ -13,6 +13,7 @@ const DashboardSummaryComponent = class {
     activeFilterCount() {
         const state = this.getState();
         return [
+            state.includeRead === true,
             Boolean(state.dateFrom || state.dateTo),
             state.selectedSenderKeys !== null,
             state.aiStatusFilter !== 'all',
@@ -26,6 +27,9 @@ const DashboardSummaryComponent = class {
     activeFilterSummaries() {
         const state = this.getState();
         const summaries = [];
+        if (state.includeRead === true) {
+            summaries.push(I18n.t('dashboardFilterSummaryIncludeRead'));
+        }
         if (state.dateFrom && state.dateTo) {
             summaries.push(I18n.t('dashboardFilterSummaryDateRange', {
                 from: this.formatFilterDate(state.dateFrom),
@@ -78,7 +82,7 @@ const DashboardSummaryComponent = class {
         this.elements.resetFilters.disabled = busy || count === 0;
     }
 
-    /** Count rendered rows against the complete unread source snapshot. */
+    /** Count rendered rows against the complete selected source snapshot. */
     viewCounts(accounts) {
         return accounts.reduce((counts, account) => {
             const messages = account.messages || [];
@@ -91,7 +95,7 @@ const DashboardSummaryComponent = class {
         }, { shown: 0, total: 0 });
     }
 
-    /** Format one account's visible and complete unread counts from the same contract. */
+    /** Format one account's visible and complete source counts from the same contract. */
     shownCount(account) {
         const { shown, total } = this.viewCounts([account]);
         return I18n.t('dashboardShownCount', { shown, total });
@@ -100,7 +104,10 @@ const DashboardSummaryComponent = class {
     /** Render loaded counts followed by the durable view and emphasized sort choice. */
     showLoadedStatus({ accounts, shown, total }) {
         const state = this.getState();
-        this.setStatus(I18n.t('dashboardLoaded', { accounts, shown, total }));
+        this.setStatus(I18n.t(
+            state.includeRead ? 'dashboardLoadedAll' : 'dashboardLoaded',
+            { accounts, shown, total }
+        ));
         const viewKey = state.viewMode === 'combined'
             ? 'dashboardViewSummaryCombined'
             : 'dashboardViewSummaryAccount';

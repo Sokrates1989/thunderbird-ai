@@ -3,7 +3,7 @@
 > [Deutsche Version](atn-submission.de.md)
 
 This document contains copy-ready listing and reviewer information for the
-first public submission of AI Mail Assistant for Thunderbird 3.5.6. Keep the
+current submission of AI Mail Assistant for Thunderbird 3.6.0. Keep the
 listing synchronized with `PRIVACY.md` whenever providers or data categories
 change.
 
@@ -17,7 +17,7 @@ Official references:
 
 - Name: `AI Mail Assistant for Thunderbird`
 - Extension ID: `thunderbird-ai@felicitas-wisdom.com`
-- Version: `3.5.6`
+- Version: `3.6.0`
 - Minimum Thunderbird: `128.0`
 - Recommended primary category: `Message and News Reading`
 - Recommended secondary category, if available: `Message Composition`
@@ -118,11 +118,11 @@ Paste the complete current contents of `PRIVACY.md` into the Thunderbird
 Add-ons privacy-policy field. Do not submit only a link. The listing description
 above already contains the required short data-collection summary.
 
-## First-listing operator sequence
+## Version-submission operator sequence
 
-Thunderbird Add-ons (ATN) distributes and signs the XPI. It does not distribute
-the Windows or macOS installer; those remain optional GitHub alternatives for
-this add-on. The submission can be completed from Windows, macOS, or Linux, but
+Thunderbird Add-ons (ATN) distributes and signs the XPI. New versions of this
+add-on are store-only and do not produce Windows or macOS installers. The
+submission can be completed from Windows, macOS, or Linux, but
 perform the final functional check in a disposable Thunderbird profile on every
 advertised platform.
 
@@ -131,18 +131,19 @@ advertised platform.
    prompts, English/German UI, and privacy disclosures.
 2. Produce the versioned XPI and matching reviewer source archive. Windows and
    macOS installers are outside the ATN submission and must not be uploaded.
-3. Sign in to the Thunderbird Add-ons Developer Hub, start a new **listed**
-   extension submission, accept the current distribution agreement, and upload
-   `artifacts/thunderbird-ai-3.5.6.xpi`.
-4. Copy the listing identity, English/German descriptions, categories, license,
-   homepage, and support values from this sheet. Paste the complete current
-   `PRIVACY.md` text into ATN's privacy-policy field rather than supplying only
-   a link.
-5. Upload the four synthetic-data screenshots from the checklist below. Do not
+3. Sign in to the Thunderbird Add-ons Developer Hub, open **My Add-ons → AI Mail
+   Assistant → Upload New Version**, and upload
+   `artifacts/thunderbird-ai-3.6.0.xpi`.
+4. Add the copy-ready 3.6.0 version notes below. Existing listing identity,
+   categories, license, screenshots, and privacy text need changes only when the
+   corresponding product behavior or disclosure changed.
+5. Review the synthetic-data screenshots and replace only outdated views. Never
    expose account addresses, message content, or provider credentials.
-6. Attach `artifacts/thunderbird-ai-3.5.6-atn-source.zip` and the build
-   instructions from `ATN_SOURCE_BUILD.md`, even though this XPI does not contain
-   minified or bundled third-party code.
+6. Answer **Yes** to the source-code question because the build flattens two
+   source trees into the XPI. Attach
+   `artifacts/thunderbird-ai-3.6.0-atn-source.zip` and the build instructions
+   from `ATN_SOURCE_BUILD.md`; the source itself remains readable and contains
+   no minified or bundled third-party code.
 7. Put the functional test notes below and a temporary low-limit reviewer API
    key only in ATN's reviewer-only technical-details/Whiteboard field. Never put
    the key in the public listing or source archive.
@@ -150,6 +151,13 @@ advertised platform.
    promptly; the current policy can reject an unanswered request after ten days.
 9. After approval, install once from the public listing in a clean profile,
    verify update identity and core actions, then revoke the temporary key.
+
+## Version 3.6.0 notes
+
+Adds an opt-in **Include read messages** dashboard filter. Unread-only remains
+the default. Read and unread Inbox headers are loaded only after the user enables
+the session-bound control; read rows can be marked unread again. Also restores
+selection by clicking unused space in a dashboard message tile.
 
 ## Permission explanations
 
@@ -198,8 +206,8 @@ that warning separately so it cannot be confused with the 56 ATN findings.
 
 ## Reviewer notes
 
-1. Upload `artifacts/thunderbird-ai-3.5.6.xpi` as the listed extension.
-2. Attach `artifacts/thunderbird-ai-3.5.6-atn-source.zip` as source code.
+1. Upload `artifacts/thunderbird-ai-3.6.0.xpi` as the listed extension update.
+2. Attach `artifacts/thunderbird-ai-3.6.0-atn-source.zip` as source code.
 3. The source archive contains `ATN_SOURCE_BUILD.md` with a no-network XPI build.
 4. Test on Thunderbird 128 or newer with a synthetic email account and synthetic
    messages only.
@@ -211,7 +219,9 @@ that warning separately so it cannot be confused with the 56 ATN findings.
 6. Open a synthetic message, click the message-toolbar action, and test summary,
    reply draft, and chat. Verify that no request occurs merely by opening mail.
 7. Open the main-toolbar dashboard, select a synthetic unread message, and run a
-   single-message analysis. Preview and similar-message search remain local.
+   single-message analysis. Enable **Include read messages**, verify read mail
+   appears and can be marked unread, then restore unread-only. Preview and
+   similar-message search remain local.
 8. The add-on uses no Experiments, remote code, telemetry, advertising,
    maintainer-operated server, or native companion.
 9. The validator warnings are the reviewed Firefox-compatibility findings

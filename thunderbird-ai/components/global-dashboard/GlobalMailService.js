@@ -1,5 +1,5 @@
 /**
- * Reads every paginated unread Inbox header with bounded account concurrency and
+ * Reads paginated Inbox headers with bounded account concurrency and
  * performs explicitly requested local mailbox actions. Message bodies are loaded
  * only when dashboard previews are enabled; no AI service is involved.
  */
@@ -12,16 +12,17 @@ const GlobalMailService = {
     STARTUP_RETRY_DELAY_MS: 500,
     DELETE_DIAGNOSTIC_CODE: 'DELETE_NOT_APPLIED',
 
-    /** Return unread headers after bounded retries while Thunderbird finishes starting. */
-    async listUnreadByAccount(options = {}) {
+    /** Return requested Inbox headers after bounded startup retries. */
+    async listByAccount(options = {}) {
         const settings = options && typeof options === 'object' ? options : {};
         const requestedAttempts = Number(settings.maxAttempts);
         const maxAttempts = Number.isInteger(requestedAttempts) && requestedAttempts > 0
             ? requestedAttempts
             : this.STARTUP_MAX_ATTEMPTS;
         return RetryService.run(
-            attempt => this.scanUnreadByAccount({
-                acceptEmptyAccounts: attempt === maxAttempts
+            attempt => this.scanByAccount({
+                acceptEmptyAccounts: attempt === maxAttempts,
+                includeRead: settings.includeRead === true
             }),
             {
                 maxAttempts,
@@ -33,7 +34,7 @@ const GlobalMailService = {
     },
 
     /** Execute one bounded account scan and reject a completely unavailable mail API. */
-    async scanUnreadByAccount(options = {}) {
+    async scanByAccount(options = {}) {
         let accounts;
         try {
             accounts = await this.mailApiCall(
@@ -55,7 +56,7 @@ const GlobalMailService = {
             while (nextIndex < mailAccounts.length) {
                 const index = nextIndex;
                 nextIndex += 1;
-                results[index] = await this.listAccount(mailAccounts[index]);
+                results[index] = await this.listAccount(mailAccounts[index], options);
             }
         };
         const workerCount = Math.min(this.ACCOUNT_QUERY_CONCURRENCY, mailAccounts.length);
@@ -172,6 +173,11 @@ const GlobalMailService = {
         return MailboxActionService.markAsRead(messageIds);
     },
 
+    /** Mark every unique message as unread while isolating individual update failures. */
+    async markAsUnread(messageIds) {
+        return MailboxActionService.markAsUnread(messageIds);
+    },
+
     /** Find the special-use Inbox without relying on localized folder names. */
     findInbox(folder) {
         if (!folder) {
@@ -190,16 +196,19 @@ const GlobalMailService = {
     },
 
     /** Isolate one account failure so the remaining accounts can still be displayed. */
-    async listAccount({ account, inbox }) {
+    async listAccount({ account, inbox }, options = {}) {
         let messageList = null;
         let initialQueryCompleted = false;
         try {
+            const query = {
+                folderId: inbox.id,
+                messagesPerPage: this.QUERY_PAGE_SIZE
+            };
+            if (options.includeRead !== true) {
+                query.read = false;
+            }
             messageList = await this.mailApiCall(
-                () => browser.messages.query({
-                    folderId: inbox.id,
-                    read: false,
-                    messagesPerPage: this.QUERY_PAGE_SIZE
-                }),
+                () => browser.messages.query(query),
                 `messages-query:${account.id}`
             );
             initialQueryCompleted = true;
@@ -220,7 +229,7 @@ const GlobalMailService = {
                 failed: false
             };
         } catch (error) {
-            console.error(`Could not query unread messages for account ${account.id}:`, error);
+            console.error(`Could not query Inbox messages for account ${account.id}:`, error);
             return {
                 accountId: account.id,
                 accountName: account.name,

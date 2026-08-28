@@ -33,6 +33,7 @@ const DashboardViewPreferences = {
             messageLimit: GlobalMailViewService.normalizeLimit(stored[keys.DASHBOARD_MESSAGE_LIMIT]),
             dateFrom: GlobalMailViewService.normalizeDate(sessionStored[keys.DASHBOARD_DATE_FROM]),
             dateTo: GlobalMailViewService.normalizeDate(sessionStored[keys.DASHBOARD_DATE_TO]),
+            includeRead: sessionStored[keys.DASHBOARD_INCLUDE_READ] === true,
             selectedSenderKeys: Array.isArray(senderFilter) ? new Set(senderFilter) : null,
             aiStatusFilter: GlobalMailViewService.normalizeAIStatusFilter(
                 sessionStored[keys.DASHBOARD_AI_STATUS_FILTER]
@@ -68,6 +69,7 @@ const DashboardViewPreferences = {
             browser.storage.session.set({
                 [keys.DASHBOARD_DATE_FROM]: state.dateFrom,
                 [keys.DASHBOARD_DATE_TO]: state.dateTo,
+                [keys.DASHBOARD_INCLUDE_READ]: state.includeRead,
                 [keys.DASHBOARD_AI_STATUS_FILTER]: state.aiStatusFilter,
                 [keys.DASHBOARD_IMPORTANCE_MINIMUM]: state.importanceMinimum,
                 [keys.DASHBOARD_SPAM_MINIMUM]: state.spamMinimum,
@@ -85,6 +87,7 @@ const DashboardViewPreferences = {
         return [
             keys.DASHBOARD_DATE_FROM,
             keys.DASHBOARD_DATE_TO,
+            keys.DASHBOARD_INCLUDE_READ,
             keys.DASHBOARD_SENDER_FILTER,
             keys.DASHBOARD_AI_STATUS_FILTER,
             keys.DASHBOARD_IMPORTANCE_MINIMUM,

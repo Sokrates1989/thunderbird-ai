@@ -24,14 +24,17 @@ Skripte eindeutige Dateinamen und globale Bindungen statt ES-Modulimporten.
 - `GlobalDashboardManager.js` koordiniert Aktualisierung, Auswahl und
   Mailbox-Aktionen; `DashboardAnalysisController.js` vereinheitlicht Erst- und
   Neu-Scoring.
-- `GlobalMailService.js` besitzt begrenzte Header-Paginierung, Vorschauen,
-  native Archivierung und Lesestatus. Löschungen laufen über den persistenten
-  Hintergrund und werden gegen neue Ungelesen-Snapshots bestätigt.
+- `GlobalMailService.js` besitzt begrenzte Posteingangs-Header-Paginierung,
+  standardmäßig nur für ungelesene und sitzungsgebunden optional auch für
+  gelesene Nachrichten, Vorschauen, native Archivierung und Lesestatus.
+  Löschungen laufen über den persistenten Hintergrund und werden gegen neue
+  Snapshots des gewählten Bestands bestätigt.
 - `GlobalMailViewService.js` wendet Absender-, Datums- und AI-Filter,
   Kontogrenzen, Neueste-50-Auswahl und globale Score-Sortierung vor Vorschauen an.
-- `DashboardViewPreferences.js` speichert Ansicht, Kontextmenü-Stil und
-  Sitzungs-Auswahl. `LaunchModeService.js` trennt Overlay-/Tab-Vorgaben und
-  räumt temporäre Popups nach jedem Klick auf.
+- `DashboardViewPreferences.js` speichert Ansicht und Kontextmenü-Stil getrennt
+  von sitzungsgebundenen Filtern, einschließlich der Option für gelesene
+  Nachrichten, und der Sitzungs-Auswahl. `LaunchModeService.js` trennt
+  Overlay-/Tab-Vorgaben und räumt temporäre Popups nach jedem Klick auf.
 - `DashboardLaunchService.js` fokussiert vorhandene Tabs, begrenzt alle
   Thunderbird-Tab-/Fensteraufrufe und speichert nur inhaltsfreie Diagnosen.
 - `SingleMailWorkspaceService.js` vereinheitlicht Nachrichten-Toolbar,

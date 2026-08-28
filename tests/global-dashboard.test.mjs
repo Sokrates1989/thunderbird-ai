@@ -345,7 +345,7 @@ test('failed startup scan clears the dashboard loading state and keeps refresh r
         {
             STARTUP_MAX_ATTEMPTS: 3,
             API_TIMEOUT_MS: 5,
-            listUnreadByAccount: async () => {
+            listByAccount: async () => {
                 const error = new Error('Mailbox API unavailable');
                 error.code = 'MAILBOXES_NOT_READY';
                 throw error;
@@ -430,7 +430,7 @@ test('loaded status counts visible rows against the complete unread source snaps
     const SummaryComponent = loadDashboardSummaryComponent({
         createElement: tagName => ({ tagName: tagName.toUpperCase(), className: '', textContent: '' })
     });
-    const state = { viewMode: 'combined', sortOrder: 'importance-desc' };
+    const state = { viewMode: 'combined', sortOrder: 'importance-desc', includeRead: false };
     const elements = {
         status: {
             textContent: '',
@@ -469,6 +469,13 @@ test('loaded status counts visible rows against the complete unread source snaps
     assert.equal(appended[2].tagName, 'EM');
     assert.equal(appended[2].className, 'dashboard-sort-summary-value');
     assert.equal(appended[2].textContent, 'dashboardSortImportanceDescending:{}');
+
+    state.includeRead = true;
+    summary.showLoadedStatus({ accounts: 9, shown: 4, total: 15 });
+    assert.equal(
+        elements.status.textContent,
+        'dashboardLoadedAll:{"accounts":9,"shown":4,"total":15}'
+    );
 });
 
 test('global dashboard reads every unread-header page for each Inbox', async () => {
@@ -498,7 +505,7 @@ test('global dashboard reads every unread-header page for each Inbox', async () 
     };
     const { aborted, service } = loadService({ accounts, query, continueList });
 
-    const results = await service.listUnreadByAccount();
+    const results = await service.listByAccount();
 
     assert.equal(results.length, 2);
     assert.equal(results[0].accountName, 'Personal');
@@ -511,6 +518,32 @@ test('global dashboard reads every unread-header page for each Inbox', async () 
     ]);
     assert.deepEqual(continued, ['list-a']);
     assert.deepEqual(aborted, []);
+});
+
+test('dashboard includes read Inbox messages only after explicit opt-in', async () => {
+    const personalInbox = inbox('inbox-all');
+    const accounts = [
+        account('personal', 'Personal', 'imap', {
+            id: 'root-personal',
+            subFolders: [personalInbox]
+        })
+    ];
+    const queries = [];
+    const { service } = loadService({
+        accounts,
+        query: async options => {
+            queries.push({ ...options });
+            return { id: null, messages: [
+                { ...message(1, 1), read: false },
+                { ...message(2, 2), read: true }
+            ] };
+        }
+    });
+
+    const results = await service.listByAccount({ includeRead: true });
+
+    assert.deepEqual(queries, [{ folderId: 'inbox-all', messagesPerPage: 100 }]);
+    assert.deepEqual(Array.from(results[0].messages, item => item.id), [1, 2]);
 });
 
 test('mailbox scans bound concurrent account queries without changing account order', async () => {
@@ -533,7 +566,7 @@ test('mailbox scans bound concurrent account queries without changing account or
         }
     });
 
-    const results = await service.listUnreadByAccount();
+    const results = await service.listByAccount();
 
     assert.equal(maximumActiveQueries, service.ACCOUNT_QUERY_CONCURRENCY);
     assert.deepEqual(
@@ -565,7 +598,7 @@ test('dashboard startup retries a timed-out account API and then loads unread ma
     service.API_TIMEOUT_MS = 5;
     service.STARTUP_RETRY_DELAY_MS = 0;
 
-    const results = await service.listUnreadByAccount({
+    const results = await service.listByAccount({
         maxAttempts: 2,
         onRetry: (error, attempt) => retries.push([error.code, attempt])
     });
@@ -594,7 +627,7 @@ test('dashboard startup stops retrying when every unread query remains unrespons
     service.STARTUP_RETRY_DELAY_MS = 0;
 
     await assert.rejects(
-        service.listUnreadByAccount({ maxAttempts: 2 }),
+        service.listByAccount({ maxAttempts: 2 }),
         error => error.code === 'MAILBOXES_NOT_READY'
     );
 
@@ -779,12 +812,14 @@ test('dashboard layout persists locally while narrowing filters remain session-o
             dashboardDisplayOptionsExpanded: false,
             dashboardContextMenuStyle: 'submenus',
             dashboardRiskMinimum: 99,
-            dashboardSenderFilter: ['legacy@example.test']
+            dashboardSenderFilter: ['legacy@example.test'],
+            dashboardIncludeRead: true
         },
         session: {
             dashboardDateFrom: '2026-08-01',
             dashboardSenderFilter: ['session@example.test'],
-            dashboardRiskMinimum: 63
+            dashboardRiskMinimum: 63,
+            dashboardIncludeRead: true
         }
     });
 
@@ -792,11 +827,13 @@ test('dashboard layout persists locally while narrowing filters remain session-o
     assert.equal(loaded.viewMode, 'combined');
     assert.equal(loaded.displayOptionsExpanded, false);
     assert.equal(loaded.dateFrom, '2026-08-01');
+    assert.equal(loaded.includeRead, true);
     assert.deepEqual([...loaded.selectedSenderKeys], ['session@example.test']);
     assert.equal(loaded.riskMinimum, 63);
     assert.equal(loaded.contextMenuStyle, 'submenus');
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_RISK_MINIMUM], undefined);
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_SENDER_FILTER], undefined);
+    assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_INCLUDE_READ], undefined);
     loaded.viewMode = 'account';
     loaded.displayOptionsExpanded = true;
     loaded.riskMinimum = 71;
@@ -808,6 +845,7 @@ test('dashboard layout persists locally while narrowing filters remain session-o
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_CONTEXT_MENU_STYLE], 'headings');
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_RISK_MINIMUM], undefined);
     assert.equal(sessionStorage[context.CONFIG.STORAGE_KEYS.DASHBOARD_RISK_MINIMUM], 71);
+    assert.equal(sessionStorage[context.CONFIG.STORAGE_KEYS.DASHBOARD_INCLUDE_READ], true);
     assert.equal(context.GlobalMailViewService.normalizeViewMode('invalid'), 'account');
     assert.equal(preferences.normalizeContextMenuStyle('invalid'), 'headings');
 
@@ -816,6 +854,7 @@ test('dashboard layout persists locally while narrowing filters remain session-o
     assert.equal(afterRestart.viewMode, 'account');
     assert.equal(afterRestart.displayOptionsExpanded, true);
     assert.equal(afterRestart.dateFrom, '');
+    assert.equal(afterRestart.includeRead, false);
     assert.equal(afterRestart.selectedSenderKeys, null);
     assert.equal(afterRestart.riskMinimum, 0);
 });
@@ -838,6 +877,7 @@ test('message actions swap first-time analysis for correction and context-only r
         onHidePreview: () => calls.push('hide-preview'),
         onOpenInTab: () => calls.push('open'),
         onMarkRead: () => calls.push('read'),
+        onMarkUnread: () => calls.push('unread'),
         onExportPdf: () => calls.push('pdf'),
         onArchive: () => calls.push('archive'),
         onTrash: () => calls.push('trash'),
@@ -885,13 +925,21 @@ test('message actions swap first-time analysis for correction and context-only r
     assert.equal(analyzedGroups[0].actions[4].contextOnly, true);
     assert.equal(groups[1].actions[0].hidden, false);
     assert.equal(hiddenGroups[1].actions[0].hidden, true);
+    mail.read = true;
+    const readGroups = component.actionGroups(mail, mail.subject, {
+        busy: false,
+        previewVisible: false
+    });
+    assert.equal(readGroups[1].actions[2].textKey, 'dashboardMarkUnreadOne');
+    assert.equal(readGroups[1].actions[2].className, 'mark-unread');
     groups[0].actions[3].execute();
     analyzedGroups[0].actions[3].execute();
     analyzedGroups[0].actions[4].execute();
     groups[1].actions[0].execute();
     groups[1].actions[1].execute();
     groups[1].actions[2].execute();
-    assert.deepEqual(calls, ['analyze', 'correct', 'reanalyze', 'preview', 'open', 'read']);
+    readGroups[1].actions[2].execute();
+    assert.deepEqual(calls, ['analyze', 'correct', 'reanalyze', 'preview', 'open', 'read', 'unread']);
 });
 
 test('message context menu defaults to direct headings and removes hidden actions', () => {
@@ -975,6 +1023,7 @@ test('dashboard counts active filter groups and resets every narrowing control t
     const manager = Object.create(DashboardManager.prototype);
     manager.dateFrom = '2026-08-01';
     manager.dateTo = '2026-08-26';
+    manager.includeRead = true;
     manager.selectedSenderKeys = new Set(['ada@example.test']);
     manager.aiStatusFilter = 'analyzed';
     manager.importanceMinimum = 20;
@@ -986,7 +1035,7 @@ test('dashboard counts active filter groups and resets every narrowing control t
     let controlsApplied = false;
     let senderOptionsRendered = false;
     let preferencesSaved = false;
-    let viewApplied = false;
+    let mailboxRefreshed = false;
     manager.senderFilterComponent = {
         clearSearch() { clearedSearch = true; }
     };
@@ -994,12 +1043,13 @@ test('dashboard counts active filter groups and resets every narrowing control t
     manager.applyPreferenceControls = () => { controlsApplied = true; };
     manager.renderSenderOptions = () => { senderOptionsRendered = true; };
     manager.savePreferences = async () => { preferencesSaved = true; };
-    manager.applyCurrentView = async () => { viewApplied = true; };
+    manager.refresh = async () => { mailboxRefreshed = true; };
 
     await manager.resetFilters();
 
     assert.equal(manager.dateFrom, '');
     assert.equal(manager.dateTo, '');
+    assert.equal(manager.includeRead, false);
     assert.equal(manager.selectedSenderKeys, null);
     assert.equal(manager.aiStatusFilter, 'all');
     assert.equal(manager.importanceMinimum, 0);
@@ -1011,12 +1061,34 @@ test('dashboard counts active filter groups and resets every narrowing control t
     assert.equal(controlsApplied, true);
     assert.equal(senderOptionsRendered, true);
     assert.equal(preferencesSaved, true);
-    assert.equal(viewApplied, true);
+    assert.equal(mailboxRefreshed, true);
+});
+
+test('include-read control persists and refreshes the Thunderbird mailbox scope', async () => {
+    const DashboardManager = loadDashboardManager({});
+    const manager = Object.create(DashboardManager.prototype);
+    manager.includeRead = false;
+    manager.elements = { includeRead: { checked: true } };
+    let controlsApplied = 0;
+    let preferencesSaved = 0;
+    let mailboxRefreshed = 0;
+    manager.applyPreferenceControls = () => { controlsApplied += 1; };
+    manager.savePreferences = async () => { preferencesSaved += 1; };
+    manager.refresh = async () => { mailboxRefreshed += 1; };
+
+    await manager.handleIncludeReadChange();
+    await manager.handleIncludeReadChange();
+
+    assert.equal(manager.includeRead, true);
+    assert.equal(controlsApplied, 1);
+    assert.equal(preferencesSaved, 1);
+    assert.equal(mailboxRefreshed, 1);
 });
 
 test('dashboard filter indicator is visible only while narrowing filters are active', () => {
     const SummaryComponent = loadDashboardSummaryComponent();
     const state = {
+        includeRead: true,
         dateFrom: '',
         dateTo: '',
         selectedSenderKeys: new Set(['ada@example.test']),
@@ -1038,10 +1110,10 @@ test('dashboard filter indicator is visible only while narrowing filters are act
     });
 
     summary.updateFilterStatus(false);
-    assert.equal(elements.activeFilters.textContent, 'dashboardActiveFilters:{"count":2}');
+    assert.equal(elements.activeFilters.textContent, 'dashboardActiveFilters:{"count":3}');
     assert.equal(
         elements.activeFilterSummary.textContent,
-        'dashboardFilterSummarySenders:{"count":1} · dashboardFilterSummarySpam:{"value":52}'
+        'dashboardFilterSummaryIncludeRead:{} · dashboardFilterSummarySenders:{"count":1} · dashboardFilterSummarySpam:{"value":52}'
     );
     assert.equal(elements.filterStatus.dataset.active, 'true');
     assert.equal(elements.filterStatus.hidden, false);
@@ -1049,6 +1121,7 @@ test('dashboard filter indicator is visible only while narrowing filters are act
 
     state.selectedSenderKeys = null;
     state.spamMinimum = 0;
+    state.includeRead = false;
     summary.updateFilterStatus(false);
     assert.equal(elements.activeFilters.textContent, 'dashboardActiveFilters:{"count":0}');
     assert.equal(elements.activeFilterSummary.textContent, '');
@@ -1060,6 +1133,7 @@ test('dashboard filter indicator is visible only while narrowing filters are act
 test('dashboard filter summary reports only active values with localized dates and AI state', () => {
     const SummaryComponent = loadDashboardSummaryComponent();
     const state = {
+        includeRead: true,
         dateFrom: '2026-08-01',
         dateTo: '2026-08-26',
         selectedSenderKeys: new Set(['ada@example.test', 'grace@example.test']),
@@ -1078,6 +1152,7 @@ test('dashboard filter summary reports only active values with localized dates a
     };
 
     assert.deepEqual([...summary.activeFilterSummaries()], [
+        'dashboardFilterSummaryIncludeRead:{}',
         'dashboardFilterSummaryDateRange:{"from":"1.8.2026","to":"26.8.2026"}',
         'dashboardFilterSummarySenders:{"count":2}',
         'dashboardFilterSummaryAIStatus:{"status":"dashboardAIStatusAnalyzed:{}"}',
@@ -1536,7 +1611,7 @@ test('an interrupted continuation is aborted and isolated to its account', async
         }
     });
 
-    const result = await service.listUnreadByAccount();
+    const result = await service.listByAccount();
 
     assert.equal(result[0].failed, true);
     assert.deepEqual(aborted, ['broken-list']);
@@ -1741,13 +1816,13 @@ test('mark as read updates each unique message and isolates partial failures', a
 
 test('mark as unread updates each unique message with the inverse read state', async () => {
     const calls = [];
-    const { mailboxActionService } = loadService({
+    const { service } = loadService({
         updateMessage: async (messageId, properties) => {
             calls.push([messageId, { ...properties }]);
         }
     });
 
-    const result = await mailboxActionService.markAsUnread([7, 7, 8, null]);
+    const result = await service.markAsUnread([7, 7, 8, null]);
 
     assert.deepEqual(calls, [
         [7, { read: false }],
@@ -1755,6 +1830,34 @@ test('mark as unread updates each unique message with the inverse read state', a
     ]);
     assert.deepEqual(Array.from(result.updatedIds), [7, 8]);
     assert.deepEqual(Array.from(result.failedIds), []);
+});
+
+test('read dashboard message can be marked unread and retained by the refreshed scope', async () => {
+    const calls = [];
+    const DashboardManager = loadDashboardManager({
+        markAsUnread: async messageIds => {
+            calls.push([...messageIds]);
+            return { updatedIds: [...messageIds], failedIds: [] };
+        }
+    });
+    const manager = Object.create(DashboardManager.prototype);
+    const busyStates = [];
+    const statuses = [];
+    let refreshCount = 0;
+    manager.selectedMessageIds = new Set();
+    manager.setBusy = busy => busyStates.push(busy);
+    manager.refresh = async () => { refreshCount += 1; };
+    manager.setStatus = (messageText, type) => statuses.push([messageText, type]);
+
+    await manager.markOneAsUnread({ id: 7 });
+
+    assert.deepEqual(calls, [[7]]);
+    assert.equal(refreshCount, 1);
+    assert.deepEqual(busyStates, [true, false]);
+    assert.deepEqual(statuses, [[
+        'dashboardMarkUnreadOneSuccess:{"count":1}',
+        'success'
+    ]]);
 });
 
 test('selected mark-as-read refreshes the unread view and reports partial success', async () => {
@@ -1999,7 +2102,7 @@ test('one unread query failure does not hide the remaining accounts', async () =
     };
     const { service } = loadService({ accounts, query });
 
-    const results = await service.listUnreadByAccount(10);
+    const results = await service.listByAccount({ maxAttempts: 10 });
 
     assert.equal(results[0].failed, true);
     assert.equal(results[0].messages.length, 0);
@@ -2135,6 +2238,7 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.match(dashboard, /id="dashboardMessageLimit"/u);
     assert.match(dashboard, /id="dashboardDateFrom"[^>]*type="date"|type="date"[^>]*id="dashboardDateFrom"/u);
     assert.match(dashboard, /id="dashboardDateTo"[^>]*type="date"|type="date"[^>]*id="dashboardDateTo"/u);
+    assert.match(dashboard, /id="dashboardIncludeRead"[^>]*type="checkbox"|type="checkbox"[^>]*id="dashboardIncludeRead"/u);
     assert.match(dashboard, /id="dashboardSenderFilter"/u);
     assert.match(
         dashboard,
@@ -2145,6 +2249,7 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.match(dashboard, /DashboardSummaryComponent\.js[\s\S]*GlobalDashboardManager\.js/u);
     assert.match(dashboard, /id="dashboardResetFilters"[\s\S]*?data-i18n="dashboardResetFilters"/u);
     assert.match(dashboardStyles, /\.dashboard-filter-status\[data-active="true"\]/u);
+    assert.match(dashboardStyles, /\.dashboard-message\.is-read \.dashboard-message-subject/u);
     assert.match(dashboard, /id="dashboardAIStatusFilter"/u);
     assert.match(dashboard, /id="dashboardImportanceMinimum"/u);
     assert.match(dashboard, /id="dashboardSpamMinimum"/u);
