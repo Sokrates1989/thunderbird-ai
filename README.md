@@ -9,14 +9,13 @@ email analysis, and inbox triage with a selectable AI provider.
 
 - **[Install from Thunderbird Add-ons](https://addons.thunderbird.net/thunderbird/addon/ai-mail-assistant/)** (recommended for automatic add-on updates)
 - [Latest release](https://github.com/Sokrates1989/thunderbird-ai/releases/latest)
-- [Installer and version history](https://github.com/Sokrates1989/thunderbird-ai/releases)
+- [Release and version history](https://github.com/Sokrates1989/thunderbird-ai/releases)
 - [Latest XPI](https://github.com/Sokrates1989/thunderbird-ai/releases/latest/download/thunderbird-ai.xpi)
-- [Latest macOS installer](https://github.com/Sokrates1989/thunderbird-ai/releases/latest/download/Thunderbird-AI-Setup-macos.pkg)
-- [Latest Windows installer](https://github.com/Sokrates1989/thunderbird-ai/releases/latest/download/Thunderbird-AI-Setup-win-x64.exe)
 - [SHA-256 checksums](https://github.com/Sokrates1989/thunderbird-ai/releases/latest/download/SHA256SUMS.txt)
 
-Stable download names always select the latest GitHub release. Every release
-also retains versioned installers and checksums for a traceable history.
+The stable XPI and checksum names always select the latest GitHub release. Each
+release also retains a versioned XPI, reviewer source archive, and checksums for
+a traceable history.
 
 **New to API setup?** The [API-key guide index](docs/api-keys/README.md) links
 individual instructions for OpenAI, Claude (Anthropic), Mistral, DeepSeek, and
@@ -128,7 +127,7 @@ the complete unread source snapshot, such as `Shown: 4 of 15`.
 - Wake-safe toolbar routing, stale-dashboard replacement after updates, bounded
   retries, and content-free support diagnostics.
 - Complete English and German UI and documentation.
-- Per-user Windows and macOS installers with controlled Thunderbird restart.
+- Reviewed Thunderbird Add-ons distribution plus a standalone XPI release.
 
 ## AI providers and models
 
@@ -229,94 +228,57 @@ Thunderbird manages approved store updates unless automatic add-on updates have
 been disabled. The same version is available on the
 [official Thunderbird Add-ons page](https://addons.thunderbird.net/thunderbird/addon/ai-mail-assistant/).
 
-## Install on Windows
+## Existing installer or file installation
 
-1. Download and run `Thunderbird-AI-Setup-3.5.6-win-x64.exe`.
-2. Select **Deutsch** or **English** and accept the GNU General Public License.
-3. Save drafts and approve the controlled restart. Setup closes Thunderbird
-   normally and restarts it by default after installation; the final restart
-   option can be cleared.
-4. Accept any one-time activation and message-permission prompt.
-5. In Settings, select the provider, enter its API key, review task models, test
-   the connection, and save.
-
-The per-user installer needs no administrator rights and updates in place while
-preserving settings through the stable extension ID. Public release installers
-must pass the [Windows code-signing gate](docs/windows-code-signing.md). Local
-test installers remain unsigned and can trigger SmartScreen.
-
-## Install on macOS
-
-1. Start Thunderbird once so a profile exists.
-2. Open `Thunderbird-AI-Setup-3.5.6-macos.pkg`.
-3. Accept the GPL, save drafts, and allow a normal Thunderbird quit.
-4. Setup opens Thunderbird after installation. Accept any one-time activation
-   or permission prompt.
-5. Select the provider, enter the key, review models, test, and save.
-
-The package installs without administrator rights into all existing profiles
-for the current user and updates in place. It is not yet Developer ID-signed or
-notarized. Public distribution requires signing, notarization, and a published
-SHA-256 checksum.
-
-Version 3.0.0 adopted the permanent ID
-`thunderbird-ai@felicitas-wisdom.com`. Native setup removes the former private
-`thunderbird-ai@example.com` identity. If a restored dashboard still shows no
-unread mail shortly after installation, close the tab and reopen it through the
-Thunderbird AI toolbar button.
+Native Windows and macOS installers are no longer published. An existing
+installer- or XPI-based installation with the permanent extension ID
+`thunderbird-ai@felicitas-wisdom.com` can receive a newer approved Thunderbird
+Add-ons version without being uninstalled. Keep automatic add-on updates enabled
+or use **Add-ons and Themes → gear → Check for Updates**. An old private build
+with ID `thunderbird-ai@example.com` must be removed once before installing the
+listed extension.
 
 ## Development and release builds
 
-Requirements: Node.js 20+, PowerShell 5.1+ and Inno Setup 6 on Windows, and
-`pkgbuild`/`productbuild` on macOS.
+Requirements: Node.js 20+, plus PowerShell 5.1+ or Bash with `zip` and `unzip`.
 
 ```powershell
 npm test
 powershell -NoProfile -ExecutionPolicy Bypass -File .\build-addon.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\build-setup.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-setup.ps1
 ```
 
-On macOS:
+On Linux, macOS, or Windows through WSL:
 
 ```bash
 ./build-addon.sh
-./installer/macos/build-setup.sh
-./installer/macos/test-setup.sh
-```
-
-Current artifacts:
-
-- `thunderbird-ai.xpi`
-- `artifacts/Thunderbird-AI-Setup-3.5.6-win-x64.exe`
-- `artifacts/Thunderbird-AI-Setup-3.5.6-macos.pkg`
-
-Build the Thunderbird Add-ons reviewer source only from tracked files:
-
-```bash
 ./scripts/build-atn-source.sh
 ```
 
+Release artifacts:
+
+- `artifacts/thunderbird-ai-<version>.xpi`
+- `artifacts/thunderbird-ai-<version>-atn-source.zip`
+- stable GitHub alias `thunderbird-ai.xpi`
+- versioned and stable SHA-256 checksum lists
+
 See the [reviewer build guide](ATN_SOURCE_BUILD.md),
 [Thunderbird Add-ons submission sheet](docs/atn-submission.md), and
-[complete manual test checklist](docs/manual-testing.md). The one-time Azure,
-OIDC, and protected-environment setup is in the
-[Windows code-signing guide](docs/windows-code-signing.md).
+[complete manual test checklist](docs/manual-testing.md).
 
-## Automatic Windows and macOS release
+## Automatic XPI and reviewer-source release
 
 A push to `main` in the official repository starts the
 [release workflow](.github/workflows/release.yml). If the manifest version has
-no release, native Ubuntu, macOS, and Windows jobs test and build the XPI,
-reviewer source, `.pkg`, and `.exe`. The Windows job additionally requires a
-valid timestamped Authenticode signature from the configured publisher.
-Publication occurs only after the complete artifact set, signed Windows stable
-alias, and checksums pass.
+no release, an Ubuntu job runs the complete Node test suite, builds the XPI and
+reviewer source archive, and applies the ATN validation-warning policy.
+Publication occurs only after the versioned XPI, byte-identical stable XPI
+alias, reviewer source archive, and checksums pass.
 
-No cross-build or GitHub UI step is needed after the one-time Actions setup.
-The repository must allow the final job's scoped `contents: write` permission.
-Pushing a new manifest version is the external publication action. Unchanged
-versions, pull requests, and forks publish nothing.
+No Azure account, code-signing credential, native installer, cross-build, or
+GitHub UI step is required. The repository must allow the final job's scoped
+`contents: write` permission. Pushing a new manifest version is the external
+publication action. Unchanged versions, pull requests, and forks publish
+nothing.
 
 ## Technical structure
 
@@ -325,9 +287,9 @@ versions, pull requests, and forks publish nothing.
 - `common/`: background, storage, message, retry, and provider-neutral AI
   services;
 - `tests/`: Node unit and workflow tests without added runtime dependencies;
-- `installer/windows/`: Inno Setup build and isolation test; and
-- `installer/macos/`: native package build, localized resources, and isolation
-  test.
+- `scripts/`: portable test, ATN-validation, and reviewer-source tooling; and
+- `installer/`: retained legacy native-packaging sources, excluded from current
+  publication automation.
 
 The add-on uses ordered global scripts instead of ES modules because that is
 the loading model declared by the manifest.

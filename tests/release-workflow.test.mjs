@@ -3,6 +3,8 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
 const workflow = readFileSync('.github/workflows/release.yml', 'utf8');
+const packageMetadata = JSON.parse(readFileSync('package.json', 'utf8'));
+const testRunner = readFileSync('scripts/run-tests.mjs', 'utf8');
 const signatureVerifier = readFileSync('installer/windows/verify-authenticode.ps1', 'utf8');
 const shellAttributes = readFileSync('.gitattributes', 'utf8');
 const addonBuilder = readFileSync('build-addon.sh', 'utf8');
@@ -18,30 +20,33 @@ test('release workflow is restricted to the official main branch and new version
     assert.doesNotMatch(workflow, /pull_request:/u);
 });
 
-test('release workflow builds and tests every supported native artifact', () => {
+test('release workflow builds and tests the portable store artifacts', () => {
     assert.match(workflow, /runs-on: ubuntu-latest/u);
-    assert.match(workflow, /runs-on: macos-latest/u);
-    assert.match(workflow, /runs-on: windows-latest/u);
     assert.match(workflow, /npm test/u);
     assert.match(workflow, /npm run lint:atn/u);
-    assert.match(workflow, /\.\/installer\/macos\/test-setup\.sh/u);
-    assert.match(workflow, /windows\\test-setup\.ps1/u);
-    assert.match(workflow, /windows\\build-setup\.ps1 -SkipAddonBuild/u);
-    assert.match(workflow, /innosetup --version=6\.7\.1/u);
+    assert.match(workflow, /\.\/build-addon\.sh/u);
+    assert.match(workflow, /\.\/scripts\/build-atn-source\.sh/u);
+    assert.doesNotMatch(workflow, /runs-on: (?:macos|windows)-latest/u);
 });
 
-test('release workflow publishes complete stable aliases with checksums', () => {
+test('release workflow publishes the stable XPI alias, reviewer source, and checksums', () => {
     for (const artifactName of [
         'thunderbird-ai.xpi',
-        'Thunderbird-AI-Setup-macos.pkg',
-        'Thunderbird-AI-Setup-win-x64.exe',
+        'atn-source.zip',
         'SHA256SUMS.txt'
     ]) {
         assert.match(workflow, new RegExp(artifactName.replaceAll('.', '\\.'), 'u'));
     }
-    assert.match(workflow, /needs:\s*\n\s*- prepare\s*\n\s*- xpi-source\s*\n\s*- macos-installer\s*\n\s*- windows-installer/u);
+    assert.match(workflow, /needs:\s*\n\s*- prepare\s*\n\s*- xpi-source/u);
     assert.match(workflow, /contents: write/u);
     assert.match(workflow, /gh release edit "\$TAG" --draft=false --latest/u);
+});
+
+test('test discovery is explicit and remains compatible with Node 20 and Node 24', () => {
+    assert.equal(packageMetadata.scripts.test, 'node scripts/run-tests.mjs');
+    assert.match(testRunner, /readdirSync\(testDirectory/u);
+    assert.match(testRunner, /endsWith\('\.test\.mjs'\)/u);
+    assert.match(testRunner, /spawnSync\(process\.execPath, \['--test', \.\.\.testFiles\]/u);
 });
 
 test('GitHub CLI release commands receive explicit repository context', () => {
@@ -57,33 +62,10 @@ test('official GitHub actions are pinned to full commit hashes', () => {
     }
 });
 
-test('Windows publication requires protected OIDC Authenticode signing', () => {
-    assert.match(workflow, /environment: windows-code-signing/u);
-    assert.match(workflow, /id-token: write/u);
-    assert.match(
-        workflow,
-        /uses: azure\/login@f5d393ae46f8fde4be8b75f32e3fc50e654ad0ca/u
-    );
-    assert.match(
-        workflow,
-        /uses: azure\/artifact-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82/u
-    );
-    for (const secretName of [
-        'AZURE_CLIENT_ID',
-        'AZURE_TENANT_ID',
-        'AZURE_SUBSCRIPTION_ID',
-        'AZURE_ARTIFACT_SIGNING_ENDPOINT',
-        'AZURE_ARTIFACT_SIGNING_ACCOUNT',
-        'AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE',
-        'WINDOWS_SIGNING_SUBJECT'
-    ]) {
-        assert.match(workflow, new RegExp(`secrets\\.${secretName}`, 'u'));
-    }
-    assert.match(workflow, /timestamp-rfc3161: http:\/\/timestamp\.acs\.microsoft\.com/u);
-    assert.match(workflow, /verify-authenticode\.ps1/u);
-    assert.ok(
-        workflow.indexOf('verify-authenticode.ps1') < workflow.indexOf('Upload Windows installers')
-    );
+test('release publication has no native installer or cloud-signing dependency', () => {
+    assert.doesNotMatch(workflow, /macos-installer|windows-installer/u);
+    assert.doesNotMatch(workflow, /azure\/|AZURE_|WINDOWS_SIGNING_SUBJECT/u);
+    assert.doesNotMatch(workflow, /id-token: write|Authenticode|\.pkg|\.exe/u);
 });
 
 test('Authenticode verifier fails closed on identity or timestamp mismatch', () => {

@@ -8,13 +8,14 @@ Ein Thunderbird-MailExtension-Add-on für Zusammenfassungen, Antwortentwürfe un
 
 - **[Über Thunderbird Add-ons installieren](https://addons.thunderbird.net/de/thunderbird/addon/ai-mail-assistant/)** (empfohlen für automatische Add-on-Updates)
 - [Aktuelle Veröffentlichung](https://github.com/Sokrates1989/thunderbird-ai/releases/latest)
-- [Installer- und Versionshistorie](https://github.com/Sokrates1989/thunderbird-ai/releases)
+- [Release- und Versionshistorie](https://github.com/Sokrates1989/thunderbird-ai/releases)
 - [Aktuelles XPI](https://github.com/Sokrates1989/thunderbird-ai/releases/latest/download/thunderbird-ai.xpi)
-- [Aktueller macOS-Installer](https://github.com/Sokrates1989/thunderbird-ai/releases/latest/download/Thunderbird-AI-Setup-macos.pkg)
-- [Aktueller Windows-Installer](https://github.com/Sokrates1989/thunderbird-ai/releases/latest/download/Thunderbird-AI-Setup-win-x64.exe)
 - [SHA-256-Prüfsummen](https://github.com/Sokrates1989/thunderbird-ai/releases/latest/download/SHA256SUMS.txt)
 
-Die stabilen Downloadnamen zeigen immer auf die aktuelle GitHub-Veröffentlichung. Jede Veröffentlichung behält zusätzlich versionierte Installer und SHA-256-Prüfsummen für eine nachvollziehbare Historie.
+Die stabilen XPI- und Prüfsummennamen zeigen immer auf die aktuelle
+GitHub-Veröffentlichung. Jede Veröffentlichung behält zusätzlich ein
+versioniertes XPI, das Reviewer-Quellarchiv und Prüfsummen für eine
+nachvollziehbare Historie.
 
 **Neu bei der Einrichtung?** Unter
 [So erhältst du deinen API-Schlüssel](docs/api-keys/README.de.md) gibt es eine eigene,
@@ -130,7 +131,7 @@ Ausgangsbestand, zum Beispiel `Angezeigt: 4 von 15`.
 - wecksichere Toolbar-Steuerung ohne statische Popup-Rückfallebene: jeder Klick aktiviert zuerst den Hintergrundprozess und liest danach die dauerhaft gespeicherte Öffnungseinstellung
 - automatische Bereinigung alter Dashboard-Tabs beim ersten Öffnen nach Installation oder Update, damit kein von Thunderbird wiederhergestelltes Fallback-Dokument fokussiert wird
 - kopierbare, inhaltsfreie Support-Diagnose mit Dashboard-Start und den letzten Hintergrund-/UI-Aktionsgrenzen; ein Vorgang ohne Abschluss zeigt die wahrscheinliche Blockadestelle
-- native Windows- und macOS-Installer mit kontrolliertem Thunderbird-Neustart
+- geprüfte Verteilung über Thunderbird Add-ons sowie ein eigenständiges XPI
 
 ## AI-Anbieter und Modelle
 
@@ -201,103 +202,70 @@ automatische Add-on-Updates nicht deaktiviert wurden. Dieselbe Version ist auf d
 [offiziellen Thunderbird-Add-ons-Seite](https://addons.thunderbird.net/de/thunderbird/addon/ai-mail-assistant/)
 verfügbar.
 
-## Installation unter Windows
+## Bestehende Installer- oder Dateiinstallation
 
-1. `Thunderbird-AI-Setup-3.5.6-win-x64.exe` herunterladen und starten.
-2. Im Setup **Deutsch** oder **English** wählen und die GNU General Public License bestätigen. Diese Auswahl wird beim ersten Start als Sprache der Erweiterung übernommen.
-3. Offene Thunderbird-Entwürfe speichern und dem kontrollierten Neustart
-   zustimmen. Setup schließt Thunderbird normal und startet ihn nach der
-   Installation standardmäßig wieder; die abschließende Startoption kann
-   deaktiviert werden.
-4. Eine mögliche einmalige Thunderbird-Rückfrage zur Aktivierung und zu den Berechtigungen zum Ändern, Verschieben und Löschen von Nachrichten bestätigen.
-5. Unter **Einstellungen** den AI-Anbieter auswählen, dessen API-Schlüssel eintragen, die aufgabenspezifischen Modelle prüfen, die Verbindung testen und speichern. Die Oberflächensprache kann dort jederzeit unabhängig von der Thunderbird-Sprache geändert werden.
-
-Der benutzerbezogene Installer benötigt keine Administratorrechte. Eine neue Setup-Datei aktualisiert die vorhandene Version; eine Deinstallation ist nicht nötig. Die feste Add-on-ID erhält die Einstellungen. Öffentliche Release-Installer müssen das [Windows-Codesignatur-Gate](docs/windows-code-signing.de.md) bestehen. Lokale Test-Installer bleiben unsigniert und können deshalb eine SmartScreen-Warnung auslösen.
-
-Version 1.5.1 korrigiert die in 1.3.0 bis 1.5.0 fehlerhaft gepackten Lokalisierungsordner. Diese älteren Installer sollten nicht mehr verteilt werden.
-
-## Installation unter macOS
-
-1. Thunderbird mindestens einmal starten, damit ein Profil angelegt ist.
-2. `Thunderbird-AI-Setup-3.5.6-macos.pkg` öffnen.
-3. Die GNU General Public License bestätigen, offene Thunderbird-Entwürfe speichern und die Installation fortsetzen. Das macOS-Installationsprogramm fordert Thunderbird zum normalen Beenden auf und beendet es niemals erzwungen.
-4. Nach erfolgreicher Installation öffnet das Setup Thunderbird automatisch. Eine mögliche einmalige Rückfrage zur Aktivierung und zu den Berechtigungen zum Ändern, Verschieben und Löschen von Nachrichten bestätigen.
-5. Unter **Einstellungen** den AI-Anbieter auswählen, dessen API-Schlüssel eintragen, die aufgabenspezifischen Modelle prüfen, die Verbindung testen und speichern.
-
-Der macOS-Installer installiert das Add-on ohne Administratorrechte für den aktuellen Benutzer in alle vorhandenen Thunderbird-Profile. Eine erneute Ausführung aktualisiert die vorhandene Installation; Einstellungen bleiben durch die feste Add-on-ID erhalten. Die anfängliche Oberflächensprache folgt automatisch Thunderbird und kann jederzeit in den Add-on-Einstellungen geändert werden. Das aktuelle Testpaket ist noch nicht mit einer Developer-ID signiert oder notarisiert; vor einer öffentlichen Veröffentlichung sind Signatur, Notarisierung und eine veröffentlichte SHA-256-Prüfsumme erforderlich.
-
-Version 3.0.0 verwendet die dauerhafte Veröffentlichungs-ID `thunderbird-ai@felicitas-wisdom.com`. Die privaten Vorabversionen mit `thunderbird-ai@example.com` werden beim nativen Setup entfernt. Bei einer manuellen XPI-Installation muss die Vorabversion einmalig selbst deinstalliert werden.
-
-Wird ein bereits geöffneter Dashboard-Tab nach einer Installation wiederhergestellt, lädt ihn Version 3.0.0 einmal gezielt als frisches Erweiterungsdokument. Falls kurz nach der Installation trotzdem keine ungelesenen E-Mails erscheinen, zeigt das Dashboard zusätzlich den sicheren Wiederherstellungsweg: Tab schließen und über die Thunderbird-AI-Schaltfläche neu öffnen.
+Native Windows- und macOS-Installer werden nicht mehr veröffentlicht. Eine
+bestehende Installation über Installer oder XPI mit der dauerhaften
+Erweiterungs-ID `thunderbird-ai@felicitas-wisdom.com` kann eine neuere, bei
+Thunderbird Add-ons freigegebene Version ohne Deinstallation erhalten.
+Automatische Add-on-Updates müssen aktiviert bleiben; alternativ kann unter
+**Add-ons und Themes → Zahnrad → Nach Updates suchen** geprüft werden. Ein alter
+privater Build mit der ID `thunderbird-ai@example.com` muss einmal entfernt
+werden, bevor die gelistete Erweiterung installiert wird.
 
 ## Entwicklung und Tests
 
-Voraussetzungen: Node.js 20+, unter Windows PowerShell 5.1+ und Inno Setup 6 sowie unter macOS die Apple-Werkzeuge `pkgbuild` und `productbuild`.
+Voraussetzungen: Node.js 20+ sowie PowerShell 5.1+ oder Bash mit `zip` und
+`unzip`.
 
 ```powershell
 npm test
 
 # Nur die XPI bauen
 powershell -NoProfile -ExecutionPolicy Bypass -File .\build-addon.ps1
-
-# XPI und Windows-Installer bauen
-powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\build-setup.ps1
-
-# Installer isoliert prüfen
-powershell -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-setup.ps1
 ```
 
-Build-Artefakte:
-
-- `thunderbird-ai.xpi`
-- `artifacts\Thunderbird-AI-Setup-3.5.6-win-x64.exe`
-- `artifacts/Thunderbird-AI-Setup-3.5.6-macos.pkg`
-
-Unter macOS werden XPI und Installer vom Repository-Stamm aus gebaut und isoliert geprüft:
+Unter Linux, macOS oder Windows mit WSL:
 
 ```bash
 ./build-addon.sh
-./installer/macos/build-setup.sh
-./installer/macos/test-setup.sh
-```
-
-Das Reviewer-Quellpaket für Thunderbird Add-ons wird ausschließlich aus von Git
-erfassten Dateien gebaut:
-
-```bash
 ./scripts/build-atn-source.sh
 ```
 
+Release-Artefakte:
+
+- `artifacts/thunderbird-ai-<Version>.xpi`
+- `artifacts/thunderbird-ai-<Version>-atn-source.zip`
+- stabiler GitHub-Alias `thunderbird-ai.xpi`
+- versionierte und stabile SHA-256-Prüfsummenlisten
+
 Build-Anleitung, direkt nutzbare Listing-Texte, Berechtigungserklärungen und
 Reviewer-Testschritte stehen in [ATN_SOURCE_BUILD.de.md](ATN_SOURCE_BUILD.de.md) und im
-[Thunderbird-Add-ons-Einreichungsblatt](docs/atn-submission.de.md). Die einmalige
-Azure-, OIDC- und geschützte GitHub-Umgebungskonfiguration steht in der
-[Windows-Codesignatur-Anleitung](docs/windows-code-signing.de.md).
+[Thunderbird-Add-ons-Einreichungsblatt](docs/atn-submission.de.md).
 
 Der bestehende Build flacht Dateien aus `thunderbird-ai/` und `common/` in das Root der XPI ab. Dateinamen müssen deshalb repositoryweit eindeutig sein.
 
-## Automatische Windows- und macOS-Veröffentlichung
+## Automatische XPI- und Reviewer-Quellveröffentlichung
 
 Ein Push auf `main` im offiziellen Repository startet den
 [Release-Workflow](.github/workflows/release.yml). Nur wenn die Version aus
 `thunderbird-ai/manifest.json` noch keine veröffentlichte GitHub Release besitzt,
-werden alle Tests und Builds ausgeführt:
+werden die Prüfungen und Builds ausgeführt:
 
-- Ubuntu baut und testet das XPI sowie das Reviewer-Quellarchiv.
-- Ein nativer macOS-Runner baut und prüft das `.pkg`.
-- Ein nativer Windows-Runner baut und prüft das Inno-Setup-`.exe`, signiert es
-  per Microsoft Artifact Signing und prüft Herausgeber sowie Zeitstempel.
-- Erst nach allen erfolgreichen Jobs werden der Tag `v<Version>`, die als
-  **Latest** markierte GitHub Release, versionierte Dateien, stabile
-  Download-Aliase und SHA-256-Prüfsummen gemeinsam veröffentlicht.
+- Ubuntu führt die vollständige Node-Testsuite aus, baut das XPI und das
+  Reviewer-Quellarchiv und prüft die ATN-Warnungsrichtlinie.
+- Erst danach werden der Tag `v<Version>`, die als **Latest** markierte GitHub
+  Release, das versionierte XPI, der stabile XPI-Alias, das Quellarchiv und die
+  SHA-256-Prüfsummen gemeinsam veröffentlicht.
 
-Damit ist kein plattformfremder lokaler Cross-Build und nach der Einrichtung
-kein manueller Schritt in der GitHub-Oberfläche erforderlich. GitHub Actions
-muss für das Repository aktiviert sein; eine Organisationsrichtlinie darf die
-im Workflow auf den abschließenden Job begrenzte Berechtigung `contents: write`
-nicht blockieren. Der Push einer neuen Manifest-Version ist bewusst zugleich
-die externe Veröffentlichungsfreigabe. Pushes mit unveränderter Version,
-Pull Requests und Forks veröffentlichen nichts.
+Es sind kein Azure-Konto, keine Codesignatur-Zugangsdaten, keine nativen
+Installer, kein Cross-Build und kein manueller Schritt in der GitHub-Oberfläche
+erforderlich. GitHub Actions muss für das Repository aktiviert sein; eine
+Organisationsrichtlinie darf die im Workflow auf den abschließenden Job
+begrenzte Berechtigung `contents: write` nicht blockieren. Der Push einer neuen
+Manifest-Version ist bewusst zugleich die externe Veröffentlichungsfreigabe.
+Pushes mit unveränderter Version, Pull Requests und Forks veröffentlichen
+nichts.
 
 ## Manueller Funktionstest
 

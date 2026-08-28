@@ -53,9 +53,11 @@ jobs:
           if [[ "$release_state" == 'false' ]]; then
             release_needed=false
           fi
-          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
-          printf 'tag=%s\n' "$tag" >> "$GITHUB_OUTPUT"
-          printf 'release_needed=%s\n' "$release_needed" >> "$GITHUB_OUTPUT"
+          {
+            printf 'version=%s\n' "$version"
+            printf 'tag=%s\n' "$tag"
+            printf 'release_needed=%s\n' "$release_needed"
+          } >> "$GITHUB_OUTPUT"
 
   xpi-source:
     name: Test and build XPI/source
@@ -101,128 +103,17 @@ jobs:
             artifacts/thunderbird-ai.xpi
             artifacts/thunderbird-ai-${{ needs.prepare.outputs.version }}-atn-source.zip
 
-  macos-installer:
-    name: Test and build macOS installer
-    needs: prepare
-    if: needs.prepare.outputs.release_needed == 'true'
-    runs-on: macos-latest
-    steps:
-      - name: Check out release source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Use the supported Node.js runtime
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: '24'
-          package-manager-cache: false
-
-      - name: Test and build native package
-        run: ./installer/macos/test-setup.sh
-
-      - name: Upload macOS packages
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: macos-installer-${{ needs.prepare.outputs.version }}
-          if-no-files-found: error
-          path: |
-            artifacts/Thunderbird-AI-Setup-${{ needs.prepare.outputs.version }}-macos.pkg
-            artifacts/Thunderbird-AI-Setup-macos.pkg
-
-  windows-installer:
-    name: Test and build Windows installer
-    needs: prepare
-    if: needs.prepare.outputs.release_needed == 'true'
-    runs-on: windows-latest
-    environment: windows-code-signing
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - name: Check out release source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Use the supported Node.js runtime
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: '24'
-          package-manager-cache: false
-
-      - name: Install the pinned Inno Setup compiler
-        shell: powershell
-        run: choco install innosetup --version=6.7.1 --yes --no-progress
-
-      - name: Test installer install, update, and uninstall
-        shell: powershell
-        run: powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\test-setup.ps1
-
-      - name: Build release installer
-        shell: powershell
-        run: powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\installer\windows\build-setup.ps1 -SkipAddonBuild
-
-      - name: Authenticate to Azure with GitHub OIDC
-        uses: azure/login@f5d393ae46f8fde4be8b75f32e3fc50e654ad0ca # v3.0.1
-        env:
-          AZURE_CORE_OUTPUT: none
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Authenticode-sign and timestamp the release installer
-        uses: azure/artifact-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82 # v2.0.0
-        with:
-          endpoint: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
-          signing-account-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_ACCOUNT }}
-          certificate-profile-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE }}
-          files: ${{ github.workspace }}\artifacts\Thunderbird-AI-Setup-${{ needs.prepare.outputs.version }}-win-x64.exe
-          file-digest: SHA256
-          timestamp-rfc3161: http://timestamp.acs.microsoft.com
-          timestamp-digest: SHA256
-          description: AI Mail Assistant for Thunderbird
-          description-url: https://github.com/Sokrates1989/thunderbird-ai
-
-      - name: Verify signature and create the byte-identical stable alias
-        shell: powershell
-        env:
-          EXPECTED_PUBLISHER: ${{ secrets.WINDOWS_SIGNING_SUBJECT }}
-          VERSION: ${{ needs.prepare.outputs.version }}
-        run: |
-          $versioned = Join-Path $env:GITHUB_WORKSPACE "artifacts\Thunderbird-AI-Setup-$env:VERSION-win-x64.exe"
-          $stable = Join-Path $env:GITHUB_WORKSPACE 'artifacts\Thunderbird-AI-Setup-win-x64.exe'
-          & .\installer\windows\verify-authenticode.ps1 -Path $versioned -ExpectedPublisher $env:EXPECTED_PUBLISHER
-          Copy-Item -LiteralPath $versioned -Destination $stable -Force
-          & .\installer\windows\verify-authenticode.ps1 -Path @($versioned, $stable) -ExpectedPublisher $env:EXPECTED_PUBLISHER
-          if ((Get-FileHash -Algorithm SHA256 -LiteralPath $versioned).Hash -ne
-              (Get-FileHash -Algorithm SHA256 -LiteralPath $stable).Hash) {
-              throw 'The stable Windows installer alias is not byte-identical.'
-          }
-
-      - name: Upload Windows installers
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: windows-installer-${{ needs.prepare.outputs.version }}
-          if-no-files-found: error
-          path: |
-            artifacts/Thunderbird-AI-Setup-${{ needs.prepare.outputs.version }}-win-x64.exe
-            artifacts/Thunderbird-AI-Setup-win-x64.exe
-
   release:
-    name: Publish complete GitHub release
+    name: Publish GitHub release
     needs:
       - prepare
       - xpi-source
-      - macos-installer
-      - windows-installer
     if: needs.prepare.outputs.release_needed == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Download all native release assets
+      - name: Download tested release assets
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           merge-multiple: true
@@ -238,10 +129,6 @@ jobs:
             "thunderbird-ai-${VERSION}.xpi"
             'thunderbird-ai.xpi'
             "thunderbird-ai-${VERSION}-atn-source.zip"
-            "Thunderbird-AI-Setup-${VERSION}-macos.pkg"
-            'Thunderbird-AI-Setup-macos.pkg'
-            "Thunderbird-AI-Setup-${VERSION}-win-x64.exe"
-            'Thunderbird-AI-Setup-win-x64.exe'
           )
           for expected_file in "${expected_files[@]}"; do
             [[ -f "release-assets/${expected_file}" ]] || {
@@ -250,8 +137,6 @@ jobs:
             }
           done
           cmp "release-assets/thunderbird-ai-${VERSION}.xpi" release-assets/thunderbird-ai.xpi
-          cmp "release-assets/Thunderbird-AI-Setup-${VERSION}-macos.pkg" release-assets/Thunderbird-AI-Setup-macos.pkg
-          cmp "release-assets/Thunderbird-AI-Setup-${VERSION}-win-x64.exe" release-assets/Thunderbird-AI-Setup-win-x64.exe
           (
             cd release-assets
             find . -maxdepth 1 -type f -print0 |
