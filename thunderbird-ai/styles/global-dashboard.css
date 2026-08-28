@@ -1170,6 +1170,9 @@ body.dashboard-expanded-view {
 }
 
 .dashboard-message-main {
+    display: grid;
+    grid-template-rows: minmax(min-content, 1fr) auto;
+    align-self: stretch;
     min-width: 0;
 }
 

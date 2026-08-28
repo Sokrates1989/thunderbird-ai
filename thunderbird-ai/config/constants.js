@@ -2,7 +2,7 @@
 
 const CONFIG = {
     ADDON_NAME: 'AI Mail Assistant for Thunderbird',
-    ADDON_VERSION: '3.5.6',
+    ADDON_VERSION: '3.5.7',
     ADDON_ID: 'thunderbird-ai@felicitas-wisdom.com',
 
     AI: {

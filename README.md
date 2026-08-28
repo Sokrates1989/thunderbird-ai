@@ -60,6 +60,14 @@ Each preview links to the original-resolution image.
   </tr>
 </table>
 
+## Release 3.5.7 scope
+
+Release 3.5.7 restores the full-height selection surface for each dashboard
+message. Clicking unused space in the message tile selects or deselects the
+message again, while the action buttons and optional message-preview controls
+remain independent. This patch is distributed through Thunderbird Add-ons; it
+does not introduce a new native installer build.
+
 ## Release 3.5.6 scope
 
 Release 3.5.6 makes the single-message read-state action reversible. An unread

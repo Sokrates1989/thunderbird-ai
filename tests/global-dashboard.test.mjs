@@ -2273,6 +2273,10 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     );
     assert.match(
         dashboardStyles,
+        /\.dashboard-message-main\s*\{[^}]*display:\s*grid;[^}]*grid-template-rows:\s*minmax\(min-content,\s*1fr\)\s*auto;[^}]*align-self:\s*stretch;/su
+    );
+    assert.match(
+        dashboardStyles,
         /\.dashboard-message-action\.archive,\s*\.dashboard-message-action\.export-pdf\s*\{[^}]*background:\s*#526d82/su
     );
     assert.match(pdfIntegration, /thunderbird-pdf@felicitas-wisdom\.com/u);
