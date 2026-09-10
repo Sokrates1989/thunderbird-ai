@@ -214,6 +214,11 @@ const SingleMailManager = class {
         window.close();
     }
 
+    /** Return from the durable workspace to the source message and its compact overlay. */
+    async returnToOverlay() {
+        return SingleMailWorkspaceService.returnToOverlay(this.emailId);
+    }
+
     /** Open the durable reply workspace in a Thunderbird tab, with an in-page fallback. */
     async openReplyComposer() {
         if (this.emailId === undefined || this.emailId === null) {

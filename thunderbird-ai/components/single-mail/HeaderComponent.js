@@ -79,10 +79,18 @@ const HeaderComponent = class {
             button.title = I18n.t('singleMailUseOverlaySaved');
             button.setAttribute('aria-label', button.title);
         } catch (error) {
-            console.error('Could not restore compact overlay mode:', error);
+            console.error('Could not save compact overlay mode:', error);
             label.textContent = I18n.t('singleMailUseOverlay');
             button.disabled = false;
             this.manager.showError(I18n.t('singleMailUseOverlayFailed'));
+            return;
+        }
+        try {
+            await this.manager.returnToOverlay();
+        } catch (error) {
+            console.error('Could not return to the compact overlay:', error);
+            button.disabled = false;
+            this.manager.showError(I18n.t('singleMailUseOverlayReturnFailed'));
         }
     }
 

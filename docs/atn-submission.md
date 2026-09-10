@@ -3,7 +3,7 @@
 > [Deutsche Version](atn-submission.de.md)
 
 This document contains copy-ready listing and reviewer information for the
-current submission of AI Mail Assistant for Thunderbird 3.8.1. Keep the
+current submission of AI Mail Assistant for Thunderbird 3.8.2. Keep the
 listing synchronized with `PRIVACY.md` whenever providers or data categories
 change.
 
@@ -17,7 +17,7 @@ Official references:
 
 - Name: `AI Mail Assistant for Thunderbird`
 - Extension ID: `thunderbird-ai@felicitas-wisdom.com`
-- Version: `3.8.1`
+- Version: `3.8.2`
 - Minimum Thunderbird: `128.0`
 - Recommended primary category: `Message and News Reading`
 - Recommended secondary category, if available: `Message Composition`
@@ -133,15 +133,15 @@ advertised platform.
    macOS installers are outside the ATN submission and must not be uploaded.
 3. Sign in to the Thunderbird Add-ons Developer Hub, open **My Add-ons → AI Mail
    Assistant → Upload New Version**, and upload
-   `artifacts/thunderbird-ai-3.8.1.xpi`.
-4. Add the copy-ready 3.8.1 version notes below. Existing listing identity,
+   `artifacts/thunderbird-ai-3.8.2.xpi`.
+4. Add the copy-ready 3.8.2 version notes below. Existing listing identity,
    categories, license, screenshots, and privacy text need changes only when the
    corresponding product behavior or disclosure changed.
 5. Review the synthetic-data screenshots and replace only outdated views. Never
    expose account addresses, message content, or provider credentials.
 6. Answer **Yes** to the source-code question because the build flattens two
    source trees into the XPI. Attach
-   `artifacts/thunderbird-ai-3.8.1-atn-source.zip` and the build instructions
+   `artifacts/thunderbird-ai-3.8.2-atn-source.zip` and the build instructions
    from `ATN_SOURCE_BUILD.md`; the source itself remains readable and contains
    no minified or bundled third-party code.
 7. Put the functional test notes below and a temporary low-limit reviewer API
@@ -152,13 +152,14 @@ advertised platform.
 9. After approval, install once from the public listing in a clean profile,
    verify update identity and core actions, then revoke the temporary key.
 
-## Version 3.8.1 notes
+## Version 3.8.2 notes
 
-The compact overlay remains the default single-message assistant experience.
-When the assistant is opened in its own Thunderbird tab, a prominent action in
-the expanded header now restores and immediately saves the compact-overlay
-default, with an in-place confirmation. The next message-toolbar launch then
-uses the compact overlay without requiring a return to Settings.
+The compact overlay return action in an expanded single-message tab is now
+smaller and completes the entire transition. It saves Overlay mode, restores
+the source message tab, opens the compact overlay there when the same message is
+still displayed, and closes the expanded tab. If that source is unavailable,
+the workspace closes onto the nearest prior tab without opening an overlay for
+the wrong message.
 
 ## Permission explanations
 
@@ -185,12 +186,17 @@ uses the compact overlay without requiring a return to Settings.
 
 ## Validator warning classification
 
-The Thunderbird Add-ons upload currently reports 56 reviewed compatibility
+The Thunderbird Add-ons upload currently reports 57 reviewed compatibility
 warnings: seven `MANIFEST_PERMISSIONS` warnings for Thunderbird-only
-permissions and 49 `UNSUPPORTED_API` warnings for Thunderbird MailExtension
+permissions and 50 `UNSUPPORTED_API` warnings for Thunderbird MailExtension
 APIs. These calls and permissions provide the documented mail, account,
 compose, folder, message-display, and external-browser behavior; removing or
 hiding them would break functionality or make the source harder to review.
+The fourth `messageDisplay.getDisplayedMessages` occurrence is the guarded
+same-message check before the expanded-tab return action opens an overlay.
+Both the [message display API](https://webextension-api.thunderbird.net/en/esr-mv2/messageDisplay.html)
+and [message-toolbar action API](https://webextension-api.thunderbird.net/en/esr-mv2/messageDisplayAction.html)
+are documented Thunderbird MailExtension interfaces.
 
 Before uploading an XPI, run the pinned local guard from the repository root:
 
@@ -203,12 +209,12 @@ errors, notices, unsafe-code findings, unreviewed warnings, changed warning
 counts, or mismatched package identity. The generic local Firefox linter emits
 one additional Firefox-only `MISSING_DATA_COLLECTION_PERMISSIONS` warning that
 the Thunderbird Add-ons report does not currently include; the guard reports
-that warning separately so it cannot be confused with the 56 ATN findings.
+that warning separately so it cannot be confused with the 57 ATN findings.
 
 ## Reviewer notes
 
-1. Upload `artifacts/thunderbird-ai-3.8.1.xpi` as the listed extension update.
-2. Attach `artifacts/thunderbird-ai-3.8.1-atn-source.zip` as source code.
+1. Upload `artifacts/thunderbird-ai-3.8.2.xpi` as the listed extension update.
+2. Attach `artifacts/thunderbird-ai-3.8.2-atn-source.zip` as source code.
 3. The source archive contains `ATN_SOURCE_BUILD.md` with a no-network XPI build.
 4. Test on Thunderbird 128 or newer with a synthetic email account and synthetic
    messages only.

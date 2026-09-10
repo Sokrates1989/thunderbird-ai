@@ -180,12 +180,14 @@ Thunderbird behavior that mocks cannot prove.
     amber **Mark as unread**. Activate it again and confirm that Thunderbird and
     the workspace both return to the unread state without reopening the window.
 40. In Settings, set the single-message assistant to open in its own Thunderbird
-    tab, then launch it from a message. The expanded header must show a prominent
-    **Use compact overlay by default** action. Activate it and confirm the saved
-    state appears in place. Close the tab and launch the assistant again from a
-    message; it must now open as the compact overlay.
+    tab, then launch it from a message. The expanded header must show the compact
+    **Return to compact overlay** action. Activate it: Thunderbird must reactivate
+    the source message tab, open the compact overlay for that same message, and
+    close the expanded tab. Repeat after closing the source tab; the expanded
+    workspace must still close onto the closest prior tab without opening an
+    overlay over a different message.
 
-The single-message popup must show version 3.8.1. The dashboard uses unread
+The single-message popup must show version 3.8.2. The dashboard uses unread
 status as its default candidate filter; **Include read messages** broadens that
 scope only for the current Thunderbird session. Analysis performed outside the
 dashboard does not automatically create a dashboard score record.

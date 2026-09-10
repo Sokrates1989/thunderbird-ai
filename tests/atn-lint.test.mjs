@@ -31,7 +31,7 @@ function warningsFromBaseline() {
 test('reviewed Thunderbird compatibility warnings pass the ATN policy', () => {
     const result = classifyAtnReport({ errors: [], notices: [], warnings: warningsFromBaseline() }, baseline);
 
-    assert.equal(result.reviewedWarningCount, 56);
+    assert.equal(result.reviewedWarningCount, 57);
     assert.equal(result.localOnlyWarningCount, 1);
     assert.deepEqual(result.mismatches, []);
     assert.deepEqual(result.unexpectedWarnings, []);

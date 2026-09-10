@@ -5,12 +5,14 @@ import test from 'node:test';
 
 import { createContext, loadScript, repositoryRoot } from '../test-support/load-script.mjs';
 
-function loadServices(existingTabs = []) {
+function loadServices(existingTabs = [], options = {}) {
     const popupAssignments = [];
     const openedPopups = [];
     const createdTabs = [];
     const updatedTabs = [];
+    const removedTabs = [];
     const context = createContext({
+        location: { search: options.locationSearch || '' },
         browser: {
             runtime: { getURL: value => `moz-extension://test/${value}` },
             storage: { local: {
@@ -18,7 +20,22 @@ function loadServices(existingTabs = []) {
                 set: async () => {}
             } },
             tabs: {
-                query: async () => existingTabs.map(tab => ({ ...tab })),
+                get: async tabId => {
+                    const tab = existingTabs.find(candidate => candidate.id === tabId);
+                    if (!tab) {
+                        throw new Error('Tab not found');
+                    }
+                    return { ...tab };
+                },
+                getCurrent: async () => {
+                    const tab = existingTabs.find(candidate => candidate.current === true);
+                    return tab ? { ...tab } : undefined;
+                },
+                query: async (queryInfo = {}) => existingTabs
+                    .filter(tab => queryInfo.windowId === undefined
+                        || tab.windowId === queryInfo.windowId)
+                    .filter(tab => queryInfo.active !== true || tab.active === true)
+                    .map(tab => ({ ...tab })),
                 update: async (tabId, details) => {
                     updatedTabs.push([tabId, { ...details }]);
                     return { id: tabId, ...details };
@@ -27,6 +44,17 @@ function loadServices(existingTabs = []) {
                     const created = { id: 90, windowId: 4, ...details };
                     createdTabs.push(created);
                     return created;
+                },
+                remove: async tabId => removedTabs.push(tabId)
+            },
+            messageDisplay: {
+                getDisplayedMessages: async tabId => options.displayedMessages?.[tabId] || []
+            },
+            messageDisplayAction: {
+                setPopup: async details => popupAssignments.push({ ...details }),
+                openPopup: async details => {
+                    openedPopups.push({ ...details });
+                    return true;
                 }
             },
             windows: { update: async () => {} }
@@ -42,6 +70,7 @@ function loadServices(existingTabs = []) {
         context,
         createdTabs,
         updatedTabs,
+        removedTabs,
         popupAssignments,
         openedPopups
     };
@@ -88,9 +117,75 @@ test('single-mail workspaces focus an existing matching AI mode and isolate othe
     assert.match(createdTabs[0].url, /messageId=42&reply=1&view=expanded/u);
 });
 
+test('expanded workspace returns to its source message tab and opens the compact overlay', async () => {
+    const existingTabs = [
+        { id: 5, windowId: 2, index: 0, active: false, url: 'about:3pane' },
+        {
+            id: 11,
+            windowId: 2,
+            index: 1,
+            active: true,
+            current: true,
+            url: 'moz-extension://test/single-mail-ui.html?messageId=42&view=expanded&returnTabId=5'
+        }
+    ];
+    const {
+        context,
+        openedPopups,
+        popupAssignments,
+        removedTabs,
+        updatedTabs
+    } = loadServices(existingTabs, {
+        locationSearch: '?messageId=42&view=expanded&returnTabId=5',
+        displayedMessages: { 5: [{ id: 42 }] }
+    });
+
+    const result = await context.SingleMailWorkspaceService.returnToOverlay(42);
+
+    assert.equal(result.overlayOpened, true);
+    assert.equal(result.targetTabId, 5);
+    assert.deepEqual(updatedTabs, [[5, { active: true }]]);
+    assert.deepEqual(popupAssignments, [
+        { popup: 'single-mail-ui.html', tabId: 5 },
+        { popup: '', tabId: 5 }
+    ]);
+    assert.deepEqual(openedPopups, [{ windowId: 2 }]);
+    assert.deepEqual(removedTabs, [11]);
+});
+
+test('expanded workspace closes onto a prior tab without opening an overlay for other mail', async () => {
+    const existingTabs = [
+        { id: 4, windowId: 2, index: 0, active: false, url: 'about:3pane' },
+        {
+            id: 11,
+            windowId: 2,
+            index: 1,
+            active: true,
+            current: true,
+            url: 'moz-extension://test/single-mail-ui.html?messageId=42&view=expanded&returnTabId=99'
+        }
+    ];
+    const { context, openedPopups, removedTabs, updatedTabs } = loadServices(existingTabs, {
+        locationSearch: '?messageId=42&view=expanded&returnTabId=99',
+        displayedMessages: { 4: [{ id: 77 }] }
+    });
+
+    const result = await context.SingleMailWorkspaceService.returnToOverlay(42);
+
+    assert.equal(result.overlayOpened, false);
+    assert.equal(result.targetTabId, 4);
+    assert.deepEqual(updatedTabs, [[4, { active: true }]]);
+    assert.deepEqual(openedPopups, []);
+    assert.deepEqual(removedTabs, [11]);
+});
+
 test('single-mail UI exposes a localized fullscreen control backed by the shared service', () => {
     const page = fs.readFileSync(
         path.join(repositoryRoot, 'thunderbird-ai/pages/single-mail-ui.html'),
+        'utf8'
+    );
+    const styles = fs.readFileSync(
+        path.join(repositoryRoot, 'thunderbird-ai/styles/single-mail-ui.css'),
         'utf8'
     );
     const manager = fs.readFileSync(
@@ -104,9 +199,12 @@ test('single-mail UI exposes a localized fullscreen control backed by the shared
     assert.match(page, /ScrollToTopComponent\.js/u);
     assert.match(page, /SingleMailWorkspaceService\.js/u);
     assert.match(manager, /SingleMailWorkspaceService\.openExpanded/u);
+    const returnButtonRule = styles.match(/\.single-mail-use-overlay \{[^}]+\}/u)?.[0] || '';
+    assert.match(returnButtonRule, /min-height:\s*30px/u);
+    assert.match(returnButtonRule, /font-size:\s*12px/u);
 });
 
-test('expanded single-mail view prominently restores the persistent overlay default', async () => {
+test('compact overlay return control persists the default and starts the handoff', async () => {
     class TestElement {
         constructor() {
             this.attributes = {};
@@ -143,7 +241,7 @@ test('expanded single-mail view prominently restores the persistent overlay defa
         CONFIG: {
             ACTIONS: { SET_LAUNCH_MODE: 'setLaunchMode' },
             ADDON_NAME: 'AI Mail Assistant',
-            ADDON_VERSION: '3.8.1'
+            ADDON_VERSION: '3.8.2'
         },
         I18n: {
             t: (key, replacements = {}) => replacements.version || key
@@ -156,11 +254,13 @@ test('expanded single-mail view prominently restores the persistent overlay defa
         location: { search: '?view=expanded' }
     });
     loadScript(context, 'thunderbird-ai/components/single-mail/HeaderComponent.js');
+    let returnedToOverlay = 0;
     const manager = {
         sendToBackground: async (action, data) => {
             requests.push({ action, data });
             return { success: true };
         },
+        returnToOverlay: async () => { returnedToOverlay += 1; },
         showError: () => assert.fail('Success must not show an error.')
     };
     const header = new context.HeaderComponent(manager);
@@ -177,6 +277,7 @@ test('expanded single-mail view prominently restores the persistent overlay defa
     assert.equal(requests[0].data.mode, 'overlay');
     assert.equal(elements.get('singleMailUseOverlay').disabled, true);
     assert.equal(elements.get('singleMailUseOverlay').addedClass, 'saved');
+    assert.equal(returnedToOverlay, 1);
     assert.equal(
         elements.get('singleMailUseOverlayLabel').textContent,
         'singleMailUseOverlaySaved'

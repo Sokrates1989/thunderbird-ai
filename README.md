@@ -59,6 +59,15 @@ Each preview links to the original-resolution image.
   </tr>
 </table>
 
+## Release 3.8.2 scope
+
+Release 3.8.2 turns the expanded single-message tab's overlay control into a
+compact return action. It saves compact Overlay mode, reactivates the message
+tab that opened the workspace, opens the overlay there when the same message is
+still displayed, and closes the expanded tab. If the original tab or popup is
+no longer available, Thunderbird still returns to the nearest prior tab and
+uses Overlay mode on the next message-toolbar launch.
+
 ## Release 3.8.1 scope
 
 Release 3.8.1 keeps the compact overlay as the default single-message assistant

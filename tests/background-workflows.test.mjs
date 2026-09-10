@@ -432,6 +432,8 @@ test('single-mail launch mode is independent and opens the displayed message in 
     assert.equal(openedTabs.length, 1);
     assert.match(openedTabs[0].url, /single-mail-ui\.html\?messageId=73&view=expanded/u);
     assert.match(openedTabs[0].url, /source=saved-preference/u);
+    assert.match(openedTabs[0].url, /returnTabId=5/u);
+    assert.equal(openedTabs[0].windowId, 2);
 });
 
 test('dashboard deletion runs in the background with modern user-action options', async () => {
@@ -792,7 +794,7 @@ test('packaged UI sources contain no unfinished actions or retired models', () =
     assert.match(source, /messages\.getFull/u);
     assert.ok(manifest.permissions.includes('clipboardWrite'));
     assert.ok(manifest.permissions.includes('sensitiveDataUpload'));
-    assert.equal(manifest.version, '3.8.1');
+    assert.equal(manifest.version, '3.8.2');
     assert.equal(manifest.compose_action, undefined);
     assert.ok(
         manifest.background.scripts.indexOf('RuntimeDiagnosticService.js')

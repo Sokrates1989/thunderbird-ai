@@ -197,12 +197,15 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     Öffnen zum ungelesenen Status zurückkehren.
 40. In den Einstellungen festlegen, dass der Einzelmail-Assistent in einem
     eigenen Thunderbird-Tab öffnet, und ihn danach aus einer Nachricht starten.
-    Im Kopf der erweiterten Ansicht muss die gut sichtbare Aktion **Kompaktes
-    Overlay als Standard verwenden** erscheinen. Ausführen und die Bestätigung
-    direkt in der Ansicht prüfen. Den Tab schließen und den Assistenten erneut
-    aus einer Nachricht starten; nun muss das kompakte Overlay erscheinen.
+    Im Kopf der erweiterten Ansicht muss die kompakte Aktion **Zum kompakten
+    Overlay** erscheinen. Ausführen: Thunderbird muss den Ausgangs-Nachrichten-
+    Tab aktivieren, dort das kompakte Overlay für dieselbe Nachricht öffnen und
+    den erweiterten Tab schließen. Den Test nach Schließen des Ausgangs-Tabs
+    wiederholen; der Arbeitsbereich muss sich weiterhin zum nächstgelegenen
+    vorherigen Tab schließen, ohne ein Overlay über einer anderen Nachricht zu
+    öffnen.
 
-Das Einzelmail-Popup muss Version 3.8.1 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.8.2 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status als Standard-Kandidatenfilter; **Gelesene Nachrichten
 einbeziehen** erweitert den Bestand nur für die aktuelle Thunderbird-Sitzung.
 Analysen außerhalb des Dashboards erzeugen nicht automatisch einen

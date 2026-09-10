@@ -19,7 +19,7 @@
       "folders.getFolderCapabilities is not supported": 1,
       "identities.getDefault is not supported": 2,
       "identities.list is not supported": 2,
-      "messageDisplay.getDisplayedMessages is not supported": 3,
+      "messageDisplay.getDisplayedMessages is not supported": 4,
       "messageDisplay.open is not supported": 2,
       "messageDisplayAction.onClicked is not supported": 1,
       "messages.abortList is not supported": 6,

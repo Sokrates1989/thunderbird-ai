@@ -62,6 +62,17 @@ Jede Vorschau öffnet beim Anklicken das Bild in seiner Originalauflösung.
   </tr>
 </table>
 
+## Umfang von Release 3.8.2
+
+Release 3.8.2 macht aus der Overlay-Aktion im erweiterten Einzelmail-Tab eine
+kompakte Rückkehraktion. Sie speichert den kompakten Overlay-Modus, aktiviert
+den Nachrichten-Tab, aus dem der Arbeitsbereich geöffnet wurde, öffnet dort bei
+weiterhin angezeigter gleicher Nachricht das Overlay und schließt den
+erweiterten Tab. Ist der ursprüngliche Tab oder das Popup nicht mehr verfügbar,
+kehrt Thunderbird dennoch zum nächstgelegenen vorherigen Tab zurück und
+verwendet beim nächsten Start über die Nachrichten-Symbolleiste den Overlay-
+Modus.
+
 ## Umfang von Release 3.8.1
 
 Release 3.8.1 behält das kompakte Overlay als Standard für den Einzelmail-
@@ -356,7 +367,7 @@ nichts.
 42. Nach mehreren Dashboard-Aktionen den Tab wechseln und das globale Toolbar-Symbol mindestens dreimal erneut verwenden. Ein hängender Thunderbird-Tabaufruf muss nach einem begrenzten Zeitlimit freigegeben werden, sodass der nächste Klick ohne Thunderbird-Neustart erneut versucht. Bei einem endgültigen Fehler muss eine lokalisierte Benachrichtigung mit Diagnosecode erscheinen. Unter **Einstellungen → AI Assistant öffnen → Support-Diagnose** müssen Add-on-/Thunderbird-Version, letzter Dashboard-Start und die letzten Hintergrund-/UI-Aktivitäten ohne E-Mail-Inhalte sichtbar und kopierbar sein. Ein absichtlich provozierter Fehler muss als fehlgeschlagener oder kontrolliert fehlgeschlagener Vorgang erscheinen.
 43. Im Dashboard mehrere Nachrichten auswählen und bis unter die letzte angezeigte Nachricht scrollen. Dort muss dieselbe Bulk-Aktionsleiste wie oberhalb der Nachrichten erscheinen; Auswahlzahl, Aktivierungszustand und Aktionen müssen in beiden Leisten synchron bleiben. Danach Dashboard und Einzelmail-Ansicht nach unten scrollen: Rechts unten muss jeweils ein kleiner runder Pfeil erscheinen, der die sichtbare Scrollfläche nach oben bewegt und am Anfang wieder verschwindet.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 3.8.1** stehen. Das Dashboard verwendet standardmäßig den Ungelesen-Status als Kandidatenfilter; **Gelesene Nachrichten einbeziehen** erweitert den Posteingangsbestand nur für die aktuelle Thunderbird-Sitzung. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 3.8.2** stehen. Das Dashboard verwendet standardmäßig den Ungelesen-Status als Kandidatenfilter; **Gelesene Nachrichten einbeziehen** erweitert den Posteingangsbestand nur für die aktuelle Thunderbird-Sitzung. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 Die Einstellungen enthalten eine **Support- und Speicherdiagnose**. Sie zeigt Hintergrundstart, Abhängigkeitsstatus, Laufzeiten und eine inhaltsfreie Prüfung lokaler Einstellungsdaten. API-Schlüssel werden ausschließlich als „vorhanden/nicht vorhanden“ gemeldet. Kann der Hintergrunddienst nicht starten, werden vorhandene Einstellungen lokal und schreibgeschützt dargestellt; Speichern und Zurücksetzen bleiben bis zu einem erfolgreichen Start deaktiviert.
 

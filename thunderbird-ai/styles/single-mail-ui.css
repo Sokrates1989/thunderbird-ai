@@ -52,19 +52,20 @@ body {
 
 .single-mail-use-overlay {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 8px;
+    right: 8px;
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    min-height: 38px;
-    padding: 8px 12px;
+    gap: 5px;
+    min-height: 30px;
+    padding: 4px 8px;
     border: 1px solid #087cc1;
-    border-radius: 7px;
+    border-radius: 6px;
     background: white;
     color: #086da9;
     cursor: pointer;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 600;
 }
 
 .single-mail-use-overlay[hidden] {
@@ -100,9 +101,9 @@ body.single-mail-expanded-view {
     max-width: 1040px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 640px) {
     .single-mail-expanded-view .header {
-        padding-top: 62px;
+        padding-top: 50px;
     }
 }
 

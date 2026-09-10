@@ -38,7 +38,11 @@ Skripte eindeutige Dateinamen und globale Bindungen statt ES-Modulimporten.
 - `DashboardLaunchService.js` fokussiert vorhandene Tabs, begrenzt alle
   Thunderbird-Tab-/Fensteraufrufe und speichert nur inhaltsfreie Diagnosen.
 - `SingleMailWorkspaceService.js` vereinheitlicht Nachrichten-Toolbar,
-  Vollbild, Dashboard-Aktionen, Antwort und Chat je Nachricht/Modus.
+  Vollbild, Dashboard-Aktionen, Antwort und Chat je Nachricht/Modus. Der Dienst
+  merkt sich den Ausgangs-Tab für die kompakte Rückkehr, begrenzt Tab- und
+  Popup-Aufrufe und öffnet das Overlay nur, wenn dort weiterhin dieselbe
+  Nachricht angezeigt wird. Ein fehlender Ausgangs-Tab fällt sicher auf den
+  nächstgelegenen vorherigen Tab zurück.
 - `PdfArchiverIntegrationService.js` besitzt ausschließlich die versionierte
   Übergabe an die feste PDF-Archiver-ID; PDF-Daten bleiben im Begleit-Add-on.
 - Nachrichten-, Kontextmenü-, Vorschau-, Bulk- und Nach-oben-Komponenten besitzen
