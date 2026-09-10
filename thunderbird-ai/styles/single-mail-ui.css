@@ -50,12 +50,60 @@ body {
     outline-offset: 2px;
 }
 
+.single-mail-use-overlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 38px;
+    padding: 8px 12px;
+    border: 1px solid #087cc1;
+    border-radius: 7px;
+    background: white;
+    color: #086da9;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.single-mail-use-overlay[hidden] {
+    display: none;
+}
+
+.single-mail-use-overlay:hover:not(:disabled) {
+    background: #e9f6fd;
+    box-shadow: 0 3px 9px rgba(8, 124, 193, 0.18);
+}
+
+.single-mail-use-overlay:focus-visible {
+    outline: 3px solid #4c9ed9;
+    outline-offset: 2px;
+}
+
+.single-mail-use-overlay:disabled {
+    cursor: default;
+    opacity: 0.72;
+}
+
+.single-mail-use-overlay.saved {
+    border-color: #2e7d32;
+    background: #edf8ee;
+    color: #256629;
+}
+
 body.single-mail-expanded-view {
     min-width: 0;
 }
 
 .single-mail-expanded-view .container {
     max-width: 1040px;
+}
+
+@media (max-width: 900px) {
+    .single-mail-expanded-view .header {
+        padding-top: 62px;
+    }
 }
 
 .header h1 {

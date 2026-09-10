@@ -3,7 +3,7 @@
 > [English version](windows-installer-testing.md)
 
 Das primäre Windows-Artefakt heißt
-`Thunderbird-AI-Setup-3.5.6-win-x64.exe`. Es installiert das Add-on nur für den
+`Thunderbird-AI-Setup-3.8.1-win-x64.exe`. Es installiert das Add-on nur für den
 aktuellen Benutzer und benötigt keine Administratorrechte.
 
 ## Automatisierter Isolationstest
@@ -39,7 +39,7 @@ beendet oder gestartet.
 6. In den Einstellungen OpenAI, Claude, Mistral, DeepSeek und den individuellen
    Endpunkt auswählen; OpenAI muss der Standard sein. Mit einem verfügbaren
    Testschlüssel eine E-Mail öffnen, die Zusammenfassung ausführen und den
-   API-Test aufrufen. Im Einzelmail-Popup muss **Version 3.5.6** stehen und die
+   API-Test aufrufen. Im Einzelmail-Popup muss **Version 3.8.1** stehen und die
    Oberfläche muss deutsch sein.
 7. In den Einstellungen **English** wählen und speichern. Popup, Antworteditor und Hilfe müssen anschließend englisch erscheinen; nach einem Thunderbird-Neustart muss die Auswahl erhalten bleiben.
 8. Beide Auswahlen zur Öffnungsart ohne den globalen Speichern-Knopf auf **Tab**
@@ -47,8 +47,12 @@ beendet oder gestartet.
    das Update ohne vorherige Deinstallation funktioniert und beide Öffnungsarten
    sowie die Anbietereinstellungen erhalten bleiben.
 9. Das Dashboard vor der zweiten Setup-Ausführung in einem eigenen Tab geöffnet lassen. Beim ersten Dashboard-Start nach dem Update müssen alle alten AI-Dashboard-Tabs geschlossen werden und genau ein frischer Dashboard-Tab entstehen. Normale Thunderbird-Tabs dürfen nicht geschlossen werden. Das globale Toolbar-Symbol danach erneut anklicken: Der frische Tab muss aktiviert werden; es darf kein zweiter Dashboard-Tab entstehen. Nach einigen Dashboard-Aktionen erneut klicken und prüfen, dass der Tab weiterhin fokussiert wird. Unter **Einstellungen → AI Assistant öffnen** müssen Dashboard und Einzelmail-Ansicht unabhängig zwischen Overlay und Tab wechseln. Unter **Support-Diagnose** müssen der letzte Start und die letzten inhaltsfreien Aktivitätsgrenzen nachvollziehbar und kopierbar sein.
-10. Über Windows **Installierte Apps** deinstallieren und nach einem
-   Thunderbird-Neustart prüfen, dass das Add-on entfernt wurde.
+10. Den Einzelmail-Assistenten in einem eigenen Tab öffnen und im Kopf der
+    erweiterten Ansicht **Kompaktes Overlay als Standard verwenden** ausführen.
+    Die Speicherbestätigung prüfen, den Tab schließen und kontrollieren, dass
+    der nächste Start über die Nachrichten-Symbolleiste das Overlay verwendet.
+11. Über Windows **Installierte Apps** deinstallieren und nach einem
+    Thunderbird-Neustart prüfen, dass das Add-on entfernt wurde.
 
 Der aktuelle Test-Build ist nicht Authenticode-signiert und kann deshalb eine
 SmartScreen-Warnung auslösen. Ein öffentlicher Release-Installer muss vor dem

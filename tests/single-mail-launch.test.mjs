@@ -105,3 +105,87 @@ test('single-mail UI exposes a localized fullscreen control backed by the shared
     assert.match(page, /SingleMailWorkspaceService\.js/u);
     assert.match(manager, /SingleMailWorkspaceService\.openExpanded/u);
 });
+
+test('expanded single-mail view prominently restores the persistent overlay default', async () => {
+    class TestElement {
+        constructor() {
+            this.attributes = {};
+            this.disabled = false;
+            this.hidden = false;
+            this.listeners = new Map();
+            this.textContent = '';
+            this.title = '';
+            this.classList = { add: value => { this.addedClass = value; } };
+        }
+
+        addEventListener(name, listener) {
+            this.listeners.set(name, listener);
+        }
+
+        removeEventListener(name) {
+            this.listeners.delete(name);
+        }
+
+        setAttribute(name, value) {
+            this.attributes[name] = String(value);
+        }
+    }
+
+    const elements = new Map([
+        ['emailSubject', new TestElement()],
+        ['addonVersion', new TestElement()],
+        ['singleMailExpandView', new TestElement()],
+        ['singleMailUseOverlay', new TestElement()],
+        ['singleMailUseOverlayLabel', new TestElement()]
+    ]);
+    const requests = [];
+    const context = createContext({
+        CONFIG: {
+            ACTIONS: { SET_LAUNCH_MODE: 'setLaunchMode' },
+            ADDON_NAME: 'AI Mail Assistant',
+            ADDON_VERSION: '3.8.1'
+        },
+        I18n: {
+            t: (key, replacements = {}) => replacements.version || key
+        },
+        document: {
+            querySelector: () => new TestElement(),
+            getElementById: id => elements.get(id),
+            title: ''
+        },
+        location: { search: '?view=expanded' }
+    });
+    loadScript(context, 'thunderbird-ai/components/single-mail/HeaderComponent.js');
+    const manager = {
+        sendToBackground: async (action, data) => {
+            requests.push({ action, data });
+            return { success: true };
+        },
+        showError: () => assert.fail('Success must not show an error.')
+    };
+    const header = new context.HeaderComponent(manager);
+
+    header.initialize();
+    assert.equal(elements.get('singleMailExpandView').hidden, true);
+    assert.equal(elements.get('singleMailUseOverlay').hidden, false);
+
+    await header.setOverlayDefault();
+
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].action, 'setLaunchMode');
+    assert.equal(requests[0].data.setting, 'singleMailOpenMode');
+    assert.equal(requests[0].data.mode, 'overlay');
+    assert.equal(elements.get('singleMailUseOverlay').disabled, true);
+    assert.equal(elements.get('singleMailUseOverlay').addedClass, 'saved');
+    assert.equal(
+        elements.get('singleMailUseOverlayLabel').textContent,
+        'singleMailUseOverlaySaved'
+    );
+});
+
+test('overlay remains the normalized default when no single-mail preference exists', async () => {
+    const { context } = loadServices();
+
+    assert.equal(context.LaunchModeService.normalizeMode(undefined), 'overlay');
+    assert.equal(await context.LaunchModeService.getMode('singleMailOpenMode'), 'overlay');
+});

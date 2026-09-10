@@ -59,6 +59,15 @@ Each preview links to the original-resolution image.
   </tr>
 </table>
 
+## Release 3.8.1 scope
+
+Release 3.8.1 keeps the compact overlay as the default single-message assistant
+experience and makes that default easier to restore. When the assistant is open
+in its own Thunderbird tab, a prominent **Use compact overlay by default**
+action now saves the overlay preference immediately and confirms the change in
+place. The next message-toolbar launch then opens the compact overlay, without a
+trip back to Settings.
+
 ## Release 3.8.0 scope
 
 Release 3.8.0 keeps settings actions within reach on the expanded configuration
