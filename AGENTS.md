@@ -38,7 +38,42 @@ Resolve the current `main` branch to one commit SHA first. Read every required r
 
 A cloud or otherwise isolated agent MAY create a temporary read-only or shallow clone outside this repository, preferably in the environment's temporary area, solely to read the rules. It MUST NOT add the rules repository as a submodule, vendor it into this repository, or modify the canonical rules repository unless explicitly requested.
 
-### 3. Load only the applicable rules
+### 3. Recover from blocked access methods before failing closed
+
+Failure of one access method does not by itself mean the canonical ruleset is inaccessible.
+
+When no trustworthy local copy exists:
+
+1. Prefer read-only access to the canonical GitHub repository.
+2. If Git smart-HTTP operations such as `git ls-remote` or `git clone` are blocked, try read-only alternatives before declaring the rules inaccessible:
+   - use `https://api.github.com` to resolve the current `main` commit SHA;
+   - use `https://raw.githubusercontent.com` to read `ai-agent-dev-rules.md` and every required rule page from that exact SHA.
+3. Do not request broader network permissions or write-capable HTTP methods merely to make Git transport work when read-only API/raw access is sufficient.
+
+If the rules still cannot be accessed, stop before side effects and tell the user:
+
+- which source and access methods were attempted;
+- the exact failure;
+- which agent platform or environment is running, when known;
+- the smallest security or configuration change that would provide read-only access.
+
+For Codex Cloud, recommend enabling **Agent Internet Access** for the repository environment with only these additional allowed domains:
+
+`github.com, api.github.com, raw.githubusercontent.com`
+
+When HTTP-method restrictions are available, recommend only:
+
+`GET, HEAD, OPTIONS`
+
+Also tell the user to save the environment, reset its setup cache, and start a new task so the updated environment policy is applied.
+
+For a local agent, recommend pointing the agent to an existing trustworthy local clone, or creating/updating that clone between agent runs.
+
+For another isolated cloud agent, recommend granting read-only HTTPS access to the canonical GitHub sources or mounting/providing a trustworthy local copy.
+
+Never recommend unrestricted internet access when narrower read-only access is sufficient.
+
+### 4. Load only the applicable rules
 
 1. Read `ai-agent-dev-rules.md` from the selected local or remote-backed revision.
 2. Treat it as the root rules router.
