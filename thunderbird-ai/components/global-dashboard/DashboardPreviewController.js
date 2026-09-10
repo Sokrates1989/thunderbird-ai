@@ -1,6 +1,8 @@
-/** Owns session-local visibility and viewport size for dashboard message previews. */
+/** Owns visibility and independently sized dashboard message previews. */
 const DashboardPreviewController = class {
     static LINE_STEP = 4;
+
+    static MIN_LINES = 1;
 
     static MAX_LINES = 20;
 
@@ -8,6 +10,7 @@ const DashboardPreviewController = class {
         this.getBaselineLines = options.getBaselineLines;
         this.isGlobalEnabled = options.isGlobalEnabled;
         this.loadPreview = options.loadPreview;
+        this.persistDefaultLines = options.persistDefaultLines;
         this.render = options.render;
         this.setBusy = options.setBusy;
         this.setStatus = options.setStatus;
@@ -23,26 +26,36 @@ const DashboardPreviewController = class {
         }
     }
 
+    /** Apply an explicitly entered global height to every currently open preview. */
+    applyDefaultToOpenPreviews() {
+        this.lineCounts.clear();
+    }
+
     /** Provide the complete render state for one message without persisting mailbox data. */
     optionsFor(message) {
         const baseline = this.normalizeLines(this.getBaselineLines());
-        const storedLines = this.lineCounts.get(message.id) || baseline;
-        const lineCount = Math.max(
-            baseline,
-            Math.min(storedLines, DashboardPreviewController.MAX_LINES)
-        );
         const visible = !this.hiddenMessageIds.has(message.id)
             && (this.isGlobalEnabled() || this.expandedMessageIds.has(message.id));
+        const storedLines = this.lineCounts.get(message.id);
+        const lineCount = storedLines === undefined
+            ? baseline
+            : this.normalizeLines(storedLines);
+        if (visible && storedLines === undefined) {
+            this.lineCounts.set(message.id, lineCount);
+        }
         return {
             previewVisible: visible,
             previewLineCount: lineCount,
-            previewBaselineLineCount: baseline,
+            previewPreviousLineCount: Math.max(
+                DashboardPreviewController.MIN_LINES,
+                lineCount - DashboardPreviewController.LINE_STEP
+            ),
             previewNextLineCount: Math.min(
                 DashboardPreviewController.MAX_LINES,
                 lineCount + DashboardPreviewController.LINE_STEP
             ),
             previewCanExpand: visible && lineCount < DashboardPreviewController.MAX_LINES,
-            previewCanReset: visible && lineCount > baseline
+            previewCanShrink: visible && lineCount > DashboardPreviewController.MIN_LINES
         };
     }
 
@@ -68,27 +81,31 @@ const DashboardPreviewController = class {
         }
     }
 
-    /** Increase one preview by the bounded four-line step. */
-    expand(message) {
+    /** Increase one preview and persist that height as the default for future previews. */
+    async expand(message) {
         const options = this.optionsFor(message);
         if (!options.previewCanExpand) {
             return;
         }
-        this.lineCounts.set(
-            message.id,
-            Math.min(
-                DashboardPreviewController.MAX_LINES,
-                options.previewLineCount + DashboardPreviewController.LINE_STEP
-            )
-        );
-        this.render();
+        await this.resize(message, options.previewNextLineCount);
     }
 
-    /** Return one enlarged preview directly to its configured initial height. */
-    reset(message) {
-        if (this.lineCounts.delete(message.id)) {
-            this.render();
+    /** Reduce one preview and persist that height as the default for future previews. */
+    async shrink(message) {
+        const options = this.optionsFor(message);
+        if (!options.previewCanShrink) {
+            return;
         }
+        await this.resize(message, options.previewPreviousLineCount);
+    }
+
+    /** Apply one bounded per-message height while updating the durable global default. */
+    async resize(message, lineCount) {
+        const normalizedLines = this.normalizeLines(lineCount);
+        this.lineCounts.set(message.id, normalizedLines);
+        const persistence = this.persistDefaultLines(normalizedLines);
+        this.render();
+        await persistence;
     }
 
     /** Remove one preview and discard its transient size override. */
@@ -110,7 +127,10 @@ const DashboardPreviewController = class {
     normalizeLines(value) {
         const lines = Number.parseInt(value, 10);
         return Number.isFinite(lines)
-            ? Math.min(DashboardPreviewController.MAX_LINES, Math.max(1, lines))
+            ? Math.min(
+                DashboardPreviewController.MAX_LINES,
+                Math.max(DashboardPreviewController.MIN_LINES, lines)
+            )
             : 3;
     }
 };

@@ -11,7 +11,7 @@ const DashboardMessageComponent = class {
         this.onCorrectScores = options.onCorrectScores;
         this.onShowPreview = options.onShowPreview;
         this.onExpandPreview = options.onExpandPreview;
-        this.onResetPreview = options.onResetPreview;
+        this.onShrinkPreview = options.onShrinkPreview;
         this.onHidePreview = options.onHidePreview;
         this.onOpenInTab = options.onOpenInTab;
         this.onMarkRead = options.onMarkRead;
@@ -160,15 +160,15 @@ const DashboardMessageComponent = class {
         );
         const controls = document.createElement('div');
         controls.className = 'dashboard-preview-controls';
-        if (options.previewCanReset) {
+        if (options.previewCanShrink) {
             controls.appendChild(this.previewControl(
                 '−',
                 I18n.t('dashboardPreviewReset', {
                     subject,
-                    lines: options.previewBaselineLineCount
+                    lines: options.previewPreviousLineCount
                 }),
-                () => this.onResetPreview(message),
-                'reset'
+                () => this.onShrinkPreview(message),
+                'shrink'
             ));
         }
         if (options.previewCanExpand && !message.previewFailed) {

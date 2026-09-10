@@ -46,8 +46,12 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     Leseoptionen und E-Mail-Aktionen. Direkte Titelgruppen und Untermenüs müssen
     per Hover, Klick und Tastatur benutzbar bleiben.
 12. Bei global ausgeschalteter Vorschau nur eine Mail laden. `+` ergänzt vier
-    sichtbare Zeilen bis 20, `−` setzt zurück, das Vollbildsymbol öffnet die
-    Originalmail im Tab und `×` entfernt nur diese Vorschau.
+    sichtbare Zeilen bis 20, `−` entfernt vier bis zur Untergrenze von einer
+    Zeile. Eine zweite Vorschau öffnen und prüfen, dass sie mit der zuletzt
+    gewählten Höhe startet, ohne die erste Vorschau zu verändern. Thunderbird
+    neu starten und prüfen, dass diese Vorgabe gespeichert bleibt. Das
+    Vollbildsymbol öffnet die Originalmail im Tab und `×` entfernt nur diese
+    Vorschau.
 13. Eine und mehrere Nachrichten als gelesen markieren. Erfolge verschwinden
     aus der ungelesenen Standardansicht; Einzelfehler dürfen andere Erfolge nicht
     zurücknehmen. Bei einbezogenen gelesenen Nachrichten eine gelesene Zeile als
@@ -184,7 +188,7 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     Erneut ausführen und prüfen, dass Thunderbird und Arbeitsbereich ohne erneutes
     Öffnen zum ungelesenen Status zurückkehren.
 
-Das Einzelmail-Popup muss Version 3.6.1 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.7.0 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status als Standard-Kandidatenfilter; **Gelesene Nachrichten
 einbeziehen** erweitert den Bestand nur für die aktuelle Thunderbird-Sitzung.
 Analysen außerhalb des Dashboards erzeugen nicht automatisch einen

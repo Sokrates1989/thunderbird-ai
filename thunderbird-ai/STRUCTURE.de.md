@@ -42,7 +42,9 @@ Skripte eindeutige Dateinamen und globale Bindungen statt ES-Modulimporten.
 - `PdfArchiverIntegrationService.js` besitzt ausschließlich die versionierte
   Übergabe an die feste PDF-Archiver-ID; PDF-Daten bleiben im Begleit-Add-on.
 - Nachrichten-, Kontextmenü-, Vorschau-, Bulk- und Nach-oben-Komponenten besitzen
-  jeweils nur ihre UI-Grenze und teilen eine einzige Aktionsbeschreibung.
+  jeweils nur ihre UI-Grenze und teilen eine einzige Aktionsbeschreibung. Die
+  Vorschau-Komponente behält unabhängige Höhen geöffneter Vorschauen bei und
+  speichert jede Änderung über `+` oder `−` als Vorgabe für die nächste Vorschau.
 - `SafeDom.js` baut dynamische Einstellungen und Einzelmail-UI aus ausdrücklichen
   DOM-Knoten auf; übersetzte Beschriftungen und Laufzeit-Metadaten werden als
   reiner Text statt als HTML eingefügt. `MarkdownRenderer.js`,

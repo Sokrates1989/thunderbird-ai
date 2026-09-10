@@ -45,8 +45,11 @@ Thunderbird behavior that mocks cannot prove.
     reading options, and email actions. Switch between direct titled groups and
     grouped submenus; hover, click, and keyboard navigation must remain usable.
 12. With global preview disabled, load only one message preview. `+` adds four
-    visible lines up to 20, `−` resets, the expand icon opens the original mail
-    in a tab, and `×` removes only that preview.
+    visible lines up to 20 and `−` removes four down to one. Open a second
+    preview and confirm it starts at the last selected height without resizing
+    the first one. Restart Thunderbird and confirm that default remains saved.
+    The expand icon opens the original mail in a tab, and `×` removes only that
+    preview.
 13. Mark one and several messages read. Successful messages disappear from the
     default unread view while partial failures are reported without rolling back
     success. With read messages included, mark one read row unread and confirm it
@@ -171,7 +174,7 @@ Thunderbird behavior that mocks cannot prove.
     amber **Mark as unread**. Activate it again and confirm that Thunderbird and
     the workspace both return to the unread state without reopening the window.
 
-The single-message popup must show version 3.6.1. The dashboard uses unread
+The single-message popup must show version 3.7.0. The dashboard uses unread
 status as its default candidate filter; **Include read messages** broadens that
 scope only for the current Thunderbird session. Analysis performed outside the
 dashboard does not automatically create a dashboard score record.

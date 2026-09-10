@@ -113,6 +113,7 @@ const GlobalDashboardManager = class {
             getBaselineLines: () => this.previewLineCount,
             isGlobalEnabled: () => this.previewEnabled,
             loadPreview: message => GlobalMailService.loadPreview(message),
+            persistDefaultLines: lineCount => this.persistPreviewLineCount(lineCount),
             render: () => this.render(this.accounts),
             setBusy: (busy, message) => this.setBusy(busy, message),
             setStatus: (message, type) => this.setStatus(message, type)
@@ -145,8 +146,14 @@ const GlobalDashboardManager = class {
                 this.previewController.show(message)
                     .catch(error => this.showUnexpectedError(error));
             },
-            onExpandPreview: message => this.previewController.expand(message),
-            onResetPreview: message => this.previewController.reset(message),
+            onExpandPreview: message => {
+                this.previewController.expand(message)
+                    .catch(error => this.showUnexpectedError(error));
+            },
+            onShrinkPreview: message => {
+                this.previewController.shrink(message)
+                    .catch(error => this.showUnexpectedError(error));
+            },
             onHidePreview: message => this.previewController.hide(message),
             onOpenInTab: message => {
                 this.openMessageInTab(message)
@@ -352,7 +359,15 @@ const GlobalDashboardManager = class {
         );
         this.elements.previewLines.value = String(this.previewLineCount);
         await this.savePreferences();
+        this.previewController.applyDefaultToOpenPreviews();
         this.render(this.accounts);
+    }
+
+    /** Save a row-level preview resize as the default height for future previews. */
+    async persistPreviewLineCount(lineCount) {
+        this.previewLineCount = DashboardViewPreferences.normalizePreviewLines(lineCount);
+        this.elements.previewLines.value = String(this.previewLineCount);
+        await this.savePreferences();
     }
 
     /** Persist the operator-selected direct or submenu right-click layout. */

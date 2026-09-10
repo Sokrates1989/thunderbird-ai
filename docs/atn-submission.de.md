@@ -3,7 +3,7 @@
 > [English version](atn-submission.md)
 
 Dieses Dokument enthält direkt verwendbare Listing- und Reviewer-Informationen
-für die aktuelle Einreichung von AI Mail Assistant for Thunderbird 3.6.1. Bei
+für die aktuelle Einreichung von AI Mail Assistant for Thunderbird 3.7.0. Bei
 Änderungen an Anbietern oder Datenkategorien muss es mit
 `PRIVACY.de.md` synchron bleiben.
 
@@ -17,7 +17,7 @@ Offizielle Referenzen:
 
 - Name: `AI Mail Assistant for Thunderbird`
 - Erweiterungs-ID: `thunderbird-ai@felicitas-wisdom.com`
-- Version: `3.6.1`
+- Version: `3.7.0`
 - Minimales Thunderbird: `128.0`
 - Empfohlene Hauptkategorie: `Message and News Reading`
 - Empfohlene Nebenkategorie, falls verfügbar: `Message Composition`
@@ -119,15 +119,15 @@ Wegwerf-Thunderbird-Profil auf jeder beworbenen Plattform erfolgen.
    hochgeladen werden.
 3. Im Thunderbird-Add-ons-Entwicklerbereich **Meine Add-ons → AI Mail Assistant
    → Neue Version hochladen** öffnen und
-   `artifacts/thunderbird-ai-3.6.1.xpi` hochladen.
-4. Die unten vorbereiteten Versionshinweise für 3.6.1 eintragen. Vorhandene
+   `artifacts/thunderbird-ai-3.7.0.xpi` hochladen.
+4. Die unten vorbereiteten Versionshinweise für 3.7.0 eintragen. Vorhandene
    Listing-Identität, Kategorien, Lizenz, Screenshots und Datenschutzerklärung
    müssen nur geändert werden, wenn sich das jeweilige Verhalten oder die
    Offenlegung geändert hat.
 5. Screenshots mit synthetischen Daten prüfen und nur veraltete Ansichten
    ersetzen. Keine Kontoadressen, Nachrichteninhalte oder Zugangsdaten zeigen.
 6. Die Quellcode-Frage mit **Ja** beantworten, weil der Build zwei Quellbäume im
-   XPI-Stamm zusammenführt. `artifacts/thunderbird-ai-3.6.1-atn-source.zip` und
+   XPI-Stamm zusammenführt. `artifacts/thunderbird-ai-3.7.0-atn-source.zip` und
    die Build-Anleitung aus `ATN_SOURCE_BUILD.de.md` anhängen; der Quellcode
    bleibt lesbar und enthält keinen minifizierten oder gebündelten Drittcode.
 7. Die folgenden Funktionstests und einen temporären, niedrig limitierten
@@ -141,15 +141,13 @@ Wegwerf-Thunderbird-Profil auf jeder beworbenen Plattform erfolgen.
    installieren, Update-Identität und Kernaktionen prüfen und den temporären
    Schlüssel widerrufen.
 
-## Versionshinweise 3.6.1
+## Versionshinweise 3.7.0
 
-Behebt individuelle HTTP-Endpunkte auf einem anderen Gerät in einem
-vertrauenswürdigen privaten Netzwerk. Unverschlüsseltes HTTP bleibt auf
-`localhost` oder Adressliterale aus Loopback-Bereichen, privaten IPv4-Netzen nach
-RFC 1918 und dem IPv6-Unique-Local-Bereich beschränkt; öffentliche Adressen,
-andere DNS-Hostnamen sowie Link-Local- und Shared-Address-Bereiche werden vor der
-exakten Host-Berechtigungsanfrage abgewiesen. Da HTTP weder E-Mail-Daten noch
-API-Zugangsdaten verschlüsselt, bleibt HTTPS die bevorzugte Variante.
+Die Höhe einer Dashboard-Vorschau folgt jetzt der letzten Anpassung über `+`
+oder `−`. Jede Anpassung ändert die ausgewählte Vorschau innerhalb des Bereichs
+von 1–20 Zeilen um vier Zeilen und speichert diese Höhe als Vorgabe für die
+nächste Vorschau sowie künftige Thunderbird-Sitzungen. Andere bereits geöffnete
+Vorschauen behalten ihre eigene Höhe.
 
 ## Berechtigungserklärungen
 
@@ -201,8 +199,8 @@ aus, damit sie nicht mit den 56 ATN-Funden verwechselt wird.
 
 ## Reviewer-Hinweise
 
-1. `artifacts/thunderbird-ai-3.6.1.xpi` als Update der gelisteten Erweiterung hochladen.
-2. `artifacts/thunderbird-ai-3.6.1-atn-source.zip` als Quellcode anhängen.
+1. `artifacts/thunderbird-ai-3.7.0.xpi` als Update der gelisteten Erweiterung hochladen.
+2. `artifacts/thunderbird-ai-3.7.0-atn-source.zip` als Quellcode anhängen.
 3. Das Quellarchiv enthält `ATN_SOURCE_BUILD.de.md` mit einem netzwerkfreien
    XPI-Build.
 4. Thunderbird 128 oder neuer mit synthetischem Konto und Nachrichten verwenden.

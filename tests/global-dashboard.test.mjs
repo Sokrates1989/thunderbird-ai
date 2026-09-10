@@ -810,6 +810,7 @@ test('dashboard layout persists locally while narrowing filters remain session-o
         local: {
             dashboardViewMode: 'combined',
             dashboardDisplayOptionsExpanded: false,
+            dashboardPreviewLines: 7,
             dashboardContextMenuStyle: 'submenus',
             dashboardRiskMinimum: 99,
             dashboardSenderFilter: ['legacy@example.test'],
@@ -828,6 +829,7 @@ test('dashboard layout persists locally while narrowing filters remain session-o
     assert.equal(loaded.displayOptionsExpanded, false);
     assert.equal(loaded.dateFrom, '2026-08-01');
     assert.equal(loaded.includeRead, true);
+    assert.equal(loaded.previewLineCount, 7);
     assert.deepEqual([...loaded.selectedSenderKeys], ['session@example.test']);
     assert.equal(loaded.riskMinimum, 63);
     assert.equal(loaded.contextMenuStyle, 'submenus');
@@ -836,12 +838,14 @@ test('dashboard layout persists locally while narrowing filters remain session-o
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_INCLUDE_READ], undefined);
     loaded.viewMode = 'account';
     loaded.displayOptionsExpanded = true;
+    loaded.previewLineCount = 11;
     loaded.riskMinimum = 71;
     loaded.contextMenuStyle = 'headings';
     await preferences.save(loaded);
 
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_VIEW_MODE], 'account');
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_DISPLAY_OPTIONS_EXPANDED], true);
+    assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_PREVIEW_LINES], 11);
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_CONTEXT_MENU_STYLE], 'headings');
     assert.equal(storage[context.CONFIG.STORAGE_KEYS.DASHBOARD_RISK_MINIMUM], undefined);
     assert.equal(sessionStorage[context.CONFIG.STORAGE_KEYS.DASHBOARD_RISK_MINIMUM], 71);
@@ -853,6 +857,7 @@ test('dashboard layout persists locally while narrowing filters remain session-o
     const afterRestart = await restarted.preferences.load();
     assert.equal(afterRestart.viewMode, 'account');
     assert.equal(afterRestart.displayOptionsExpanded, true);
+    assert.equal(afterRestart.previewLineCount, 11);
     assert.equal(afterRestart.dateFrom, '');
     assert.equal(afterRestart.includeRead, false);
     assert.equal(afterRestart.selectedSenderKeys, null);
@@ -873,7 +878,7 @@ test('message actions swap first-time analysis for correction and context-only r
         onCorrectScores: () => calls.push('correct'),
         onShowPreview: () => calls.push('preview'),
         onExpandPreview: () => calls.push('expand-preview'),
-        onResetPreview: () => calls.push('reset-preview'),
+        onShrinkPreview: () => calls.push('shrink-preview'),
         onHidePreview: () => calls.push('hide-preview'),
         onOpenInTab: () => calls.push('open'),
         onMarkRead: () => calls.push('read'),
@@ -1016,6 +1021,27 @@ test('dashboard view panel defaults open and persists only explicit toggle chang
 
     assert.equal(manager.displayOptionsExpanded, false);
     assert.equal(saveCount, 1);
+});
+
+test('row preview resizing updates the durable dashboard line preference', async () => {
+    const DashboardManager = loadDashboardManager({}, undefined, {
+        DashboardViewPreferences: {
+            normalizePreviewLines: value => Math.min(20, Math.max(1, Number(value)))
+        }
+    });
+    const manager = Object.create(DashboardManager.prototype);
+    const savedLineCounts = [];
+    manager.elements = { previewLines: { value: '3' } };
+    manager.previewLineCount = 3;
+    manager.savePreferences = async () => {
+        savedLineCounts.push(manager.previewLineCount);
+    };
+
+    await manager.persistPreviewLineCount(11);
+
+    assert.equal(manager.previewLineCount, 11);
+    assert.equal(manager.elements.previewLines.value, '11');
+    assert.deepEqual(savedLineCounts, [11]);
 });
 
 test('dashboard counts active filter groups and resets every narrowing control together', async () => {
@@ -1658,11 +1684,13 @@ test('one dashboard preview loads only its targeted message', async () => {
     assert.equal(target.previewFailed, false);
 });
 
-test('one preview grows by four lines, resets, closes, and reopens without another load', async () => {
+test('preview resize persists as the next default without resizing another open preview', async () => {
     const calls = [];
     const PreviewController = loadPreviewController();
     const target = message(7, 7);
+    const nextTarget = message(8, 8);
     const busyStates = [];
+    const savedDefaultLines = [];
     const statuses = [];
     let baselineLines = 3;
     let globalEnabled = false;
@@ -1675,6 +1703,10 @@ test('one preview grows by four lines, resets, closes, and reopens without anoth
             mail.preview = 'Local body';
             return true;
         },
+        persistDefaultLines: async lineCount => {
+            savedDefaultLines.push(lineCount);
+            baselineLines = lineCount;
+        },
         render: () => { renderCount += 1; },
         setBusy: busy => busyStates.push(busy),
         setStatus: (text, type) => statuses.push([text, type])
@@ -1683,43 +1715,55 @@ test('one preview grows by four lines, resets, closes, and reopens without anoth
     assert.deepEqual({ ...controller.optionsFor(target) }, {
         previewVisible: false,
         previewLineCount: 3,
-        previewBaselineLineCount: 3,
+        previewPreviousLineCount: 1,
         previewNextLineCount: 7,
         previewCanExpand: false,
-        previewCanReset: false
+        previewCanShrink: false
     });
     await controller.show(target);
     await controller.show(target);
-    controller.expand(target);
-    controller.expand(target);
+    await controller.expand(target);
+    await controller.expand(target);
 
     assert.equal(controller.optionsFor(target).previewLineCount, 11);
-    assert.equal(controller.optionsFor(target).previewCanReset, true);
-    controller.reset(target);
-    assert.equal(controller.optionsFor(target).previewLineCount, 3);
-    assert.equal(controller.optionsFor(target).previewCanReset, false);
+    assert.equal(controller.optionsFor(target).previewCanShrink, true);
+    await controller.show(nextTarget);
+    assert.equal(controller.optionsFor(nextTarget).previewLineCount, 11);
+    await controller.shrink(target);
+    assert.equal(controller.optionsFor(target).previewLineCount, 7);
+    assert.equal(controller.optionsFor(nextTarget).previewLineCount, 11);
+    await controller.shrink(target);
+    await controller.shrink(target);
+    await controller.shrink(target);
+    assert.equal(controller.optionsFor(target).previewLineCount, 1);
+    assert.equal(controller.optionsFor(target).previewCanShrink, false);
+    assert.deepEqual(savedDefaultLines, [7, 11, 7, 3, 1]);
+
+    baselineLines = 5;
+    controller.applyDefaultToOpenPreviews();
+    assert.equal(controller.optionsFor(target).previewLineCount, 5);
+    assert.equal(controller.optionsFor(nextTarget).previewLineCount, 5);
 
     for (let index = 0; index < 20; index += 1) {
-        controller.expand(target);
+        await controller.expand(target);
     }
     assert.equal(controller.optionsFor(target).previewLineCount, 20);
     assert.equal(controller.optionsFor(target).previewCanExpand, false);
     controller.hide(target);
     assert.equal(controller.optionsFor(target).previewVisible, false);
-    assert.equal(controller.optionsFor(target).previewLineCount, 3);
+    assert.equal(controller.optionsFor(target).previewLineCount, 20);
 
     await controller.show(target);
-    assert.deepEqual(calls, [7]);
+    assert.deepEqual(calls, [7, 8]);
     controller.hide(target);
     globalEnabled = true;
     controller.setGlobalEnabled(true);
     assert.equal(controller.optionsFor(target).previewVisible, true);
-    baselineLines = 5;
-    assert.equal(controller.optionsFor(target).previewLineCount, 5);
+    assert.equal(controller.optionsFor(target).previewLineCount, 20);
 
     assert.ok(renderCount >= 8);
-    assert.deepEqual(busyStates, [true, false, true, false]);
-    assert.equal(statuses.length, 2);
+    assert.deepEqual(busyStates, [true, false, true, false, true, false]);
+    assert.equal(statuses.length, 3);
     assert.deepEqual(statuses[0], ['dashboardPreviewOneLoaded:{}', 'success']);
 });
 

@@ -59,6 +59,14 @@ Each preview links to the original-resolution image.
   </tr>
 </table>
 
+## Release 3.7.0 scope
+
+Release 3.7.0 makes the dashboard preview `+` and `−` controls remember the
+most recently selected height. Each control changes the targeted preview by
+four lines within the 1–20-line range and saves that height as the default for
+the next preview, including after Thunderbird restarts. Previews that are
+already open keep their independent heights.
+
 ## Release 3.6.1 scope
 
 Release 3.6.1 fixes custom HTTP endpoints hosted on another machine in a trusted
@@ -128,8 +136,9 @@ the complete unread source snapshot, such as `Shown: 4 of 15`.
 - Three clearly separated action groups: AI actions, reading options, and email
   actions. Available operations include preview, open in tab, mark read, PDF
   export, archive, and delete.
-- Expandable previews in four-line increments up to 20 lines, reset, close, and
-  open-original controls.
+- Independently resizable previews with four-line `+`/`−` steps within 1–20
+  lines; the last selected height becomes the durable default for the next
+  preview. Close and open-original controls remain available.
 - Equivalent right-click context actions with direct titled groups or optional
   grouped submenus.
 - Independent overlay/tab preferences for the global dashboard and
