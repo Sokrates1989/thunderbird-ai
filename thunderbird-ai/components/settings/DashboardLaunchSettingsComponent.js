@@ -76,7 +76,9 @@ const DashboardLaunchSettingsComponent = class {
             if (!result?.success) {
                 throw new Error('LAUNCH_MODE_SAVE_FAILED');
             }
-            this.settingsManager.notifySettingChanged(setting, selectedMode);
+            this.settingsManager.notifySettingChanged(setting, selectedMode, {
+                persisted: true
+            });
             this.settingsManager.showStatus(I18n.t('settingsSaved'), 'success');
             return true;
         } catch (error) {

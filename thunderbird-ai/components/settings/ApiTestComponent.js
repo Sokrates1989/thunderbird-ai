@@ -74,7 +74,11 @@ const ApiTestComponent = class {
         );
         this.elements.testResult = SafeDom.create('div', {
             id: 'testResult',
-            className: 'test-result'
+            className: 'test-result',
+            attributes: {
+                role: 'status',
+                'aria-live': 'polite'
+            }
         });
         section.append(this.elements.testApiBtn, this.elements.testResult);
         this.container.replaceChildren(heading, section);
@@ -98,8 +102,8 @@ const ApiTestComponent = class {
     /**
      * Test API connection
      * 
-     * Tests the visible provider configuration without saving it first.
-     * Shows loading state and provides feedback on success or failure.
+     * Tests the visible provider configuration and saves it only after a successful test.
+     * Shows loading state and provides feedback for both connection and persistence.
      * 
      * @async
      * @example
@@ -138,7 +142,20 @@ const ApiTestComponent = class {
             });
 
             if (result.success) {
-                this.showTestResult('✅ ' + result.message, 'success');
+                const settingsSaved = await this.settingsManager.components.actions.saveSettings({
+                    endpointPermissionGranted: true,
+                    showSuccessStatus: false,
+                    showFailureStatus: false
+                });
+                const messageKey = settingsSaved
+                    ? 'apiTestSettingsSaved'
+                    : 'apiTestSettingsSaveFailed';
+                this.showTestResult(
+                    `${settingsSaved ? '✅' : '❌'} ${I18n.t(messageKey, {
+                        message: result.message
+                    })}`,
+                    settingsSaved ? 'success' : 'error'
+                );
             } else {
                 this.showTestResult('❌ ' + result.message, 'error');
             }

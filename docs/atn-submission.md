@@ -3,7 +3,7 @@
 > [Deutsche Version](atn-submission.de.md)
 
 This document contains copy-ready listing and reviewer information for the
-current submission of AI Mail Assistant for Thunderbird 3.7.0. Keep the
+current submission of AI Mail Assistant for Thunderbird 3.8.0. Keep the
 listing synchronized with `PRIVACY.md` whenever providers or data categories
 change.
 
@@ -17,7 +17,7 @@ Official references:
 
 - Name: `AI Mail Assistant for Thunderbird`
 - Extension ID: `thunderbird-ai@felicitas-wisdom.com`
-- Version: `3.7.0`
+- Version: `3.8.0`
 - Minimum Thunderbird: `128.0`
 - Recommended primary category: `Message and News Reading`
 - Recommended secondary category, if available: `Message Composition`
@@ -133,15 +133,15 @@ advertised platform.
    macOS installers are outside the ATN submission and must not be uploaded.
 3. Sign in to the Thunderbird Add-ons Developer Hub, open **My Add-ons → AI Mail
    Assistant → Upload New Version**, and upload
-   `artifacts/thunderbird-ai-3.7.0.xpi`.
-4. Add the copy-ready 3.7.0 version notes below. Existing listing identity,
+   `artifacts/thunderbird-ai-3.8.0.xpi`.
+4. Add the copy-ready 3.8.0 version notes below. Existing listing identity,
    categories, license, screenshots, and privacy text need changes only when the
    corresponding product behavior or disclosure changed.
 5. Review the synthetic-data screenshots and replace only outdated views. Never
    expose account addresses, message content, or provider credentials.
 6. Answer **Yes** to the source-code question because the build flattens two
    source trees into the XPI. Attach
-   `artifacts/thunderbird-ai-3.7.0-atn-source.zip` and the build instructions
+   `artifacts/thunderbird-ai-3.8.0-atn-source.zip` and the build instructions
    from `ATN_SOURCE_BUILD.md`; the source itself remains readable and contains
    no minified or bundled third-party code.
 7. Put the functional test notes below and a temporary low-limit reviewer API
@@ -152,13 +152,14 @@ advertised platform.
 9. After approval, install once from the public listing in a clean profile,
    verify update identity and core actions, then revoke the temporary key.
 
-## Version 3.7.0 notes
+## Version 3.8.0 notes
 
-Dashboard preview height now follows the operator's last `+` or `−` adjustment.
-Each adjustment changes the selected preview by four lines within the 1–20-line
-range and persists that height as the default for the next preview and future
-Thunderbird sessions. Other previews that are already open retain their own
-height.
+Settings actions now remain accessible at both ends of the configuration page,
+and a floating Save action appears whenever the form has unsaved changes. A
+successful API connection test automatically saves the exact tested provider
+configuration and reports that persistence; failures leave the form visibly
+unsaved. Dashboard and single-message scroll-to-top actions use the same refined
+floating-button styling.
 
 ## Permission explanations
 
@@ -207,8 +208,8 @@ that warning separately so it cannot be confused with the 56 ATN findings.
 
 ## Reviewer notes
 
-1. Upload `artifacts/thunderbird-ai-3.7.0.xpi` as the listed extension update.
-2. Attach `artifacts/thunderbird-ai-3.7.0-atn-source.zip` as source code.
+1. Upload `artifacts/thunderbird-ai-3.8.0.xpi` as the listed extension update.
+2. Attach `artifacts/thunderbird-ai-3.8.0-atn-source.zip` as source code.
 3. The source archive contains `ATN_SOURCE_BUILD.md` with a no-network XPI build.
 4. Test on Thunderbird 128 or newer with a synthetic email account and synthetic
    messages only.

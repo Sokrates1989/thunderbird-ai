@@ -20,6 +20,127 @@ test('model selectors are compact self-contained cards instead of detached grid 
     assert.match(apiConfig, /'aria-describedby': 'modelRoutingHelp'/u);
 });
 
+test('settings keep save controls reachable and reuse the polished floating-action style', () => {
+    const settingsPage = source('thunderbird-ai/pages/settings.html');
+    const settingsStyles = source('thunderbird-ai/styles/settings.css');
+    const floatingStyles = source('thunderbird-ai/styles/scroll-to-top.css');
+
+    assert.match(settingsPage, /id="actions-section-top"/u);
+    assert.match(settingsPage, /id="actions-section"/u);
+    assert.match(settingsPage, /id="settingsSaveFloating"/u);
+    assert.match(settingsPage, /scroll-to-top\.css/u);
+    assert.match(settingsStyles, /\.settings-save-floating/u);
+    assert.match(floatingStyles, /\.floating-action\s*\{/u);
+    assert.match(floatingStyles, /\.scroll-to-top\s+\.floating-action-icon/u);
+});
+
+test('settings actions distinguish persisted values from unsaved edits', () => {
+    const context = createContext({ I18n: { t: key => key } });
+    loadScript(context, 'thunderbird-ai/components/settings/ActionsComponent.js');
+    const component = Object.create(context.ActionsComponent.prototype);
+    let currentSettings = { uiLanguage: 'en', aiProvider: 'openai' };
+    const standardSave = {
+        button: { disabled: false },
+        icon: { textContent: '' },
+        label: { textContent: '' }
+    };
+    const floatingSave = {
+        button: { disabled: false, hidden: true, dataset: {} },
+        icon: { textContent: '' },
+        label: { textContent: '' }
+    };
+    component.settingsManager = { collectAllSettings: () => currentSettings };
+    component.elements = {
+        saveControls: [standardSave],
+        resetButtons: [{ disabled: false }],
+        floatingSave
+    };
+    component.persistenceAvailable = true;
+    component.isSaving = false;
+    component.savedFeedbackVisible = false;
+    component.savedFeedbackTimer = null;
+
+    component.markSettingsPersisted(currentSettings);
+    assert.equal(component.isDirty, false);
+    assert.equal(standardSave.button.disabled, true);
+    assert.equal(floatingSave.button.hidden, true);
+
+    currentSettings = { uiLanguage: 'de', aiProvider: 'openai' };
+    component.handleSettingChanged('uiLanguage', 'de');
+    assert.equal(component.isDirty, true);
+    assert.equal(standardSave.button.disabled, false);
+    assert.equal(floatingSave.button.hidden, false);
+    assert.equal(floatingSave.button.dataset.state, 'dirty');
+});
+
+test('a successful API test automatically persists the tested settings', async () => {
+    const translations = {
+        apiTestButton: 'Test API connection',
+        apiTesting: 'Testing…',
+        apiTestFailed: 'Test failed.',
+        apiTestSettingsSaved: '{message} Settings were saved automatically.',
+        apiTestSettingsSaveFailed: '{message} The connection worked, but saving failed.'
+    };
+    const context = createContext({
+        CONFIG: { ACTIONS: { TEST_API: 'testApi' }, AI: { PROVIDERS: {
+            custom: { apiKeyRequired: false }
+        } } },
+        I18n: {
+            t: (key, values = {}) => (translations[key] || key).replace(
+                /\{(\w+)\}/gu,
+                (_match, name) => String(values[name] ?? '')
+            )
+        },
+        SafeDom: { setIconLabel() {} },
+        AIProviderService: { resolveModel: () => 'local-model' },
+        console: { error() {} }
+    });
+    loadScript(context, 'thunderbird-ai/components/settings/ApiTestComponent.js');
+    const component = Object.create(context.ApiTestComponent.prototype);
+    const saveOptions = [];
+    const requests = [];
+    component.settingsManager = {
+        components: {
+            apiConfig: {
+                getActiveProviderConfiguration: () => ({
+                    provider: 'custom',
+                    apiKey: '',
+                    taskModels: { bulkTriage: 'local-model' }
+                }),
+                ensureEndpointPermission: async () => true
+            },
+            actions: {
+                saveSettings: async options => {
+                    saveOptions.push(options);
+                    return true;
+                }
+            }
+        },
+        sendToBackground: async (action, data) => {
+            requests.push({ action, data });
+            return { success: true, message: 'Connection okay.' };
+        }
+    };
+    component.elements = {
+        testApiBtn: { disabled: false },
+        testResult: { textContent: '', className: '' }
+    };
+
+    await component.testApiConnection();
+
+    assert.equal(requests[0].action, 'testApi');
+    assert.deepEqual(JSON.parse(JSON.stringify(saveOptions)), [{
+        endpointPermissionGranted: true,
+        showSuccessStatus: false,
+        showFailureStatus: false
+    }]);
+    assert.equal(
+        component.elements.testResult.textContent,
+        '✅ Connection okay. Settings were saved automatically.'
+    );
+    assert.equal(component.elements.testResult.className, 'test-result success');
+});
+
 test('settings expose built-in and compatible custom AI provider controls', () => {
     const settingsPage = source('thunderbird-ai/pages/settings.html');
     const apiConfig = source('thunderbird-ai/components/settings/ApiConfigComponent.js');

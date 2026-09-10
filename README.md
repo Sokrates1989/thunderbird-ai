@@ -59,6 +59,16 @@ Each preview links to the original-resolution image.
   </tr>
 </table>
 
+## Release 3.8.0 scope
+
+Release 3.8.0 keeps settings actions within reach on the expanded configuration
+page. Matching action bars now appear above and below the form, unsaved changes
+surface a polished floating **Save settings** action, and a successful API
+connection test automatically saves the exact provider configuration that was
+tested. The floating action briefly confirms success, while a failed test or
+save leaves the form visibly unsaved. The dashboard and single-message
+scroll-to-top shortcuts now use the same refined floating-action styling.
+
 ## Release 3.7.0 scope
 
 Release 3.7.0 makes the dashboard preview `+` and `−` controls remember the

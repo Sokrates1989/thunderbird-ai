@@ -95,6 +95,7 @@ const SettingsManager = class {
             this.updateAllComponents(settings);
             this.settingsLoaded = true;
             this.components.actions.setPersistenceAvailable(true);
+            this.components.actions.markSettingsPersisted(this.collectAllSettings());
             this.components.statistics.start();
             void this.components.scoreArchive.loadArchive();
         } catch (error) {
@@ -252,11 +253,15 @@ const SettingsManager = class {
      * 
      * @param {string} key - Setting key that changed
      * @param {*} value - New value for the setting
+     * @param {Object} options - Change state, including whether it is already persisted
      * @example
      * this.notifySettingChanged('aiProvider', 'anthropic');
      */
-    notifySettingChanged(key, value) {
+    notifySettingChanged(key, value, options = {}) {
         this.currentSettings[key] = value;
+        if (this.settingsLoaded) {
+            this.components.actions.handleSettingChanged(key, value, options);
+        }
     }
 
     /**

@@ -95,6 +95,10 @@ Thunderbird behavior that mocks cannot prove.
     provider, open the API-key help button and verify the three localized steps,
     official credential link, provider-specific full guide, all-provider guide,
     keyboard focus, Escape close, and modal backdrop.
+    Change a provider field and verify that the top and bottom Save buttons
+    enable together and the floating Save action appears. A successful API test
+    must save the tested values automatically and report both outcomes. A failed
+    connection or failed save must leave the edited values visibly unsaved.
 23. Test newsletter/bulk signals and sender frequency, then confirm an explicit
     wanted-sender correction overrides the local spam floor.
 24. Trigger one temporary provider failure. The UI remains loading across
@@ -122,8 +126,10 @@ Thunderbird behavior that mocks cannot prove.
     content-free action boundaries, including a controlled failure. The support
     section must be the final settings section and its technical report must be
     collapsed initially.
-31. Scroll dashboard and single-message views. The floating top button appears
-    only away from the top and both bulk bars remain synchronized.
+31. Scroll dashboard and single-message views. The refined floating top button
+    appears only away from the top and both bulk bars remain synchronized. On
+    Settings, verify matching action bars at the top and bottom, and confirm the
+    floating Save action remains reachable while an edited form is scrolled.
 32. Use a synthetic AI response containing a heading, emphasis, nested and task
     lists, a table, a quote, code, a web link, raw HTML, a `javascript:` link,
     and a Markdown image. Action results, AI Chat, assistant reply history, and
@@ -174,7 +180,7 @@ Thunderbird behavior that mocks cannot prove.
     amber **Mark as unread**. Activate it again and confirm that Thunderbird and
     the workspace both return to the unread state without reopening the window.
 
-The single-message popup must show version 3.7.0. The dashboard uses unread
+The single-message popup must show version 3.8.0. The dashboard uses unread
 status as its default candidate filter; **Include read messages** broadens that
 scope only for the current Thunderbird session. Analysis performed outside the
 dashboard does not automatically create a dashboard score record.

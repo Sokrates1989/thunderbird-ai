@@ -45,6 +45,14 @@ Skripte eindeutige Dateinamen und globale Bindungen statt ES-Modulimporten.
   jeweils nur ihre UI-Grenze und teilen eine einzige Aktionsbeschreibung. Die
   Vorschau-Komponente behält unabhängige Höhen geöffneter Vorschauen bei und
   speichert jede Änderung über `+` oder `−` als Vorgabe für die nächste Vorschau.
+- `ScrollToTopComponent.js` steuert die gemeinsame schwebende Nach-oben-Aktion
+  für Dashboard und Einzelmail-Ansicht. `scroll-to-top.css` stellt die
+  überarbeitete Aktionsfläche bereit, die auch die Einstellungen verwenden.
+- `ActionsComponent.js` rendert synchronisierte Einstellungsaktionen über und
+  unter dem Formular, vergleicht Änderungen mit dem zuletzt gespeicherten Stand
+  und zeigt die schwebende Speichern-Aktion nur bei Änderungen oder kurz nach
+  erfolgreichem Speichern. `ApiTestComponent.js` verwendet nach einem
+  erfolgreichen Verbindungstest exakt denselben Speichervorgang.
 - `SafeDom.js` baut dynamische Einstellungen und Einzelmail-UI aus ausdrücklichen
   DOM-Knoten auf; übersetzte Beschriftungen und Laufzeit-Metadaten werden als
   reiner Text statt als HTML eingefügt. `MarkdownRenderer.js`,

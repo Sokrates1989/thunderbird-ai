@@ -99,6 +99,11 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     offiziellen Zugangslink, anbieterspezifische Vollanleitung,
     Anbieterübersicht, Tastaturfokus, Schließen per Escape und modalen
     Hintergrund prüfen.
+    Ein Anbieterfeld ändern und prüfen, dass beide Speichern-Schaltflächen
+    gemeinsam aktiv werden und die schwebende Speichern-Aktion erscheint. Ein
+    erfolgreicher API-Test muss die getesteten Werte automatisch speichern und
+    beide Erfolge melden. Nach Verbindungs- oder Speicherfehlern müssen die
+    Änderungen sichtbar ungespeichert bleiben.
 23. Newsletter-/Bulk-Signale und Absenderhäufigkeit testen; eine ausdrückliche
     Korrektur als erwünschter Absender muss die lokale Spam-Untergrenze schlagen.
 24. Einen temporären Anbieterfehler auslösen. Die UI bleibt während begrenzter
@@ -126,8 +131,11 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     inhaltsfreie Aktionsgrenzen einschließlich kontrolliertem Fehler zeigen.
     Der Supportbereich muss der letzte Einstellungsabschnitt sein und sein
     technischer Bericht anfangs eingeklappt bleiben.
-31. Dashboard und Einzelmail-Ansicht scrollen. Der Nach-oben-Button erscheint
-    nur unterhalb des Anfangs; beide Bulk-Leisten bleiben synchron.
+31. Dashboard und Einzelmail-Ansicht scrollen. Der überarbeitete
+    Nach-oben-Button erscheint nur unterhalb des Anfangs; beide Bulk-Leisten
+    bleiben synchron. In den Einstellungen übereinstimmende Aktionsleisten oben
+    und unten prüfen; bei gescrolltem geändertem Formular muss die schwebende
+    Speichern-Aktion erreichbar bleiben.
 32. Eine synthetische AI-Antwort mit Überschrift, Hervorhebung, verschachtelter
     Liste, Aufgabenliste, Tabelle, Zitat, Code, Weblink, rohem HTML,
     `javascript:`-Link und Markdown-Bild verwenden. Aktionsergebnisse, AI Chat,
@@ -188,7 +196,7 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     Erneut ausführen und prüfen, dass Thunderbird und Arbeitsbereich ohne erneutes
     Öffnen zum ungelesenen Status zurückkehren.
 
-Das Einzelmail-Popup muss Version 3.7.0 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.8.0 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status als Standard-Kandidatenfilter; **Gelesene Nachrichten
 einbeziehen** erweitert den Bestand nur für die aktuelle Thunderbird-Sitzung.
 Analysen außerhalb des Dashboards erzeugen nicht automatisch einen

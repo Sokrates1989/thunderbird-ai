@@ -1,6 +1,6 @@
 body {
     font-family: Arial, sans-serif;
-    padding: 20px;
+    padding: 20px 20px 92px;
     background: #f5f5f5;
     margin: 0;
 }
@@ -714,8 +714,24 @@ body {
 .actions {
     display: flex;
     gap: 10px;
-    margin-top: 30px;
+    flex-wrap: wrap;
     justify-content: center;
+}
+
+.settings-actions {
+    padding: 12px;
+    border: 1px solid #d7e3ec;
+    border-radius: 8px;
+    background: #f6fafd;
+    box-shadow: 0 2px 7px rgba(20, 45, 70, 0.08);
+}
+
+.settings-actions-top {
+    margin: 0 0 30px;
+}
+
+.settings-actions-bottom {
+    margin-top: 30px;
 }
 
 .btn {
@@ -736,7 +752,7 @@ body {
     color: white;
 }
 
-.btn.primary:hover {
+.btn.primary:hover:not(:disabled) {
     background: #005a9e;
 }
 
@@ -745,7 +761,7 @@ body {
     color: white;
 }
 
-.btn.secondary:hover {
+.btn.secondary:hover:not(:disabled) {
     background: #5a6268;
 }
 
@@ -755,8 +771,53 @@ body {
     border: 1px solid #dee2e6;
 }
 
-.btn:not(.primary):not(.secondary):hover {
+.btn:not(.primary):not(.secondary):hover:not(:disabled) {
     background: #e9ecef;
+}
+
+.btn:disabled {
+    cursor: default;
+    opacity: 0.58;
+}
+
+.settings-save-floating {
+    gap: 9px;
+    min-width: 0;
+    height: 50px;
+    padding: 0 18px 0 9px;
+    border-color: #0069a8;
+    background: linear-gradient(135deg, #0b8bd2 0%, #0067a3 100%);
+    color: white;
+    box-shadow:
+        0 12px 28px rgba(0, 86, 137, 0.32),
+        0 3px 7px rgba(20, 45, 70, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.settings-save-floating .floating-action-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.16);
+    font-size: 17px;
+}
+
+.settings-save-floating:hover:not(:disabled) {
+    border-color: #005b91;
+    background: linear-gradient(135deg, #087fc1 0%, #005d94 100%);
+    box-shadow:
+        0 15px 32px rgba(0, 86, 137, 0.38),
+        0 4px 9px rgba(20, 45, 70, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.settings-save-floating[data-state="saved"] {
+    border-color: #24713a;
+    background: linear-gradient(135deg, #32954e 0%, #237039 100%);
+}
+
+.settings-save-floating[data-state="saving"] {
+    opacity: 0.9;
 }
 
 /* Status */
@@ -902,5 +963,11 @@ body {
     .btn {
         width: 100%;
         justify-content: center;
+    }
+
+    .settings-save-floating {
+        right: max(14px, env(safe-area-inset-right));
+        bottom: max(14px, env(safe-area-inset-bottom));
+        width: auto;
     }
 }
