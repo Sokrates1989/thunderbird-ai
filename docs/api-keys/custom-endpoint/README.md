@@ -137,8 +137,19 @@ select **Test API connection** in Thunderbird, approve only
    host exactly.
 7. Select **Test API connection**, then **Save**.
 
-Remote endpoints must use HTTPS. Plain HTTP is accepted only for `localhost`
-and `127.0.0.1`, allowing a local development service.
+Public endpoints and DNS hostnames must use HTTPS. Plain HTTP is accepted only
+for literal addresses in these locally bounded ranges:
+
+- `localhost` and IPv4 loopback `127.0.0.0/8`;
+- IPv4 private-use networks `10.0.0.0/8`, `172.16.0.0/12`, and
+  `192.168.0.0/16`; and
+- IPv6 loopback `::1` and unique-local addresses `fc00::/7`.
+
+Other non-public ranges, including link-local and shared-address space, are not
+accepted over HTTP. Use the server's numeric private address rather than a local
+hostname, because the add-on cannot securely prove where a hostname resolves.
+HTTP does not encrypt email data or API credentials: use it only on a network
+you trust, and prefer HTTPS whenever the service supports it.
 
 ## Common errors
 

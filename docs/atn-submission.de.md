@@ -171,7 +171,7 @@ ihrer Dashboard-Kachel auswählen.
 | `https://api.mistral.ai/*` | Mistral erst nach ausdrücklicher AI-Aktion erreichen. |
 | `https://api.deepseek.com/*` | DeepSeek erst nach ausdrücklicher AI-Aktion erreichen. |
 | Optional `https://*/*` | Nur den exakt konfigurierten individuellen HTTPS-Host nach Nutzeraktion anfordern. |
-| Optional `http://localhost/*`, `http://127.0.0.1/*` | Einen ausdrücklich konfigurierten Loopback-Entwicklungsdienst erlauben; anderes HTTP wird abgewiesen. |
+| Optional `http://*/*` | Die Fähigkeit deklarieren, einen exakten individuellen HTTP-Host anzufordern. Die Laufzeitprüfung akzeptiert nur Loopback-, private IPv4- oder Unique-Local-IPv6-Adressliterale; öffentliche HTTP-Endpunkte, Hostnamen sowie Link-Local- und Shared-Address-Bereiche werden vor der Berechtigungsanfrage abgewiesen. |
 
 ## Einordnung der Validator-Warnungen
 

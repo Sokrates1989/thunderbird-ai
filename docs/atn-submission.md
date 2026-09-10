@@ -180,7 +180,7 @@ selection by clicking unused space in a dashboard message tile.
 | `https://api.mistral.ai/*` | Reach the built-in Mistral HTTPS API only after an explicit AI action. |
 | `https://api.deepseek.com/*` | Reach the built-in DeepSeek HTTPS API only after an explicit AI action. |
 | Optional `https://*/*` | Declare the bounded capability needed for custom HTTPS endpoints; the add-on requests only the exact configured host when the user saves or tests it. |
-| Optional `http://localhost/*`, `http://127.0.0.1/*` | Permit an explicitly configured loopback development endpoint; non-loopback plain HTTP is rejected. |
+| Optional `http://*/*` | Declare the capability required to request an exact custom HTTP host. Runtime validation accepts only loopback, IPv4 private-use, or IPv6 unique-local address literals; public, hostname, link-local, and shared-address HTTP endpoints are rejected before permission is requested. |
 
 ## Validator warning classification
 

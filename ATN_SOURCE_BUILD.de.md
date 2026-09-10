@@ -54,8 +54,8 @@ bereit. Nur eine ausdrückliche AI-Aktion sendet ausgewählte Maildaten direkt a
 Thunderbird an diesen Dienst. Die integrierten Ziele sind
 `https://api.openai.com/`, `https://api.anthropic.com/`,
 `https://api.mistral.ai/` und `https://api.deepseek.com/`. Individuelle Dienste
-müssen HTTPS verwenden; nur Loopback-Entwicklungsendpunkte dürfen HTTP nutzen
-und benötigen eine aus einer Benutzeraktion angeforderte exakte
-Host-Berechtigung. Das Add-on besitzt keinen vom Maintainer betriebenen Dienst.
+müssen HTTPS verwenden; nur Endpunkte unter Loopback- oder privaten IP-Adressen
+dürfen HTTP nutzen und benötigen eine aus einer Benutzeraktion angeforderte
+exakte Host-Berechtigung. Das Add-on besitzt keinen vom Maintainer betriebenen Dienst.
 Alle Datenkategorien und Aufbewahrungsgrenzen stehen in `PRIVACY.de.md` und den
 Reviewer-Hinweisen unter `docs/atn-submission.de.md`.

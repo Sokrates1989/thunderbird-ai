@@ -49,9 +49,9 @@ The user selects OpenAI, Claude (Anthropic), Mistral, DeepSeek, or a compatible
 custom endpoint and supplies any required API key. Only an explicit AI action
 sends selected mail data directly from Thunderbird to that service. Built-in
 destinations are `https://api.openai.com/`, `https://api.anthropic.com/`,
-`https://api.mistral.ai/`, and `https://api.deepseek.com/`. Custom services
-must use HTTPS, except for HTTP loopback development endpoints, and require an
-exact-host optional permission requested from a user action. The add-on has no
-maintainer-operated service. Full data categories and retention boundaries are
+`https://api.mistral.ai/`, and `https://api.deepseek.com/`. Custom services must
+use HTTPS, except for HTTP endpoints at loopback or private-use IP addresses,
+and require an exact-host optional permission requested from a user action. The
+add-on has no maintainer-operated service. Full data categories and retention boundaries are
 documented in `PRIVACY.md` and the reviewer notes in
 `docs/atn-submission.md`.
