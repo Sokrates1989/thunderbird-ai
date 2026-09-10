@@ -147,9 +147,21 @@ synthetischen E-Mail fortfahren.
    auf den eingetragenen Host zeigen.
 7. **API-Verbindung testen** und anschließend **Speichern** wählen.
 
-Entfernte Endpunkte müssen HTTPS verwenden. Unverschlüsseltes HTTP wird nur für
-`localhost` und `127.0.0.1` akzeptiert, damit ein lokaler Entwicklungsdienst
-erreichbar bleibt.
+Öffentliche Endpunkte und DNS-Hostnamen müssen HTTPS verwenden.
+Unverschlüsseltes HTTP wird nur für Literale in diesen lokal begrenzten
+Adressbereichen akzeptiert:
+
+- `localhost` und IPv4-Loopback `127.0.0.0/8`
+- private IPv4-Netze `10.0.0.0/8`, `172.16.0.0/12` und `192.168.0.0/16`
+- IPv6-Loopback `::1` und Unique-Local-Adressen `fc00::/7`
+
+Andere nicht öffentliche Bereiche, darunter Link-Local- und Shared-Address-
+Bereiche, werden über HTTP nicht akzeptiert. Statt eines lokalen Hostnamens muss
+die numerische private Adresse des Servers verwendet werden, weil das Add-on
+die Auflösung eines Hostnamens nicht sicher nachweisen kann. HTTP verschlüsselt
+weder E-Mail-Daten noch API-Zugangsdaten: Verwenden Sie es nur in einem
+vertrauenswürdigen Netzwerk und bevorzugen Sie HTTPS, sobald der Dienst es
+unterstützt.
 
 ## Häufige Fehler
 

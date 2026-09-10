@@ -91,7 +91,7 @@ const AIProviderService = {
             return '';
         }
         const localHttp = url.protocol === 'http:'
-            && ['localhost', '127.0.0.1'].includes(url.hostname);
+            && this.isLocalNetworkHost(url.hostname);
         if (url.protocol !== 'https:' && !localHttp) {
             if (throwOnInvalid) {
                 throw this.configurationError('providerEndpointInsecure');
@@ -110,6 +110,68 @@ const AIProviderService = {
             url.pathname = `${path}${suffix}`;
         }
         return url.toString();
+    },
+
+    /** Allow HTTP only for literal private-use or loopback addresses whose scope is locally bounded. */
+    isLocalNetworkHost(hostname) {
+        if (hostname === 'localhost') {
+            return true;
+        }
+        const ipv4 = this.parseIpv4Address(hostname);
+        if (ipv4) {
+            return ipv4[0] === 127
+                || ipv4[0] === 10
+                || (ipv4[0] === 172 && ipv4[1] >= 16 && ipv4[1] <= 31)
+                || (ipv4[0] === 192 && ipv4[1] === 168);
+        }
+        const ipv6 = this.parseIpv6Address(hostname);
+        if (!ipv6) {
+            return false;
+        }
+        const loopback = ipv6.slice(0, 7).every(part => part === 0) && ipv6[7] === 1;
+        const uniqueLocal = (ipv6[0] & 0xfe00) === 0xfc00;
+        const ipv4Mapped = ipv6.slice(0, 5).every(part => part === 0)
+            && ipv6[5] === 0xffff;
+        if (ipv4Mapped) {
+            const mapped = [ipv6[6] >> 8, ipv6[6] & 0xff, ipv6[7] >> 8, ipv6[7] & 0xff];
+            return mapped[0] === 127
+                || mapped[0] === 10
+                || (mapped[0] === 172 && mapped[1] >= 16 && mapped[1] <= 31)
+                || (mapped[0] === 192 && mapped[1] === 168);
+        }
+        return loopback || uniqueLocal;
+    },
+
+    /** Parse a canonical dotted-decimal IPv4 hostname into four numeric octets. */
+    parseIpv4Address(hostname) {
+        if (!/^\d{1,3}(?:\.\d{1,3}){3}$/u.test(hostname)) {
+            return null;
+        }
+        const octets = hostname.split('.').map(Number);
+        return octets.every(octet => octet <= 255) ? octets : null;
+    },
+
+    /** Expand a bracketed URL IPv6 hostname into its eight 16-bit address words. */
+    parseIpv6Address(hostname) {
+        if (!hostname.startsWith('[') || !hostname.endsWith(']')) {
+            return null;
+        }
+        const address = hostname.slice(1, -1).toLowerCase();
+        if (!/^[0-9a-f:]+$/u.test(address) || address.split('::').length > 2) {
+            return null;
+        }
+        const [leftValue, rightValue] = address.split('::');
+        const left = leftValue ? leftValue.split(':') : [];
+        const right = rightValue ? rightValue.split(':') : [];
+        const missing = 8 - left.length - right.length;
+        if ((address.includes('::') && missing < 1) || (!address.includes('::') && missing !== 0)) {
+            return null;
+        }
+        const words = [...left, ...Array(missing).fill('0'), ...right];
+        if (words.length !== 8 || words.some(word => !/^[0-9a-f]{1,4}$/u.test(word))) {
+            return null;
+        }
+        return words.map(word => Number.parseInt(word, 16));
     },
 
     /** Return the optional host permission pattern needed by a custom endpoint. */

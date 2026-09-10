@@ -62,6 +62,17 @@ Jede Vorschau öffnet beim Anklicken das Bild in seiner Originalauflösung.
   </tr>
 </table>
 
+## Umfang von Release 3.6.1
+
+Release 3.6.1 behebt individuelle HTTP-Endpunkte auf einem anderen Gerät in
+einem vertrauenswürdigen privaten Netzwerk. Unverschlüsseltes HTTP wird nur für
+`localhost` oder Adressliterale aus Loopback-Bereichen, privaten IPv4-Netzen nach
+RFC 1918 und dem IPv6-Unique-Local-Bereich zugelassen; öffentliche Adressen,
+andere Hostnamen sowie Link-Local- und Shared-Address-Bereiche bleiben gesperrt,
+und das Add-on fordert nur die exakte Host-Berechtigung an. Da HTTP weder
+E-Mail-Daten noch API-Zugangsdaten verschlüsselt, sollte es nur in einem
+vertrauenswürdigen Netzwerk verwendet und HTTPS bevorzugt werden.
+
 ## Umfang von Release 3.6.0
 
 Release 3.6.0 ergänzt im Dashboard unter **Zeitraum und Absender** die optionale
@@ -110,7 +121,7 @@ Ausgangsbestand, zum Beispiel `Angezeigt: 4 von 15`.
 - unabhängiger Risikowert für Phishing, Betrug, gefährliche Inhalte, potenziell Rechtswidriges und sonst unerwünschte Kontakte
 - lokale Suche nach ähnlichen Nachrichten im aktuellen Ordner
 - nachrichtenbezogener AI Chat
-- frei wählbarer AI-Anbieter: OpenAI, Claude (Anthropic), Mistral, DeepSeek oder ein HTTPS-/localhost-Endpunkt mit OpenAI-Chat-, OpenAI-Responses- oder Anthropic-Messages-kompatiblem Protokoll
+- frei wählbarer AI-Anbieter: OpenAI, Claude (Anthropic), Mistral, DeepSeek oder ein HTTPS- beziehungsweise privater Netzwerkendpunkt mit OpenAI-Chat-, OpenAI-Responses- oder Anthropic-Messages-kompatiblem Protokoll
 - lokale Ergebnisablage mit Verwaltung unter **Einstellungen** und Zwischenablage-Aktion
 - lokale, tokenbasierte Schätzung der bisherigen OpenAI-API-Kosten mit transparentem Preisstand
 - eigenes globales Posteingangs-Dashboard mit vollständiger Header-Paginierung, ungelesenem Standardbestand und sitzungsgebundener Option für gelesene Nachrichten, einer übersichtlich gruppierten und dauerhaft ein-/ausklappbaren Ansichtskonfiguration, stabiler Tab-Ansicht, umschaltbarer Konto- oder kombinierter Neueste-50-Ansicht, kontenübergreifender Score-Sortierung, sitzungsgebundenem durchsuchbarem Absender- und Datumsfilter, nur bei aktiven Filtern eingeblendeter Filteranzahl mit Zurücksetzen-Aktion, frei wählbaren 1–50 Nachrichten pro Konto, Einzelauswahl, Mehrfachlöschen, identischen Bulk-Aktionen ober- und unterhalb der Nachrichten sowie globaler oder nur für eine angeklickte E-Mail geladener lokaler Inhaltsvorschau
@@ -147,11 +158,12 @@ explizit auf `disabled`, weil die vorhandenen E-Mail-Funktionen nur den finalen
 Text verarbeiten und begrenzte Ausgabelimits verwenden.
 
 Individuelle Endpunkte können eines der drei unterstützten JSON-Protokolle und
-Bearer-, `x-api-key`- oder keine Authentifizierung verwenden. Entfernte
-Endpunkte müssen HTTPS verwenden; HTTP ist nur für `localhost` und `127.0.0.1`
-zugelassen. Das Add-on stellt keine beliebige proprietäre API automatisch um:
-der individuelle Dienst muss zu einem der auswählbaren Protokolle kompatibel
-sein.
+Bearer-, `x-api-key`- oder keine Authentifizierung verwenden. Öffentliche
+Endpunkte und Hostnamen müssen HTTPS verwenden. HTTP ist auf `localhost`,
+IPv4-Loopback- und private IPv4-Adressen sowie IPv6-Loopback- und
+Unique-Local-Adressen beschränkt. Das Add-on stellt keine beliebige proprietäre
+API automatisch um: der individuelle Dienst muss zu einem der auswählbaren
+Protokolle kompatibel sein.
 
 Das bevorzugte Modell wird pro AI-Funktion und Anbieter eingestellt.
 **Automatisch** wählt die schnelle, ausgewogene oder qualitätsorientierte
@@ -298,7 +310,7 @@ nichts.
 26. **Werte korrigieren** ausführen. Das Einzelmail-Popup darf keine schnellen Schaltflächen für **Kategorisieren**, **Wichtigkeit prüfen** oder **API testen** mehr zeigen. Terra muss standardmäßig neue Wichtigkeits-, Spam- und Risikowerte liefern. Alle drei Werte ändern, getrennte Gründe auswählen, je einen Freitext eingeben und die Referenz speichern. Beim erneuten Scoring derselben E-Mail müssen die archivierten Werte und Gründe vorausgewählt und für die neue Bewertung berücksichtigt werden.
 27. **Ähnliche finden** prüfen; diese Aktion benötigt keinen externen AI-Aufruf.
 28. Beide **AI Chat**-Schaltflächen testen, Ergebnisse kopieren und lokal speichern.
-29. Unter **Einstellungen** nacheinander OpenAI, Claude, Mistral, DeepSeek und **Individueller Endpunkt** auswählen. Die integrierten Endpunkt-URLs müssen schreibgeschützt sein, Anbieterwechsel müssen noch nicht gespeicherte Schlüssel und Modelle getrennt behalten und OpenAI muss bei einer bestehenden Installation die bisherigen Werte übernehmen. Mit einem DeepSeek-Testschlüssel muss **API-Verbindung testen** sichtbaren Antworttext statt einer Leerausgabe liefern. Für den individuellen Endpunkt HTTPS beziehungsweise einen localhost-Testdienst, Protokoll und Authentifizierung eintragen; beim Testen muss Thunderbird nur Zugriff auf dessen exakten Host anfordern. Danach die Modellauswahl für Bulk, Einzelmail-Scoring, Zusammenfassen, Antwortvorschlag, AI Chat und jede weitere AI-Funktion prüfen. Jede Bezeichnung und das zugehörige Eingabefeld müssen unmittelbar zusammen in einer eigenen klar abgegrenzten Karte stehen; **Automatisch** muss je Anbieter die passende schnelle, ausgewogene oder qualitätsorientierte Vorgabe verwenden und jede Modell-ID muss sich unabhängig ändern und speichern lassen.
+29. Unter **Einstellungen** nacheinander OpenAI, Claude, Mistral, DeepSeek und **Individueller Endpunkt** auswählen. Die integrierten Endpunkt-URLs müssen schreibgeschützt sein, Anbieterwechsel müssen noch nicht gespeicherte Schlüssel und Modelle getrennt behalten und OpenAI muss bei einer bestehenden Installation die bisherigen Werte übernehmen. Mit einem DeepSeek-Testschlüssel muss **API-Verbindung testen** sichtbaren Antworttext statt einer Leerausgabe liefern. Für den individuellen Endpunkt HTTPS beziehungsweise einen HTTP-Testdienst unter einer numerischen privaten IP-Adresse, Protokoll und Authentifizierung eintragen; beim Testen muss Thunderbird nur Zugriff auf dessen exakten Host anfordern. Öffentliche HTTP-Adressen, Hostnamen sowie Link-Local- und Shared-Address-Bereiche müssen vor der Berechtigungsanfrage abgewiesen werden. Danach die Modellauswahl für Bulk, Einzelmail-Scoring, Zusammenfassen, Antwortvorschlag, AI Chat und jede weitere AI-Funktion prüfen. Jede Bezeichnung und das zugehörige Eingabefeld müssen unmittelbar zusammen in einer eigenen klar abgegrenzten Karte stehen; **Automatisch** muss je Anbieter die passende schnelle, ausgewogene oder qualitätsorientierte Vorgabe verwenden und jede Modell-ID muss sich unabhängig ändern und speichern lassen.
 30. Im **Archiv der Scoring-Referenzen** die gespeicherte Testmail öffnen, alle drei Werte und getrennten Gründe prüfen, manuell neu bewerten und speichern. Eine vor Version 2.6.0 gespeicherte Referenz muss mit leerem Risikofeld lesbar bleiben und sich nach Eingabe des Risikowerts speichern lassen. Danach die Referenz entfernen; die Thunderbird-E-Mail darf dabei nicht gelöscht oder verändert werden.
 31. Die Oberflächensprache auf **English** umstellen und globales Dashboard, Einzelmail-Popup, Antworteditor, Einstellungen und Hilfe prüfen. Danach zurück auf **Deutsch** wechseln. Alle sichtbaren Texte und Meldungen müssen der Auswahl folgen.
 32. In den **Einstellungen** darf kein Abschnitt für automatische E-Mail-Verarbeitung mehr erscheinen. Einen erfolgreichen API-Test oder eine andere AI-Aktion ausführen und anschließend die Nutzungsstatistiken aktualisieren. **Geschätzte API-Kosten** müssen als lokalisierter USD-Wert erscheinen und der Hinweis muss Beginn der Tokenaufzeichnung, Preisstand sowie Einschränkungen nennen.
@@ -314,7 +326,7 @@ nichts.
 42. Nach mehreren Dashboard-Aktionen den Tab wechseln und das globale Toolbar-Symbol mindestens dreimal erneut verwenden. Ein hängender Thunderbird-Tabaufruf muss nach einem begrenzten Zeitlimit freigegeben werden, sodass der nächste Klick ohne Thunderbird-Neustart erneut versucht. Bei einem endgültigen Fehler muss eine lokalisierte Benachrichtigung mit Diagnosecode erscheinen. Unter **Einstellungen → AI Assistant öffnen → Support-Diagnose** müssen Add-on-/Thunderbird-Version, letzter Dashboard-Start und die letzten Hintergrund-/UI-Aktivitäten ohne E-Mail-Inhalte sichtbar und kopierbar sein. Ein absichtlich provozierter Fehler muss als fehlgeschlagener oder kontrolliert fehlgeschlagener Vorgang erscheinen.
 43. Im Dashboard mehrere Nachrichten auswählen und bis unter die letzte angezeigte Nachricht scrollen. Dort muss dieselbe Bulk-Aktionsleiste wie oberhalb der Nachrichten erscheinen; Auswahlzahl, Aktivierungszustand und Aktionen müssen in beiden Leisten synchron bleiben. Danach Dashboard und Einzelmail-Ansicht nach unten scrollen: Rechts unten muss jeweils ein kleiner runder Pfeil erscheinen, der die sichtbare Scrollfläche nach oben bewegt und am Anfang wieder verschwindet.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 3.6.0** stehen. Das Dashboard verwendet standardmäßig den Ungelesen-Status als Kandidatenfilter; **Gelesene Nachrichten einbeziehen** erweitert den Posteingangsbestand nur für die aktuelle Thunderbird-Sitzung. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 3.6.1** stehen. Das Dashboard verwendet standardmäßig den Ungelesen-Status als Kandidatenfilter; **Gelesene Nachrichten einbeziehen** erweitert den Posteingangsbestand nur für die aktuelle Thunderbird-Sitzung. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 Die Einstellungen enthalten eine **Support- und Speicherdiagnose**. Sie zeigt Hintergrundstart, Abhängigkeitsstatus, Laufzeiten und eine inhaltsfreie Prüfung lokaler Einstellungsdaten. API-Schlüssel werden ausschließlich als „vorhanden/nicht vorhanden“ gemeldet. Kann der Hintergrunddienst nicht starten, werden vorhandene Einstellungen lokal und schreibgeschützt dargestellt; Speichern und Zurücksetzen bleiben bis zu einem erfolgreichen Start deaktiviert.
 

@@ -83,7 +83,11 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
 22. Den [Anbieter-Abnahmetest](api-keys/README.de.md#einheitlicher-anbietertest)
     für jeden verfügbaren Anbieter ausführen. Integrierte URLs bleiben
     schreibgeschützt; Anbieterprofile getrennt; ein individueller Host fordert
-    nur seine exakte Berechtigung an. Beim ersten Öffnen der Einstellungen
+    nur seine exakte Berechtigung an. Über HTTP werden nur `localhost` oder
+    Adressliterale aus Loopback-Bereichen, privaten IPv4-Netzen nach RFC 1918 und
+    dem IPv6-Unique-Local-Bereich akzeptiert. Öffentliche Adressen, andere
+    Hostnamen sowie Link-Local- und Shared-Address-Bereiche müssen vor der
+    Berechtigungsanfrage abgewiesen werden. Beim ersten Öffnen der Einstellungen
     müssen Anbieter- und Thunderbird-Archivkonfiguration eingeklappt sein. Die
     Anbieterzusammenfassung zeigt den konfigurierten Anbieter oder bei
     unvollständiger Pflichtkonfiguration einen roten Warnhinweis. Für jeden
@@ -180,7 +184,7 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     Erneut ausführen und prüfen, dass Thunderbird und Arbeitsbereich ohne erneutes
     Öffnen zum ungelesenen Status zurückkehren.
 
-Das Einzelmail-Popup muss Version 3.6.0 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.6.1 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status als Standard-Kandidatenfilter; **Gelesene Nachrichten
 einbeziehen** erweitert den Bestand nur für die aktuelle Thunderbird-Sitzung.
 Analysen außerhalb des Dashboards erzeugen nicht automatisch einen

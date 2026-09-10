@@ -59,6 +59,16 @@ Each preview links to the original-resolution image.
   </tr>
 </table>
 
+## Release 3.6.1 scope
+
+Release 3.6.1 fixes custom HTTP endpoints hosted on another machine in a trusted
+private network. Plain HTTP is accepted only for `localhost` or address literals
+in loopback, RFC 1918 IPv4, and unique-local IPv6 ranges; public addresses, other
+hostnames, link-local, and shared-address ranges remain blocked, and the add-on
+requests permission only for the exact configured host. Because HTTP does not
+encrypt email data or API credentials, use it only on a trusted network and
+prefer HTTPS.
+
 ## Release 3.6.0 scope
 
 Release 3.6.0 adds an opt-in **Include read messages** control to the dashboard's
@@ -102,7 +112,7 @@ the complete unread source snapshot, such as `Shown: 4 of 15`.
 - Extraction of contacts, dates, amounts, references, and tasks.
 - Message-related AI Chat and local search for similar messages.
 - Selectable OpenAI, Claude (Anthropic), Mistral, DeepSeek, or compatible custom
-  HTTPS/localhost endpoint.
+  HTTPS or private-network endpoint.
 - Per-task model routing with automatic fast, balanced, and quality roles.
 - Local result storage, support diagnostics, usage counters, and an OpenAI-only
   token-based cost estimate with a disclosed price snapshot.
@@ -140,9 +150,10 @@ DeepSeek V4 enables thinking by default. The add-on sends `thinking: disabled`
 because its email functions consume only final text and use bounded output.
 
 Custom endpoints may use OpenAI Chat, OpenAI Responses, or Anthropic Messages
-with Bearer, `x-api-key`, or no authentication. Remote endpoints must use HTTPS;
-HTTP is allowed only for `localhost` and `127.0.0.1`. The service must actually
-implement the selected JSON protocol.
+with Bearer, `x-api-key`, or no authentication. Public endpoints and hostnames
+must use HTTPS. HTTP is limited to `localhost`, IPv4 loopback and private-use
+addresses, and IPv6 loopback and unique-local addresses. The service must
+actually implement the selected JSON protocol.
 
 **Automatic** model selection maps each task to the provider's fast, balanced,
 or quality preset. For OpenAI these roles are:

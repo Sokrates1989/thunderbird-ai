@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extensionName__",
-  "version": "3.6.0",
+  "version": "3.6.1",
   "description": "__MSG_extensionDescription__",
   "default_locale": "en",
   "author": "Sokrates1989",
@@ -57,8 +57,7 @@
   ],
   "optional_host_permissions": [
     "https://*/*",
-    "http://localhost/*",
-    "http://127.0.0.1/*"
+    "http://*/*"
   ],
   "web_accessible_resources": [
     {

@@ -82,6 +82,10 @@ Thunderbird behavior that mocks cannot prove.
 22. Complete the [provider acceptance test](api-keys/README.md#shared-provider-acceptance-test)
     for each available provider. Built-in URLs remain read-only; unsaved provider
     profiles remain separate; a custom host requests only its exact permission.
+    For HTTP, only `localhost` or address literals in loopback, RFC 1918 IPv4,
+    and unique-local IPv6 ranges are accepted. Public addresses, other hostnames,
+    link-local, and shared-address ranges must be rejected before a permission
+    request.
     On first opening Settings, provider and Thunderbird archive configuration
     must be collapsed. The provider summary must show the configured provider or
     a red warning when its required configuration is incomplete. For every
@@ -167,7 +171,7 @@ Thunderbird behavior that mocks cannot prove.
     amber **Mark as unread**. Activate it again and confirm that Thunderbird and
     the workspace both return to the unread state without reopening the window.
 
-The single-message popup must show version 3.6.0. The dashboard uses unread
+The single-message popup must show version 3.6.1. The dashboard uses unread
 status as its default candidate filter; **Include read messages** broadens that
 scope only for the current Thunderbird session. Analysis performed outside the
 dashboard does not automatically create a dashboard score record.
