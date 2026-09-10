@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="chatTitle"></title>
+    <link rel="stylesheet" href="markdown-content.css">
+    <link rel="stylesheet" href="assistant-pane.css">
+</head>
+<body>
+    <main class="assistant-pane-shell">
+        <header class="assistant-pane-header">
+            <div class="assistant-pane-heading">
+                <span class="assistant-pane-mark" aria-hidden="true">✦</span>
+                <div class="assistant-pane-heading-copy">
+                    <h1 data-i18n="chatTitle"></h1>
+                    <p id="assistantPaneContext" class="assistant-pane-context"></p>
+                </div>
+            </div>
+            <div class="assistant-pane-header-actions">
+                <button type="button" id="assistantPaneRestart" class="assistant-pane-icon-button"
+                        data-i18n-title="chatRestart" data-i18n-aria-label="chatRestart" disabled>
+                    <span aria-hidden="true">↻</span>
+                </button>
+                <button type="button" id="assistantPaneClose" class="assistant-pane-icon-button"
+                        data-i18n-title="chatClose" data-i18n-aria-label="chatClose">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+        </header>
+
+        <section class="assistant-pane-conversation" aria-labelledby="assistantPaneContext">
+            <div id="assistantPaneEmpty" class="assistant-pane-empty">
+                <span class="assistant-pane-empty-icon" aria-hidden="true">💬</span>
+                <strong data-i18n="assistantPaneEmptyTitle"></strong>
+                <span data-i18n="assistantPaneEmptyHint"></span>
+            </div>
+            <div id="assistantPaneMessages" class="assistant-pane-messages" aria-live="polite"></div>
+        </section>
+
+        <footer class="assistant-pane-composer">
+            <button type="button" id="assistantPaneSummarize" class="assistant-pane-summary" disabled>
+                <span aria-hidden="true">🔥</span>
+                <span data-i18n="assistantPaneSummarize"></span>
+            </button>
+            <textarea id="assistantPaneInput" rows="3" data-i18n-placeholder="chatPlaceholder"
+                      data-i18n-aria-label="chatPlaceholder" disabled></textarea>
+            <button type="button" id="assistantPaneSend" class="assistant-pane-send" disabled
+                    data-i18n="chatSend"></button>
+        </footer>
+    </main>
+
+    <script src="locale-de.js"></script>
+    <script src="locale-en.js"></script>
+    <script src="constants.js"></script>
+    <script src="retry.js"></script>
+    <script src="SafeDom.js"></script>
+    <script src="MarkdownInlineRenderer.js"></script>
+    <script src="MarkdownRenderer.js"></script>
+    <script src="assistant-pane.js"></script>
+    <script src="assistant-pane-entry.js"></script>
+</body>
+</html>

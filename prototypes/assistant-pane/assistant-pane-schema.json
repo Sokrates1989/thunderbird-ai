@@ -1,0 +1,47 @@
+[
+  {
+    "namespace": "aiAssistantPane",
+    "description": "Prototype API for a persistent assistant pane in Thunderbird mail tabs.",
+    "events": [
+      {
+        "name": "onWidthChanged",
+        "type": "function",
+        "description": "Fires after the operator resizes the assistant pane.",
+        "parameters": [
+          { "name": "tabId", "type": "integer" },
+          { "name": "width", "type": "integer" }
+        ]
+      }
+    ],
+    "functions": [
+      {
+        "name": "initialize",
+        "type": "function",
+        "description": "Sets the default pane width for newly registered mail tabs.",
+        "async": true,
+        "parameters": [{ "name": "width", "type": "integer" }]
+      },
+      {
+        "name": "ensureButton",
+        "type": "function",
+        "description": "Adds the assistant-pane toggle to a Thunderbird mail tab.",
+        "async": true,
+        "parameters": [{ "name": "tabId", "type": "integer" }]
+      },
+      {
+        "name": "toggle",
+        "type": "function",
+        "description": "Toggles the assistant pane in a Thunderbird mail tab.",
+        "async": true,
+        "parameters": [{ "name": "tabId", "type": "integer" }]
+      },
+      {
+        "name": "close",
+        "type": "function",
+        "description": "Closes the assistant pane in a Thunderbird mail tab.",
+        "async": true,
+        "parameters": [{ "name": "tabId", "type": "integer" }]
+      }
+    ]
+  }
+]
