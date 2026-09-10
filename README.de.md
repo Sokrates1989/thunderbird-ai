@@ -110,7 +110,7 @@ Ausgangsbestand, zum Beispiel `Angezeigt: 4 von 15`.
 - unabhängiger Risikowert für Phishing, Betrug, gefährliche Inhalte, potenziell Rechtswidriges und sonst unerwünschte Kontakte
 - lokale Suche nach ähnlichen Nachrichten im aktuellen Ordner
 - nachrichtenbezogener AI Chat
-- frei wählbarer AI-Anbieter: OpenAI, Claude (Anthropic), Mistral, DeepSeek oder ein HTTPS-/localhost-Endpunkt mit OpenAI-Chat-, OpenAI-Responses- oder Anthropic-Messages-kompatiblem Protokoll
+- frei wählbarer AI-Anbieter: OpenAI, Claude (Anthropic), Mistral, DeepSeek oder ein HTTPS- beziehungsweise privater Netzwerkendpunkt mit OpenAI-Chat-, OpenAI-Responses- oder Anthropic-Messages-kompatiblem Protokoll
 - lokale Ergebnisablage mit Verwaltung unter **Einstellungen** und Zwischenablage-Aktion
 - lokale, tokenbasierte Schätzung der bisherigen OpenAI-API-Kosten mit transparentem Preisstand
 - eigenes globales Posteingangs-Dashboard mit vollständiger Header-Paginierung, ungelesenem Standardbestand und sitzungsgebundener Option für gelesene Nachrichten, einer übersichtlich gruppierten und dauerhaft ein-/ausklappbaren Ansichtskonfiguration, stabiler Tab-Ansicht, umschaltbarer Konto- oder kombinierter Neueste-50-Ansicht, kontenübergreifender Score-Sortierung, sitzungsgebundenem durchsuchbarem Absender- und Datumsfilter, nur bei aktiven Filtern eingeblendeter Filteranzahl mit Zurücksetzen-Aktion, frei wählbaren 1–50 Nachrichten pro Konto, Einzelauswahl, Mehrfachlöschen, identischen Bulk-Aktionen ober- und unterhalb der Nachrichten sowie globaler oder nur für eine angeklickte E-Mail geladener lokaler Inhaltsvorschau
@@ -147,11 +147,12 @@ explizit auf `disabled`, weil die vorhandenen E-Mail-Funktionen nur den finalen
 Text verarbeiten und begrenzte Ausgabelimits verwenden.
 
 Individuelle Endpunkte können eines der drei unterstützten JSON-Protokolle und
-Bearer-, `x-api-key`- oder keine Authentifizierung verwenden. Entfernte
-Endpunkte müssen HTTPS verwenden; HTTP ist nur für `localhost` und `127.0.0.1`
-zugelassen. Das Add-on stellt keine beliebige proprietäre API automatisch um:
-der individuelle Dienst muss zu einem der auswählbaren Protokolle kompatibel
-sein.
+Bearer-, `x-api-key`- oder keine Authentifizierung verwenden. Öffentliche
+Endpunkte und Hostnamen müssen HTTPS verwenden. HTTP ist auf `localhost`,
+IPv4-Loopback- und private IPv4-Adressen sowie IPv6-Loopback- und
+Unique-Local-Adressen beschränkt. Das Add-on stellt keine beliebige proprietäre
+API automatisch um: der individuelle Dienst muss zu einem der auswählbaren
+Protokolle kompatibel sein.
 
 Das bevorzugte Modell wird pro AI-Funktion und Anbieter eingestellt.
 **Automatisch** wählt die schnelle, ausgewogene oder qualitätsorientierte

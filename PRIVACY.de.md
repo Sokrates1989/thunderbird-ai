@@ -2,7 +2,7 @@
 
 > [English version](PRIVACY.md)
 
-Zuletzt aktualisiert: 23. August 2026
+Zuletzt aktualisiert: 10. September 2026
 
 AI Mail Assistant for Thunderbird analysiert geöffnete E-Mails nicht
 automatisch. Netzwerkverarbeitung beginnt nur nach einer ausdrücklich gestarteten
@@ -20,8 +20,8 @@ gespeicherte Korrekturbeispiele senden. Unterstützte Ziele sind:
 - Claude unter `https://api.anthropic.com/` mit Anthropic Messages API;
 - Mistral unter `https://api.mistral.ai/` mit Chat Completions;
 - DeepSeek unter `https://api.deepseek.com/` mit Chat Completions; oder
-- ein individueller HTTPS-Endpunkt beziehungsweise HTTP-Loopback auf
-  `localhost` oder `127.0.0.1` mit kompatiblem gewählten Protokoll.
+- ein individueller HTTPS-Endpunkt beziehungsweise ein HTTP-Endpunkt unter
+  einer Loopback- oder privaten IP-Adresse mit kompatiblem gewählten Protokoll.
 
 Der Maintainer leitet diese Anfragen nicht über einen eigenen Dienst. Anbieter
 oder Endpunktbetreiber bestimmen serverseitige Verarbeitung, Aufbewahrung,

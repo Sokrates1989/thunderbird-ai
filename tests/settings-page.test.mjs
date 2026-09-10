@@ -39,8 +39,7 @@ test('settings expose built-in and compatible custom AI provider controls', () =
     ]);
     assert.deepEqual(manifest.optional_host_permissions, [
         'https://*/*',
-        'http://localhost/*',
-        'http://127.0.0.1/*'
+        'http://*/*'
     ]);
 });
 

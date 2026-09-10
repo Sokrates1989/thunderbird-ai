@@ -2,7 +2,7 @@
 
 > [Deutsche Version](PRIVACY.de.md)
 
-Last updated: 23 August 2026
+Last updated: 10 September 2026
 
 AI Mail Assistant for Thunderbird does not automatically analyze opened email. Network processing begins only when the user explicitly starts an AI action or explicitly selects messages for dashboard analysis.
 
@@ -14,7 +14,7 @@ Depending on the chosen action, the add-on sends the email subject, sender, read
 - Claude at `https://api.anthropic.com/` using the Anthropic Messages API;
 - Mistral at `https://api.mistral.ai/` using its Chat Completions API;
 - DeepSeek at `https://api.deepseek.com/` using its Chat Completions API; or
-- a custom HTTPS endpoint, or an HTTP loopback endpoint on `localhost` or `127.0.0.1`, using a user-selected compatible protocol.
+- a custom HTTPS endpoint, or an HTTP endpoint at a loopback or private-use IP address, using a user-selected compatible protocol.
 
 The add-on maintainer does not proxy these requests. Each provider or custom-endpoint operator independently controls service-side processing, retention, account terms, and charges. OpenAI's `store: false` request field does not govern another provider or a custom endpoint. Users must review and trust the selected service before sending email data.
 

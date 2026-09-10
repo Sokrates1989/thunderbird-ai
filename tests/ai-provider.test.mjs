@@ -155,20 +155,58 @@ test('connection tests leave enough output budget for reasoning-model answers', 
     assert.equal(request.body.max_tokens, 512);
 });
 
-test('custom endpoints reject insecure remote HTTP while allowing loopback development', () => {
+test('custom endpoints allow HTTP for private networks and loopback addresses', () => {
     const { service } = loadProviderService();
-    const insecure = service.normalizeConfiguration('custom', {
-        baseUrl: 'http://private-ai.example/v1',
-        defaultModel: 'private-model'
-    });
-    const loopback = service.normalizeConfiguration('custom', {
-        baseUrl: 'http://127.0.0.1:11434/v1',
+    const allowed = [
+        'http://localhost:11434/v1',
+        'http://127.255.255.254:11434/v1',
+        'http://10.0.0.8:11434/v1',
+        'http://172.16.0.8:11434/v1',
+        'http://172.31.255.254:11434/v1',
+        'http://192.168.1.8:11434/v1',
+        'http://[::1]:11434/v1',
+        'http://[fc00::8]:11434/v1',
+        'http://[fdff:ffff::8]:11434/v1',
+        'http://[::ffff:192.168.1.8]:11434/v1'
+    ];
+
+    for (const baseUrl of allowed) {
+        const configuration = service.normalizeConfiguration('custom', {
+            baseUrl,
+            defaultModel: 'local-model'
+        });
+        assert.match(service.resolveEndpoint(configuration), /\/chat\/completions$/u);
+    }
+
+    const privateEndpoint = service.normalizeConfiguration('custom', {
+        baseUrl: 'http://192.168.1.8:11434/v1',
         defaultModel: 'local-model'
     });
+    assert.equal(service.endpointPermission(privateEndpoint), 'http://192.168.1.8/*');
+});
 
-    assert.throws(() => service.resolveEndpoint(insecure), /must use HTTPS/u);
-    assert.equal(service.resolveEndpoint(loopback), 'http://127.0.0.1:11434/v1/chat/completions');
-    assert.equal(service.endpointPermission(loopback), 'http://127.0.0.1/*');
+test('custom endpoints reject HTTP outside the explicit private-address boundary', () => {
+    const { service } = loadProviderService();
+    const rejected = [
+        'http://private-ai.example/v1',
+        'http://172.15.255.255/v1',
+        'http://172.32.0.0/v1',
+        'http://192.0.2.1/v1',
+        'http://100.64.0.1/v1',
+        'http://169.254.169.254/v1',
+        'http://[fe80::1]/v1',
+        'http://[::ffff:8.8.8.8]/v1',
+        'http://[2001:db8::1]/v1',
+        'ftp://192.168.1.8/v1'
+    ];
+
+    for (const baseUrl of rejected) {
+        const configuration = service.normalizeConfiguration('custom', {
+            baseUrl,
+            defaultModel: 'private-model'
+        });
+        assert.throws(() => service.resolveEndpoint(configuration), /must use HTTPS/u);
+    }
 });
 
 test('automatic model routing follows each provider task quality role', () => {
