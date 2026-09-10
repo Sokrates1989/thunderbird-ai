@@ -18,7 +18,7 @@ Der Build erstellt sowohl `artifacts/thunderbird-ai-assistant-pane-prototype-<ve
 
 ## Sicher testen
 
-Verwenden Sie ein Wegwerfprofil von Thunderbird. Eigene Experiment APIs benötigen für eine normale Installation eine privilegierte Signatur. Die XPI dient daher vor allem als reproduzierbares Prüfpaket. Für den lokalen Test wird der entpackte Build als temporäres Add-on geladen. Der Prototyp nutzt dieselbe Erweiterungs-ID wie das normale Add-on und sollte nicht in einem produktiv verwendeten Profil geladen werden.
+Verwenden Sie ein Wegwerfprofil von Thunderbird. Eigene Experiment APIs benötigen für eine normale Installation eine privilegierte Signatur. Die XPI dient daher vor allem als reproduzierbares Prüfpaket. Für den lokalen Test wird der entpackte Build als temporäres Add-on geladen. Der Prototyp hat eine eigene Erweiterungs-ID und ersetzt daher das normale Add-on nicht. Das normale Add-on sollte während des Tests trotzdem deaktiviert werden, damit keine doppelten Symbolleisten-Aktionen erscheinen.
 
 1. Thunderbird mit der Profilverwaltung starten und ein eigenes Testprofil anlegen.
 2. **Extras > Entwickler-Werkzeuge > Add-ons debuggen** öffnen (alternativ **Add-ons und Themes**, Zahnradmenü, **Add-ons debuggen**).

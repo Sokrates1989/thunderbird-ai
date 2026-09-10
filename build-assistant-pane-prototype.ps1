@@ -123,6 +123,9 @@ try {
 
     $manifestPath = Join-Path $stagingDirectory 'manifest.json'
     $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+    $manifest.name = 'AI Mail Assistant - Assistant Pane Prototype'
+    $manifest.browser_specific_settings.gecko.id = `
+        'thunderbird-ai-pane-prototype@felicitas-wisdom.com'
     $manifest.background.scripts = Add-UniqueValue `
         -Values @($manifest.background.scripts) `
         -Value 'assistant-pane-bootstrap.js'

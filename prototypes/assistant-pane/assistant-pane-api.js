@@ -8,9 +8,6 @@
     const { ExtensionCommon } = ChromeUtils.importESModule(
         "resource://gre/modules/ExtensionCommon.sys.mjs"
     );
-    const { Services } = ChromeUtils.importESModule(
-        "resource://gre/modules/Services.sys.mjs"
-    );
 
     const BUTTON_ID = "thunderbirdAiAssistantPaneButton";
     const PANE_ID = "thunderbirdAiAssistantPane";

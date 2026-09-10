@@ -141,7 +141,14 @@ test('prototype stays out of the production manifest and builder injects its bou
     assert.match(builder, /assistant-pane-bootstrap\.js/u);
     assert.match(builder, /experiment_apis/u);
     assert.match(builder, /assistant-pane-schema\.json/u);
+    assert.match(builder, /thunderbird-ai-pane-prototype@felicitas-wisdom\.com/u);
     assert.match(builder, /Temporary add-on directory/u);
+
+    const privilegedApi = fs.readFileSync(
+        path.join(repositoryRoot, 'prototypes/assistant-pane/assistant-pane-api.js'),
+        'utf8'
+    );
+    assert.doesNotMatch(privilegedApi, /Services\.sys\.mjs/u);
 });
 
 test('prototype UI strings exist in both runtime and manifest locale catalogs', () => {
