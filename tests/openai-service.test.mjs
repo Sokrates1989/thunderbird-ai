@@ -1,9 +1,17 @@
 import assert from 'node:assert/strict';
+import http from 'node:http';
 import test from 'node:test';
 
 import { createContext, loadScript } from '../test-support/load-script.mjs';
 
-function loadOpenAIService({ model = 'auto', taskModels, fetchImplementation, responseText = 'Ergebnis' } = {}) {
+function loadOpenAIService({
+    model = 'auto',
+    taskModels,
+    fetchImplementation,
+    responseText = 'Ergebnis',
+    provider = 'openai',
+    providerOverrides = {}
+} = {}) {
     const requests = [];
     const retryDelays = [];
     const recordedUsage = [];
@@ -33,14 +41,15 @@ function loadOpenAIService({ model = 'auto', taskModels, fetchImplementation, re
             definition.tasks.map(task => [task, definition.defaultModel])
         )))
         : taskModels;
-    const providerConfig = context.AIProviderService.normalizeConfiguration('openai', {
-        apiKey: 'sk-test-key',
+    const providerConfig = context.AIProviderService.normalizeConfiguration(provider, {
+        apiKey: provider === 'openai' ? 'sk-test-key' : '',
         defaultModel: model,
-        taskModels: configuredTaskModels
+        taskModels: configuredTaskModels,
+        ...providerOverrides
     });
     context.StorageManager = {
         getSettings: async () => ({
-            aiProvider: 'openai',
+            aiProvider: provider,
             providerConfig,
             taskModels: configuredTaskModels
         }),
@@ -50,6 +59,40 @@ function loadOpenAIService({ model = 'auto', taskModels, fetchImplementation, re
     };
     loadScript(context, 'common/utils/openai.js');
     return { recordedUsage, retryDelays, service: context.OpenAIService, requests };
+}
+
+/** Start a dependency-free OpenAI-compatible endpoint for a real socket-level request. */
+async function startLocalChatEndpoint(t) {
+    const requests = [];
+    const server = http.createServer((request, response) => {
+        const chunks = [];
+        request.on('data', chunk => chunks.push(chunk));
+        request.on('end', () => {
+            requests.push({
+                method: request.method,
+                path: request.url,
+                body: JSON.parse(Buffer.concat(chunks).toString('utf8'))
+            });
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify({
+                model: 'local-qwen-mock',
+                choices: [{ message: { content: 'Local endpoint response' } }],
+                usage: { prompt_tokens: 8, completion_tokens: 3 }
+            }));
+        });
+    });
+    await new Promise((resolve, reject) => {
+        server.once('error', reject);
+        server.listen(0, '0.0.0.0', resolve);
+    });
+    t.after(() => new Promise((resolve, reject) => {
+        server.close(error => error ? reject(error) : resolve());
+    }));
+    const requestHost = process.env.LOCAL_ENDPOINT_TEST_HOST || '127.0.0.1';
+    return {
+        baseUrl: `http://${requestHost}:${server.address().port}/v1`,
+        requests
+    };
 }
 
 function successfulResponse(content = 'Ergebnis', usage = null) {
@@ -111,6 +154,38 @@ test('successful responses record model-specific token usage for cost statistics
         cachedTokens: 200,
         outputTokens: 80
     }]);
+});
+
+test('persisted custom configuration reaches a real local endpoint for test and summary', async t => {
+    const endpoint = await startLocalChatEndpoint(t);
+    const { service } = loadOpenAIService({
+        fetchImplementation: fetch,
+        model: 'qwen',
+        provider: 'custom',
+        providerOverrides: {
+            authMode: 'none',
+            baseUrl: endpoint.baseUrl,
+            protocol: 'openai-chat'
+        },
+        taskModels: {}
+    });
+
+    const connection = await service.testConnection();
+    const summary = await service.generateSummary({
+        author: 'Local tester <local@example.test>',
+        subject: 'Synthetic local endpoint test',
+        content: 'This message contains synthetic test data only.',
+        attachments: []
+    });
+
+    assert.equal(connection.success, true);
+    assert.equal(summary.content, 'Local endpoint response');
+    assert.deepEqual(endpoint.requests.map(request => request.path), [
+        '/v1/chat/completions',
+        '/v1/chat/completions'
+    ]);
+    assert.ok(endpoint.requests[0].body.messages);
+    assert.match(endpoint.requests[1].body.messages[1].content, /Synthetic local endpoint test/u);
 });
 
 test('transient network failures are retried before the UI receives an error', async () => {
