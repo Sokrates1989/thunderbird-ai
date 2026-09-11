@@ -3,7 +3,7 @@
 > [English version](windows-installer-testing.md)
 
 Das primäre Windows-Artefakt heißt
-`Thunderbird-AI-Setup-3.9.0-win-x64.exe`. Es installiert das Add-on nur für den
+`Thunderbird-AI-Setup-3.10.0-win-x64.exe`. Es installiert das Add-on nur für den
 aktuellen Benutzer und benötigt keine Administratorrechte.
 
 ## Automatisierter Isolationstest
@@ -39,7 +39,7 @@ beendet oder gestartet.
 6. In den Einstellungen OpenAI, Claude, Mistral, DeepSeek und den individuellen
    Endpunkt auswählen; OpenAI muss der Standard sein. Mit einem verfügbaren
    Testschlüssel eine E-Mail öffnen, die Zusammenfassung ausführen und den
-   API-Test aufrufen. Im Einzelmail-Popup muss **Version 3.9.0** stehen und die
+   API-Test aufrufen. Im Einzelmail-Popup muss **Version 3.10.0** stehen und die
    Oberfläche muss deutsch sein.
 7. In den Einstellungen **English** wählen und speichern. Popup, Antworteditor und Hilfe müssen anschließend englisch erscheinen; nach einem Thunderbird-Neustart muss die Auswahl erhalten bleiben.
 8. Beide Auswahlen zur Öffnungsart ohne den globalen Speichern-Knopf auf **Tab**
@@ -53,7 +53,12 @@ beendet oder gestartet.
     übersteht und seine **×**-Schaltfläche es schließt. Ein Ergebnis erzeugen,
     den Modus wechseln, schließen und dieselbe Nachricht erneut öffnen; das
     Ergebnis muss für die aktuelle Sitzung verfügbar bleiben.
-11. Über Windows **Installierte Apps** deinstallieren und nach einem
+11. Dashboard-Nachrichten auswählen und beide vollständigen
+    Sammelaktionsleisten aus dem sichtbaren Bereich bewegen. Prüfen, dass die
+    schwebende Auswahlanzahl und fünf übereinstimmende Aktionen mit lokalisierten
+    Hover-/Fokus-Tooltips erscheinen und bei sichtbarer vollständiger Leiste oder
+    geleerter Auswahl wieder verschwinden.
+12. Über Windows **Installierte Apps** deinstallieren und nach einem
     Thunderbird-Neustart prüfen, dass das Add-on entfernt wurde.
 
 Der aktuelle Test-Build ist nicht Authenticode-signiert und kann deshalb eine

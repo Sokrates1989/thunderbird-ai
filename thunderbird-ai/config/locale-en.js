@@ -488,6 +488,7 @@ globalThis.LOCALE_MESSAGES.en = Object.freeze({
     dashboardPreviewEmpty: 'No readable message text is available.',
     dashboardSelectAll: 'Select all',
     dashboardSelectedCount: '{count} selected',
+    dashboardFloatingBulkActionsLabel: 'Bulk actions for {count} selected emails',
     dashboardAnalyzeSelected: 'Analyze unscored selection',
     dashboardRescoreSelected: 'Re-score selection',
     dashboardRescoreSelectedConfirm: 'Re-score {count} selected messages with AI? Existing visible AI scores will be replaced. Saved operator corrections remain in the learning archive.',

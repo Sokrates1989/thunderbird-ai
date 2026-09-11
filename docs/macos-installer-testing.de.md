@@ -3,7 +3,7 @@
 > [English version](macos-installer-testing.md)
 
 Das primäre macOS-Artefakt heißt
-`Thunderbird-AI-Setup-3.9.0-macos.pkg`. Es verwendet ausschließlich die
+`Thunderbird-AI-Setup-3.10.0-macos.pkg`. Es verwendet ausschließlich die
 macOS-Installationsdomäne des aktuellen Benutzerverzeichnisses und benötigt
 keine Administratorrechte.
 
@@ -27,7 +27,7 @@ enthaltene automatische Startbefehl wird stattdessen statisch geprüft.
 
 1. Thunderbird mindestens einmal starten und anschließend eine E-Mail sowie
    einen ungespeicherten Testentwurf öffnen.
-2. `artifacts/Thunderbird-AI-Setup-3.9.0-macos.pkg` öffnen. Die GPL-Lizenzseite lesen und bestätigen. Im
+2. `artifacts/Thunderbird-AI-Setup-3.10.0-macos.pkg` öffnen. Die GPL-Lizenzseite lesen und bestätigen. Im
    Installationsprogramm muss der lokalisierte Hinweis zur benutzerbezogenen
    Installation und zum sicheren Thunderbird-Beenden erscheinen. Es darf keine
    Administratorabfrage geben.
@@ -45,15 +45,20 @@ enthaltene automatische Startbefehl wird stattdessen statisch geprüft.
 5. In den Einstellungen OpenAI, Claude, Mistral, DeepSeek und den individuellen
    Endpunkt auswählen; OpenAI muss der Standard sein. Mit einem verfügbaren
    Testschlüssel eine E-Mail öffnen, die Zusammenfassung ausführen und den
-   API-Test aufrufen. Im Einzelmail-Popup muss **Version 3.9.0** stehen.
+   API-Test aufrufen. Im Einzelmail-Popup muss **Version 3.10.0** stehen.
 6. Eine abweichende Sprache unter **Einstellungen** speichern und nach einem
    Thunderbird-Neustart prüfen, dass sie erhalten bleibt.
 7. Den Installer erneut ausführen. Die vorhandene Installation muss ohne
    vorherige Deinstallation aktualisiert werden; API-Schlüssel und gespeicherte
    Einstellungen müssen erhalten bleiben.
-8. Wenn mehrere Thunderbird-Profile vorhanden sind, jedes Profil starten und
+8. Dashboard-Nachrichten auswählen und beide vollständigen
+   Sammelaktionsleisten aus dem sichtbaren Bereich bewegen. Die schwebende
+   Auswahlanzahl, fünf übereinstimmende Aktionen, lokalisierte Hover-/Fokus-
+   Tooltips und das Ausblenden bei sichtbarer vollständiger Leiste oder leerer
+   Auswahl prüfen.
+9. Wenn mehrere Thunderbird-Profile vorhanden sind, jedes Profil starten und
    prüfen, dass dieselbe Add-on-Version erkannt wird.
-9. Das Add-on über Thunderbirds Add-on-Verwaltung entfernen und Thunderbird
+10. Das Add-on über Thunderbirds Add-on-Verwaltung entfernen und Thunderbird
    neu starten. Es darf in diesem Profil nicht mehr geladen werden.
 
 Das aktuelle Testpaket ist nicht mit einer Apple Developer ID signiert und

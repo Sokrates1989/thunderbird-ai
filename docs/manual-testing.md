@@ -193,8 +193,15 @@ Thunderbird behavior that mocks cannot prove.
     and complete at least one chat turn, then close and reopen the assistant for
     the same message. Both must be restored. Open another message and verify that
     the prior message's result and chat are not shown.
+42. Select at least one dashboard message, then scroll until neither the top nor
+    bottom bulk-action bar intersects the viewport. A floating stack must show
+    the selection count and the same five icons, colors, and actions for analyzing
+    unscored mail, re-scoring, marking as read, archiving, and deleting. Hover and
+    keyboard focus must expose each localized action name. The stack must hide as
+    soon as either complete bar is visible or the selection becomes empty; its
+    buttons must remain visible but disabled while an action is running.
 
-The single-message popup must show version 3.9.0. The dashboard uses unread
+The single-message popup must show version 3.10.0. The dashboard uses unread
 status as its default candidate filter; **Include read messages** broadens that
 scope only for the current Thunderbird session. Analysis performed outside the
 dashboard does not automatically create a dashboard score record.

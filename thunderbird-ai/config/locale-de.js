@@ -488,6 +488,7 @@ globalThis.LOCALE_MESSAGES.de = Object.freeze({
     dashboardPreviewEmpty: 'Kein lesbarer Nachrichtentext vorhanden.',
     dashboardSelectAll: 'Alle auswählen',
     dashboardSelectedCount: '{count} ausgewählt',
+    dashboardFloatingBulkActionsLabel: 'Sammelaktionen für {count} ausgewählte E-Mails',
     dashboardAnalyzeSelected: 'Unbewertete Auswahl analysieren',
     dashboardRescoreSelected: 'Auswahl neu bewerten',
     dashboardRescoreSelectedConfirm: '{count} ausgewählte Nachrichten erneut durch die AI bewerten? Bereits sichtbare AI-Werte werden ersetzt. Gespeicherte Nutzerkorrekturen bleiben im Lernarchiv erhalten.',

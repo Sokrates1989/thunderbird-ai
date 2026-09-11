@@ -3,7 +3,7 @@
 > [Deutsche Version](windows-installer-testing.de.md)
 
 The primary Windows artifact is
-`Thunderbird-AI-Setup-3.9.0-win-x64.exe`. It installs only for the current user
+`Thunderbird-AI-Setup-3.10.0-win-x64.exe`. It installs only for the current user
 and requires no administrator privileges.
 
 ## Automated isolation test
@@ -34,7 +34,7 @@ not quit or launch Thunderbird.
 5. Confirm the add-on appears and existing API settings remain present.
 6. Select OpenAI, Claude, Mistral, DeepSeek, and the custom endpoint in settings;
    OpenAI must be the default. With an available key, summarise an email and run
-   the API test. The popup must show **Version 3.9.0** and German UI.
+   the API test. The popup must show **Version 3.10.0** and German UI.
 7. Select **English**, save, and confirm popup, reply editor, and help switch to
    English and retain the choice after restart.
 8. Set both launch-mode selectors to **tab** without pressing the global Save
@@ -50,7 +50,11 @@ not quit or launch Thunderbird.
     persistent compact window survives focus changes in Thunderbird, and that
     its **×** button closes it. Generate a result, switch modes, close, and reopen
     the same message; the result must remain available for the current session.
-11. Uninstall through Windows **Installed apps**, restart Thunderbird, and
+11. Select dashboard messages and move both complete bulk-action bars outside
+    the viewport. Verify that the floating selection count and five matching
+    actions appear with localized hover/focus tooltips, then disappear when a
+    complete bar becomes visible or the selection is cleared.
+12. Uninstall through Windows **Installed apps**, restart Thunderbird, and
     confirm the add-on is removed.
 
 The test build is not Authenticode-signed and can trigger SmartScreen. A public

@@ -33,7 +33,8 @@ const GlobalDashboardManager = class {
             senderSummary: document.getElementById('dashboardSenderSummary'),
             senderOptions: document.getElementById('dashboardSenderOptions'),
             loadingIndicator: document.getElementById('dashboardLoadingIndicator'),
-            loadingText: document.getElementById('dashboardLoadingText')
+            loadingText: document.getElementById('dashboardLoadingText'),
+            floatingBulkActions: document.getElementById('dashboardFloatingBulkActions')
         };
         this.sourceAccounts = [];
         this.accounts = [];
@@ -86,6 +87,7 @@ const GlobalDashboardManager = class {
         });
         this.bulkActionsComponent = new DashboardBulkActionsComponent({
             hosts: document.querySelectorAll('[data-dashboard-bulk-actions-host]'),
+            floatingHost: this.elements.floatingBulkActions,
             onToggleAll: selected => this.toggleAllVisible(selected),
             onAnalyze: () => {
                 this.analysisController.analyzeSelection()

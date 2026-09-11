@@ -2267,8 +2267,12 @@ test('manifest routes both toolbar actions through the wake-safe background serv
     assert.ok(dashboard.indexOf('DashboardDeleteComponent.js')
         < dashboard.indexOf('GlobalDashboardManager.js'));
     assert.equal((dashboard.match(/data-dashboard-bulk-actions-host=/gu) || []).length, 2);
+    assert.match(dashboard, /id="dashboardFloatingBulkActions"[^>]*hidden/u);
     assert.match(bulkActionsComponent, /dashboard-bulk-action-groups/u);
     assert.match(bulkActionsComponent, /className = 'dashboard-action-icon'/u);
+    assert.match(bulkActionsComponent, /new globalThis\.IntersectionObserver/u);
+    assert.match(bulkActionsComponent, /this\.selectedCount === 0 \|\| toolbarVisible/u);
+    assert.match(dashboardStyles, /\.dashboard-floating-bulk-action::after/u);
     assert.match(dashboard, /id="dashboardShowPreview"/u);
     assert.match(dashboard, /<details id="dashboardDisplayOptions"[^>]*open>/u);
     assert.match(dashboard, /class="dashboard-display-options-summary"/u);

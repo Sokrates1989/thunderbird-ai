@@ -212,8 +212,16 @@ Prüfebene; diese Liste deckt Thunderbird-Verhalten ab, das Mocks nicht belegen.
     schließen und erneut öffnen. Beides muss wiederhergestellt werden. Eine
     andere Nachricht öffnen und prüfen, dass Ergebnis und Chat der vorherigen
     Nachricht dort nicht erscheinen.
+42. Mindestens eine Dashboard-Nachricht auswählen und so scrollen, dass weder
+    die obere noch die untere Sammelaktionsleiste den sichtbaren Bereich berührt.
+    Ein schwebender Stapel muss die Auswahlanzahl und dieselben fünf Symbole,
+    Farben und Aktionen zum Analysieren unbewerteter Nachrichten, Neubewerten,
+    Gelesen-Markieren, Archivieren und Löschen zeigen. Hover und Tastaturfokus
+    müssen den jeweiligen lokalisierten Aktionsnamen einblenden. Der Stapel muss
+    verschwinden, sobald eine vollständige Leiste sichtbar oder die Auswahl leer
+    ist; während einer laufenden Aktion bleibt er sichtbar, aber deaktiviert.
 
-Das Einzelmail-Popup muss Version 3.9.0 anzeigen. Das Dashboard verwendet den
+Das Einzelmail-Popup muss Version 3.10.0 anzeigen. Das Dashboard verwendet den
 Ungelesen-Status als Standard-Kandidatenfilter; **Gelesene Nachrichten
 einbeziehen** erweitert den Bestand nur für die aktuelle Thunderbird-Sitzung.
 Analysen außerhalb des Dashboards erzeugen nicht automatisch einen

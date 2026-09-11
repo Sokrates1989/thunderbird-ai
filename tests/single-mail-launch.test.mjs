@@ -279,7 +279,7 @@ test('header offers exactly the other two destinations and a close control only 
         ]);
         const switched = [];
         const context = createContext({
-            CONFIG: { ADDON_NAME: 'AI Mail Assistant', ADDON_VERSION: '3.9.0' },
+            CONFIG: { ADDON_NAME: 'AI Mail Assistant', ADDON_VERSION: '3.10.0' },
             I18n: { t: (key, replacements = {}) => replacements.version || key },
             document: {
                 querySelector: () => new TestElement(),

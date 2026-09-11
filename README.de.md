@@ -62,6 +62,17 @@ Jede Vorschau öffnet beim Anklicken das Bild in seiner Originalauflösung.
   </tr>
 </table>
 
+## Umfang von Release 3.10.0
+
+Release 3.10.0 hält die Aktionen für ausgewählte Dashboard-Nachrichten
+erreichbar, wenn beide vollständigen Sammelaktionsleisten außerhalb des
+sichtbaren Bereichs liegen. Ein kompakter schwebender Stapel zeigt die aktuelle
+Auswahlanzahl und dieselben fünf Aktionen zum Analysieren, Neubewerten,
+Gelesen-Markieren, Archivieren und Löschen mit übereinstimmenden Symbolen,
+Farben, Deaktivierungszuständen und lokalisierten Tooltips bei Hover oder
+Tastaturfokus. Die schwebenden Aktionen bleiben ohne Auswahl oder bei sichtbarer
+vollständiger Aktionsleiste ausgeblendet.
+
 ## Umfang von Release 3.9.0
 
 Release 3.9.0 ergänzt eine dritte Startoption für einzelne Nachrichten: ein
@@ -368,7 +379,9 @@ nichts.
 42. Nach mehreren Dashboard-Aktionen den Tab wechseln und das globale Toolbar-Symbol mindestens dreimal erneut verwenden. Ein hängender Thunderbird-Tabaufruf muss nach einem begrenzten Zeitlimit freigegeben werden, sodass der nächste Klick ohne Thunderbird-Neustart erneut versucht. Bei einem endgültigen Fehler muss eine lokalisierte Benachrichtigung mit Diagnosecode erscheinen. Unter **Einstellungen → AI Assistant öffnen → Support-Diagnose** müssen Add-on-/Thunderbird-Version, letzter Dashboard-Start und die letzten Hintergrund-/UI-Aktivitäten ohne E-Mail-Inhalte sichtbar und kopierbar sein. Ein absichtlich provozierter Fehler muss als fehlgeschlagener oder kontrolliert fehlgeschlagener Vorgang erscheinen.
 43. Im Dashboard mehrere Nachrichten auswählen und bis unter die letzte angezeigte Nachricht scrollen. Dort muss dieselbe Bulk-Aktionsleiste wie oberhalb der Nachrichten erscheinen; Auswahlzahl, Aktivierungszustand und Aktionen müssen in beiden Leisten synchron bleiben. Danach Dashboard und Einzelmail-Ansicht nach unten scrollen: Rechts unten muss jeweils ein kleiner runder Pfeil erscheinen, der die sichtbare Scrollfläche nach oben bewegt und am Anfang wieder verschwindet.
 
-Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 3.9.0** stehen. Das Dashboard verwendet standardmäßig den Ungelesen-Status als Kandidatenfilter; **Gelesene Nachrichten einbeziehen** erweitert den Posteingangsbestand nur für die aktuelle Thunderbird-Sitzung. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
+44. Mindestens eine Dashboard-Nachricht auswählen und so scrollen, dass weder die obere noch die untere Sammelaktionsleiste sichtbar ist. Rechts muss ein schwebender Stapel mit Auswahlanzahl sowie denselben fünf Symbolen, Farben und Aktionen für **Unbewertete Auswahl analysieren**, **Auswahl neu bewerten**, **Ausgewählte als gelesen markieren**, **Ausgewählte archivieren** und **Ausgewählte löschen** erscheinen. Hover und Tastaturfokus müssen den lokalisierten Aktionsnamen zeigen. Sobald eine vollständige Sammelaktionsleiste sichtbar wird oder die Auswahl leer ist, muss der Stapel verschwinden; während einer laufenden Aktion müssen seine Schaltflächen deaktiviert sein.
+
+Im Einzelmail-Popup wird die aktive Add-on-Version unter dem Betreff angezeigt. Nach einem Update muss dort **Version 3.10.0** stehen. Das Dashboard verwendet standardmäßig den Ungelesen-Status als Kandidatenfilter; **Gelesene Nachrichten einbeziehen** erweitert den Posteingangsbestand nur für die aktuelle Thunderbird-Sitzung. Für die im Dashboard ausgewerteten Nachrichten bleiben die AI-Scores lokal gespeichert und erlauben den Filter **Nur nicht analysierte**; Nachrichten, die außerhalb des Dashboards analysiert wurden, erhalten dadurch jedoch keine Dashboard-Markierung.
 
 Die Einstellungen enthalten eine **Support- und Speicherdiagnose**. Sie zeigt Hintergrundstart, Abhängigkeitsstatus, Laufzeiten und eine inhaltsfreie Prüfung lokaler Einstellungsdaten. API-Schlüssel werden ausschließlich als „vorhanden/nicht vorhanden“ gemeldet. Kann der Hintergrunddienst nicht starten, werden vorhandene Einstellungen lokal und schreibgeschützt dargestellt; Speichern und Zurücksetzen bleiben bis zu einem erfolgreichen Start deaktiviert.
 

@@ -3,7 +3,7 @@
 > [Deutsche Version](atn-submission.de.md)
 
 This document contains copy-ready listing and reviewer information for the
-current submission of AI Mail Assistant for Thunderbird 3.9.0. Keep the
+current submission of AI Mail Assistant for Thunderbird 3.10.0. Keep the
 listing synchronized with `PRIVACY.md` whenever providers or data categories
 change.
 
@@ -17,7 +17,7 @@ Official references:
 
 - Name: `AI Mail Assistant for Thunderbird`
 - Extension ID: `thunderbird-ai@felicitas-wisdom.com`
-- Version: `3.9.0`
+- Version: `3.10.0`
 - Minimum Thunderbird: `128.0`
 - Recommended primary category: `Message and News Reading`
 - Recommended secondary category, if available: `Message Composition`
@@ -133,15 +133,15 @@ advertised platform.
    macOS installers are outside the ATN submission and must not be uploaded.
 3. Sign in to the Thunderbird Add-ons Developer Hub, open **My Add-ons → AI Mail
    Assistant → Upload New Version**, and upload
-   `artifacts/thunderbird-ai-3.9.0.xpi`.
-4. Add the copy-ready 3.9.0 version notes below. Existing listing identity,
+   `artifacts/thunderbird-ai-3.10.0.xpi`.
+4. Add the copy-ready 3.10.0 version notes below. Existing listing identity,
    categories, license, screenshots, and privacy text need changes only when the
    corresponding product behavior or disclosure changed.
 5. Review the synthetic-data screenshots and replace only outdated views. Never
    expose account addresses, message content, or provider credentials.
 6. Answer **Yes** to the source-code question because the build flattens two
    source trees into the XPI. Attach
-   `artifacts/thunderbird-ai-3.9.0-atn-source.zip` and the build instructions
+   `artifacts/thunderbird-ai-3.10.0-atn-source.zip` and the build instructions
    from `ATN_SOURCE_BUILD.md`; the source itself remains readable and contains
    no minified or bundled third-party code.
 7. Put the functional test notes below and a temporary low-limit reviewer API
@@ -152,16 +152,14 @@ advertised platform.
 9. After approval, install once from the public listing in a clean profile,
    verify update identity and core actions, then revoke the temporary key.
 
-## Version 3.9.0 notes
+## Version 3.10.0 notes
 
-The single-message assistant now offers three independent containers: the
-default dismiss-on-blur overlay, a persistent non-modal compact window, and a
-dedicated Thunderbird tab. Two compact header controls always expose the other
-two destinations without silently changing the saved default. The persistent
-window remains open while Thunderbird is used and provides an explicit close
-control. The latest AI result and completed chat turns are retained per message
-in memory for the current Thunderbird session and restored after a close,
-reopen, or view switch.
+Selected-message actions now remain accessible when both complete dashboard
+bulk-action bars are outside the viewport. A compact floating stack presents
+the current selection count and the same five analyze, re-score, mark-read,
+archive, and delete actions with matching icons, colors, disabled states, and
+localized tooltips. It remains hidden when no message is selected or either
+complete bulk-action bar is visible.
 
 ## Permission explanations
 
@@ -215,8 +213,8 @@ that warning separately so it cannot be confused with the 57 ATN findings.
 
 ## Reviewer notes
 
-1. Upload `artifacts/thunderbird-ai-3.9.0.xpi` as the listed extension update.
-2. Attach `artifacts/thunderbird-ai-3.9.0-atn-source.zip` as source code.
+1. Upload `artifacts/thunderbird-ai-3.10.0.xpi` as the listed extension update.
+2. Attach `artifacts/thunderbird-ai-3.10.0-atn-source.zip` as source code.
 3. The source archive contains `ATN_SOURCE_BUILD.md` with a no-network XPI build.
 4. Test on Thunderbird 128 or newer with a synthetic email account and synthetic
    messages only.

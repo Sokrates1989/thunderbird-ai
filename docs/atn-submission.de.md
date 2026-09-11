@@ -3,7 +3,7 @@
 > [English version](atn-submission.md)
 
 Dieses Dokument enthält direkt verwendbare Listing- und Reviewer-Informationen
-für die aktuelle Einreichung von AI Mail Assistant for Thunderbird 3.9.0. Bei
+für die aktuelle Einreichung von AI Mail Assistant for Thunderbird 3.10.0. Bei
 Änderungen an Anbietern oder Datenkategorien muss es mit
 `PRIVACY.de.md` synchron bleiben.
 
@@ -17,7 +17,7 @@ Offizielle Referenzen:
 
 - Name: `AI Mail Assistant for Thunderbird`
 - Erweiterungs-ID: `thunderbird-ai@felicitas-wisdom.com`
-- Version: `3.9.0`
+- Version: `3.10.0`
 - Minimales Thunderbird: `128.0`
 - Empfohlene Hauptkategorie: `Message and News Reading`
 - Empfohlene Nebenkategorie, falls verfügbar: `Message Composition`
@@ -119,15 +119,15 @@ Wegwerf-Thunderbird-Profil auf jeder beworbenen Plattform erfolgen.
    hochgeladen werden.
 3. Im Thunderbird-Add-ons-Entwicklerbereich **Meine Add-ons → AI Mail Assistant
    → Neue Version hochladen** öffnen und
-   `artifacts/thunderbird-ai-3.9.0.xpi` hochladen.
-4. Die unten vorbereiteten Versionshinweise für 3.9.0 eintragen. Vorhandene
+   `artifacts/thunderbird-ai-3.10.0.xpi` hochladen.
+4. Die unten vorbereiteten Versionshinweise für 3.10.0 eintragen. Vorhandene
    Listing-Identität, Kategorien, Lizenz, Screenshots und Datenschutzerklärung
    müssen nur geändert werden, wenn sich das jeweilige Verhalten oder die
    Offenlegung geändert hat.
 5. Screenshots mit synthetischen Daten prüfen und nur veraltete Ansichten
    ersetzen. Keine Kontoadressen, Nachrichteninhalte oder Zugangsdaten zeigen.
 6. Die Quellcode-Frage mit **Ja** beantworten, weil der Build zwei Quellbäume im
-   XPI-Stamm zusammenführt. `artifacts/thunderbird-ai-3.9.0-atn-source.zip` und
+   XPI-Stamm zusammenführt. `artifacts/thunderbird-ai-3.10.0-atn-source.zip` und
    die Build-Anleitung aus `ATN_SOURCE_BUILD.de.md` anhängen; der Quellcode
    bleibt lesbar und enthält keinen minifizierten oder gebündelten Drittcode.
 7. Die folgenden Funktionstests und einen temporären, niedrig limitierten
@@ -141,17 +141,15 @@ Wegwerf-Thunderbird-Profil auf jeder beworbenen Plattform erfolgen.
    installieren, Update-Identität und Kernaktionen prüfen und den temporären
    Schlüssel widerrufen.
 
-## Versionshinweise 3.9.0
+## Versionshinweise 3.10.0
 
-Der Einzelmail-Assistent bietet jetzt drei unabhängige Darstellungen: das beim
-Fokuswechsel schließende Standard-Overlay, ein dauerhaft geöffnetes nicht-
-modales kompaktes Fenster und einen eigenen Thunderbird-Tab. Zwei kompakte
-Schaltflächen im Kopf zeigen stets die jeweils anderen beiden Ziele, ohne die
-gespeicherte Vorgabe unbemerkt zu ändern. Das dauerhafte Fenster bleibt beim
-Arbeiten in Thunderbird offen und besitzt eine ausdrückliche Schließen-
-Schaltfläche. Das letzte AI-Ergebnis und abgeschlossene Chat-Beiträge bleiben
-pro Nachricht im Arbeitsspeicher der aktuellen Thunderbird-Sitzung erhalten
-und werden nach Schließen, erneutem Öffnen oder Ansichtswechsel wiederhergestellt.
+Aktionen für ausgewählte Nachrichten bleiben jetzt erreichbar, wenn beide
+vollständigen Dashboard-Sammelaktionsleisten außerhalb des sichtbaren Bereichs
+liegen. Ein kompakter schwebender Stapel zeigt die aktuelle Auswahlanzahl und
+dieselben fünf Aktionen zum Analysieren, Neubewerten, Gelesen-Markieren,
+Archivieren und Löschen mit übereinstimmenden Symbolen, Farben,
+Deaktivierungszuständen und lokalisierten Tooltips. Ohne Auswahl oder bei
+sichtbarer vollständiger Sammelaktionsleiste bleibt der Stapel ausgeblendet.
 
 ## Berechtigungserklärungen
 
@@ -209,8 +207,8 @@ aus, damit sie nicht mit den 57 ATN-Funden verwechselt wird.
 
 ## Reviewer-Hinweise
 
-1. `artifacts/thunderbird-ai-3.9.0.xpi` als Update der gelisteten Erweiterung hochladen.
-2. `artifacts/thunderbird-ai-3.9.0-atn-source.zip` als Quellcode anhängen.
+1. `artifacts/thunderbird-ai-3.10.0.xpi` als Update der gelisteten Erweiterung hochladen.
+2. `artifacts/thunderbird-ai-3.10.0-atn-source.zip` als Quellcode anhängen.
 3. Das Quellarchiv enthält `ATN_SOURCE_BUILD.de.md` mit einem netzwerkfreien
    XPI-Build.
 4. Thunderbird 128 oder neuer mit synthetischem Konto und Nachrichten verwenden.

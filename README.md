@@ -59,6 +59,15 @@ Each preview links to the original-resolution image.
   </tr>
 </table>
 
+## Release 3.10.0 scope
+
+Release 3.10.0 keeps the dashboard's selected-message actions reachable while
+both complete bulk-action bars are outside the viewport. A compact floating
+stack shows the current selection count and the same five analyze, re-score,
+mark-read, archive, and delete actions with matching icons, colors, disabled
+states, and localized hover or keyboard-focus tooltips. The floating actions
+stay hidden when nothing is selected or either complete action bar is visible.
+
 ## Release 3.9.0 scope
 
 Release 3.9.0 adds a third single-message launch choice: a persistent compact
