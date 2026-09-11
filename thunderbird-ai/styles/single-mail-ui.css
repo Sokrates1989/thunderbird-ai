@@ -25,10 +25,15 @@ body {
     background: #f8fafc;
 }
 
-.single-mail-expand-view {
+.single-mail-view-actions {
     position: absolute;
     top: 9px;
     right: 9px;
+    display: flex;
+    gap: 6px;
+}
+
+.single-mail-view-action {
     width: 34px;
     height: 34px;
     border: 1px solid #aeb8c2;
@@ -39,58 +44,25 @@ body {
     font-size: 18px;
 }
 
-.single-mail-expand-view:hover {
+.single-mail-view-action[hidden] {
+    display: none;
+}
+
+.single-mail-view-action:hover {
     border-color: #087cc1;
     color: #087cc1;
     background: #eef7fc;
 }
 
-.single-mail-expand-view:focus-visible {
+.single-mail-view-action:focus-visible {
     outline: 3px solid #4c9ed9;
     outline-offset: 2px;
 }
 
-.single-mail-use-overlay {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    min-height: 30px;
-    padding: 4px 8px;
-    border: 1px solid #087cc1;
-    border-radius: 6px;
-    background: white;
-    color: #086da9;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.single-mail-use-overlay[hidden] {
-    display: none;
-}
-
-.single-mail-use-overlay:hover:not(:disabled) {
-    background: #e9f6fd;
-    box-shadow: 0 3px 9px rgba(8, 124, 193, 0.18);
-}
-
-.single-mail-use-overlay:focus-visible {
-    outline: 3px solid #4c9ed9;
-    outline-offset: 2px;
-}
-
-.single-mail-use-overlay:disabled {
-    cursor: default;
-    opacity: 0.72;
-}
-
-.single-mail-use-overlay.saved {
-    border-color: #2e7d32;
-    background: #edf8ee;
-    color: #256629;
+.single-mail-close-view:hover {
+    border-color: #b3261e;
+    color: #b3261e;
+    background: #fff1f0;
 }
 
 body.single-mail-expanded-view {

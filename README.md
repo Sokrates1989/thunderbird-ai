@@ -59,14 +59,16 @@ Each preview links to the original-resolution image.
   </tr>
 </table>
 
-## Release 3.8.2 scope
+## Release 3.9.0 scope
 
-Release 3.8.2 turns the expanded single-message tab's overlay control into a
-compact return action. It saves compact Overlay mode, reactivates the message
-tab that opened the workspace, opens the overlay there when the same message is
-still displayed, and closes the expanded tab. If the original tab or popup is
-no longer available, Thunderbird still returns to the nearest prior tab and
-uses Overlay mode on the next message-toolbar launch.
+Release 3.9.0 adds a third single-message launch choice: a persistent compact
+window that remains open while the user works in Thunderbird and closes only
+through its close control or native window controls. The original lightweight
+overlay remains the default, and the dedicated Thunderbird tab remains
+available. Compact controls in every view open either of the other two modes
+without changing the saved default. The latest AI result and completed chat
+turns are retained per message for the current Thunderbird session, so closing,
+reopening, or switching views does not discard them.
 
 ## Release 3.8.1 scope
 

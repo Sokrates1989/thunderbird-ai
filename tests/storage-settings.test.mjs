@@ -125,7 +125,7 @@ test('legacy general model is a migration fallback and saved task choices become
 test('saving a partial settings payload preserves both existing launch preferences', async () => {
     const { context, service, values } = loadStorage({
         dashboardOpenMode: 'tab',
-        singleMailOpenMode: 'tab'
+        singleMailOpenMode: 'window'
     });
 
     await service.saveSettings({
@@ -138,7 +138,20 @@ test('saving a partial settings payload preserves both existing launch preferenc
     });
 
     assert.equal(values.dashboardOpenMode, 'tab');
-    assert.equal(values.singleMailOpenMode, 'tab');
+    assert.equal(values.singleMailOpenMode, 'window');
+});
+
+test('persistent window is valid only for the single-mail launch preference', async () => {
+    const { service, values } = loadStorage();
+
+    await service.saveSettings({
+        dashboardOpenMode: 'window',
+        singleMailOpenMode: 'window',
+        uiLanguage: 'en'
+    });
+
+    assert.equal(values.dashboardOpenMode, 'overlay');
+    assert.equal(values.singleMailOpenMode, 'window');
 });
 
 test('concurrent token reports accumulate by model and produce a dated price estimate', async () => {

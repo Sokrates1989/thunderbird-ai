@@ -169,11 +169,15 @@ class ThunderbirdAI {
                         tab,
                         'saved-preference'
                     );
+                } else if (mode === launchModeService.MODES.WINDOW) {
+                    await SingleMailWorkspaceService.openWindowFromDisplayedTab(
+                        tab,
+                        'saved-preference'
+                    );
                 } else {
-                    await launchModeService.openOverlay(
-                        browser.messageDisplayAction,
-                        'single-mail-ui.html',
-                        { tabId: tab.id, windowId: tab.windowId }
+                    await SingleMailWorkspaceService.openOverlayFromDisplayedTab(
+                        tab,
+                        'saved-preference'
                     );
                 }
                 return { success: true };
@@ -233,6 +237,7 @@ class ThunderbirdAI {
             session: RuntimeDiagnosticService.sessionId,
             dependencies: {
                 launchMode: Boolean(globalThis.LaunchModeService),
+                singleMailSession: Boolean(globalThis.SingleMailSessionService),
                 dashboardLaunch: Boolean(globalThis.DashboardLaunchService),
                 storage: Boolean(globalThis.StorageManager),
                 message: Boolean(globalThis.MessageService),
@@ -299,6 +304,14 @@ class ThunderbirdAI {
                 case CONFIG.ACTIONS.GET_SETTINGS:
                 case CONFIG.ACTIONS.GET_STATISTICS:
                     return StorageManager.getSettings();
+                case CONFIG.ACTIONS.GET_SINGLE_MAIL_SESSION:
+                    return {
+                        success: true,
+                        data: await globalThis.SingleMailSessionService.load(request.messageId)
+                    };
+                case CONFIG.ACTIONS.CLEAR_SINGLE_MAIL_CHAT:
+                    await globalThis.SingleMailSessionService.clearChat(request.messageId);
+                    return { success: true };
                 case CONFIG.ACTIONS.PREPARE_RESTORED_DASHBOARD:
                     return {
                         success: true,
@@ -344,7 +357,9 @@ class ThunderbirdAI {
         if (!storageKey) {
             return { success: false };
         }
-        const normalizedMode = globalThis.LaunchModeService.normalizeMode(mode);
+        const normalizedMode = setting === 'dashboardOpenMode'
+            ? this.dashboardLaunchService().normalizeMode(mode)
+            : globalThis.LaunchModeService.normalizeMode(mode);
         const success = await StorageManager.set(
             storageKey,
             normalizedMode
@@ -396,7 +411,9 @@ class ThunderbirdAI {
         if (result.usedApi) {
             await StorageManager.updateStatistics('api', this.apiAttemptCount(result));
         }
-        return this.successResult(task, result, messageId);
+        const response = this.successResult(task, result, messageId);
+        await this.rememberSingleMailResult(messageId, response.data);
+        return response;
     }
 
     /** Load selected messages once and return configured-model importance, spam, and risk scores. */
@@ -437,7 +454,7 @@ class ThunderbirdAI {
         const result = await OpenAIService.analyzeSingleScore(message, feedbackExamples);
         await StorageManager.updateStatistics('email');
         await StorageManager.updateStatistics('api', this.apiAttemptCount(result));
-        return {
+        const response = {
             success: true,
             data: {
                 title: I18n.t('singleScoreTitle'),
@@ -449,6 +466,12 @@ class ThunderbirdAI {
                 archivedFeedback
             }
         };
+        await this.rememberSingleMailResult(
+            messageId,
+            response.data,
+            'scoring'
+        );
+        return response;
     }
 
     /** Persist explicit operator corrections independently from Thunderbird mail state. */
@@ -535,6 +558,11 @@ class ThunderbirdAI {
         const result = await OpenAIService.processChat(query, message, history);
         await StorageManager.updateStatistics('email');
         await StorageManager.updateStatistics('api', this.apiAttemptCount(result));
+        await this.rememberSingleMailChat(messageId, [
+            ...history,
+            { role: 'user', content: query },
+            { role: 'assistant', content: result.content }
+        ]);
         return {
             success: true,
             data: {
@@ -558,7 +586,9 @@ class ThunderbirdAI {
         if (result.usedApi) {
             await StorageManager.updateStatistics('api', this.apiAttemptCount(result));
         }
-        return this.successResult('reply', result, messageId);
+        const response = this.successResult('reply', result, messageId);
+        await this.rememberSingleMailResult(messageId, response.data);
+        return response;
     }
 
     async improveText(text, type) {
@@ -584,7 +614,7 @@ class ThunderbirdAI {
             }).join('\n\n')
             : I18n.t('noSimilar');
         await StorageManager.updateStatistics('email');
-        return {
+        const response = {
             success: true,
             data: {
                 title: I18n.t('similarTitle'),
@@ -594,6 +624,26 @@ class ThunderbirdAI {
                 similarMessages
             }
         };
+        await this.rememberSingleMailResult(messageId, response.data);
+        return response;
+    }
+
+    /** Retain one completed result without turning a storage failure into a lost AI response. */
+    async rememberSingleMailResult(messageId, result, kind = 'standard') {
+        try {
+            await globalThis.SingleMailSessionService.rememberResult(messageId, result, kind);
+        } catch (error) {
+            console.warn('The AI result could not be retained for this Thunderbird session.', error);
+        }
+    }
+
+    /** Retain completed chat turns without hiding a successful provider response on failure. */
+    async rememberSingleMailChat(messageId, history) {
+        try {
+            await globalThis.SingleMailSessionService.rememberChat(messageId, history);
+        } catch (error) {
+            console.warn('The chat could not be retained for this Thunderbird session.', error);
+        }
     }
 
     async handleMenuClick(info) {

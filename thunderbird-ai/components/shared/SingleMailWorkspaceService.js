@@ -7,13 +7,19 @@ const SingleMailWorkspaceService = {
         return this.MODES.has(mode) ? mode : null;
     },
 
-    workspaceUrl(messageId, mode = null, source = 'manual', returnTabId = null) {
+    workspaceUrl(
+        messageId,
+        mode = null,
+        source = 'manual',
+        returnTabId = null,
+        view = 'expanded'
+    ) {
         const parameters = new URLSearchParams({ messageId: String(messageId) });
         const normalizedMode = this.normalizeMode(mode);
         if (normalizedMode) {
             parameters.set(normalizedMode, '1');
         }
-        parameters.set('view', 'expanded');
+        parameters.set('view', view);
         parameters.set('source', String(source || 'manual').slice(0, 80));
         if (Number.isInteger(returnTabId)) {
             parameters.set('returnTabId', String(returnTabId));
@@ -42,6 +48,31 @@ const SingleMailWorkspaceService = {
 
     /** Resolve the displayed Thunderbird message before opening a persistent tab. */
     async openFromDisplayedTab(tab, source = 'saved-preference') {
+        const message = await this.displayedMessageFromTab(tab);
+        return this.openExpanded(message.id, null, source, tab);
+    },
+
+    /** Resolve the displayed message before opening its blur-resistant compact window. */
+    async openWindowFromDisplayedTab(tab, source = 'saved-preference') {
+        const message = await this.displayedMessageFromTab(tab);
+        return this.openPersistentWindow(message.id, source, tab);
+    },
+
+    /** Open Thunderbird's lightweight dismiss-on-blur popup for the displayed message. */
+    async openOverlayFromDisplayedTab(tab, source = 'saved-preference') {
+        const message = await this.displayedMessageFromTab(tab);
+        return globalThis.LaunchModeService.openOverlay(
+            browser.messageDisplayAction,
+            this.workspaceUrl(message.id, null, source, tab.id, 'overlay'),
+            { tabId: tab.id, windowId: tab.windowId }
+        );
+    },
+
+    /** Resolve exactly one message from a Thunderbird message-display tab. */
+    async displayedMessageFromTab(tab) {
+        if (tab?.id === undefined) {
+            throw new Error('A Thunderbird tab is required to load the displayed message.');
+        }
         const displayed = await this.withTimeout(
             () => browser.messageDisplay.getDisplayedMessages(tab.id),
             'load-displayed-message'
@@ -51,27 +82,64 @@ const SingleMailWorkspaceService = {
         if (message?.id === undefined || message?.id === null) {
             throw new Error('Thunderbird did not report a displayed message.');
         }
-        return this.openExpanded(message.id, null, source, tab);
+        return message;
+    },
+
+    /** Open or focus one non-modal compact assistant window for the selected message. */
+    async openPersistentWindow(messageId, source = 'manual', returnTab = null) {
+        if (messageId === undefined || messageId === null || messageId === '') {
+            throw new Error('A message ID is required to open the persistent single-mail window.');
+        }
+        const key = `${String(messageId)}:window`;
+        if (this.openInProgress.has(key)) {
+            return this.openInProgress.get(key);
+        }
+        const launch = this.openOrFocusWindow(messageId, source, returnTab);
+        this.openInProgress.set(key, launch);
+        try {
+            return await launch;
+        } finally {
+            this.openInProgress.delete(key);
+        }
+    },
+
+    /** Reuse a matching compact window or create a non-modal popup that survives blur. */
+    async openOrFocusWindow(messageId, source, returnTab = null) {
+        const baseUrl = browser.runtime.getURL('single-mail-ui.html');
+        const existing = await this.findWorkspaceTab(baseUrl, messageId, null, 'window');
+        if (existing?.windowId !== undefined) {
+            await this.focusWindow(existing.windowId, 'focus-single-mail-persistent-window');
+            return existing;
+        }
+        const resolvedReturnTab = await this.resolveReturnTab(returnTab);
+        return this.withTimeout(
+            () => browser.windows.create({
+                url: this.workspaceUrl(
+                    messageId,
+                    null,
+                    source,
+                    resolvedReturnTab?.id,
+                    'window'
+                ),
+                type: 'popup',
+                width: CONFIG.UI.SINGLE_MAIL_WINDOW_WIDTH,
+                height: CONFIG.UI.SINGLE_MAIL_WINDOW_HEIGHT,
+                allowScriptsToClose: true
+            }),
+            'create-single-mail-persistent-window'
+        );
     },
 
     async openOrFocus(messageId, mode, source, returnTab = null) {
         const baseUrl = browser.runtime.getURL('single-mail-ui.html');
-        const existing = await this.findWorkspaceTab(baseUrl, messageId, mode);
+        const existing = await this.findWorkspaceTab(baseUrl, messageId, mode, 'expanded');
         if (existing?.id !== undefined) {
             const focused = await this.withTimeout(
                 () => browser.tabs.update(existing.id, { active: true }),
                 'activate-single-mail-tab'
             );
-            if (existing.windowId !== undefined && typeof browser.windows?.update === 'function') {
-                try {
-                    await this.withTimeout(
-                        () => browser.windows.update(existing.windowId, { focused: true }),
-                        'focus-single-mail-window',
-                        CONFIG.UI.DASHBOARD_WINDOW_FOCUS_TIMEOUT_MS
-                    );
-                } catch (error) {
-                    console.warn('The single-mail tab was focused without raising its window.', error);
-                }
+            if (existing.windowId !== undefined) {
+                await this.focusWindow(existing.windowId, 'focus-single-mail-window');
             }
             return focused;
         }
@@ -88,10 +156,37 @@ const SingleMailWorkspaceService = {
         );
     },
 
+    /** Raise an existing workspace without failing an otherwise successful launch. */
+    async focusWindow(windowId, stage) {
+        if (typeof browser.windows?.update !== 'function') {
+            return;
+        }
+        try {
+            await this.withTimeout(
+                () => browser.windows.update(windowId, { focused: true }),
+                stage,
+                CONFIG.UI.DASHBOARD_WINDOW_FOCUS_TIMEOUT_MS
+            );
+        } catch (error) {
+            console.warn('The single-mail workspace was focused without raising its window.', error);
+        }
+    },
+
     /** Resolve the tab which should regain focus when an expanded workspace closes. */
     async resolveReturnTab(returnTab = null) {
         if (returnTab?.id !== undefined) {
             return returnTab;
+        }
+        const inheritedTabId = this.returnTabIdFromSearch(globalThis.location?.search || '');
+        if (inheritedTabId !== null && typeof browser.tabs.get === 'function') {
+            try {
+                return await this.withTimeout(
+                    () => browser.tabs.get(inheritedTabId),
+                    'get-inherited-return-tab'
+                );
+            } catch (error) {
+                console.warn('The inherited single-mail return tab is no longer available.', error);
+            }
         }
         if (typeof browser.tabs.getCurrent === 'function') {
             const current = await this.withTimeout(
@@ -99,17 +194,6 @@ const SingleMailWorkspaceService = {
                 'get-current-single-mail-tab'
             );
             if (current?.id !== undefined) {
-                const inheritedTabId = this.returnTabIdFromSearch(current.url || '');
-                if (inheritedTabId !== null && typeof browser.tabs.get === 'function') {
-                    try {
-                        return await this.withTimeout(
-                            () => browser.tabs.get(inheritedTabId),
-                            'get-inherited-return-tab'
-                        );
-                    } catch (error) {
-                        console.warn('The inherited single-mail return tab is no longer available.', error);
-                    }
-                }
                 return current;
             }
         }
@@ -120,14 +204,14 @@ const SingleMailWorkspaceService = {
         return active || null;
     },
 
-    /** Restore the source tab, open its matching message overlay, and close this workspace. */
+    /** Restore the source tab, open its matching message overlay, and close this view. */
     async returnToOverlay(messageId) {
         const current = await this.withTimeout(
             () => browser.tabs.getCurrent(),
             'get-current-single-mail-tab'
         );
         if (current?.id === undefined) {
-            throw new Error('The expanded single-mail tab could not be identified.');
+            throw new Error('The current single-mail view could not be identified.');
         }
         const target = await this.findReturnTarget(current);
         if (!target) {
@@ -139,16 +223,8 @@ const SingleMailWorkspaceService = {
             () => browser.tabs.update(target.id, { active: true }),
             'activate-single-mail-return-tab'
         );
-        if (target.windowId !== undefined && typeof browser.windows?.update === 'function') {
-            try {
-                await this.withTimeout(
-                    () => browser.windows.update(target.windowId, { focused: true }),
-                    'focus-single-mail-return-window',
-                    CONFIG.UI.DASHBOARD_WINDOW_FOCUS_TIMEOUT_MS
-                );
-            } catch (error) {
-                console.warn('The single-mail return tab was activated without raising its window.', error);
-            }
+        if (target.windowId !== undefined) {
+            await this.focusWindow(target.windowId, 'focus-single-mail-return-window');
         }
 
         let overlayOpened = false;
@@ -156,7 +232,7 @@ const SingleMailWorkspaceService = {
             try {
                 await globalThis.LaunchModeService.openOverlay(
                     browser.messageDisplayAction,
-                    'single-mail-ui.html',
+                    this.workspaceUrl(messageId, null, 'return-from-expanded', target.id, 'overlay'),
                     { tabId: target.id, windowId: target.windowId }
                 );
                 overlayOpened = true;
@@ -191,7 +267,7 @@ const SingleMailWorkspaceService = {
             .sort((left, right) => (right.index ?? -1) - (left.index ?? -1))[0] || null;
     },
 
-    /** Read only a safe Thunderbird tab ID from an expanded-workspace URL. */
+    /** Read only a safe Thunderbird tab ID from a single-mail view URL. */
     returnTabIdFromSearch(search) {
         const query = String(search || '').includes('?')
             ? String(search).slice(String(search).indexOf('?'))
@@ -226,7 +302,7 @@ const SingleMailWorkspaceService = {
         );
     },
 
-    async findWorkspaceTab(baseUrl, messageId, mode) {
+    async findWorkspaceTab(baseUrl, messageId, mode, view = 'expanded') {
         if (typeof browser.tabs.query !== 'function') {
             return null;
         }
@@ -234,16 +310,18 @@ const SingleMailWorkspaceService = {
             () => browser.tabs.query({}),
             'query-single-mail-tabs'
         );
-        return tabs.find(tab => this.matchesWorkspace(tab, baseUrl, messageId, mode)) || null;
+        return tabs.find(tab => this.matchesWorkspace(tab, baseUrl, messageId, mode, view)) || null;
     },
 
-    matchesWorkspace(tab, baseUrl, messageId, mode) {
+    matchesWorkspace(tab, baseUrl, messageId, mode, view = 'expanded') {
         if (!tab?.url?.startsWith(`${baseUrl}?`)) {
             return false;
         }
         const parameters = new URLSearchParams(tab.url.slice(tab.url.indexOf('?') + 1));
         const tabMode = [...this.MODES].find(candidate => parameters.get(candidate) === '1') || null;
-        return parameters.get('messageId') === String(messageId) && tabMode === mode;
+        return parameters.get('messageId') === String(messageId)
+            && tabMode === mode
+            && parameters.get('view') === view;
     },
 
     async withTimeout(operation, stage, timeoutMs = CONFIG.UI.DASHBOARD_LAUNCH_API_TIMEOUT_MS) {

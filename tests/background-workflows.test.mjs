@@ -30,10 +30,12 @@ async function loadBackground(options = {}) {
     const serviceCalls = [];
     const deleteCalls = [];
     const storageState = { ...(options.initialStorage || {}) };
+    const sessionStorageState = { ...(options.initialSessionStorage || {}) };
     const popupAssignments = [];
     const messagePopupAssignments = [];
     const openedPopups = [];
     const openedTabs = [];
+    const openedWindows = [];
     const notifications = [];
     let actionClickListener = null;
     let messageActionClickListener = null;
@@ -89,15 +91,26 @@ async function loadBackground(options = {}) {
                     return 'notification-id';
                 }
             },
-            storage: { local: {
-                get: async keys => {
-                    const requested = Array.isArray(keys) ? keys : [keys];
-                    return Object.fromEntries(requested
-                        .filter(key => Object.hasOwn(storageState, key))
-                        .map(key => [key, storageState[key]]));
+            storage: {
+                local: {
+                    get: async keys => {
+                        const requested = Array.isArray(keys) ? keys : [keys];
+                        return Object.fromEntries(requested
+                            .filter(key => Object.hasOwn(storageState, key))
+                            .map(key => [key, storageState[key]]));
+                    },
+                    set: async values => Object.assign(storageState, values)
                 },
-                set: async values => Object.assign(storageState, values)
-            } },
+                session: {
+                    get: async keys => {
+                        const requested = Array.isArray(keys) ? keys : [keys];
+                        return Object.fromEntries(requested
+                            .filter(key => Object.hasOwn(sessionStorageState, key))
+                            .map(key => [key, sessionStorageState[key]]));
+                    },
+                    set: async values => Object.assign(sessionStorageState, values)
+                }
+            },
             tabs: {
                 query: async () => [],
                 update: async (tabId, details) => ({ id: tabId, ...details }),
@@ -106,7 +119,13 @@ async function loadBackground(options = {}) {
                     return { id: 11, windowId: 3, ...details };
                 })
             },
-            windows: { update: async (windowId, details) => ({ id: windowId, ...details }) }
+            windows: {
+                update: async (windowId, details) => ({ id: windowId, ...details }),
+                create: options.createWindow || (async details => {
+                    openedWindows.push({ ...details });
+                    return { id: 12, type: 'popup', ...details };
+                })
+            }
         }
     });
     loadScript(context, 'thunderbird-ai/config/locale-de.js');
@@ -116,6 +135,7 @@ async function loadBackground(options = {}) {
     loadScript(context, 'thunderbird-ai/components/shared/RuntimeDiagnosticService.js');
     loadScript(context, 'thunderbird-ai/components/shared/LaunchModeService.js');
     loadScript(context, 'thunderbird-ai/components/shared/SingleMailWorkspaceService.js');
+    loadScript(context, 'thunderbird-ai/components/shared/SingleMailSessionService.js');
     loadScript(context, 'thunderbird-ai/components/shared/DashboardLaunchService.js');
     context.MessageService = {
         getFullMessage: options.getFullMessage || (async id => ({
@@ -246,11 +266,13 @@ async function loadBackground(options = {}) {
         notifications,
         openedPopups,
         openedTabs,
+        openedWindows,
         messagePopupAssignments,
         popupAssignments,
         serviceCalls,
         stats,
-        storageState
+        storageState,
+        sessionStorageState
     };
 }
 
@@ -436,6 +458,25 @@ test('single-mail launch mode is independent and opens the displayed message in 
     assert.equal(openedTabs[0].windowId, 2);
 });
 
+test('single-mail persistent-window mode opens a non-modal message-scoped window', async () => {
+    const { messageActionClick, messagePopupAssignments, openedWindows } = await loadBackground({
+        initialStorage: {
+            dashboardOpenMode: 'overlay',
+            singleMailOpenMode: 'window'
+        }
+    });
+
+    await messageActionClick();
+
+    assert.deepEqual(messagePopupAssignments, [{ popup: '' }]);
+    assert.equal(openedWindows.length, 1);
+    assert.equal(openedWindows[0].type, 'popup');
+    assert.equal(openedWindows[0].allowScriptsToClose, true);
+    assert.match(openedWindows[0].url, /single-mail-ui\.html\?messageId=73/u);
+    assert.match(openedWindows[0].url, /view=window/u);
+    assert.match(openedWindows[0].url, /returnTabId=5/u);
+});
+
 test('dashboard deletion runs in the background with modern user-action options', async () => {
     const { ai, config, deleteCalls, storageState } = await loadBackground();
 
@@ -548,6 +589,42 @@ test('chat, similar-message search, and API test are functional routes', async (
     assert.equal(chat.data.content, 'chat result');
     assert.match(similar.data.content, /Ähnlich/);
     assert.equal(apiTest.success, true);
+});
+
+test('single-mail results and completed chat turns survive view closure for the same message', async () => {
+    const { ai, config } = await loadBackground();
+
+    await ai.handleMessage({ action: config.ACTIONS.SUMMARIZE, messageId: 7 });
+    await ai.handleMessage({
+        action: config.ACTIONS.CHAT,
+        messageId: 7,
+        query: 'Was ist wichtig?',
+        history: [{ role: 'user', content: 'Vorherige Frage' }]
+    });
+    const retained = await ai.handleMessage({
+        action: config.ACTIONS.GET_SINGLE_MAIL_SESSION,
+        messageId: 7
+    });
+
+    assert.equal(retained.success, true);
+    assert.equal(retained.data.result.data.content, 'summary result');
+    assert.deepEqual(Array.from(retained.data.chatHistory, entry => ({ ...entry })), [
+        { role: 'user', content: 'Vorherige Frage' },
+        { role: 'user', content: 'Was ist wichtig?' },
+        { role: 'assistant', content: 'chat result' }
+    ]);
+
+    const cleared = await ai.handleMessage({
+        action: config.ACTIONS.CLEAR_SINGLE_MAIL_CHAT,
+        messageId: 7
+    });
+    const afterClear = await ai.handleMessage({
+        action: config.ACTIONS.GET_SINGLE_MAIL_SESSION,
+        messageId: 7
+    });
+    assert.equal(cleared.success, true);
+    assert.deepEqual(Array.from(afterClear.data.chatHistory), []);
+    assert.equal(afterClear.data.result.data.content, 'summary result');
 });
 
 test('reply refinement uses the source message and returns an editable reply result', async () => {
@@ -794,7 +871,7 @@ test('packaged UI sources contain no unfinished actions or retired models', () =
     assert.match(source, /messages\.getFull/u);
     assert.ok(manifest.permissions.includes('clipboardWrite'));
     assert.ok(manifest.permissions.includes('sensitiveDataUpload'));
-    assert.equal(manifest.version, '3.8.2');
+    assert.equal(manifest.version, '3.9.0');
     assert.equal(manifest.compose_action, undefined);
     assert.ok(
         manifest.background.scripts.indexOf('RuntimeDiagnosticService.js')

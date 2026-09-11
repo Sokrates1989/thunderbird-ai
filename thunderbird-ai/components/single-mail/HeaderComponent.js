@@ -23,19 +23,17 @@ const HeaderComponent = class {
             title: document.querySelector('.header h1'),
             subtitle: document.getElementById('emailSubject'),
             version: document.getElementById('addonVersion'),
-            expandView: document.getElementById('singleMailExpandView'),
-            useOverlay: document.getElementById('singleMailUseOverlay'),
-            useOverlayLabel: document.getElementById('singleMailUseOverlayLabel')
+            openOverlay: document.getElementById('singleMailOpenOverlay'),
+            openWindow: document.getElementById('singleMailOpenWindow'),
+            openTab: document.getElementById('singleMailOpenTab'),
+            closeView: document.getElementById('singleMailCloseView')
         };
-        this.openExpanded = () => {
-            this.manager.openExpandedView().catch(error => {
-                console.error('Could not open the single-mail fullscreen view:', error);
-                this.manager.showError(I18n.t('singleMailLaunchFailedMessage'));
-            });
+        this.modeHandlers = {
+            overlay: () => { void this.switchView('overlay'); },
+            window: () => { void this.switchView('window'); },
+            tab: () => { void this.switchView('tab'); }
         };
-        this.useOverlay = () => {
-            void this.setOverlayDefault();
-        };
+        this.closeWindow = () => window.close();
     }
 
     /**
@@ -53,44 +51,44 @@ const HeaderComponent = class {
         this.elements.version.textContent = I18n.t('versionLabel', {
             version: CONFIG.ADDON_VERSION
         });
-        const expanded = new URLSearchParams(window.location.search).get('view') === 'expanded';
-        this.elements.expandView.hidden = expanded;
-        this.elements.useOverlay.hidden = !expanded;
-        this.elements.expandView.addEventListener('click', this.openExpanded);
-        this.elements.useOverlay.addEventListener('click', this.useOverlay);
+        const currentMode = this.currentMode();
+        this.elements.openOverlay.hidden = currentMode === 'overlay';
+        this.elements.openWindow.hidden = currentMode === 'window';
+        this.elements.openTab.hidden = currentMode === 'tab';
+        this.elements.closeView.hidden = currentMode !== 'window';
+        this.elements.openOverlay.addEventListener('click', this.modeHandlers.overlay);
+        this.elements.openWindow.addEventListener('click', this.modeHandlers.window);
+        this.elements.openTab.addEventListener('click', this.modeHandlers.tab);
+        this.elements.closeView.addEventListener('click', this.closeWindow);
     }
 
-    /** Persist the compact overlay as the next single-mail launch destination. */
-    async setOverlayDefault() {
-        const button = this.elements.useOverlay;
-        const label = this.elements.useOverlayLabel;
-        button.disabled = true;
-        label.textContent = I18n.t('singleMailUseOverlaySaving');
-        try {
-            const response = await this.manager.sendToBackground(
-                CONFIG.ACTIONS.SET_LAUNCH_MODE,
-                { setting: 'singleMailOpenMode', mode: 'overlay' }
-            );
-            if (!response?.success) {
-                throw new Error(response?.error || I18n.t('singleMailUseOverlayFailed'));
-            }
-            button.classList.add('saved');
-            label.textContent = I18n.t('singleMailUseOverlaySaved');
-            button.title = I18n.t('singleMailUseOverlaySaved');
-            button.setAttribute('aria-label', button.title);
-        } catch (error) {
-            console.error('Could not save compact overlay mode:', error);
-            label.textContent = I18n.t('singleMailUseOverlay');
-            button.disabled = false;
-            this.manager.showError(I18n.t('singleMailUseOverlayFailed'));
-            return;
+    /** Identify which of the three single-mail containers owns this document. */
+    currentMode() {
+        const view = new URLSearchParams(window.location.search).get('view');
+        if (view === 'expanded') {
+            return 'tab';
+        }
+        return view === 'window' ? 'window' : 'overlay';
+    }
+
+    /** Move the current message to another supported container without changing its default. */
+    async switchView(mode) {
+        const buttons = [
+            this.elements.openOverlay,
+            this.elements.openWindow,
+            this.elements.openTab
+        ];
+        for (const button of buttons) {
+            button.disabled = true;
         }
         try {
-            await this.manager.returnToOverlay();
+            await this.manager.switchView(mode);
         } catch (error) {
-            console.error('Could not return to the compact overlay:', error);
-            button.disabled = false;
-            this.manager.showError(I18n.t('singleMailUseOverlayReturnFailed'));
+            console.error('Could not switch the single-mail view:', error);
+            for (const button of buttons) {
+                button.disabled = false;
+            }
+            this.manager.showError(I18n.t('singleMailLaunchFailedMessage'));
         }
     }
 
@@ -135,8 +133,10 @@ const HeaderComponent = class {
      * this.cleanup();
      */
     cleanup() {
-        this.elements.expandView?.removeEventListener('click', this.openExpanded);
-        this.elements.useOverlay?.removeEventListener('click', this.useOverlay);
+        this.elements.openOverlay?.removeEventListener('click', this.modeHandlers.overlay);
+        this.elements.openWindow?.removeEventListener('click', this.modeHandlers.window);
+        this.elements.openTab?.removeEventListener('click', this.modeHandlers.tab);
+        this.elements.closeView?.removeEventListener('click', this.closeWindow);
     }
 };
 

@@ -3,13 +3,16 @@
  * A stalled Thunderbird API call must never keep later toolbar clicks blocked indefinitely.
  */
 globalThis.DashboardLaunchService = {
-    MODES: globalThis.LaunchModeService.MODES,
+    MODES: Object.freeze({
+        OVERLAY: globalThis.LaunchModeService.MODES.OVERLAY,
+        TAB: globalThis.LaunchModeService.MODES.TAB
+    }),
     PROMPTS: Object.freeze({ ADOPT_TAB: 'adopt-tab', DISCOVER_TAB: 'discover-tab' }),
     INSTALL_NOTICE_WINDOW_MS: 10 * 60 * 1000,
     openInProgress: null,
 
     normalizeMode(value) {
-        return globalThis.LaunchModeService.normalizeMode(value);
+        return value === this.MODES.TAB ? this.MODES.TAB : this.MODES.OVERLAY;
     },
 
     async getMode() {

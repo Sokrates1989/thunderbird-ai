@@ -1,9 +1,9 @@
 /** Routes extension action clicks without relying on manifest popup fallbacks. */
 globalThis.LaunchModeService = {
-    MODES: Object.freeze({ OVERLAY: 'overlay', TAB: 'tab' }),
+    MODES: Object.freeze({ OVERLAY: 'overlay', WINDOW: 'window', TAB: 'tab' }),
 
     normalizeMode(value) {
-        return value === this.MODES.TAB ? this.MODES.TAB : this.MODES.OVERLAY;
+        return Object.values(this.MODES).includes(value) ? value : this.MODES.OVERLAY;
     },
 
     async getMode(storageKey) {

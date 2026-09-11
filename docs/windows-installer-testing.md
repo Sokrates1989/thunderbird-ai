@@ -3,7 +3,7 @@
 > [Deutsche Version](windows-installer-testing.de.md)
 
 The primary Windows artifact is
-`Thunderbird-AI-Setup-3.8.2-win-x64.exe`. It installs only for the current user
+`Thunderbird-AI-Setup-3.9.0-win-x64.exe`. It installs only for the current user
 and requires no administrator privileges.
 
 ## Automated isolation test
@@ -34,7 +34,7 @@ not quit or launch Thunderbird.
 5. Confirm the add-on appears and existing API settings remain present.
 6. Select OpenAI, Claude, Mistral, DeepSeek, and the custom endpoint in settings;
    OpenAI must be the default. With an available key, summarise an email and run
-   the API test. The popup must show **Version 3.8.2** and German UI.
+   the API test. The popup must show **Version 3.9.0** and German UI.
 7. Select **English**, save, and confirm popup, reply editor, and help switch to
    English and retain the choice after restart.
 8. Set both launch-mode selectors to **tab** without pressing the global Save
@@ -43,13 +43,13 @@ not quit or launch Thunderbird.
 9. Leave the dashboard open in a tab before updating. The first dashboard start
    afterwards must replace old AI dashboard tabs with exactly one fresh tab and
    preserve normal Thunderbird tabs. Repeated toolbar clicks must focus the
-   existing dashboard. Confirm independent overlay/tab preferences and
-   content-free support diagnostics.
-10. Open the single-message assistant in its own tab and activate **Return to
-    compact overlay** in the expanded header. Confirm that Thunderbird restores
-    the source message tab, opens its overlay, and closes the expanded tab. If
-    the source tab was closed, it must close onto the closest prior tab without
-    opening an overlay for a different message.
+   existing dashboard. Confirm independent dashboard overlay/tab and single-mail
+   overlay/window/tab preferences plus content-free support diagnostics.
+10. Open the single-message assistant in each of its three modes. Verify that
+    the two top-right mode buttons always lead to the other two modes, that the
+    persistent compact window survives focus changes in Thunderbird, and that
+    its **×** button closes it. Generate a result, switch modes, close, and reopen
+    the same message; the result must remain available for the current session.
 11. Uninstall through Windows **Installed apps**, restart Thunderbird, and
     confirm the add-on is removed.
 

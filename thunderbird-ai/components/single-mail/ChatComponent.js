@@ -99,6 +99,21 @@ const ChatComponent = class {
         this.elements.overlay.hidden = true;
     }
 
+    /** Rebuild completed conversation turns retained for this Thunderbird session. */
+    restore(history) {
+        this.history = Array.isArray(history)
+            ? history.filter(entry => (
+                (entry?.role === 'user' || entry?.role === 'assistant')
+                && typeof entry.content === 'string'
+            )).map(entry => ({ role: entry.role, content: entry.content }))
+            : [];
+        this.elements.messages.replaceChildren();
+        for (const entry of this.history) {
+            this.appendMessage(entry.role, entry.content);
+        }
+        this.updateRestartAvailability();
+    }
+
     /** Preserve revisitable history unless the operator explicitly confirms a fresh chat. */
     restartChat() {
         if (this.isSending || !this.hasConversation()) {
@@ -113,6 +128,10 @@ const ChatComponent = class {
         this.elements.input.value = '';
         this.updateRestartAvailability();
         this.elements.input.focus();
+        const clearing = this.manager.clearChatSession?.();
+        clearing?.catch(error => {
+            console.warn('Could not clear the retained single-mail chat.', error);
+        });
     }
 
     hasConversation() {

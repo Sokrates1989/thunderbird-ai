@@ -111,6 +111,12 @@ const StorageManager = {
     },
 
     normalizeDashboardOpenMode(mode) {
+        return mode === globalThis.LaunchModeService.MODES.TAB
+            ? globalThis.LaunchModeService.MODES.TAB
+            : globalThis.LaunchModeService.MODES.OVERLAY;
+    },
+
+    normalizeSingleMailOpenMode(mode) {
         return globalThis.LaunchModeService.normalizeMode(mode);
     },
 
@@ -170,7 +176,7 @@ const StorageManager = {
             dashboardOpenMode: this.normalizeDashboardOpenMode(
                 result[CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE]
             ),
-            singleMailOpenMode: this.normalizeDashboardOpenMode(
+            singleMailOpenMode: this.normalizeSingleMailOpenMode(
                 result[CONFIG.STORAGE_KEYS.SINGLE_MAIL_OPEN_MODE]
             ),
             uiLanguage: I18n.isSupportedLanguage(result[CONFIG.STORAGE_KEYS.UI_LANGUAGE])
@@ -241,7 +247,7 @@ const StorageManager = {
             [CONFIG.STORAGE_KEYS.DASHBOARD_OPEN_MODE]: this.normalizeDashboardOpenMode(
                 dashboardOpenMode
             ),
-            [CONFIG.STORAGE_KEYS.SINGLE_MAIL_OPEN_MODE]: this.normalizeDashboardOpenMode(
+            [CONFIG.STORAGE_KEYS.SINGLE_MAIL_OPEN_MODE]: this.normalizeSingleMailOpenMode(
                 singleMailOpenMode
             )
         };

@@ -2,7 +2,7 @@
 
 const CONFIG = {
     ADDON_NAME: 'AI Mail Assistant for Thunderbird',
-    ADDON_VERSION: '3.8.2',
+    ADDON_VERSION: '3.9.0',
     ADDON_ID: 'thunderbird-ai@felicitas-wisdom.com',
 
     AI: {
@@ -301,6 +301,8 @@ const CONFIG = {
     UI: {
         POPUP_WIDTH: 450,
         POPUP_HEIGHT: 600,
+        SINGLE_MAIL_WINDOW_WIDTH: 600,
+        SINGLE_MAIL_WINDOW_HEIGHT: 820,
         TOAST_DURATION: 3000,
         LOADING_TIMEOUT: 60000,
         DASHBOARD_EXPAND_PROMPT_THRESHOLD: 3,
@@ -328,6 +330,8 @@ const CONFIG = {
         TEST_API: 'testApiConnection',
         GET_STATISTICS: 'getStatistics',
         GET_BACKGROUND_HEALTH: 'getBackgroundHealth',
+        GET_SINGLE_MAIL_SESSION: 'getSingleMailSession',
+        CLEAR_SINGLE_MAIL_CHAT: 'clearSingleMailChat',
         PREPARE_RESTORED_DASHBOARD: 'prepareRestoredDashboard',
         TRANSLATE: 'translateMessage',
         EXTRACT_INFO: 'extractInfo',

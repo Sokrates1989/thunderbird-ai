@@ -9,6 +9,7 @@ function loadServices(existingTabs = [], options = {}) {
     const popupAssignments = [];
     const openedPopups = [];
     const createdTabs = [];
+    const createdWindows = [];
     const updatedTabs = [];
     const removedTabs = [];
     const context = createContext({
@@ -57,7 +58,14 @@ function loadServices(existingTabs = [], options = {}) {
                     return true;
                 }
             },
-            windows: { update: async () => {} }
+            windows: {
+                update: async () => {},
+                create: async details => {
+                    const created = { id: 91, type: 'popup', ...details };
+                    createdWindows.push(created);
+                    return created;
+                }
+            }
         }
     });
     loadScript(context, 'thunderbird-ai/config/locale-de.js');
@@ -69,6 +77,7 @@ function loadServices(existingTabs = [], options = {}) {
     return {
         context,
         createdTabs,
+        createdWindows,
         updatedTabs,
         removedTabs,
         popupAssignments,
@@ -97,6 +106,25 @@ test('temporary overlay routing clears the popup after the user click', async ()
         { popup: '', tabId: 7 }
     ]);
     assert.deepEqual(openedPopups, [{ windowId: 3 }]);
+});
+
+test('persistent single-mail mode opens a non-modal window scoped to one message', async () => {
+    const { context, createdWindows } = loadServices();
+
+    await context.SingleMailWorkspaceService.openPersistentWindow(
+        42,
+        'manual-switch',
+        { id: 5, windowId: 2 }
+    );
+
+    assert.equal(createdWindows.length, 1);
+    assert.equal(createdWindows[0].type, 'popup');
+    assert.equal(createdWindows[0].allowScriptsToClose, true);
+    assert.equal(createdWindows[0].width, context.CONFIG.UI.SINGLE_MAIL_WINDOW_WIDTH);
+    assert.equal(createdWindows[0].height, context.CONFIG.UI.SINGLE_MAIL_WINDOW_HEIGHT);
+    assert.match(createdWindows[0].url, /messageId=42/u);
+    assert.match(createdWindows[0].url, /view=window/u);
+    assert.match(createdWindows[0].url, /returnTabId=5/u);
 });
 
 test('single-mail workspaces focus an existing matching AI mode and isolate other modes', async () => {
@@ -145,10 +173,12 @@ test('expanded workspace returns to its source message tab and opens the compact
     assert.equal(result.overlayOpened, true);
     assert.equal(result.targetTabId, 5);
     assert.deepEqual(updatedTabs, [[5, { active: true }]]);
-    assert.deepEqual(popupAssignments, [
-        { popup: 'single-mail-ui.html', tabId: 5 },
-        { popup: '', tabId: 5 }
-    ]);
+    assert.equal(popupAssignments.length, 2);
+    assert.equal(popupAssignments[0].tabId, 5);
+    assert.match(popupAssignments[0].popup, /single-mail-ui\.html\?messageId=42/u);
+    assert.match(popupAssignments[0].popup, /view=overlay/u);
+    assert.match(popupAssignments[0].popup, /returnTabId=5/u);
+    assert.deepEqual(popupAssignments[1], { popup: '', tabId: 5 });
     assert.deepEqual(openedPopups, [{ windowId: 2 }]);
     assert.deepEqual(removedTabs, [11]);
 });
@@ -179,7 +209,7 @@ test('expanded workspace closes onto a prior tab without opening an overlay for 
     assert.deepEqual(removedTabs, [11]);
 });
 
-test('single-mail UI exposes a localized fullscreen control backed by the shared service', () => {
+test('single-mail UI exposes localized compact controls for all three view modes', () => {
     const page = fs.readFileSync(
         path.join(repositoryRoot, 'thunderbird-ai/pages/single-mail-ui.html'),
         'utf8'
@@ -193,18 +223,24 @@ test('single-mail UI exposes a localized fullscreen control backed by the shared
         'utf8'
     );
 
-    assert.match(page, /id="singleMailExpandView"/u);
-    assert.match(page, /data-i18n-title="singleMailExpandView"/u);
+    assert.match(page, /id="singleMailOpenOverlay"/u);
+    assert.match(page, /id="singleMailOpenWindow"/u);
+    assert.match(page, /id="singleMailOpenTab"/u);
+    assert.match(page, /id="singleMailCloseView"/u);
+    assert.match(page, /data-i18n-title="singleMailSwitchToWindow"/u);
     assert.match(page, /id="scrollToTopButton"/u);
     assert.match(page, /ScrollToTopComponent\.js/u);
     assert.match(page, /SingleMailWorkspaceService\.js/u);
+    assert.match(manager, /SingleMailWorkspaceService\.openPersistentWindow/u);
     assert.match(manager, /SingleMailWorkspaceService\.openExpanded/u);
-    const returnButtonRule = styles.match(/\.single-mail-use-overlay \{[^}]+\}/u)?.[0] || '';
-    assert.match(returnButtonRule, /min-height:\s*30px/u);
-    assert.match(returnButtonRule, /font-size:\s*12px/u);
+    assert.match(manager, /GET_SINGLE_MAIL_SESSION/u);
+    assert.match(manager, /components\.chat\.restore/u);
+    const actionRule = styles.match(/\.single-mail-view-action \{[^}]+\}/u)?.[0] || '';
+    assert.match(actionRule, /width:\s*34px/u);
+    assert.match(actionRule, /height:\s*34px/u);
 });
 
-test('compact overlay return control persists the default and starts the handoff', async () => {
+test('header offers exactly the other two destinations and a close control only in window mode', async () => {
     class TestElement {
         constructor() {
             this.attributes = {};
@@ -212,8 +248,6 @@ test('compact overlay return control persists the default and starts the handoff
             this.hidden = false;
             this.listeners = new Map();
             this.textContent = '';
-            this.title = '';
-            this.classList = { add: value => { this.addedClass = value; } };
         }
 
         addEventListener(name, listener) {
@@ -229,64 +263,57 @@ test('compact overlay return control persists the default and starts the handoff
         }
     }
 
-    const elements = new Map([
-        ['emailSubject', new TestElement()],
-        ['addonVersion', new TestElement()],
-        ['singleMailExpandView', new TestElement()],
-        ['singleMailUseOverlay', new TestElement()],
-        ['singleMailUseOverlayLabel', new TestElement()]
-    ]);
-    const requests = [];
-    const context = createContext({
-        CONFIG: {
-            ACTIONS: { SET_LAUNCH_MODE: 'setLaunchMode' },
-            ADDON_NAME: 'AI Mail Assistant',
-            ADDON_VERSION: '3.8.2'
-        },
-        I18n: {
-            t: (key, replacements = {}) => replacements.version || key
-        },
-        document: {
-            querySelector: () => new TestElement(),
-            getElementById: id => elements.get(id),
-            title: ''
-        },
-        location: { search: '?view=expanded' }
-    });
-    loadScript(context, 'thunderbird-ai/components/single-mail/HeaderComponent.js');
-    let returnedToOverlay = 0;
-    const manager = {
-        sendToBackground: async (action, data) => {
-            requests.push({ action, data });
-            return { success: true };
-        },
-        returnToOverlay: async () => { returnedToOverlay += 1; },
-        showError: () => assert.fail('Success must not show an error.')
-    };
-    const header = new context.HeaderComponent(manager);
+    const cases = [
+        { search: '?view=overlay', current: 'overlay', closeVisible: false },
+        { search: '?view=window', current: 'window', closeVisible: true },
+        { search: '?view=expanded', current: 'tab', closeVisible: false }
+    ];
+    for (const testCase of cases) {
+        const elements = new Map([
+            ['emailSubject', new TestElement()],
+            ['addonVersion', new TestElement()],
+            ['singleMailOpenOverlay', new TestElement()],
+            ['singleMailOpenWindow', new TestElement()],
+            ['singleMailOpenTab', new TestElement()],
+            ['singleMailCloseView', new TestElement()]
+        ]);
+        const switched = [];
+        const context = createContext({
+            CONFIG: { ADDON_NAME: 'AI Mail Assistant', ADDON_VERSION: '3.9.0' },
+            I18n: { t: (key, replacements = {}) => replacements.version || key },
+            document: {
+                querySelector: () => new TestElement(),
+                getElementById: id => elements.get(id),
+                title: ''
+            },
+            location: { search: testCase.search }
+        });
+        loadScript(context, 'thunderbird-ai/components/single-mail/HeaderComponent.js');
+        const header = new context.HeaderComponent({
+            switchView: async mode => { switched.push(mode); },
+            showError: () => assert.fail('Success must not show an error.')
+        });
 
-    header.initialize();
-    assert.equal(elements.get('singleMailExpandView').hidden, true);
-    assert.equal(elements.get('singleMailUseOverlay').hidden, false);
-
-    await header.setOverlayDefault();
-
-    assert.equal(requests.length, 1);
-    assert.equal(requests[0].action, 'setLaunchMode');
-    assert.equal(requests[0].data.setting, 'singleMailOpenMode');
-    assert.equal(requests[0].data.mode, 'overlay');
-    assert.equal(elements.get('singleMailUseOverlay').disabled, true);
-    assert.equal(elements.get('singleMailUseOverlay').addedClass, 'saved');
-    assert.equal(returnedToOverlay, 1);
-    assert.equal(
-        elements.get('singleMailUseOverlayLabel').textContent,
-        'singleMailUseOverlaySaved'
-    );
+        header.initialize();
+        for (const mode of ['overlay', 'window', 'tab']) {
+            const id = `singleMailOpen${mode[0].toUpperCase()}${mode.slice(1)}`;
+            assert.equal(elements.get(id).hidden, mode === testCase.current, testCase.current);
+        }
+        assert.equal(
+            elements.get('singleMailCloseView').hidden,
+            !testCase.closeVisible,
+            testCase.current
+        );
+        const destination = testCase.current === 'overlay' ? 'window' : 'overlay';
+        await header.switchView(destination);
+        assert.deepEqual(switched, [destination]);
+    }
 });
 
 test('overlay remains the normalized default when no single-mail preference exists', async () => {
     const { context } = loadServices();
 
     assert.equal(context.LaunchModeService.normalizeMode(undefined), 'overlay');
+    assert.equal(context.LaunchModeService.normalizeMode('window'), 'window');
     assert.equal(await context.LaunchModeService.getMode('singleMailOpenMode'), 'overlay');
 });

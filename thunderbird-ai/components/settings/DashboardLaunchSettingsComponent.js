@@ -15,12 +15,21 @@ const DashboardLaunchSettingsComponent = class {
         const dashboard = this.createModeSetting(
             'dashboardOpenMode',
             'dashboardLaunchSettingsLabel',
-            'dashboardLaunchSettingsHint'
+            'dashboardLaunchSettingsHint',
+            [
+                ['overlay', 'dashboardLaunchModeOverlay'],
+                ['tab', 'dashboardLaunchModeTab']
+            ]
         );
         const singleMail = this.createModeSetting(
             'singleMailOpenMode',
             'singleMailLaunchSettingsLabel',
-            'singleMailLaunchSettingsHint'
+            'singleMailLaunchSettingsHint',
+            [
+                ['overlay', 'dashboardLaunchModeOverlay'],
+                ['window', 'singleMailLaunchModeWindow'],
+                ['tab', 'dashboardLaunchModeTab']
+            ]
         );
         this.elements.mode = dashboard.select;
         this.elements.singleMailMode = singleMail.select;
@@ -34,8 +43,8 @@ const DashboardLaunchSettingsComponent = class {
         });
     }
 
-    /** Create one launch-mode selector with the shared overlay and tab choices. */
-    createModeSetting(id, labelKey, hintKey) {
+    /** Create one launch-mode selector from the choices supported by that entry point. */
+    createModeSetting(id, labelKey, hintKey, options) {
         const group = SafeDom.create('div', {
             className: 'setting-group launch-mode-setting'
         });
@@ -44,10 +53,7 @@ const DashboardLaunchSettingsComponent = class {
             attributes: { for: id }
         });
         const select = SafeDom.create('select', { id });
-        for (const [value, key] of [
-            ['overlay', 'dashboardLaunchModeOverlay'],
-            ['tab', 'dashboardLaunchModeTab']
-        ]) {
+        for (const [value, key] of options) {
             select.appendChild(SafeDom.create('option', {
                 text: I18n.t(key),
                 properties: { value }
@@ -63,10 +69,11 @@ const DashboardLaunchSettingsComponent = class {
 
     /** Save a launch selector immediately and restore its last value when persistence fails. */
     async persistMode(setting, element) {
-        const previousMode = globalThis.LaunchModeService.normalizeMode(
+        const previousMode = this.normalizeMode(
+            setting,
             this.settingsManager.currentSettings[setting]
         );
-        const selectedMode = globalThis.LaunchModeService.normalizeMode(element.value);
+        const selectedMode = this.normalizeMode(setting, element.value);
         element.disabled = true;
         try {
             const result = await this.settingsManager.sendToBackground(
@@ -93,22 +100,36 @@ const DashboardLaunchSettingsComponent = class {
 
     getCurrentValues() {
         return {
-            dashboardOpenMode: globalThis.LaunchModeService.normalizeMode(
+            dashboardOpenMode: this.normalizeMode(
+                'dashboardOpenMode',
                 this.elements.mode.value
             ),
-            singleMailOpenMode: globalThis.LaunchModeService.normalizeMode(
+            singleMailOpenMode: this.normalizeMode(
+                'singleMailOpenMode',
                 this.elements.singleMailMode.value
             )
         };
     }
 
     updateDisplay(settings) {
-        this.elements.mode.value = globalThis.LaunchModeService.normalizeMode(
+        this.elements.mode.value = this.normalizeMode(
+            'dashboardOpenMode',
             settings.dashboardOpenMode
         );
-        this.elements.singleMailMode.value = globalThis.LaunchModeService.normalizeMode(
+        this.elements.singleMailMode.value = this.normalizeMode(
+            'singleMailOpenMode',
             settings.singleMailOpenMode
         );
+    }
+
+    /** Keep the dashboard's two modes separate from the single-mail window option. */
+    normalizeMode(setting, value) {
+        if (setting === 'dashboardOpenMode') {
+            return value === globalThis.LaunchModeService.MODES.TAB
+                ? globalThis.LaunchModeService.MODES.TAB
+                : globalThis.LaunchModeService.MODES.OVERLAY;
+        }
+        return globalThis.LaunchModeService.normalizeMode(value);
     }
 };
 

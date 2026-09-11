@@ -384,10 +384,11 @@ test('settings expose independent persisted launch preferences for both entry po
     assert.match(settingsManager, /new SupportDiagnosticsComponent\(this\)/u);
     assert.match(settingsManager, /dashboardLaunch\.getCurrentValues\(\)/u);
     assert.match(launchSettings, /\['overlay', 'dashboardLaunchModeOverlay'\]/u);
+    assert.match(launchSettings, /\['window', 'singleMailLaunchModeWindow'\]/u);
     assert.match(launchSettings, /\['tab', 'dashboardLaunchModeTab'\]/u);
     assert.match(launchSettings, /'dashboardOpenMode'/u);
     assert.match(launchSettings, /'singleMailOpenMode'/u);
-    assert.match(launchSettings, /singleMailOpenMode:\s*globalThis\.LaunchModeService\.normalizeMode/u);
+    assert.match(launchSettings, /normalizeMode\(\s*'singleMailOpenMode'/u);
     assert.match(launchSettings, /CONFIG\.ACTIONS\.SET_LAUNCH_MODE/u);
     assert.match(launchSettings, /persistMode\('dashboardOpenMode'/u);
     assert.match(launchSettings, /persistMode\('singleMailOpenMode'/u);
@@ -424,7 +425,7 @@ test('launch mode selectors save immediately and roll back a failed write', asyn
     const component = Object.create(context.DashboardLaunchSettingsComponent.prototype);
     component.settingsManager = settingsManager;
     const dashboardSelect = { value: 'tab', disabled: false };
-    const singleMailSelect = { value: 'overlay', disabled: false };
+    const singleMailSelect = { value: 'window', disabled: false };
 
     assert.equal(await component.persistMode('dashboardOpenMode', dashboardSelect), true);
     assert.equal(requests[0].action, context.CONFIG.ACTIONS.SET_LAUNCH_MODE);

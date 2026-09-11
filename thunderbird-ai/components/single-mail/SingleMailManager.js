@@ -42,6 +42,7 @@ const SingleMailManager = class {
             await this.loadCurrentEmailData();
             if (this.emailData) {
                 this.updateUIWithEmailData();
+                await this.restoreSession();
             } else {
                 this.showGeneralInterface();
             }
@@ -94,6 +95,27 @@ const SingleMailManager = class {
         });
         this.components.mailActions.updateMessage?.(this.emailData);
         this.updateStatus(I18n.t('emailLoaded', { subject: this.emailData.subject }));
+    }
+
+    /** Restore the latest result and completed chat turns retained for this message. */
+    async restoreSession() {
+        try {
+            const response = await this.sendToBackground(
+                CONFIG.ACTIONS.GET_SINGLE_MAIL_SESSION,
+                { messageId: this.emailId }
+            );
+            const session = response?.success ? response.data : null;
+            if (session?.result?.data) {
+                if (session.result.kind === 'scoring') {
+                    this.components.results.showScoring(session.result.data);
+                } else {
+                    this.components.results.showResults(session.result.data);
+                }
+            }
+            this.components.chat.restore(session?.chatHistory || []);
+        } catch (error) {
+            this.log(`Could not restore the single-mail session: ${error.message}`, 'warning');
+        }
     }
 
     showGeneralInterface() {
@@ -187,7 +209,7 @@ const SingleMailManager = class {
             return;
         }
         const parameters = new URLSearchParams(window.location.search);
-        if (parameters.get('chat') !== '1') {
+        if (parameters.get('chat') !== '1' && parameters.get('view') !== 'window') {
             try {
                 await SingleMailWorkspaceService.openExpanded(
                     this.emailId,
@@ -219,6 +241,45 @@ const SingleMailManager = class {
         return SingleMailWorkspaceService.returnToOverlay(this.emailId);
     }
 
+    /** Switch the current document to another single-mail container. */
+    async switchView(mode) {
+        if (mode === 'overlay') {
+            return this.returnToOverlay();
+        }
+        if (mode === 'window') {
+            return this.openPersistentWindowView();
+        }
+        if (mode === 'tab') {
+            return this.openExpandedView();
+        }
+        throw new Error(`Unsupported single-mail view: ${mode}`);
+    }
+
+    /** Open the non-modal compact window and close the document that launched it. */
+    async openPersistentWindowView() {
+        if (this.emailId === undefined || this.emailId === null) {
+            throw new Error(I18n.t('messageNotFound'));
+        }
+        await SingleMailWorkspaceService.openPersistentWindow(
+            this.emailId,
+            'manual-switch'
+        );
+        await this.closeCurrentView();
+    }
+
+    /** Close an expanded Thunderbird tab explicitly and popup documents through window.close. */
+    async closeCurrentView() {
+        const view = new URLSearchParams(window.location.search).get('view');
+        if (view === 'expanded' && typeof browser.tabs.getCurrent === 'function') {
+            const current = await browser.tabs.getCurrent();
+            if (current?.id !== undefined) {
+                await browser.tabs.remove(current.id);
+                return;
+            }
+        }
+        window.close();
+    }
+
     /** Open the durable reply workspace in a Thunderbird tab, with an in-page fallback. */
     async openReplyComposer() {
         if (this.emailId === undefined || this.emailId === null) {
@@ -226,7 +287,7 @@ const SingleMailManager = class {
             return;
         }
         const parameters = new URLSearchParams(window.location.search);
-        if (parameters.get('reply') !== '1') {
+        if (parameters.get('reply') !== '1' && parameters.get('view') !== 'window') {
             try {
                 await SingleMailWorkspaceService.openExpanded(
                     this.emailId,
@@ -239,6 +300,16 @@ const SingleMailManager = class {
             }
         }
         await this.components.replyComposer.open();
+    }
+
+    /** Clear retained chat state after the chat component confirms a restart. */
+    async clearChatSession() {
+        const response = await this.sendToBackground(CONFIG.ACTIONS.CLEAR_SINGLE_MAIL_CHAT, {
+            messageId: this.emailId
+        });
+        if (!response?.success) {
+            throw new Error('The retained single-mail chat could not be cleared.');
+        }
     }
 
     showLoading(show) {

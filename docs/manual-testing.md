@@ -179,15 +179,22 @@ Thunderbird behavior that mocks cannot prove.
     message as read, the detail row says **Read**, and the same action becomes
     amber **Mark as unread**. Activate it again and confirm that Thunderbird and
     the workspace both return to the unread state without reopening the window.
-40. In Settings, set the single-message assistant to open in its own Thunderbird
-    tab, then launch it from a message. The expanded header must show the compact
-    **Return to compact overlay** action. Activate it: Thunderbird must reactivate
-    the source message tab, open the compact overlay for that same message, and
-    close the expanded tab. Repeat after closing the source tab; the expanded
-    workspace must still close onto the closest prior tab without opening an
-    overlay over a different message.
+40. In Settings, verify that the single-message assistant offers **compact
+    overlay**, **persistent compact window**, and **dedicated Thunderbird tab**,
+    while the dashboard still offers only overlay and tab. Save each single-mail
+    option in turn and launch the assistant from the same message. The lightweight
+    overlay may close when Thunderbird regains focus. The persistent window must
+    remain open while clicking and scrolling in Thunderbird and must close only
+    through its in-page **×** control or the native window controls.
+41. In each single-message view, verify that the top-right corner shows compact
+    controls for exactly the other two modes. Switch through overlay, persistent
+    window, and Thunderbird tab; every transition must retain the same source
+    message and must not change the saved default in Settings. Generate a summary
+    and complete at least one chat turn, then close and reopen the assistant for
+    the same message. Both must be restored. Open another message and verify that
+    the prior message's result and chat are not shown.
 
-The single-message popup must show version 3.8.2. The dashboard uses unread
+The single-message popup must show version 3.9.0. The dashboard uses unread
 status as its default candidate filter; **Include read messages** broadens that
 scope only for the current Thunderbird session. Analysis performed outside the
 dashboard does not automatically create a dashboard score record.
